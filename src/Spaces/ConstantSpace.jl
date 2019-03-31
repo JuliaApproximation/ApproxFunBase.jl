@@ -240,3 +240,69 @@ choosedomainspace(M::ConcreteMultiplication{D,UnsetSpace},sp::UnsetSpace) where 
 choosedomainspace(M::ConcreteMultiplication{D,UnsetSpace},sp::Space) where {D<:ConstantSpace} = space(M.f)
 
 Base.isfinite(f::Fun{CS}) where {CS<:ConstantSpace} = isfinite(Number(f))
+
+
+
+
+
+## ConstantSpace and PointSpace default overrides
+
+for SP in (:ConstantSpace,)
+    for OP in (:abs,:sign,:exp,:sqrt,:angle)
+        @eval begin
+            $OP(z::Fun{<:$SP,<:Complex}) = Fun(space(z),$OP.(coefficients(z)))
+            $OP(z::Fun{<:$SP,<:Real}) = Fun(space(z),$OP.(coefficients(z)))
+            $OP(z::Fun{<:$SP}) = Fun(space(z),$OP.(coefficients(z)))
+        end
+    end
+
+    # we need to pad coefficients since 0^0 == 1
+    for OP in (:^,)
+        @eval begin
+            function $OP(z::Fun{<:$SP},k::Integer)
+                k ≠ 0 && return Fun(space(z),$OP.(coefficients(z),k))
+                Fun(space(z),$OP.(pad(coefficients(z),dimension(space(z))),k))
+            end
+            function $OP(z::Fun{<:$SP},k::Number)
+                k ≠ 0 && return Fun(space(z),$OP.(coefficients(z),k))
+                Fun(space(z),$OP.(pad(coefficients(z),dimension(space(z))),k))
+            end
+        end
+    end
+end
+
+
+for OP in (:(Base.max),:(Base.min))
+    @eval begin
+        $OP(a::Fun{CS1,T},b::Fun{CS2,V}) where {CS1<:ConstantSpace,CS2<:ConstantSpace,T<:Real,V<:Real} =
+            Fun($OP(Number(a),Number(b)),space(a) ∪ space(b))
+        $OP(a::Fun{CS,T},b::Real) where {CS<:ConstantSpace,T<:Real} =
+            Fun($OP(Number(a),b),space(a))
+        $OP(a::Real,b::Fun{CS,T}) where {CS<:ConstantSpace,T<:Real} =
+            Fun($OP(a,Number(b)),space(b))
+    end
+end
+
+for OP in (:<,:(Base.isless),:(<=),:>,:(>=))
+    @eval begin
+        $OP(a::Fun{CS},b::Fun{CS}) where {CS<:ConstantSpace} = $OP(convert(Number,a),Number(b))
+        $OP(a::Fun{CS},b::Number) where {CS<:ConstantSpace} = $OP(convert(Number,a),b)
+        $OP(a::Number,b::Fun{CS}) where {CS<:ConstantSpace} = $OP(a,convert(Number,b))
+    end
+end
+
+# from DualNumbers
+for (funsym, exp) in Calculus.symbolic_derivatives_1arg()
+    funsym == :abs && continue
+    funsym == :sign && continue
+    funsym == :exp && continue
+    funsym == :sqrt && continue
+    @eval begin
+        $(funsym)(z::Fun{CS,T}) where {CS<:ConstantSpace,T<:Real} =
+            Fun($(funsym)(Number(z)),space(z))
+        $(funsym)(z::Fun{CS,T}) where {CS<:ConstantSpace,T<:Complex} =
+            Fun($(funsym)(Number(z)),space(z))
+        $(funsym)(z::Fun{CS}) where {CS<:ConstantSpace} =
+            Fun($(funsym)(Number(z)),space(z))
+    end
+end

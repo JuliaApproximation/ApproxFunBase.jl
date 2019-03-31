@@ -20,6 +20,10 @@ end
 const VFun{S,T} = Fun{S,T,Vector{T}}
 
 Fun(sp::Space,coeff::AbstractVector) = Fun{typeof(sp),eltype(coeff),typeof(coeff)}(sp,coeff)
+Fun() = Fun(identity)
+Fun(d::Domain) = Fun(identity,d)
+Fun(d::Space) = Fun(identity,d)
+
 
 function Fun(sp::Space,v::AbstractVector{Any})
     if isempty(v)

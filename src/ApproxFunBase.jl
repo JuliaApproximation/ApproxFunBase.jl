@@ -4,7 +4,7 @@ module ApproxFunBase
     using Base, BlockArrays, BandedMatrices, BlockBandedMatrices, DomainSets, IntervalSets,
             SpecialFunctions, AbstractFFTs, FFTW, SpecialFunctions, DSP, DualNumbers, FastTransforms,
             LinearAlgebra, SparseArrays, LowRankApprox, FillArrays, InfiniteArrays #, Arpack
-import StaticArrays
+import StaticArrays, Calculus
 
 import DomainSets: Domain, indomain, UnionDomain, ProductDomain, FullSpace, Point, elements, DifferenceDomain,
             Interval, ChebyshevInterval, boundary, ∂, rightendpoint, leftendpoint,

@@ -486,11 +486,11 @@ macro wrappergetindex(Wrap)
         BLAS.axpy!(α,P::ApproxFunBase.SubOperator{T,OP},A::AbstractMatrix) where {T,OP<:$Wrap} =
             ApproxFunBase.unwrap_axpy!(α,P,A)
 
-        ApproxFunBase.mul_coefficients(A::$Wrap,b) = mul_coefficients(A.op,b)
+        ApproxFunBase.mul_coefficients(A::$Wrap,b) = ApproxFunBase.mul_coefficients(A.op,b)
         ApproxFunBase.mul_coefficients(A::ApproxFunBase.SubOperator{T,OP,Tuple{UnitRange{Int},UnitRange{Int}}},b) where {T,OP<:$Wrap} =
-            mul_coefficients(view(parent(A).op,S.indexes[1],S.indexes[2]),b)
+            ApproxFunBase.mul_coefficients(view(parent(A).op,S.indexes[1],S.indexes[2]),b)
         ApproxFunBase.mul_coefficients(A::ApproxFunBase.SubOperator{T,OP},b) where {T,OP<:$Wrap} =
-            mul_coefficients(view(parent(A).op,S.indexes[1],S.indexes[2]),b)
+            ApproxFunBase.mul_coefficients(view(parent(A).op,S.indexes[1],S.indexes[2]),b)
     end
 
     for TYP in (:(BandedMatrices.BandedMatrix),:(ApproxFunBase.RaggedMatrix),
@@ -779,3 +779,64 @@ end
 
 AbstractMatrix(V::Operator) = arraytype(V)(V)
 AbstractVector(S::Operator) = Vector(S)
+
+
+
+
+# default copy is to loop through
+# override this for most operators.
+function default_BandedMatrix(S::Operator)
+    Y=BandedMatrix{eltype(S)}(undef, size(S), bandwidths(S))
+
+    for j=1:size(S,2),k=colrange(Y,j)
+        @inbounds inbands_setindex!(Y,S[k,j],k,j)
+    end
+
+    Y
+end
+
+
+# default copy is to loop through
+# override this for most operators.
+function default_RaggedMatrix(S::Operator)
+    data=Array{eltype(S)}(undef, 0)
+    cols=Array{Int}(undef, size(S,2)+1)
+    cols[1]=1
+    for j=1:size(S,2)
+        cs=colstop(S,j)
+        K=cols[j]-1
+        cols[j+1]=cs+cols[j]
+        resize!(data,cols[j+1]-1)
+
+        for k=1:cs
+            data[K+k]=S[k,j]
+        end
+    end
+
+    RaggedMatrix(data,cols,size(S,1))
+end
+
+function default_Matrix(S::Operator)
+    n, m = size(S)
+    if isinf(n) || isinf(m)
+        error("Cannot convert $S to a Matrix")
+    end
+
+    eltype(S)[S[k,j] for k=1:n, j=1:m]
+end
+
+
+
+
+# The diagonal of the operator may not be the diagonal of the sub
+# banded matrix, so the following calculates the row of the
+# Banded matrix corresponding to the diagonal of the original operator
+
+
+diagindshift(S,kr,jr) = first(kr)-first(jr)
+diagindshift(S::SubOperator) = diagindshift(S,parentindices(S)[1],parentindices(S)[2])
+
+
+#TODO: Remove
+diagindrow(S,kr,jr) = bandwidth(S,2)+first(jr)-first(kr)+1
+diagindrow(S::SubOperator) = diagindrow(S,parentindices(S)[1],parentindices(S)[2])
