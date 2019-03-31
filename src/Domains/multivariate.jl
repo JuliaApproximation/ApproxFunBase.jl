@@ -9,14 +9,6 @@ boundary(d::ProductDomain{Tuple{A,B}}) where {A<:IntervalOrSegment,B<:IntervalOr
                       Vec(rightendpoint(factor(d,1)),rightendpoint(factor(d,2))),
                       Vec(leftendpoint(factor(d,1)),rightendpoint(factor(d,2))),
                       Vec(leftendpoint(factor(d,1)),leftendpoint(factor(d,2)))])
-boundary(d::ProductDomain{Tuple{A,B}}) where {A<:IntervalOrSegment,B<:PeriodicSegment} =
-    UnionDomain((PeriodicSegment(Vec(rightendpoint(factor(d,1)),leftendpoint(factor(d,2))),Vec(rightendpoint(factor(d,1)),rightendpoint(factor(d,2)))),
-        PeriodicSegment(Vec(leftendpoint(factor(d,1)),rightendpoint(factor(d,2))),Vec(leftendpoint(factor(d,1)),leftendpoint(factor(d,2))))))
-boundary(d::ProductDomain{Tuple{A,B}}) where {A<:PeriodicSegment,B<:IntervalOrSegment} =
-    UnionDomain((PeriodicSegment(Vec(leftendpoint(factor(d,1)),leftendpoint(factor(d,2))),Vec(rightendpoint(factor(d,1)),leftendpoint(factor(d,2)))),
-        PeriodicSegment(Vec(rightendpoint(factor(d,1)),rightendpoint(factor(d,2))),Vec(leftendpoint(factor(d,1)),rightendpoint(factor(d,2))))))
-boundary(d::ProductDomain{Tuple{A,B}}) where {A<:PeriodicSegment,B<:PeriodicSegment} = EmptyDomain()
-
 
 
 ## Union

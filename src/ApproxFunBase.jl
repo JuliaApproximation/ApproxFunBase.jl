@@ -62,7 +62,6 @@ import BlockArrays: nblocks, blocksize, global2blockindex, globalrange, BlockSiz
 
 import BandedMatrices: bandrange, bandshift,
                         inbands_getindex, inbands_setindex!, bandwidth, AbstractBandedMatrix,
-                        flipsign,
                         colstart, colstop, colrange, rowstart, rowstop, rowrange,
                         bandwidths, _BandedMatrix, BandedMatrix
 
@@ -107,6 +106,11 @@ export .., Interval, ChebyshevInterval, leftendpoint, rightendpoint, endpoints, 
 include("LinearAlgebra/LinearAlgebra.jl")
 include("Fun.jl")
 include("Domains/Domains.jl")
-
+include("Multivariate/Multivariate.jl")
+include("Operators/Operator.jl")
+include("Caching/caching.jl")
+include("PDE/PDE.jl")
+include("Spaces/Spaces.jl")
+include("testing.jl")
 
 end #module

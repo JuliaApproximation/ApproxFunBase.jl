@@ -54,7 +54,7 @@ end
 isapproxinteger(x) = isapprox(x,round(Int,x))  || isapprox(x+1,round(Int,x+1))
 
 
-# This creates ApproxFun.real, ApproxFun.eps and ApproxFun.dou
+# This creates ApproxFunBase.real, ApproxFunBase.eps and ApproxFunBase.dou
 # which we override for default julia types
 real(x...) = Base.real(x...)
 real(::Type{UnsetNumber}) = UnsetNumber
@@ -632,12 +632,12 @@ hvnocat(rows,A...) = Base.typed_hvcat(mapreduce(typeof,promote_type,A),rows,A...
 macro nocat(x)
     ex = expand(x)
     if ex.args[1] == :vcat
-        ex.args[1] = :(ApproxFun.vnocat)
+        ex.args[1] = :(ApproxFunBase.vnocat)
     elseif ex.args[1] == :hcat
-        ex.args[1] = :(ApproxFun.hnocat)
+        ex.args[1] = :(ApproxFunBase.hnocat)
     else
         @assert ex.args[1] == :hvcat
-        ex.args[1] = :(ApproxFun.hvnocat)
+        ex.args[1] = :(ApproxFunBase.hvnocat)
     end
     esc(ex)
 end

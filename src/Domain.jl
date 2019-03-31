@@ -1,6 +1,6 @@
 
 
-export Domain, SegmentDomain, PeriodicDomain, tocanonical, fromcanonical, fromcanonicalD, ∂
+export Domain, SegmentDomain, tocanonical, fromcanonical, fromcanonicalD, ∂
 export chebyshevpoints, fourierpoints, isambiguous, arclength
 export components, component, ncomponents
 
@@ -112,45 +112,8 @@ maps the point `x` in `d` to a point in `canonical(d,x)`
 """
 function tocanonical end
 
-###### Periodic domains
-
-abstract type PeriodicDomain{T} <: Domain{T} end
-
-
-canonicaldomain(::PeriodicDomain) = PeriodicSegment()
-
-
-points(d::PeriodicDomain{T},n::Integer) where {T} =
-    fromcanonical.(Ref(d), fourierpoints(real(eltype(T)),n))
-
-fourierpoints(n::Integer) = fourierpoints(Float64,n)
-fourierpoints(::Type{T},n::Integer) where {T<:Number} = convert(T,π)*collect(0:2:2n-2)/n
-
-function indomain(x, d::PeriodicDomain{T}) where T
-    y=tocanonical(d,x)
-    if !isapprox(fromcanonical(d,y),x)
-        return false
-    end
-
-    l=arclength(d)
-    if isinf(l)
-        abs(imag(y))<20eps(T)
-    else
-        abs(imag(y))/l<20eps(T)
-    end
-end
-
 issubset(a::Domain,b::Domain) = a==b
 
-
-first(d::PeriodicDomain) = fromcanonical(d,0)
-last(d::PeriodicDomain) = fromcanonical(d,2π)
-
-
-struct AnyPeriodicDomain <: PeriodicDomain{UnsetNumber} end
-isambiguous(::AnyPeriodicDomain)=true
-
-convert(::Type{D},::AnyDomain) where {D<:PeriodicDomain} = AnyPeriodicDomain()
 
 ## conveninece routines
 
@@ -184,15 +147,14 @@ domain(::Number) = AnyDomain()
 
 
 rand(d::IntervalOrSegmentDomain,k...) = fromcanonical.(Ref(d),2rand(k...)-1)
-rand(d::PeriodicDomain,k...) = fromcanonical.(Ref(d),2π*rand(k...)-π)
+
 
 checkpoints(d::IntervalOrSegmentDomain) = fromcanonical.(Ref(d),[-0.823972,0.01,0.3273484])
-checkpoints(d::PeriodicDomain) = fromcanonical.(Ref(d),[1.223972,3.14,5.83273484])
 
 ## boundary
 
 boundary(d::SegmentDomain) = [leftendpoint(d),rightendpoint(d)] #TODO: Points domain
-boundary(d::PeriodicDomain) = EmptyDomain()
+
 
 
 

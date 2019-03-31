@@ -32,26 +32,15 @@ end
     @test 0.45-0.65im ∉ Segment(-1,1)
 
     @test reverseorientation(Arc(1,2,(0.1,0.2))) == Arc(1,2,(0.2,0.1))
-    @test 0.1 ∈ PeriodicSegment(2π,0)
-    @test 100.0 ∈ PeriodicSegment(0,2π)
-    @test -100.0 ∈ PeriodicSegment(0,2π)
 
 
     @test ApproxFunBase.AnySegment() == ApproxFunBase.AnySegment()
-
-    @test 10.0 ∈ PeriodicLine()
-    @test -10.0 ∈ PeriodicLine()
-    @test -10.0+im ∉ PeriodicLine()
-
-    @test ApproxFunBase.Vec(0,0.5) ∈ PeriodicSegment(ApproxFunBase.Vec(0.0,0), ApproxFunBase.Vec(0,1))
 
     @test ApproxFunBase.dimension(Domain{Float64}) == 1
     @test ApproxFunBase.dimension(Segment{Float64}) == 1
     @test ApproxFunBase.dimension(ChebyshevInterval()) == 1
     @test ApproxFunBase.dimension(ChebyshevInterval()^2) == 2
     @test ApproxFunBase.dimension(ChebyshevInterval()^3) == 3
-
-    @test ApproxFunBase.Vec(1,0) ∈ Circle((0.,0.),1.)
 
     @test isambiguous(convert(ApproxFunBase.Point,ApproxFunBase.AnyDomain()))
     @test isambiguous(ApproxFunBase.Point(ApproxFunBase.AnyDomain()))
