@@ -620,11 +620,6 @@ end
 
 length(A::CachedIterator) = length(A.iterator)
 
-
-# The following don't need caching
-cache(A::AbstractVector{T}) where {T<:Number} = A
-
-
 ## nocat
 vnocat(A...) = Base.vect(A...)
 hnocat(A...) = Base.typed_hcat(mapreduce(typeof,promote_type,A),A...)

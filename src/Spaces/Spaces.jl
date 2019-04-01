@@ -140,9 +140,9 @@ abstract type WeightSpace{S,DD,RR} <: Space{DD,RR} end
 
 
 domain(S::WeightSpace) = domain(S.space)
-
-
 points(sp::WeightSpace,n) = points(sp.space,n)
+
+weight(S::WeightSpace, x...) = error("Override `weight(::$S, $x)`")
 
 
 struct WeightSpacePlan{S,P,T,V}

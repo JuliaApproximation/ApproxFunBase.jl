@@ -260,3 +260,40 @@ for (gesdd, elty, relty) in ((:dgesdd_,:Float64,:Float64),
         end
     end
 end
+
+
+function BandedMatrix(S::SubOperator{T,ConcreteConversion{QuotientSpace{SP,O,D,R},SP,T},Tuple{UnitRange{Int},UnitRange{Int}}}) where {SP,O,D,R,T}
+    kr,jr = parentindices(S)
+    C = parent(S)
+    #ret = BandedMatrix{eltype(S)}(undef, size(S), bandwidths(S))
+    ret = BandedMatrix{eltype(S)}(undef, (last(kr),last(jr)), bandwidths(C))
+    #@assert first(kr) == first(jr) == 1
+
+    sp = domainspace(C)
+    F = sp.F
+    A = F.factors
+    n = size(A, 1)
+    B = sp.bcs[1:n,1:last(jr)+n]
+    x = sp.x
+    @inbounds for j in 1:last(jr)
+        kk = colrange(ret, j)
+        if j in kk
+            ret[j,j] = one(R)
+        end
+        for jj = 1:n, ii = 1:n
+            A[ii,jj] = B[ii,j+jj]
+        end
+        for ii = 1:n
+            x[ii] = -B[ii,j]
+        end
+        if norm(x) > 8*norm(A)*eps(R)
+            mutable_lu!(F)
+            ldiv!(F, x)
+        end
+        for k = first(kk)+1:last(kk)
+            ret[k,j] = x[k-j]
+        end
+    end
+
+    ret[kr,jr]
+end

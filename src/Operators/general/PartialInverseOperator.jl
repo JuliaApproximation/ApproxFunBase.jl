@@ -37,3 +37,33 @@ function getindex(P::PartialInverseOperator,k::Integer,j::Integer)
         return zero(eltype(P))
     end
 end
+
+
+## These are both hacks that apparently work
+
+function BandedMatrix(S::SubOperator{T,PP,Tuple{UnitRange{Int},UnitRange{Int}}}) where {T,PP<:PartialInverseOperator}
+    kr,jr = parentindices(S)
+    P = parent(S)
+    #ret = BandedMatrix{eltype(S)}(undef, size(S), bandwidths(S))
+    ret = BandedMatrix{eltype(S)}(undef, (last(kr),last(jr)), bandwidths(P))
+    b = bandwidth(P, 2)
+    #@assert first(kr) == first(jr) == 1
+
+    @inbounds for j in 1:last(jr)
+        kk = colrange(ret, j)
+        if j in kk
+            ret[j,j] = inv(P.cache[j,j])
+        end
+        for k in first(kk):min(last(kk),j-1)
+            t = zero(T)
+            for i = max(k,j-b-1):j-1
+                t += ret[k,i]*P.cache[i,j]
+            end
+            ret[k,j] = -t/P.cache[j,j]
+        end
+    end
+
+    ret[kr,jr]
+end
+
+
