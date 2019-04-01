@@ -16,6 +16,10 @@ mutable struct ClenshawPlan{S,T}
     C::Vector{T}
 end
 
+function recA end
+function recB end
+function recC end
+
 function ClenshawPlan(::Type{T},sp,N::Int,n::Int) where T
     A = T[recA(T,sp,k) for k=0:N-1]
     B = T[recB(T,sp,k) for k=0:N-1]
@@ -224,3 +228,80 @@ function sineshaw(c::AbstractVector,θ)
 end
 sineshaw(c::AbstractVector,θ::AbstractVector) = promote_type(eltype(c),eltype(θ))[sineshaw(c,θ[k]) for k=1:length(θ)]
 sineshaw(c::AbstractVector,θ::AbstractMatrix) = promote_type(eltype(c),eltype(θ))[sineshaw(c,θ[k,j]) for k=1:size(θ,1),j=1:size(θ,2)]
+
+
+function chebyshev_clenshaw(c::AbstractVector, x)
+    N,T = length(c),promote_type(eltype(c),typeof(x))
+    if N == 0
+        return zero(x)
+    elseif N == 1 # avoid issues with NaN x
+        return first(c)*one(x)
+    end
+
+    x = 2x
+    bk1,bk2 = zero(T),zero(T)
+    @inbounds for k = N:-1:2
+        bk2, bk1 = bk1, muladd(x,bk1,c[k]-bk2)
+    end
+
+    muladd(x/2,bk1,c[1]-bk2)
+end
+
+
+function chebyshev_clenshaw(c::AbstractVector,x::Vector,plan::ClenshawPlan{<:Any,V}) where V
+    N,n = length(c),length(x)
+    if isempty(c)
+        return zeros(V,n)
+    end
+
+    bk=plan.bk
+    bk1=plan.bk1
+    bk2=plan.bk2
+
+    @inbounds for i = 1:n
+        x[i] = 2x[i]
+        bk1[i] = zero(V)
+        bk2[i] = zero(V)
+    end
+
+    @inbounds for k = N:-1:2
+        ck = c[k]
+        for i = 1:n
+            bk[i] = muladd(x[i],bk1[i],ck-bk2[i])
+        end
+        bk2, bk1, bk = bk1, bk, bk2
+    end
+
+    ck = c[1]
+    @inbounds for i = 1:n
+        x[i] = x[i]/2
+        bk[i] = muladd(x[i],bk1[i],ck-bk2[i])
+    end
+
+    bk
+end
+
+# entries for Chebyshev/Cos multiplication
+function chebmult_getindex(cfs::AbstractVector,k::Integer,j::Integer)
+    n=length(cfs)
+
+    ret = zero(eltype(cfs))
+
+    n == 0 && return ret
+
+    # Toeplitz part
+    if k == j
+        ret += cfs[1]
+    elseif k > j && k-j+1 ≤ n
+        ret += cfs[k-j+1]/2
+    elseif k < j && j-k+1 ≤ n
+        ret += cfs[j-k+1]/2
+    end
+
+    # Hankel part
+    if k ≥ 2 && k+j-1 ≤ n
+        ret += cfs[k+j-1]/2
+    end
+
+    ret
+end

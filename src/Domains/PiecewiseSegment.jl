@@ -38,7 +38,7 @@ for OP in (:arclength,:complexlength)
     @eval $OP(d::PiecewiseSegment) = mapreduce($OP,+,components(d))
 end
 
-
+isperiodic(_) = false
 isperiodic(d::PiecewiseSegment) = first(d.points) == last(d.points)
 
 reverseorientation(d::PiecewiseSegment) = PiecewiseSegment(reverse(d.points))
