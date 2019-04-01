@@ -31,9 +31,6 @@ end
 @testset "Domain" begin
     @test 0.45-0.65im ∉ Segment(-1,1)
 
-    @test reverseorientation(Arc(1,2,(0.1,0.2))) == Arc(1,2,(0.2,0.1))
-
-
     @test ApproxFunBase.AnySegment() == ApproxFunBase.AnySegment()
 
     @test ApproxFunBase.dimension(Domain{Float64}) == 1
