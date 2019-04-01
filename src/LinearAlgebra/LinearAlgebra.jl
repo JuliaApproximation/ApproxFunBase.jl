@@ -9,7 +9,6 @@ include("lyap.jl")
 include("bary.jl")
 include("clenshaw.jl")
 include("ultraspherical.jl")
-include("fourier.jl")
 
 include("hesseneigs.jl")
 

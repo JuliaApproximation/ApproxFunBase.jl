@@ -129,6 +129,10 @@ bvp(d,k) = vcat(Operator{prectype(d)}[ldiffbc(d,i) for i=0:div(k,2)-1],
 
 periodic(d,k) = Operator{prectype(d)}[Evaluation(d,leftendpoint,i)-Evaluation(d,rightendpoint,i) for i=0:k]
 
+# shorthand for second order
+ivp(d) = ivp(d,2)
+bvp(d) = bvp(d,2)
+
 
 
 for op in (:rdirichlet,:ldirichlet,:lneumann,:rneumann,:ivp,:bvp)

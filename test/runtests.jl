@@ -49,3 +49,4 @@ end
 end
 
 @time include("MatrixTest.jl")
+@time include("SpacesTest.jl")

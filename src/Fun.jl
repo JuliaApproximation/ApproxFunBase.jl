@@ -457,6 +457,8 @@ function differentiate(f::Fun,k::Integer)
     (k==0) ? f : differentiate(differentiate(f),k-1)
 end
 
+# use conj(transpose(f)) for ArraySpace
+adjoint(f::Fun) = differentiate(f)
 
 
 
