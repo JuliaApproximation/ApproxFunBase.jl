@@ -96,9 +96,6 @@ export pad!, pad, chop!, sample,
        complexroots, roots, svfft, isvfft,
        reverseorientation, jumplocations
 
-##Testing
-export bisectioninv
-
 export .., Interval, ChebyshevInterval, leftendpoint, rightendpoint, endpoints, cache
 
 

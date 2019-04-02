@@ -537,6 +537,8 @@ end
 extrema(f::Fun{PiecewiseSpace{SV,DD,RR},T}) where {SV,DD<:UnionDomain,RR<:Real,T<:Real} =
     mapreduce(extrema,(x,y)->extrema([x...;y...]),components(f))
 
+function complexroots end
+
 function roots(f::Fun{P}) where P<:PiecewiseSpace
     rts=mapreduce(roots,vcat,components(f))
     k=1

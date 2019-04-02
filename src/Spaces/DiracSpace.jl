@@ -1,4 +1,5 @@
-export DiracDelta, KroneckerDelta
+export DiracDelta, KroneckerDelta, DiracSpace, PointSpace
+
 for TYP in (:DiracSpace,:PointSpace)
     @eval begin
         struct $TYP{T,D,R} <: Space{D,R}
