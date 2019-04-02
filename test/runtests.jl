@@ -1,4 +1,4 @@
-using ApproxFunBase, LinearAlgebra, Test
+using ApproxFunBase, LinearAlgebra, Random, Test
     import ApproxFunBase: Infinity, ∞
 
 @testset "Helper" begin
