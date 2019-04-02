@@ -1,4 +1,4 @@
-
+export continuity
 
 ## Space promotion for InterlaceOperator
 # It's here because we need DirectSumSpace

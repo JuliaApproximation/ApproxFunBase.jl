@@ -161,17 +161,6 @@ function Base.inv(T::ToeplitzOperator)
     ToeplitzOperator(ai[2:end],ai[1:1])
 end
 
-function Fun(T::ToeplitzOperator)
-   if length(T.nonnegative)==1
-      Fun(Taylor(),[T.nonnegative;T.negative])
-    elseif length(T.negative)==0
-        Fun(Hardy{false}(),T.nonnegative)
-    else
-        Fun(Laurent(Circle()),interlace(T.nonnegative,T.negative))
-    end
-end
-
-
 
 ####
 # Toeplitz/Hankel

@@ -18,12 +18,10 @@ convert(::Type{HeavisideSpace},d::AbstractVector) =
     HeavisideSpace(PiecewiseSegment(sort(d)))
 
 spacescompatible(a::SplineSpace{λ},b::SplineSpace{λ}) where {λ} = domainscompatible(a,b)
-canonicalspace(sp::HeavisideSpace) = PiecewiseSpace(map(Chebyshev,components(domain(sp))))
 
 
-function evaluate(f::Fun{HeavisideSpace{T,R}},x::Real) where {T<:Real,R}
-    p = domain(f).points
-    c = f.coefficients
+function evaluate(c::AbstractVector{T}, s::HeavisideSpace{<:Real}, x::Real) where T
+    p = domain(s).points
     for k=1:length(c)
         if p[k] ≤ x ≤ p[k+1]
             return c[k]
@@ -33,7 +31,7 @@ function evaluate(f::Fun{HeavisideSpace{T,R}},x::Real) where {T<:Real,R}
 end
 
 
-function evaluate(f::Fun{SplineSpace{1,T,R}},x::Real) where {T<:Real,R}
+function evaluate(c::AbstractVector{T}, s::SplineSpace{1,<:Real}, x::Real) where T
     p = domain(f).points
     c = f.coefficients
     for k=1:length(p)-1
