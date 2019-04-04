@@ -218,7 +218,7 @@ for (op,ODE,RHS,growth) in ((:(erf),"f'*D^2+(2f*f'^2-f'')*D","0",:(imag)),
             end
             D=Derivative(space(f))
             B=[Evaluation(space(f),xmin),Evaluation(space(f),xmax)]
-            u=\([B;eval($L)],[opfxmin;opfxmax;eval($R)];tolerance=eps(T)*opmax)
+            u=\([B;eval($L)],[opfxmin;opfxmax;eval($R)];tolerance=10eps(T)*opmax)
 
             setdomain(u,domain(fin))
         end
