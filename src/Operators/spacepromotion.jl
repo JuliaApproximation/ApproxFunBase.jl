@@ -47,7 +47,7 @@ rangespace(S::SpaceOperator) = S.rangespace
 
 
 ##TODO: Do we need both max and min?
-function findmindomainspace(ops::AbstractVector)
+function findmindomainspace(ops::AbstractVector)::Any
     sp = UnsetSpace()
 
     for op in ops
@@ -57,7 +57,7 @@ function findmindomainspace(ops::AbstractVector)
     sp
 end
 
-function findmaxrangespace(ops::AbstractVector)
+function findmaxrangespace(ops::AbstractVector)::Any
     sp = UnsetSpace()
 
     for op in ops
@@ -80,9 +80,9 @@ promoterangespace(P::Operator,sp::Space) = promoterangespace(P,sp,rangespace(P))
 promotedomainspace(P::Operator,sp::Space) = promotedomainspace(P,sp,domainspace(P))
 
 
-promoterangespace(P::Operator,sp::Space,cursp::Space) =
+promoterangespace(P::Operator,sp::Space,cursp::Space)::Any =
     (sp==cursp) ? P : Conversion(cursp,sp)*P
-promotedomainspace(P::Operator,sp::Space,cursp::Space) =
+promotedomainspace(P::Operator,sp::Space,cursp::Space)::Any =
     (sp==cursp) ? P : P*Conversion(sp,cursp)
 
 
@@ -134,7 +134,7 @@ choosedomainspace(A::Operator,_) = choosedomainspace(A)
 
 choosedomainspace(A) = choosedomainspace(A,UnsetSpace())
 
-function choosedomainspace(ops::AbstractVector,spin)
+function choosedomainspace(ops::AbstractVector,spin)::Any
     sp = UnsetSpace()
 
     for op in ops

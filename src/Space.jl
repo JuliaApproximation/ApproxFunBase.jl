@@ -146,7 +146,7 @@ mappoint(a::Domain,b::Space,x)=mappoint(a,domain(b),x)
 
 for FUNC in (:conversion_rule,:maxspace_rule,:union_rule)
     @eval begin
-        function $FUNC(a,b)
+        function $FUNC(a,b)::Any
             if spacescompatible(a,b)
                 a
             else
@@ -168,7 +168,7 @@ end
 
 
 # gives a space c that has a banded conversion operator TO a and b
-function conversion_type(a,b)
+function conversion_type(a,b)::Any
     if spacescompatible(a,b)
         a
     elseif !domainscompatible(a,b)
@@ -187,7 +187,7 @@ end
 
 # gives a space c that has a banded conversion operator FROM a and b
 maxspace(a,b) = NoSpace()  # TODO: this fixes weird bug with Nothing
-function maxspace(a::Space,b::Space)
+function maxspace(a::Space, b::Space)::Any
     if spacescompatible(a,b)
         return a
     elseif !domainscompatible(a,b)
@@ -247,7 +247,7 @@ union(a::AmbiguousSpace, b::Space) = b
 union(a::Space, b::AmbiguousSpace) = a
 
 
-function union_by_union_rule(a::Space,b::Space)
+function union_by_union_rule(a::Space,b::Space)::Any
     if spacescompatible(a,b)
         if isambiguous(domain(a))
             return b
@@ -262,7 +262,7 @@ function union_by_union_rule(a::Space,b::Space)
     union_rule(b,a)
 end
 
-function union(a::Space, b::Space)
+function union(a::Space, b::Space)::Any
     cr = union_by_union_rule(a,b)
     cr isa NoSpace || return cr
 
