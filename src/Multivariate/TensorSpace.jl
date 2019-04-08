@@ -349,7 +349,7 @@ end
 
 function *(T::TransformPlan{TT,SS,false},v::AbstractVector) where {SS<:TensorSpace,TT}
     P = TransformPlan(T.space,T.plan,Val{true})
-    P*copy(v)
+    P*AbstractVector{rangetype(SS)}(v)
 end
 
 
