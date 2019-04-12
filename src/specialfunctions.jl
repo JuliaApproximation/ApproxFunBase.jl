@@ -111,7 +111,7 @@ function /(c::Number,f::Fun)
     r=roots(f)
     tol=10eps(promote_type(typeof(c),cfstype(f)))
     @assert length(r)==0
-    \(Multiplication(f,space(f)),c*one(space(f));tolerance=tol)
+    \(Multiplication(f,space(f)),c*one(f);tolerance=tol)
 end
 
 
