@@ -182,7 +182,7 @@ end
 
 
 # avoids default ConstantSpace
-function union_rule(B::ConstantSpace,A::SumSpace)
+function union_rule(B::ConstantSpace,A::SumSpace)::Any
     if !domainscompatible(A,B)
         NoSpace()
     else
@@ -195,7 +195,7 @@ function union_rule(B::ConstantSpace,A::SumSpace)
     end
 end
 
-function union_rule(A::SumSpace, B::Space)
+function union_rule(A::SumSpace, B::Space)::Any
     if !domainscompatible(A,B)
         NoSpace()
     else

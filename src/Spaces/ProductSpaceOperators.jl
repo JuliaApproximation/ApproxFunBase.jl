@@ -5,14 +5,14 @@ export continuity
 
 for TYP in (:PiecewiseSpace,:ArraySpace)
     @eval begin
-        function promotedomainspace(A::InterlaceOperator{T,2},sp::$TYP) where T
+        function promotedomainspace(A::InterlaceOperator{T,2},sp::$TYP)::Any where T
             if domainspace(A) == sp
                 return A
             end
             @assert size(A.ops,2) == length(sp)
             InterlaceOperator([promotedomainspace(A.ops[k,j],sp[j]) for k=1:size(A.ops,1),j=1:size(A.ops,2)],$TYP)
         end
-        function interlace_choosedomainspace(ops,rs::$TYP)
+        function interlace_choosedomainspace(ops,rs::$TYP)::Any
             @assert length(ops) == length(rs)
             # this ensures correct dispatch for unino
             sps = Array{Space}(
@@ -93,7 +93,7 @@ end
 
 # Sum Space and PiecewiseSpace need to allow permutation of space orders
 for TYP in (:SumSpace,:PiecewiseSpace)
-    @eval function Conversion(S1::$TYP,S2::$TYP)
+    @eval function Conversion(S1::$TYP,S2::$TYP)::Any
         v1 = collect(S1.spaces)
         v2 = collect(S2.spaces)
 
@@ -180,7 +180,7 @@ end
 for (OPrule,OP) in ((:conversion_rule,:conversion_type),(:maxspace_rule,:maxspace),
                         (:union_rule,:union))
     for TYP in (:SumSpace,:PiecewiseSpace)
-        @eval function $OPrule(S1sp::$TYP,S2sp::$TYP)
+        @eval function $OPrule(S1sp::$TYP,S2sp::$TYP)::Any
             S1 = components(S1sp)
             S2 = components(S2sp)
             cs1,cs2=map(canonicalspace,S1),map(canonicalspace,S2)
@@ -239,7 +239,7 @@ for (Op,OpWrap) in ((:Derivative,:DerivativeWrapper),(:Integral,:IntegralWrapper
     end
 end
 
-function Derivative(S::SumSpace,k::Integer)
+function Derivative(S::SumSpace,k::Integer)::Any
     # we want to map before we decompose, as the map may introduce
     # mixed bases.
     if typeof(canonicaldomain(S))==typeof(domain(S))
