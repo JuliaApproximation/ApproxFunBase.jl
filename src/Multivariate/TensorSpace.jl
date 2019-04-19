@@ -323,37 +323,35 @@ Base.transpose(d::TensorSpace) = TensorSpace(d.spaces[2],d.spaces[1])
 
 
 
-## Transforms
-plan_transform!(S::TensorSpace,M::AbstractMatrix) = TransformPlan(S,((plan_transform(S.spaces[1],size(M,1)),size(M,1)),
-                                                             (plan_transform(S.spaces[2],size(M,2)),size(M,2))),
+## Transforms                                                          
+
+for (plan, plan!, Typ) in ((:plan_transform, :plan_transform!, :TransformPlan), 
+                           (:plan_itransform, :plan_itransform!, :ITransformPlan))                                                             
+    @eval begin
+        $plan!(S::TensorSpace, M::AbstractMatrix) = $Typ(S,(($plan(S.spaces[1],size(M,1)),size(M,1)),
+                                                             ($plan(S.spaces[2],size(M,2)),size(M,2))),
                                                              Val{true})
 
+        function *(T::$Typ{<:Any,<:TensorSpace,true}, M::AbstractMatrix)
+            n=size(M,1)
 
-function *(T::TransformPlan{TT,SS,true},M::AbstractMatrix) where {SS<:TensorSpace,TT}
-    n=size(M,1)
+            for k=1:size(M,2)
+                M[:,k]=T.plan[1][1]*M[:,k]
+            end
+            for k=1:n
+                M[k,:]=T.plan[2][1]*M[k,:]
+            end
+            M
+        end
 
-    for k=1:size(M,2)
-        M[:,k]=T.plan[1][1]*M[:,k]
+        function *(T::$Typ{TT,SS,false},v::AbstractVector) where {SS<:TensorSpace,TT}
+            P = $Typ(T.space,T.plan,Val{true})
+            P*AbstractVector{rangetype(SS)}(v)
+        end
     end
-    for k=1:n
-        M[k,:]=T.plan[2][1]*M[k,:]
-    end
-    M
 end
 
-function *(T::TransformPlan{TT,SS,true},v::AbstractVector) where {SS<:TensorSpace,TT}
-    N,M = T.plan[1][2],T.plan[2][2]
-    V=reshape(v,N,M)
-    fromtensor(T.space,T*V)
-end
-
-function *(T::TransformPlan{TT,SS,false},v::AbstractVector) where {SS<:TensorSpace,TT}
-    P = TransformPlan(T.space,T.plan,Val{true})
-    P*AbstractVector{rangetype(SS)}(v)
-end
-
-
-function plan_transform(sp::TensorSpace,::Type{T},n::Integer) where {T}
+function plan_transform(sp::TensorSpace, ::Type{T}, n::Integer) where {T}
     NM=n
     if isfinite(dimension(sp.spaces[1])) && isfinite(dimension(sp.spaces[2]))
         N,M=dimension(sp.spaces[1]),dimension(sp.spaces[2])
@@ -368,102 +366,28 @@ function plan_transform(sp::TensorSpace,::Type{T},n::Integer) where {T}
     end
 
     TransformPlan(sp,((plan_transform(sp.spaces[1],T,N),N),
-                      (plan_transform(sp.spaces[2],T,M),M)),
+                    (plan_transform(sp.spaces[2],T,M),M)),
                 Val{false})
+end   
+
+plan_transform(sp::TensorSpace, v::AbstractVector) = plan_transform(sp,eltype(v),length(v))
+
+function plan_itransform(sp::TensorSpace, v::AbstractVector{T}) where {T}
+    N,M = size(totensor(sp, v)) # wasteful
+    ITransformPlan(sp,((plan_itransform(sp.spaces[1],T,N),N),
+                    (plan_itransform(sp.spaces[2],T,M),M)),
+                Val{false})
+end   
+
+
+function *(T::TransformPlan{<:Any,<:TensorSpace,true},v::AbstractVector) 
+    N,M = T.plan[1][2],T.plan[2][2]
+    V=reshape(v,N,M)
+    fromtensor(T.space,T*V)
 end
 
-
-plan_transform(sp::TensorSpace,v::AbstractVector) = plan_transform(sp,eltype(v),length(v))
-
-
-
-
-# Old
-
-plan_column_transform(S,v) = plan_transform(columnspace(S,1),v)
-plan_column_itransform(S,v) = plan_itransform(columnspace(S,1),v)
-
-function itransform!(S::TensorSpace,M::AbstractMatrix)
-    n=size(M,1)
-
-    planc=plan_itransform(factor(S,1),M[:,1])
-    for k=1:size(M,2)
-        M[:,k] = planc*M[:,k]
-    end
-
-    planr=plan_itransform(factor(S,2),M[1,:])
-    for k=1:n
-        M[k,:]=planr*M[k,:]
-    end
-    M
-end
-
-function itransform!(S::AbstractProductSpace,M::AbstractMatrix)
-    n=size(M,1)
-
-    ## The order matters
-    pln=plan_column_itransform(S,n)
-    for k=1:size(M,2)
-        M[:,k]=itransform(columnspace(S,k),M[:,k],pln)
-    end
-
-    for k=1:n
-        M[k,:]=itransform(factor(S,2),M[k,:])
-    end
-    M
-end
-
-
-function transform!(S::TensorSpace,M::AbstractMatrix{T}) where T
-    n=size(M,1)
-
-    ## The order matters!!
-    # For Disk Space, this is due to requiring decay
-    # in function
-    for k=1:n
-        M[k,:]=transform(factor(S,2),M[k,:])
-    end
-
-    pln=plan_column_transform(S,n)
-    for k=1:size(M,2)
-        # col may not be full length
-        col=pln*M[:,k]
-        M[1:length(col),k]=col
-        for j=length(col)+1:n
-            M[j,k]=zero(T) # fill rest with zeros
-        end
-    end
-
-
-    M
-end
-
-
-
-function transform!(S::AbstractProductSpace,M::AbstractMatrix{T}) where T
-    n=size(M,1)
-
-    ## The order matters!!
-    # For Disk Space, this is due to requiring decay
-    # in function
-    for k=1:n
-        M[k,:]=transform(factor(S,2),M[k,:])
-    end
-
-    pln=plan_column_transform(S,n)
-    for k=1:size(M,2)
-        # col may not be full length
-        col=transform(columnspace(S,k),M[:,k],pln)
-        M[1:length(col),k]=col
-        for j=length(col)+1:n
-            M[j,k]=zero(T) # fill rest with zeros
-        end
-    end
-
-
-    M
-end
-
+*(T::ITransformPlan{<:Any,<:TensorSpace,true},v::AbstractVector)  =
+    vec(T*totensor(T.space,v))
 
 
 ## points

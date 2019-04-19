@@ -426,6 +426,10 @@ plan_itransform!(sp::Space,cfs) = error("Override for $sp")
 transform(S::Space,vals) = plan_transform(S,vals)*vals
 itransform(S::Space,cfs) = plan_itransform(S,cfs)*cfs
 
+itransform!(S::Space,cfs) = plan_itransform!(S,cfs)*cfs
+transform!(S::Space,cfs) = plan_transform!(S,cfs)*cfs
+
+
 *(P::CanonicalTransformPlan,vals::AbstractVector) = coefficients(P.plan*vals,P.canonicalspace,P.space)
 *(P::ICanonicalTransformPlan,cfs::AbstractVector) = P.plan*coefficients(cfs,P.space,P.canonicalspace)
 
