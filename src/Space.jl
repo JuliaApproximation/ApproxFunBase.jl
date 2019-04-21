@@ -18,9 +18,9 @@ abstract type Space{D,R} end
 
 const RealSpace = Space{D,R} where {D,R<:Real}
 const ComplexSpace = Space{D,R} where {D,R<:Complex}
-const UnivariateSpace = Space{D,R} where {D<:Domain1d,R}
-const BivariateSpace = Space{D,R}  where {D<:Domain2d,R}
-const RealUnivariateSpace = RealSpace{D,R} where {D<:Domain1d,R<:Real}
+const UnivariateSpace = Space{D,R} where {D<:EuclideanDomain{1},R}
+const BivariateSpace = Space{D,R}  where {D<:EuclideanDomain{2},R}
+const RealUnivariateSpace = RealSpace{D,R} where {D<:EuclideanDomain{1},R<:Real}
 
 
 

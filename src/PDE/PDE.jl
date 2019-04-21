@@ -21,7 +21,7 @@ function Laplacian(d::BivariateSpace,k::Integer)
     end
 end
 
-Laplacian(d::Domain2d, k::Integer) = Laplacian(Space(d),k)
+Laplacian(d::EuclideanDomain{2}, k::Integer) = Laplacian(Space(d),k)
 grad(d::ProductDomain) = [Derivative(d,[1,0]),Derivative(d,[0,1])]
 
 
