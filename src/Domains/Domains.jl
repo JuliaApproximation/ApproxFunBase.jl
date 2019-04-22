@@ -40,8 +40,13 @@ end
 
 include("multivariate.jl")
 
-function affine_setdiff(d::Domain, ptsin::UnionDomain)    
-    pts=Number.(elements(ptsin))
+affine_setdiff(d::Domain, ptsin::UnionDomain) = 
+    _affine_setdiff(d, Number.(elements(ptsin)))
+
+affine_setdiff(d::Domain, ptsin::WrappedDomain{<:AbstractVector}) = 
+    _affine_setdiff(d, ptsin.domain)
+
+function _affine_setdiff(d::Domain, pts)    
     isempty(pts) && return d
     tol=sqrt(eps(arclength(d)))
     da=leftendpoint(d)

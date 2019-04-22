@@ -1,5 +1,6 @@
 name = "ApproxFunBase"
 uuid = "fbd15aa5-315a-5a7d-a8a4-24992e37be05"
+version = "0.0.4"
 
 [deps]
 AbstractFFTs = "621f4979-c628-5d54-868e-fcf4e3e8185c"
@@ -34,7 +35,7 @@ BlockArrays = "0.8.0"
 BlockBandedMatrices = "0.4.0"
 Calculus = "≥ 0.1.15"
 DSP = "≥ 0.5.1"
-DomainSets = "0.0.1, 0.0.2"
+DomainSets = "0.0.2"
 DualNumbers = "0.6.2"
 FFTW = "≥ 0.2.4"
 FastGaussQuadrature = "≥ 0.3.2"
