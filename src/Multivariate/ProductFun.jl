@@ -74,7 +74,7 @@ ProductFun(f::Function,dx::Space,dy::Space)=ProductFun(dynamic(f),TensorSpace(dx
 
 ProductFun(f::Function,D::Domain,M::Integer,N::Integer) = ProductFun(dynamic(f),Space(D),M,N)
 ProductFun(f::Function,d::Domain) = ProductFun(dynamic(f),Space(d))
-ProductFun(f::Function, dx::EuclideanDomain{1}, dy::EuclideanDomain{1}) = ProductFun(dynamic(f),Space(dx),Space(dy))
+ProductFun(f::Function, dx::Domain{<:Number}, dy::Domain{<:Number}) = ProductFun(dynamic(f),Space(dx),Space(dy))
 ProductFun(f::Function) = ProductFun(dynamic(f),ChebyshevInterval(),ChebyshevInterval())
 
 ## Conversion from other 2D Funs
