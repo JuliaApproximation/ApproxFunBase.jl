@@ -254,7 +254,7 @@ Base.transpose(S::ConstantTimesOperator) = sp.c*transpose(S.op)
 ### Calculus
 
 #TODO: general dimension
-function Derivative(S::TensorSpace{SV,DD},order::Vector{Int}) where {SV,DD<:Domain2d}
+function Derivative(S::TensorSpace{SV,DD},order::Vector{Int}) where {SV,DD<:EuclideanDomain{2}}
     @assert length(order)==2
     if order[1]==0
         Dy=Derivative(S.spaces[2],order[2])

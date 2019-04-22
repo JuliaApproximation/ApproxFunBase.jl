@@ -379,7 +379,7 @@ for OP in (:abs,:sign,:log,:angle)
     @eval begin
         $OP(f::Fun{<:PiecewiseSpace{<:Any,<:Any,<:Real},<:Real}) =
             Fun(map($OP,components(f)),PiecewiseSpace)
-        $OP(f::Fun{<:PiecewiseSpace{<:Any,<:Domain1d}}) =
+        $OP(f::Fun{<:PiecewiseSpace{<:Any,<:EuclideanDomain{1}}}) =
             Fun(map($OP,components(f)),PiecewiseSpace)
     end
 end
