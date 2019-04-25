@@ -276,12 +276,11 @@ end
 
 
 function evaluate(f::AbstractVector,S::PiecewiseSpace,x)
-    d=domain(S)
     g=Fun(S,f)
 
 #    ret=zero(promote_type(eltype(f),eltype(S)))
-    for k=1:ncomponents(d)
-        if in(x,component(d,k))
+    for k=1:ncomponents(S)
+        if in(x,domain(component(S,k)))
             return component(g,k)(x)
         end
     end
