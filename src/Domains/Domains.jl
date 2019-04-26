@@ -46,6 +46,16 @@ affine_setdiff(d::Domain, ptsin::UnionDomain) =
 affine_setdiff(d::Domain, ptsin::WrappedDomain{<:AbstractVector}) = 
     _affine_setdiff(d, ptsin.domain)
 
+function _affine_setdiff(d::Domain, p::Number) 
+    isempty(d) && return d
+    p ∉ d  && return d
+    a,b = endpoints(d)
+    if leftendpoint(d) > rightendpoint(d) 
+        a,b = b,a
+    end
+    UnionDomain(a..p, p..b) # TODO: Clopen interval
+end
+
 function _affine_setdiff(d::Domain, pts)    
     isempty(pts) && return d
     tol=sqrt(eps(arclength(d)))
