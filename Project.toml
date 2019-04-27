@@ -1,6 +1,6 @@
 name = "ApproxFunBase"
 uuid = "fbd15aa5-315a-5a7d-a8a4-24992e37be05"
-version = "0.1"
+version = "0.1.1"
 
 [deps]
 AbstractFFTs = "621f4979-c628-5d54-868e-fcf4e3e8185c"
@@ -31,8 +31,8 @@ ToeplitzMatrices = "c751599d-da0a-543b-9d20-d0a503d91d24"
 [compat]
 AbstractFFTs = "≥ 0.3.1"
 BandedMatrices = "0.9.0"
-BlockArrays = "0.8, 0.9"
-BlockBandedMatrices = "0.4.0"
+BlockArrays = "0.9"
+BlockBandedMatrices = "0.4.2"
 Calculus = "≥ 0.1.15"
 DSP = "≥ 0.5.1"
 DomainSets = "0.0.2"
