@@ -470,7 +470,7 @@ function points(sp::TensorSpace,n)
 
     for y in points(b,M),
         x in points(a,N)
-        push!(pts,Vec(x,y))
+        push!(pts,Vec(x...,y...))
     end
     pts
 end
