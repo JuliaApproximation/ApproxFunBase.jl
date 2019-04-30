@@ -98,6 +98,7 @@ isambiguous(sp::Space) = isambiguous(rangetype(sp))
 
 #TODO: should it default to canonicalspace?
 points(d::Space,n) = points(domain(d),n)
+points(d::Space) = points(d, dimension(d))
 
 
 

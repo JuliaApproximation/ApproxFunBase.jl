@@ -246,7 +246,7 @@ TensorSpace(A::ProductDomain) = TensorSpace(tuple(map(Space,A.domains)...))
 ⊗(A::Space,B::TensorSpace) = TensorSpace(A,B.spaces...)
 ⊗(A::Space,B::Space) = TensorSpace(A,B)
 
-domain(f::TensorSpace) = mapreduce(domain,×,f.spaces)
+domain(f::TensorSpace) = ×(domain.(f.spaces)...)
 Space(sp::ProductDomain) = TensorSpace(sp)
 
 setdomain(sp::TensorSpace, d::ProductDomain) = TensorSpace(setdomain.(factors(sp), factors(d)))

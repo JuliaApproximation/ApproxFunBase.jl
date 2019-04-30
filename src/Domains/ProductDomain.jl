@@ -19,15 +19,15 @@ function pushappendpts!(ret, xx, pts)
         push!(ret,Vec(xx...))
     else
         for x in pts[1]
-            pushappendpts!(ret,(xx...,x),pts[2:end])
+            pushappendpts!(ret,(xx...,x...),pts[2:end])
         end
     end
     ret
 end
 
 function checkpoints(d::ProductDomain)
-    pts=map(checkpoints,d.domains)
-    ret=Vector{Vec{length(d.domains),float(mapreduce(eltype,promote_type,d.domains))}}(undef, 0)
+    pts = checkpoints.(d.domains)
+    ret=Vector{Vec{sum(dimension.(d.domains)),float(promote_type(eltype.(eltype.(d.domains))...))}}(undef, 0)
 
     pushappendpts!(ret,(),pts)
     ret
