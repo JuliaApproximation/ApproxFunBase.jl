@@ -716,18 +716,6 @@ conv(y::SVector{1}, x::AbstractVector) = y[1]*x
 conv(x::AbstractFill, y::SVector{1}) = x*y[1]
 conv(y::SVector{1}, x::AbstractFill) = y[1]*x
 conv(x::AbstractFill, y::AbstractFill) = DSP.conv(x, y)
-function conv(x::AbstractFill, y::AbstractVector)
-    isinf(length(x)) || return DSP.conv(x,y)
-    @assert length(y) == 1
-    x*y[1]
-end
-function conv(y::AbstractVector, x::AbstractFill)
-    isinf(length(x)) || return DSP.conv(y,x)
-    @assert length(y) == 1
-    y[1]*x
-end
-
-
 
 
 ## BlockInterlacer
