@@ -380,13 +380,13 @@ function plan_itransform(sp::TensorSpace, v::AbstractVector{T}) where {T}
 end   
 
 
-function *(T::TransformPlan{<:Any,<:TensorSpace,true},v::AbstractVector) 
+function *(T::TransformPlan{TT,<:TensorSpace,true},v::AbstractVector) where TT # need where TT
     N,M = T.plan[1][2],T.plan[2][2]
     V=reshape(v,N,M)
     fromtensor(T.space,T*V)
 end
 
-*(T::ITransformPlan{<:Any,<:TensorSpace,true},v::AbstractVector)  =
+*(T::ITransformPlan{TT,<:TensorSpace,true},v::AbstractVector) where TT  =
     vec(T*totensor(T.space,v))
 
 
