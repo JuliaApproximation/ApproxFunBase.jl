@@ -461,6 +461,7 @@ macro wrapperstructure(Wrap)
              $ret
 
              $func(D::$Wrap,k::Integer) = $func(D.op,k)
+             $func(A::$Wrap,i::ApproxFunBase.Infinity) = $func(D.op,k)
          end
      end
 
