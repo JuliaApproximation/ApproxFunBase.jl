@@ -368,9 +368,15 @@ function plan_transform(sp::TensorSpace, ::Type{T}, n::Integer) where {T}
     TransformPlan(sp,((plan_transform(sp.spaces[1],T,N),N),
                     (plan_transform(sp.spaces[2],T,M),M)),
                 Val{false})
-end   
+end  
+
+function plan_transform!(sp::TensorSpace, ::Type{T}, n::Integer) where {T}
+    P = plan_transform(sp, T, n)
+    TransformPlan(sp, P.plan, Val{true})
+end
 
 plan_transform(sp::TensorSpace, v::AbstractVector) = plan_transform(sp,eltype(v),length(v))
+plan_transform!(sp::TensorSpace, v::AbstractVector) = plan_transform!(sp,eltype(v),length(v))
 
 function plan_itransform(sp::TensorSpace, v::AbstractVector{T}) where {T}
     N,M = size(totensor(sp, v)) # wasteful
