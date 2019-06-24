@@ -38,10 +38,10 @@ end
 
 # default_Fun is the default constructor, based on evaluation and transforms
 # last argument is whether to splat or not
-default_Fun(::Type{T},f,d::Space{ReComp},pts::AbstractVector,::Type{Val{true}}) where {T,ReComp} =
+default_Fun(::Type{T},f,d::Space{ReComp},pts::AbstractArray,::Type{Val{true}}) where {T,ReComp} =
     Fun(d,transform(d,T[f(x...) for x in pts]))
 
-default_Fun(::Type{T},f,d::Space{ReComp},pts::AbstractVector,::Type{Val{false}}) where {T,ReComp} =
+default_Fun(::Type{T},f,d::Space{ReComp},pts::AbstractArray,::Type{Val{false}}) where {T,ReComp} =
     Fun(d,transform(d,broadcast!(f, similar(pts, T), pts)))
 
 
