@@ -1,6 +1,4 @@
-using Pkg
-Pkg.add("ApproxFun")
-using ApproxFun
+using ApproxFunBase
 
 @testset "MatrixOperator" begin
     A=[Legendre(),Chebyshev()]
