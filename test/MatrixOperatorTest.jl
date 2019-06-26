@@ -1,4 +1,9 @@
-using ApproxFun
+using Reexport
+
+@reexport using ApproxFunBase
+@reexport using ApproxFunOrthogonalPolynomials
+@reexport using ApproxFunSingularities
+
 @testset "MatrixOperator" begin
     A=[Legendre(),Chebyshev()]
     B=[Chebyshev(),Legendre()]
