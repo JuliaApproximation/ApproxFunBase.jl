@@ -1,4 +1,4 @@
-using ApproxFunBase
+using ApproxFunBase, ApproxFunOrthogonalPolynomials
 
 @testset "MatrixOperator" begin
     A=[Legendre(),Chebyshev()]
