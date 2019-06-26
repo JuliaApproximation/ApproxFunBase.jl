@@ -15,7 +15,7 @@ notifications:
   email: false
 before_script:
   - julia -e 'using Pkg; Pkg.add("ApproxFunOrthogonalPolynomials")'
-  - julia -e 'Pkg.add("ApproxFunSingularities")'
+  - julia -e 'using Pkg; Pkg.add("ApproxFunSingularities")'
 after_script:
   - bash ./docs/travis.sh
 after_success:
