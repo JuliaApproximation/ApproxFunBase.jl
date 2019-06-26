@@ -1,3 +1,5 @@
+using Pkg
+Pkg.add("ApproxFun")
 using ApproxFun
 
 @testset "MatrixOperator" begin
