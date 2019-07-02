@@ -246,7 +246,7 @@ TensorSpace(A::ProductDomain) = TensorSpace(tuple(map(Space,A.domains)...))
 ⊗(A::Space,B::TensorSpace) = TensorSpace(A,B.spaces...)
 ⊗(A::Space,B::Space) = TensorSpace(A,B)
 
-domain(f::TensorSpace) = mapreduce(domain,×,f.spaces)
+domain(f::TensorSpace) = ×(domain.(f.spaces)...)
 Space(sp::ProductDomain) = TensorSpace(sp)
 
 setdomain(sp::TensorSpace, d::ProductDomain) = TensorSpace(setdomain.(factors(sp), factors(d)))
@@ -368,9 +368,15 @@ function plan_transform(sp::TensorSpace, ::Type{T}, n::Integer) where {T}
     TransformPlan(sp,((plan_transform(sp.spaces[1],T,N),N),
                     (plan_transform(sp.spaces[2],T,M),M)),
                 Val{false})
-end   
+end  
+
+function plan_transform!(sp::TensorSpace, ::Type{T}, n::Integer) where {T}
+    P = plan_transform(sp, T, n)
+    TransformPlan(sp, P.plan, Val{true})
+end
 
 plan_transform(sp::TensorSpace, v::AbstractVector) = plan_transform(sp,eltype(v),length(v))
+plan_transform!(sp::TensorSpace, v::AbstractVector) = plan_transform!(sp,eltype(v),length(v))
 
 function plan_itransform(sp::TensorSpace, v::AbstractVector{T}) where {T}
     N,M = size(totensor(sp, v)) # wasteful
@@ -380,13 +386,13 @@ function plan_itransform(sp::TensorSpace, v::AbstractVector{T}) where {T}
 end   
 
 
-function *(T::TransformPlan{<:Any,<:TensorSpace,true},v::AbstractVector) 
+function *(T::TransformPlan{TT,<:TensorSpace,true},v::AbstractVector) where TT # need where TT
     N,M = T.plan[1][2],T.plan[2][2]
     V=reshape(v,N,M)
     fromtensor(T.space,T*V)
 end
 
-*(T::ITransformPlan{<:Any,<:TensorSpace,true},v::AbstractVector)  =
+*(T::ITransformPlan{TT,<:TensorSpace,true},v::AbstractVector) where TT  =
     vec(T*totensor(T.space,v))
 
 
