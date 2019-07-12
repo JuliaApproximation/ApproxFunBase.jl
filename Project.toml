@@ -1,6 +1,6 @@
 name = "ApproxFunBase"
 uuid = "fbd15aa5-315a-5a7d-a8a4-24992e37be05"
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 AbstractFFTs = "621f4979-c628-5d54-868e-fcf4e3e8185c"
