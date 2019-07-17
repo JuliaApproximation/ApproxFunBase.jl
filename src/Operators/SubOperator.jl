@@ -127,6 +127,11 @@ defaultgetindex(B::Operator,k::AbstractRange, j::InfRanges) = view(B, k, j)
 defaultgetindex(B::Operator,k::InfRanges, j::AbstractRange) = view(B, k, j)
 
 
+if VERSION < v"1.2-"
+    reindex(V, idxs, subidxs) = Base.reindex(V, idxs, subidxs)
+else
+    reindex(V, idxs, subidxs) = Base.reindex(idxs, subidxs)
+end
 
 reindex(A::Operator, B::Tuple{Block,Any}, kj::Tuple{Any,Any}) =
     (reindex(rangespace(A),(B[1],), (kj[1],))[1], reindex(domainspace(A),tail(B), tail(kj))[1])
