@@ -494,7 +494,7 @@ macro wrappergetindex(Wrap)
             ApproxFunBase.mul_coefficients(view(parent(A).op,S.indexes[1],S.indexes[2]),b)
     end
 
-    for TYP in (:(BandedMatrices.BandedMatrix),:(ApproxFunBase.RaggedMatrix),
+    for TYP in (:(ApproxFunBase.BandedMatrix),:(ApproxFunBase.RaggedMatrix),
                 :Matrix,:Vector,:AbstractVector)
         ret = quote
             $ret
@@ -510,7 +510,7 @@ macro wrappergetindex(Wrap)
         $ret
 
         # fast converts to banded matrices would be based on indices, not blocks
-        function BandedMatrices.BandedMatrix(S::ApproxFunBase.SubOperator{T,OP,NTuple{2,ApproxFunBase.BlockRange1}}) where {T,OP<:$Wrap}
+        function ApproxFunBase.BandedMatrix(S::ApproxFunBase.SubOperator{T,OP,NTuple{2,ApproxFunBase.BlockRange1}}) where {T,OP<:$Wrap}
             A = parent(S)
             ds = domainspace(A)
             rs = rangespace(A)
