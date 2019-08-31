@@ -39,27 +39,27 @@ diagblockshift(a::AbstractFill{Int},b::Vcat{Int,1,<:Tuple{V1,<:AbstractFill{Int}
 
 
 function diagblockshift(a::Vcat{Int,1,<:Tuple{V1,<:AbstractFill{Int}}},b::AbstractFill{Int}) where V1 <: AbstractVector{Int}
-    @assert getindex_value(a.arrays[end]) == getindex_value(b)
-    isempty(a.arrays[1]) && return diagblockshift(a.arrays[2],b)
+    @assert getindex_value(a.args[end]) == getindex_value(b)
+    isempty(a.args[1]) && return diagblockshift(a.args[2],b)
     a1, b1 = a[1],b[1]
-    a1 == b1 && return diagblockshift(Vcat(a.arrays[1][2:end],a.arrays[2]),b)
-    a1 >  b1 && length(a.arrays[1]) == 1 && return 0
-    a1 >  b1 && return max(0,-1+diagblockshift(flatten(([a1-b1;a.arrays[1][2:end]],a.arrays[2]),b)))
-    a1 <  b1 && length(a.arrays[1]) == 1 && return 1
+    a1 == b1 && return diagblockshift(Vcat(a.args[1][2:end],a.args[2]),b)
+    a1 >  b1 && length(a.args[1]) == 1 && return 0
+    a1 >  b1 && return max(0,-1+diagblockshift(flatten(([a1-b1;a.args[1][2:end]],a.args[2]),b)))
+    a1 <  b1 && length(a.args[1]) == 1 && return 1
     # a1 <  b1 &&
-    return 1+diagblockshift(Vcat(a.arrays[1][2:end],a.arrays[2]),Vcat([b1-a1],b))
+    return 1+diagblockshift(Vcat(a.args[1][2:end],a.args[2]),Vcat([b1-a1],b))
 end
 
 function diagblockshift(a::Vcat{Int,1,<:Tuple{V1,<:AbstractFill{Int}}},
                         b::Vcat{Int,1,<:Tuple{V2,<:AbstractFill{Int}}}) where {V1 <: AbstractVector{Int},V2 <: AbstractVector{Int}}
-    isempty(a.arrays[1]) && return diagblockshift(a.arrays[2],b)
-    isempty(b.arrays[1]) && return diagblockshift(a,b.arrays[2])
+    isempty(a.args[1]) && return diagblockshift(a.args[2],b)
+    isempty(b.args[1]) && return diagblockshift(a,b.args[2])
     a1, b1 = a[1],b[1]
-    a1 == b1 && return diagblockshift(Vcat(a.arrays[1][2:end],a.arrays[2]),Vcat(b.arrays[1][2:end],b.arrays[2]))
-    a1 >  b1 && return max(0,-1+diagblockshift(Vcat([a1-b1;a.arrays[1][2:end]],a.arrays[2]),
-                                               Vcat(b.arrays[1][2:end],b.arrays[2])))
+    a1 == b1 && return diagblockshift(Vcat(a.args[1][2:end],a.args[2]),Vcat(b.args[1][2:end],b.args[2]))
+    a1 >  b1 && return max(0,-1+diagblockshift(Vcat([a1-b1;a.args[1][2:end]],a.args[2]),
+                                               Vcat(b.args[1][2:end],b.args[2])))
     # a1 <  b1 &&
-    return 1+diagblockshift(Vcat(a.arrays[1][2:end],a.arrays[2]),Vcat([b1-a1;b.arrays[1][2:end]],b.arrays[2]))
+    return 1+diagblockshift(Vcat(a.args[1][2:end],a.args[2]),Vcat([b1-a1;b.args[1][2:end]],b.args[2]))
 end
 
 
