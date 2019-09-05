@@ -540,11 +540,11 @@ end
 
 # Conversions we always assume are intentional: no need to promote
 
-*(A::ConversionWrapper{TO1},B::ConversionWrapper{TO}) where {TO1<:TimesOperator,TO<:TimesOperator} =
+*(A::ConversionWrapper,B::ConversionWrapper) =
     ConversionWrapper(TimesOperator(A.op,B.op))
-*(A::ConversionWrapper{TO},B::Conversion) where {TO<:TimesOperator} =
+*(A::ConversionWrapper, B::Conversion) =
     ConversionWrapper(TimesOperator(A.op,B))
-*(A::Conversion,B::ConversionWrapper{TO}) where {TO<:TimesOperator} =
+*(A::Conversion,B::ConversionWrapper) =
     ConversionWrapper(TimesOperator(A,B.op))
 
 *(A::Conversion,B::Conversion) = ConversionWrapper(TimesOperator(A,B))

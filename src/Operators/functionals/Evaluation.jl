@@ -20,7 +20,7 @@ ConcreteEvaluation(sp::Space,x,o::Number) =
 Evaluation(::Type{T},sp::Space,x,order) where {T} =
     ConcreteEvaluation{typeof(sp),typeof(x),typeof(order),T}(sp,x,order)
 # TODO: This seems like a bad idea: if you are specifying x, just go with the generic version
-function Evaluation(::Type{T},sp::UnivariateSpace,x::Number,order) where {T}
+function Evaluation(::Type{T}, @nospecialize(sp::UnivariateSpace), x::Number, order) where {T}
     d=domain(sp)
     if isa(d,IntervalOrSegment) && isapprox(leftendpoint(d),x)
         Evaluation(T,sp,leftendpoint,order)
@@ -83,17 +83,17 @@ end
 
 ## EvaluationWrapper
 
-struct EvaluationWrapper{S<:Space,M,FS<:Operator,OT,T<:Number} <: Evaluation{T}
+struct EvaluationWrapper{S<:Space,M,OT,T<:Number} <: Evaluation{T}
     space::S
     x::M
     order::OT
-    op::FS
+    op::Operator{T}
 end
 
 
 @wrapper EvaluationWrapper
 EvaluationWrapper(sp::Space,x,order,func::Operator) =
-    EvaluationWrapper{typeof(sp),typeof(x),typeof(func),typeof(order),eltype(func)}(sp,x,order,func)
+    EvaluationWrapper{typeof(sp),typeof(x),typeof(order),eltype(func)}(sp,x,order,func)
 
 
 domainspace(E::Evaluation) = E.space
@@ -166,13 +166,13 @@ convert(::Type{Operator{T}},B::ConcreteDirichlet{S,V}) where {S,V,T} =
 
 
 struct DirichletWrapper{S,T} <: Dirichlet{S,T}
-    op::S
+    op::Operator{T}
     order::Int
 end
 
 @wrapper DirichletWrapper
 
-DirichletWrapper(B::Operator,λ=0) = DirichletWrapper{typeof(B),eltype(B)}(B,λ)
+DirichletWrapper(B::Operator,λ=0) = DirichletWrapper{typeof(domainspace(B)),eltype(B)}(B,λ)
 
 convert(::Type{Operator{T}},B::DirichletWrapper) where {T} =
     DirichletWrapper(Operator{T}(B.op),B.order)::Operator{T}

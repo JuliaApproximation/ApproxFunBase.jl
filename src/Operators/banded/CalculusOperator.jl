@@ -18,8 +18,8 @@ macro calculus_operator(Op)
             space::S        # the domain space
             order::OT
         end
-        struct $WrappOp{BT<:Operator,S<:Space,OT,T} <: $Op{S,OT,T}
-            op::BT
+        struct $WrappOp{S<:Space,OT,T} <: $Op{S,OT,T}
+            op::Operator{T}
             order::OT
         end
 
@@ -60,7 +60,7 @@ macro calculus_operator(Op)
         end
 
         $WrappOp(op::Operator,order) =
-            $WrappOp{typeof(op),typeof(domainspace(op)),typeof(order),eltype(op)}(op,order)
+            $WrappOp{typeof(domainspace(op)),typeof(order),eltype(op)}(op,order)
         $WrappOp(op::Operator) = $WrappOp(op,1)
 
         function Base.convert(::Type{Operator{T}},D::$WrappOp) where T

@@ -56,16 +56,14 @@ Conversion() = ConversionWrapper(Operator(I,UnsetSpace()))
 # the domain and range space
 # but continue to know its a derivative
 
-struct ConversionWrapper{S<:Operator,T} <: Conversion{T}
-    op::S
+struct ConversionWrapper{T} <: Conversion{T}
+    op::Operator{T}
 end
 
 @wrapper ConversionWrapper
 
 
-ConversionWrapper(::Type{T},op) where {T} = ConversionWrapper{typeof(op),T}(op)
-ConversionWrapper(B::Operator) =
-    ConversionWrapper{typeof(B),eltype(B)}(B)
+ConversionWrapper(::Type{T},op) where {T} = ConversionWrapper{T}(op)
 Conversion(A::Space,B::Space,C::Space) =
     ConversionWrapper(Conversion(B,C)*Conversion(A,B))
 Conversion(A::Space,B::Space,C::Space,D::Space...) =
@@ -79,7 +77,7 @@ function convert(::Type{Operator{T}},D::ConversionWrapper) where T
         D
     else
         BO=convert(Operator{T},D.op)
-        ConversionWrapper{typeof(BO),T}(BO)
+        ConversionWrapper{T}(BO)
     end
 end
 
