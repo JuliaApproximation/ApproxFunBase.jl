@@ -47,7 +47,8 @@ rangespace(S::SpaceOperator) = S.rangespace
 
 
 ##TODO: Do we need both max and min?
-function findmindomainspace(ops::AbstractVector)::Any
+@nospecialize
+function findmindomainspace(ops::AbstractVector)
     sp = UnsetSpace()
 
     for op in ops
@@ -57,7 +58,7 @@ function findmindomainspace(ops::AbstractVector)::Any
     sp
 end
 
-function findmaxrangespace(ops::AbstractVector)::Any
+function findmaxrangespace(ops::AbstractVector)
     sp = UnsetSpace()
 
     for op in ops
@@ -66,7 +67,7 @@ function findmaxrangespace(ops::AbstractVector)::Any
 
     sp
 end
-
+@specialize
 
 # The coolest definitions ever!!
 # supports Derivative():Chebyshev()→Ultraspherical(1)
@@ -79,12 +80,12 @@ end
 promoterangespace(P::Operator,sp::Space) = promoterangespace(P,sp,rangespace(P))
 promotedomainspace(P::Operator,sp::Space) = promotedomainspace(P,sp,domainspace(P))
 
-
-promoterangespace(P::Operator,sp::Space,cursp::Space)::Any =
+@nospecialize
+promoterangespace(P::Operator,sp::Space,cursp::Space) =
     (sp==cursp) ? P : Conversion(cursp,sp)*P
-promotedomainspace(P::Operator,sp::Space,cursp::Space)::Any =
+promotedomainspace(P::Operator,sp::Space,cursp::Space) =
     (sp==cursp) ? P : P*Conversion(sp,cursp)
-
+@specialize
 
 
 
@@ -134,7 +135,8 @@ choosedomainspace(A::Operator,_) = choosedomainspace(A)
 
 choosedomainspace(A) = choosedomainspace(A,UnsetSpace())
 
-function choosedomainspace(ops::AbstractVector,spin)::Any
+
+function choosedomainspace(@nospecialize(ops::AbstractVector), @nospecialize(spin))
     sp = UnsetSpace()
 
     for op in ops
@@ -144,17 +146,17 @@ function choosedomainspace(ops::AbstractVector,spin)::Any
     sp
 end
 
-choosespaces(A::Operator,b) = promotedomainspace(A,choosedomainspace(A,b))
+choosespaces(A::Operator, b) = promotedomainspace(A,choosedomainspace(A,b))
 
 
-spacescompatible(A::Operator,B::Operator) =
+spacescompatible(A::Operator, B::Operator) =
     spacescompatible(domainspace(A),domainspace(B)) &&
     spacescompatible(rangespace(A),rangespace(B))
 
 
 #It's important that domain space is promoted first as it might impact range space
 promotespaces(ops::AbstractVector) = promoterangespace(promotedomainspace(ops))
-function promotespaces(ops::AbstractVector,b::Fun)
+function promotespaces(@nospecialize(ops::AbstractVector), @nospecialize(b::Fun))
     A=promotespaces(ops)
     if isa(rangespace(A),AmbiguousSpace)
         # try setting the domain space
@@ -164,7 +166,7 @@ function promotespaces(ops::AbstractVector,b::Fun)
 end
 
 
-function promotespaces(A::Operator,B::Operator)
+function promotespaces(@nospecialize(A::Operator), @nospecialize(B::Operator))
     if spacescompatible(A,B)
         A,B
     else
