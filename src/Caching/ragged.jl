@@ -64,8 +64,8 @@ QROperator(R::CachedOperator{T,RaggedMatrix{T}}) where {T} =
     QROperator(R,RaggedMatrix{T}(undef,0,Int[]),0)
 
 function resizedata!(QR::QROperator{CachedOperator{T,RaggedMatrix{T},
-                                                  MM,DS,RS,BI}},
-         ::Colon,col) where {T,MM,DS,RS,BI}
+                                                  DS,RS,BI}},
+         ::Colon,col) where {T,DS,RS,BI}
     if col ≤ QR.ncols
         return QR
     end
@@ -127,8 +127,8 @@ end
 
 
 function resizedata!(QR::QROperator{CachedOperator{T,RaggedMatrix{T},
-                                       MM,DS,RS,BI}},
-::Colon,col) where {T<:BlasFloat,MM,DS,RS,BI}
+                                       DS,RS,BI}},
+::Colon,col) where {T<:BlasFloat,DS,RS,BI}
     if col ≤ QR.ncols
         return QR
     end

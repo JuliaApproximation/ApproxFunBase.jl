@@ -3,7 +3,7 @@
 
 
 struct AlmostBandedMatrix{T} <: AbstractMatrix{T}
-    bands::BandedMatrix{T}
+    bands::BandedMatrix{T,Matrix{T},Base.OneTo{Int}}
     fill::LowRankMatrix{T}
     function AlmostBandedMatrix{T}(bands::BandedMatrix{T}, fill::LowRankMatrix{T}) where T
         if size(bands) ≠ size(fill)

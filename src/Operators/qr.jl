@@ -105,12 +105,6 @@ function qr(A::Operator; cached::Int=0)
     qr!(cache(A;padding=true);cached=cached)
 end
 
-function qr2(A::Operator, cached::Int=0)
-    if isambiguous(domainspace(A)) || isambiguous(rangespace(A))
-        throw(ArgumentError("Only non-ambiguous operators can be factorized."))
-    end
-    qr!(cache(A;padding=true);cached=cached)
-end
 
 factorize(A::Operator) = qr(A)
 

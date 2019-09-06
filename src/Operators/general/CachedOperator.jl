@@ -8,8 +8,8 @@ export cache
 
 ## CachedOperator
 
-mutable struct CachedOperator{T<:Number,DM<:AbstractMatrix,M<:Operator,DS,RS,BI} <: Operator{T}
-    op::M
+mutable struct CachedOperator{T<:Number,DM<:AbstractMatrix,DS,RS,BI} <: Operator{T}
+    op::Operator{T}
     data::DM
     datasize::Tuple{Int,Int}
     domainspace::DS
@@ -21,8 +21,7 @@ mutable struct CachedOperator{T<:Number,DM<:AbstractMatrix,M<:Operator,DS,RS,BI}
 end
 
 CachedOperator(op::Operator,data::AbstractMatrix,sz::Tuple{Int,Int},ds,rs,bi,pd=false) =
-    CachedOperator{eltype(data),typeof(data),typeof(op),
-                    typeof(ds),typeof(rs),typeof(bi)}(op,data,sz,ds,rs,bi,pd)
+    CachedOperator{eltype(data),typeof(data),typeof(ds),typeof(rs),typeof(bi)}(op,data,sz,ds,rs,bi,pd) |> uninfer
 
 
 CachedOperator(op::Operator,data::AbstractMatrix,sz::Tuple{Int,Int},pd=false) =
@@ -31,7 +30,7 @@ CachedOperator(op::Operator,data::AbstractMatrix,padding=false) = CachedOperator
 
 
 
-function default_CachedOperator(op::Operator;padding::Bool=false)
+@inline function default_CachedOperator(op::Operator;padding::Bool=false)
     if isbanded(op)
         CachedOperator(BandedMatrix,op;padding=padding)
     elseif isbandedblockbanded(op) && !padding
@@ -45,14 +44,15 @@ function default_CachedOperator(op::Operator;padding::Bool=false)
     end |> uninfer
 end
 
-CachedOperator(op::Operator;padding::Bool=false) = default_CachedOperator(op;padding=padding)
+@inline CachedOperator(op::Operator; padding::Bool=false) = 
+    default_CachedOperator(op;padding=padding) |> uninfer
 
 """
     cache(op::Operator)
 
 Caches the entries of an operator, to speed up multiplying a Fun by the operator.
 """
-cache(O::Operator;kwds...) = CachedOperator(O;kwds...)
+@inline cache(O::Operator;kwds...) = CachedOperator(O;kwds...)
 cache(::Type{MT},O::Operator;kwds...) where {MT<:AbstractMatrix} = CachedOperator(MT,O;kwds...)
 
 convert(::Type{Operator{T}},S::CachedOperator{T}) where {T} = S
@@ -63,8 +63,8 @@ convert(::Type{Operator{T}},S::CachedOperator) where {T} =
 
 domainspace(C::CachedOperator) = C.domainspace
 rangespace(C::CachedOperator) = C.rangespace
-bandwidths(C::CachedOperator{T,BM,M}) where {T<:Number,BM<:BandedMatrix,M<:Operator} = C.bandwidths
-blockbandwidths(C::CachedOperator{T,BM,M}) where {T<:Number,BM<:BandedMatrix,M<:Operator} = C.bandwidths
+bandwidths(C::CachedOperator{T,BM}) where {T<:Number,BM<:BandedMatrix} = C.bandwidths
+blockbandwidths(C::CachedOperator{T,BM}) where {T<:Number,BM<:BandedMatrix} = C.bandwidths
 
 
 # TODO: cache this information as well

@@ -796,8 +796,5 @@ cache(Q::BlockInterlacer) = CachedIterator(Q)
 
 
 
-struct Uninfer 
-    x
-end
 
-uninfer(x) = Uninfer(x).x
+@noinline uninfer(@nospecialize(x)) = Ref{Any}(x)[]

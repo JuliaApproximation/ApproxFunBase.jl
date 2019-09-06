@@ -1,17 +1,19 @@
 ## Caches
 
-function CachedOperator(io::InterlaceOperator{T,1};padding::Bool=false) where T
-    ds=domainspace(io)
-    rs=rangespace(io)
+CachedOperator(io::InterlaceOperator{T,1};padding::Bool=false) where T =
+    _interlace_CachedOperator(io, padding)
 
-    ind=findall(op->isinf(size(op,1)), io.ops)
+function _interlace_CachedOperator(@nospecialize(io::InterlaceOperator{T,1}), padding) where T
+    ds = domainspace(io)
+    rs = rangespace(io)
+
+    ind = findall(op->isinf(size(op,1)), io.ops)
     if length(ind) ≠ 1  || !isbanded(io.ops[ind[1]])  # is almost banded
         return default_CachedOperator(io;padding=padding)
     end
     i=ind[1]
     bo=io.ops[i]
     lin,uin=bandwidths(bo)
-
 
 
     # calculate number of rows interlaced
@@ -25,7 +27,6 @@ function CachedOperator(io::InterlaceOperator{T,1};padding::Bool=false) where T
             md=max(md,d)
         end
     end
-
 
     isend=true
     for k=i+1:length(io.ops)
@@ -55,7 +56,7 @@ function CachedOperator(io::InterlaceOperator{T,1};padding::Bool=false) where T
     bcrow=1
     oprow=0
     for k=1:n
-        K,J=io.rangeinterlacer[k]
+        K,J= uninfer(io.rangeinterlacer[k])
 
         if K ≠ i
             # fill the fill matrix
@@ -73,7 +74,7 @@ function CachedOperator(io::InterlaceOperator{T,1};padding::Bool=false) where T
     end
 
 
-    CachedOperator(io,ret,(n,n+u),ds,rs,(l,∞))
+    CachedOperator(uninfer(io),uninfer(ret),(n,n+u),ds,rs,(l,∞))  |> uninfer
 end
 
 
@@ -173,12 +174,15 @@ function CachedOperator(io::InterlaceOperator{T,2};padding::Bool=false) where T
 end
 
 
+resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T}}, row::Integer, col::Integer) where {T} =
+         _almostbanded_resizedata!(co, co.op, row, col)
+
+resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T}}, row::Integer, ::Colon) where {T} =
+         _almostbanded_resizedata!(co, co.op, row, :)         
 
 # Grow cached interlace operator
 
-function resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},
-                              InterlaceOperator{T,1,DS,RS,DI,RI,BI}},
-           n::Integer,::Colon) where {T<:Number,DS,RS,DI,RI,BI}
+function _almostbanded_resizedata!(co, op::InterlaceOperator{T,1}, n::Integer,::Colon) where {T<:Number}
     if n ≤ co.datasize[1]
         return co
     end
@@ -187,12 +191,12 @@ function resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},
     pad!(co.data,n,n+u)
 
     r=rank(co.data.fill)
-    ind=findfirst(op->isinf(size(op,1)),co.op.ops)
+    ind=findfirst(op->isinf(size(op,1)),op.ops)
 
     k=1
-    for (K,J) in co.op.rangeinterlacer
+    for (K,J) in op.rangeinterlacer
         if K ≠ ind
-            co.data.fill.V[co.datasize[2]:end,k] = co.op.ops[K][J,co.datasize[2]:n+u]
+            co.data.fill.V[co.datasize[2]:end,k] = op.ops[K][J,co.datasize[2]:n+u]
             k += 1
             if k > r
                 break
@@ -202,7 +206,7 @@ function resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},
 
     kr=co.datasize[1]+1:n
     jr=max(1,kr[1]-l):n+u
-    BLAS.axpy!(1.0,view(co.op.ops[ind],kr .- r,jr),
+    BLAS.axpy!(1.0,view(op.ops[ind],kr .- r,jr),
                     view(co.data.bands,kr,jr))
 
     co.datasize=(n,n+u)
@@ -211,14 +215,11 @@ end
 
 
 
-function resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},
-                              InterlaceOperator{T,2,DS,RS,DI,RI,BI}},
-           n::Integer,::Colon) where {T<:Number,DS,RS,DI,RI,BI}
+function _almostbanded_resizedata!(co, io::InterlaceOperator{T,2}, n::Integer,::Colon) where T<:Number
     if n ≤ co.datasize[1]
         return co
     end
 
-    io=co.op
     ds=domainspace(io)
     rs=rangespace(io)
     di=io.domaininterlacer
@@ -242,7 +243,7 @@ function resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},
     K=k=1
     while k ≤ r
         if isfinite(dimension(rs[ri[K][1]]))
-            co.data.fill.V[co.datasize[2]:end,k] = co.op[K,co.datasize[2]:n+u]
+            co.data.fill.V[co.datasize[2]:end,k] = io[K,co.datasize[2]:n+u]
             k += 1
         end
         K += 1
@@ -259,14 +260,12 @@ function resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},
 end
 
 
-resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},
-                              InterlaceOperator{T,1,DS,RS,DI,RI,BI}},
-n::Integer,m::Integer) where {T<:Number,DS,RS,DI,RI,BI} = resizedata!(co,max(n,m+bandwidth(co.data.bands,1)),:)
+_almostbanded_resizedata!(co, ::InterlaceOperator{T,1}, n::Integer,m::Integer) where {T<:Number} = 
+    resizedata!(co,max(n,m+bandwidth(co.data.bands,1)),:)
 
 
-resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},
-                               InterlaceOperator{T,2,DS,RS,DI,RI,BI}},
-n::Integer,m::Integer) where {T<:Number,DS,RS,DI,RI,BI} = resizedata!(co,max(n,m+bandwidth(co.data.bands,1)),:)
+_almostbanded_resizedata!(co, ::InterlaceOperator{T,2}, n::Integer,m::Integer) where {T<:Number} = 
+    resizedata!(co,max(n,m+bandwidth(co.data.bands,1)),:)
 
 
 
@@ -285,8 +284,8 @@ end
 
 
 function resizedata!(QR::QROperator{CachedOperator{T,AlmostBandedMatrix{T},
-                                                  MM,DS,RS,BI}},
-         ::Colon,col) where {T,MM,DS,RS,BI}
+                                                  DS,RS,BI}},
+         ::Colon,col) where {T,DS,RS,BI}
     if col ≤ QR.ncols
         return QR
     end
@@ -351,8 +350,8 @@ end
 # BLAS versions, requires BlasFloat
 
 function resizedata!(QR::QROperator{CachedOperator{T,AlmostBandedMatrix{T},
-                                       MM,DS,RS,BI}},
-::Colon,col) where {T<:BlasFloat,MM,DS,RS,BI}
+                                       DS,RS,BI}},
+::Colon,col) where {T<:BlasFloat,DS,RS,BI}
     if col ≤ QR.ncols
         return QR
     end
