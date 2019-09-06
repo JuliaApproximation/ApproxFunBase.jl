@@ -28,7 +28,7 @@ function Evaluation(::Type{T}, @nospecialize(sp::UnivariateSpace), x::Number, or
         Evaluation(T,sp,rightendpoint,order)
     else
         ConcreteEvaluation{typeof(sp),typeof(x),typeof(order),T}(sp,x,order)
-    end
+    end  |> uninfer
 end
 
 Evaluation(sp::Space,x,order) = Evaluation(rangetype(sp),sp,x,order)

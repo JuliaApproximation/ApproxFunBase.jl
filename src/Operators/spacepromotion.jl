@@ -47,7 +47,6 @@ rangespace(S::SpaceOperator) = S.rangespace
 
 
 ##TODO: Do we need both max and min?
-@nospecialize
 function findmindomainspace(ops::AbstractVector)
     sp = UnsetSpace()
 
@@ -55,7 +54,7 @@ function findmindomainspace(ops::AbstractVector)
         sp = union(sp,domainspace(op))
     end
 
-    sp
+    sp  |> uninfer
 end
 
 function findmaxrangespace(ops::AbstractVector)
@@ -65,9 +64,8 @@ function findmaxrangespace(ops::AbstractVector)
         sp = maxspace(sp,rangespace(op))
     end
 
-    sp
+    sp  |> uninfer
 end
-@specialize
 
 # The coolest definitions ever!!
 # supports Derivative():Chebyshev()→Ultraspherical(1)
@@ -80,12 +78,10 @@ end
 promoterangespace(P::Operator,sp::Space) = promoterangespace(P,sp,rangespace(P))
 promotedomainspace(P::Operator,sp::Space) = promotedomainspace(P,sp,domainspace(P))
 
-@nospecialize
 promoterangespace(P::Operator,sp::Space,cursp::Space) =
-    (sp==cursp) ? P : Conversion(cursp,sp)*P
+    ((sp==cursp) ? P : Conversion(cursp,sp)*P)  |> uninfer
 promotedomainspace(P::Operator,sp::Space,cursp::Space) =
-    (sp==cursp) ? P : P*Conversion(sp,cursp)
-@specialize
+    ((sp==cursp) ? P : P*Conversion(sp,cursp))  |> uninfer
 
 
 
@@ -143,7 +139,7 @@ function choosedomainspace(@nospecialize(ops::AbstractVector), @nospecialize(spi
         sp = conversion_type(sp,choosedomainspace(op,spin))
     end
 
-    sp
+    sp  |> uninfer
 end
 
 choosespaces(A::Operator, b) = promotedomainspace(A,choosedomainspace(A,b))

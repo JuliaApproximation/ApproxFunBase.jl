@@ -793,3 +793,11 @@ function iterate(it::BlockInterlacer, (N,k,blkst,lngs))
 end
 
 cache(Q::BlockInterlacer) = CachedIterator(Q)
+
+
+
+struct Uninfer 
+    x
+end
+
+uninfer(x) = Uninfer(x).x

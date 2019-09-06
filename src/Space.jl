@@ -278,7 +278,7 @@ function union(@nospecialize(a::Space), @nospecialize(b::Space))
         return cr
     end
 
-    a ⊕ b
+    a ⊕ b  |> uninfer
 end
 
 union(a::Space) = a

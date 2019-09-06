@@ -27,8 +27,7 @@ rangespace(C::ConcreteConversion)=C.rangespace
 
 
 function defaultConversion(a::Space,b::Space)
-    @nospecialize
-    ret = if a==b
+    if a==b
         Conversion(a)
     elseif conversion_type(a,b)==NoSpace()
         sp=canonicalspace(a)
@@ -41,9 +40,7 @@ function defaultConversion(a::Space,b::Space)
         end
     else
         error("Implement Conversion from " * string(typeof(a)) * " to " * string(typeof(b)))
-    end
-    @specialize
-    ret
+    end |> uninfer
 end
 
 Conversion(a::Space,b::Space) = defaultConversion(a,b)

@@ -45,7 +45,7 @@ function PlusOperator(ops::Vector)
         b1=max(br[1],b1)
         b2=max(br[end],b2)
     end
-    PlusOperator(ops,(b1,b2))
+    uninfer(PlusOperator(ops,(b1,b2)))
 end
 
 function convert(::Type{Operator{T}},P::PlusOperator) where T

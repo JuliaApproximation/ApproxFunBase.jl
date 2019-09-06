@@ -460,7 +460,7 @@ function _vcat(A::OperatorTypes...)
             push!(Av,a)
         end
     end
-    InterlaceOperator(vnocat(Av...))
+    uninfer(InterlaceOperator(vnocat(Av...)))
 end
 
 

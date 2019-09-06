@@ -42,7 +42,7 @@ function default_CachedOperator(op::Operator;padding::Bool=false)
         CachedOperator(RaggedMatrix,op;padding=padding)
     else
         CachedOperator(Matrix,op;padding=padding)
-    end
+    end |> uninfer
 end
 
 CachedOperator(op::Operator;padding::Bool=false) = default_CachedOperator(op;padding=padding)

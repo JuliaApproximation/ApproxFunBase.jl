@@ -14,8 +14,8 @@ macro calculus_functional(Op)
         struct $ConcOp{S,T} <: $Op{S,T}
             domainspace::S
         end
-        struct $WrappOp{BT<:Operator,S<:Space,T} <: $Op{S,T}
-            op::BT
+        struct $WrappOp{S<:Space,T} <: $Op{S,T}
+            op::Operator{T}
         end
 
         @wrapper $WrappOp
