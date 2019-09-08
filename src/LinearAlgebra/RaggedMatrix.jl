@@ -28,8 +28,14 @@ end
 RaggedMatrix(dat::Vector,cols::Vector{Int},m::Int) =
     RaggedMatrix{eltype(dat)}(dat,cols,m)
 
-RaggedMatrix{T}(::UndefInitializer, m::Int, colns::AbstractVector{Int}) where {T} =
-    RaggedMatrix(Vector{T}(undef, sum(colns)),Int[1;1 .+ cumsum(colns)],m)
+function RaggedMatrix{T}(::UndefInitializer, m::Int, colns::AbstractVector{Int}) where {T} 
+    cs = Vector{Int}(undef, length(colns)+1)
+    cs[1] = 1
+    for j=2:length(cs)
+        cs[j] = cs[j-1] + colns[j-1]
+    end
+    RaggedMatrix(Vector{T}(undef, cs[end]),cs,m)
+end
 
 
 Base.size(A::RaggedMatrix) = (A.m,length(A.cols)-1)

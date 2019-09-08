@@ -3,17 +3,17 @@
 CachedOperator(io::InterlaceOperator{T,1};padding::Bool=false) where T =
     _interlace_CachedOperator(io, padding)
 
-function _interlace_CachedOperator(@nospecialize(io::InterlaceOperator{T,1}), padding) where T
+function _interlace_CachedOperator(io::InterlaceOperator{T,1}, padding) where T
     ds = domainspace(io)
     rs = rangespace(io)
 
     ind = findall(op->isinf(size(op,1)), io.ops)
-    if length(ind) ≠ 1  || !isbanded(io.ops[ind[1]])  # is almost banded
+    if length(ind) ≠ 1  || !(isbanded(io.ops[ind[1]])::Bool)  # is almost banded
         return default_CachedOperator(io;padding=padding)
     end
     i=ind[1]
     bo=io.ops[i]
-    lin,uin=bandwidths(bo)
+    lin,uin=bandwidths(bo)::NTuple{2,Int}
 
 
     # calculate number of rows interlaced
@@ -22,7 +22,7 @@ function _interlace_CachedOperator(@nospecialize(io::InterlaceOperator{T,1}), pa
     md=0
     for k=1:length(io.ops)
         if k ≠ i
-            d=dimension(rs[k])
+            d=dimension(rs[k])::Int
             nds+=d
             md=max(md,d)
         end
@@ -35,10 +35,10 @@ function _interlace_CachedOperator(@nospecialize(io::InterlaceOperator{T,1}), pa
         end
     end
 
-    numoprows=isend ? md-1 : md
-    n=nds+numoprows
+    numoprows=(isend ? md-1 : md) ::Int
+    n=(nds+numoprows) ::Int
 
-    (l,u) = (max(lin+nds,n-1),max(0,uin+1-ind[1]))
+    (l,u) = (max(lin+nds,n-1),max(0,uin+1-ind[1]))::Tuple{Int,Int}
 
     # add extra rows for QR
     if padding
@@ -50,13 +50,13 @@ function _interlace_CachedOperator(@nospecialize(io::InterlaceOperator{T,1}), pa
 
     # populate the finite rows
     jr=1:n+u
-    ioM=io[1:n,jr]
+    ioM=io[1:n,jr]::RaggedMatrix{T}
 
 
     bcrow=1
     oprow=0
     for k=1:n
-        K,J= uninfer(io.rangeinterlacer[k])
+        K,J= io.rangeinterlacer[k]
 
         if K ≠ i
             # fill the fill matrix
@@ -74,7 +74,7 @@ function _interlace_CachedOperator(@nospecialize(io::InterlaceOperator{T,1}), pa
     end
 
 
-    CachedOperator(uninfer(io),uninfer(ret),(n,n+u),ds,rs,(l,∞))  |> uninfer
+    CachedOperator(io,ret,(n,n+u),ds,rs,(l,∞))
 end
 
 

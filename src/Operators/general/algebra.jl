@@ -378,14 +378,12 @@ function getindex(P::TimesOperator,k::AbstractVector)
     vec(Matrix(P[1:1,k]))
 end
 
-for TYP in (:Matrix, :BandedMatrix, :RaggedMatrix)
+for TYP in (:Matrix, :RaggedMatrix)
     @eval function $TYP(V::SubOperator{T,TO,Tuple{UnitRange{Int},UnitRange{Int}}}) where {T,TO<:TimesOperator}
         P = parent(V)
 
         if isbanded(P)
-            if $TYP ≠ BandedMatrix
-                return $TYP(BandedMatrix(V))
-            end
+            return $TYP(BandedMatrix(V))
         elseif isbandedblockbanded(P)
             N = block(rangespace(P), last(parentindices(V)[1]))
             M = block(domainspace(P), last(parentindices(V)[2]))
@@ -438,9 +436,9 @@ for TYP in (:Matrix, :BandedMatrix, :RaggedMatrix)
 
         # The following returns a banded Matrix with all rows
         # for large k its upper triangular
-        BA = convert($TYP{T}, P.ops[end][krl[end,1]:krl[end,2],jr])
+        BA = uninfer(convert($TYP{T}, P.ops[end][krl[end,1]:krl[end,2],jr]))
         for m = (length(P.ops)-1):-1:1
-            BA = convert($TYP{T}, P.ops[m][krl[m,1]:krl[m,2],krl[m+1,1]:krl[m+1,2]])*BA
+            BA = uninfer(convert($TYP{T}, P.ops[m][krl[m,1]:krl[m,2],krl[m+1,1]:krl[m+1,2]])*BA)
         end
 
         $TYP{T}(BA)
@@ -500,6 +498,71 @@ for TYP in (:BlockBandedMatrix, :BandedBlockBandedMatrix)
 
         convert($TYP, BA)
     end
+end
+
+function _krlin(ops, kr, jr)
+    krlin = Matrix{Int}(undef,length(ops),2)
+
+    krlin[1,1],krlin[1,2]=kr[1],kr[end]
+    for m=1:length(ops)-1
+        krlin[m+1,1]=rowstart(ops[m],krlin[m,1])
+        krlin[m+1,2]=rowstop(ops[m],krlin[m,2])
+    end
+    krlin[end,1]=max(krlin[end,1],colstart(ops[end],jr[1]))
+    krlin[end,2]=min(krlin[end,2],colstop(ops[end],jr[end]))
+    for m=length(ops)-1:-1:2
+        krlin[m,1]=max(krlin[m,1],colstart(ops[m],krlin[m+1,1]))
+        krlin[m,2]=min(krlin[m,2],colstop(ops[m],krlin[m+1,2]))
+    end
+    krlin
+end
+
+function BandedMatrix(V::SubOperator{T,TO,Tuple{UnitRange{Int},UnitRange{Int}}}) where {T,TO<:TimesOperator}
+    P = parent(V)
+
+    if isbandedblockbanded(P)
+        N = block(rangespace(P), last(parentindices(V)[1]))::Block{1,Int64}
+        M = block(domainspace(P), last(parentindices(V)[2]))::Block{1,Int64}
+        B = P[Block(1):N, Block(1):M]::DefaultBandedBlockBandedMatrix{T}
+        return BandedMatrix(view(B, parentindices(V)...), _colstops(V))
+    end
+
+    kr,jr = parentindices(V)
+
+    (isempty(kr) || isempty(jr)) && return BandedMatrix(Zeros, V)
+
+    if maximum(kr) > size(P,1) || maximum(jr) > size(P,2) ||
+        minimum(kr) < 1 || minimum(jr) < 1
+        throw(BoundsError())
+    end
+
+    @assert length(P.ops) ≥ 2
+    if size(V,1)==0
+        return BandedMatrix(Zeros, V)
+    end
+
+
+    # find optimal truncations for each operator
+    # by finding the non-zero entries
+    krl = _krlin(P.ops, kr, jr)
+
+    # Check if any range is invalid, in which case return zero
+    for m=1:length(P.ops)
+        if krl[m,1]>krl[m,2]
+            return BandedMatrix(Zeros, V)
+        end
+    end
+
+
+
+    # The following returns a banded Matrix with all rows
+    # for large k its upper triangular
+    BA = convert(BandedMatrix{T,Matrix{T},Base.OneTo{Int}}, P.ops[end][krl[end,1]:krl[end,2],jr])
+    for m = (length(P.ops)-1):-1:1
+        BA = convert(BandedMatrix{T,Matrix{T},Base.OneTo{Int}}, P.ops[m][krl[m,1]:krl[m,2],krl[m+1,1]:krl[m+1,2]])*BA
+    end
+
+    convert(BandedMatrix{T,Matrix{T},Base.OneTo{Int}},BA)
 end
 
 

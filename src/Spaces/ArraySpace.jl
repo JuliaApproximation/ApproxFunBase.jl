@@ -34,7 +34,7 @@ Vector(sp::VectorSpace) = sp.spaces
 Matrix(sp::MatrixSpace) = sp.spaces
 
 
-BlockInterlacer(sp::ArraySpace) = BlockInterlacer(blocklengths.(tuple(sp.spaces...)))
+BlockInterlacer(sp::ArraySpace) = uninfer(BlockInterlacer(map(blocklengths,sp.spaces)))
 interlacer(sp::ArraySpace) = BlockInterlacer(sp)
 
 for OP in (:length,:firstindex,:lastindex,:size)

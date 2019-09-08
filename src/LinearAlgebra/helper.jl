@@ -733,7 +733,7 @@ end
 
 const TrivialInterlacer{d} = BlockInterlacer{NTuple{d,<:Ones}}
 
-BlockInterlacer(v::AbstractVector) = BlockInterlacer(tuple(v...))
+BlockInterlacer(v::AbstractVector) = uninfer(BlockInterlacer(tuple(v...)))
 
 Base.eltype(it::BlockInterlacer) = Tuple{Int,Int}
 

@@ -70,7 +70,7 @@ import BlockBandedMatrices: blockbandwidth, blockbandwidths, blockcolstop, block
                             subblockbandwidth, subblockbandwidths, _BlockBandedMatrix,
                             _BandedBlockBandedMatrix, BandedBlockBandedMatrix, BlockBandedMatrix,
                             isblockbanded, isbandedblockbanded, bb_numentries, BlockBandedSizes,
-                            BandedBlockBandedSizes
+                            BandedBlockBandedSizes, DefaultBandedBlockBandedMatrix
 
 import FastTransforms: ChebyshevTransformPlan, IChebyshevTransformPlan, plan_chebyshevtransform,
                         plan_chebyshevtransform!, plan_ichebyshevtransform, plan_ichebyshevtransform!

@@ -11,6 +11,7 @@ end
 
 # linear algebra
 
+Fun() = Fun(identity,ChebyshevInterval())
 
 ## Constructors that involve MultivariateFun
 Fun(f::Fun) = f # Fun of Fun should be like a conversion

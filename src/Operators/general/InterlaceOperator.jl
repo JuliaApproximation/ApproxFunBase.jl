@@ -345,7 +345,7 @@ for TYP in (:BandedMatrix, :BlockBandedMatrix, :BandedBlockBandedMatrix, :Ragged
                 if !isempty(ret_kr)
                     sub_kr=cr[ret_kr[1]][2]:cr[ret_kr[end]][2]
 
-                    LinearAlgebra.axpy!(1.0,view(L.ops[ν],sub_kr,jr),view(ret,ret_kr,:))
+                    LinearAlgebra.axpy!(one(T),view(L.ops[ν],sub_kr,jr),view(ret,ret_kr,:))
                 end
             end
             ret
