@@ -5,8 +5,6 @@ include("standardchop.jl")
 include("blas.jl")
 include("lyap.jl")
 
-
-include("bary.jl")
 include("clenshaw.jl")
 
 include("hesseneigs.jl")

@@ -1,6 +1,6 @@
 module ApproxFunBase
     using Base, BlockArrays, BandedMatrices, BlockBandedMatrices, DomainSets, IntervalSets,
-            SpecialFunctions, AbstractFFTs, FFTW, SpecialFunctions, DSP, DualNumbers, FastTransforms,
+            SpecialFunctions, AbstractFFTs, FFTW, SpecialFunctions, DSP, DualNumbers, 
             LinearAlgebra, SparseArrays, LowRankApprox, FillArrays, InfiniteArrays #, Arpack
 import StaticArrays, Calculus
 
@@ -71,9 +71,6 @@ import BlockBandedMatrices: blockbandwidth, blockbandwidths, blockcolstop, block
                             _BandedBlockBandedMatrix, BandedBlockBandedMatrix, BlockBandedMatrix,
                             isblockbanded, isbandedblockbanded, bb_numentries, BlockBandedSizes,
                             BandedBlockBandedSizes
-
-import FastTransforms: ChebyshevTransformPlan, IChebyshevTransformPlan, plan_chebyshevtransform,
-                        plan_chebyshevtransform!, plan_ichebyshevtransform, plan_ichebyshevtransform!
 
 import FillArrays: AbstractFill, getindex_value
 import LazyArrays: cache
