@@ -41,8 +41,8 @@ end
 
 
 function resizedata!(QR::QROperator{<:CachedOperator{T,<:BandedMatrix{T},
-                                                  MM,DS,RS,BI}},
-         ::Colon,col) where {T,MM,DS,RS,BI}
+                                                  DS,RS,BI}},
+         ::Colon,col) where {T,DS,RS,BI}
     if col ≤ QR.ncols
         return QR
     end
@@ -94,8 +94,8 @@ end
 
 
 function resizedata!(QR::QROperator{<:CachedOperator{T,<:BandedMatrix{T},
-                                       MM,DS,RS,BI}},
-                     ::Colon,col) where {T<:BlasFloat,MM,DS,RS,BI}
+                                       DS,RS,BI}},
+                     ::Colon,col) where {T<:BlasFloat,DS,RS,BI}
     if col ≤ QR.ncols
         return QR
     end

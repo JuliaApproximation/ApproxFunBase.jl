@@ -14,6 +14,8 @@ for TYP in (:Fun,:StridedVector,:AbstractVector,:Any)
     end
 end
 
+
+
 """
     \\(A::Operator,b;tolerance=tol,maxlength=n)
 

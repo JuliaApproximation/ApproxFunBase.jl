@@ -690,7 +690,7 @@ end
 
 const TrivialInterlacer{d} = BlockInterlacer{NTuple{d,<:Ones}}
 
-BlockInterlacer(v::AbstractVector) = BlockInterlacer(tuple(v...))
+BlockInterlacer(v::AbstractVector) = uninfer(BlockInterlacer(tuple(v...)))
 
 Base.eltype(it::BlockInterlacer) = Tuple{Int,Int}
 
@@ -750,3 +750,8 @@ function iterate(it::BlockInterlacer, (N,k,blkst,lngs))
 end
 
 cache(Q::BlockInterlacer) = CachedIterator(Q)
+
+
+
+
+@noinline uninfer(@nospecialize(x)) = Ref{Any}(x)[]

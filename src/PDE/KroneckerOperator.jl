@@ -149,7 +149,7 @@ const Wrappers = Union{ConversionWrapper,MultiplicationWrapper,DerivativeWrapper
 
 
 
-isbandedblockbanded(P::Union{PlusOperator,TimesOperator}) = all(isbandedblockbanded,P.ops)
+isbandedblockbanded(P::Union{PlusOperator,TimesOperator}) = all(isbandedblockbanded,P.ops)::Bool
 
 
 

@@ -173,6 +173,7 @@ for (op,ODE,RHS,growth) in ((:(exp),"D-f'","0",:(real)),
         #     g=exp(Fun(f.coefficients,space(f).space))
         #     Fun(g.coefficients,MappedSpace(domain(f),space(g)))
         # end
+        @nospecialize
         function $op(fin::Fun{S,T}) where {S,T}
             f=setcanonicaldomain(fin)  # removes possible issues with roots
 
@@ -184,8 +185,9 @@ for (op,ODE,RHS,growth) in ((:(exp),"D-f'","0",:(real)),
             B=Evaluation(domainspace(D),xmax)
             u=\([B,eval($L)],Any[opfxmax,eval($R)];tolerance=eps(T)*opmax)
 
-            setdomain(u,domain(fin))
+            setdomain(u,domain(fin))        
         end
+        @specialize
     end
 end
 

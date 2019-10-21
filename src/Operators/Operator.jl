@@ -688,9 +688,13 @@ BlockBandedMatrix(::Type{Zeros}, V::Operator) =
                       (AbstractVector{Int}(blocklengths(rangespace(V))),
                        AbstractVector{Int}(blocklengths(domainspace(V)))),
                       blockbandwidths(V))
-RaggedMatrix(::Type{Zeros}, V::Operator) =
-    RaggedMatrix(Zeros{eltype(V)}(size(V)),
-                 Int[max(0,colstop(V,j)) for j=1:size(V,2)])
+function RaggedMatrix(::Type{Zeros}, V::Operator)
+    cs = Vector{Int}(undef, size(V,2))
+    for j = 1:length(cs)
+        cs[j] = max(0,colstop(V,j))
+    end
+    RaggedMatrix(Zeros{eltype(V)}(size(V)), cs)
+end
 
 
 convert_axpy!(::Type{MT}, S::Operator) where {MT <: AbstractMatrix} =
@@ -772,10 +776,10 @@ end
 
 function arraytype(V::SubOperator)
     P = parent(V)
-    isbanded(P) && return BandedMatrix
+    isbanded(P) && return BandedMatrix |> uninfer
     # isbandedblockbanded(P) && return BandedBlockBandedMatrix
-    isinf(size(P,1)) && israggedbelow(P) && return RaggedMatrix
-    return Matrix
+    isinf(size(P,1)) && israggedbelow(P) && return RaggedMatrix|> uninfer
+    return Matrix|> uninfer
 end
 
 AbstractMatrix(V::Operator) = arraytype(V)(V)
