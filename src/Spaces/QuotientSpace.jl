@@ -14,7 +14,7 @@ struct QuotientSpace{S,O,D,R} <: Space{D,R}
     end
 end
 
-QuotientSpace(sp::Space{D,R}, bcs::Operator) where {D,R} = QuotientSpace{typeof(sp), typeof(bcs), D, R}(sp, bcs)
+QuotientSpace(sp::Space{D,R}, bcs::Operator{T}) where {D,R,T} = QuotientSpace{typeof(sp), typeof(bcs), D, promote_type(R, T)}(sp, bcs)
 QuotientSpace(bcs::Operator) = QuotientSpace(domainspace(bcs), bcs)
 
 domain(QS::QuotientSpace) = domain(QS.space)
