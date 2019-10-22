@@ -571,20 +571,14 @@ function *(f::Fun, A::Operator)
     end
 end
 
-function *(c::Number,A::Operator)
-    if c==1
-        A
-    elseif c==0
-        ZeroOperator(domainspace(A),rangespace(A))
-    else
-        ConstantTimesOperator(c,A)
-    end
-end
-*(A::Operator,c::Number) = A*(c*one(domainspace(A)))
+*(c::Number,A::Operator) = ConstantTimesOperator(c,A)
+*(A::Operator,c::Number) = c*A
 
+\(c::Number,B::Operator) = inv(c)*B
+\(c::Fun,B::Operator) = inv(c)*B
 
-/(B::Operator,c::Number) = (1.0/c)*B
-/(B::Operator,c::Fun) = (1.0/c)*B
+/(B::Operator,c::Number) = B*inv(c)
+/(B::Operator,c::Fun) = B*inv(c)
 
 
 
