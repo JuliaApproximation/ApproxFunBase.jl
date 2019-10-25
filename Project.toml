@@ -28,7 +28,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 AbstractFFTs = "0.4"
-BandedMatrices = "0.11, 0.12"
+BandedMatrices = "0.11, 0.12, 0.13"
 BlockArrays = "0.9, 0.10"
 BlockBandedMatrices = "0.5"
 Calculus = "0.5"
