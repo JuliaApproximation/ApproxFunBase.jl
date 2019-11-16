@@ -493,7 +493,7 @@ for op in (:(findmax),:(findmin))
     end
 end
 
-extremal_args(f::Fun{S}) where {S<:PiecewiseSpace} = cat(1,[extremal_args(fp) for fp in components(f)]...)
+extremal_args(f::Fun{S}) where {S<:PiecewiseSpace} = cat(1,[extremal_args(fp) for fp in components(f)]..., dims=1)
 
 function extremal_args(f::Fun)
     d = domain(f)
