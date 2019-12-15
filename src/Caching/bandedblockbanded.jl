@@ -23,12 +23,10 @@ function resizedata!(B::CachedOperator{T,<:BandedBlockBandedMatrix{T}}, ::Colon,
         rows = blocklengths(rangespace(B.op))[1:J+l]
         cols = blocklengths(domainspace(B.op))[1:J]
 
-        bs = BandedBlockBandedSizes(rows, cols, l, u, λ, μ)
-
         # B.data = _BandedBlockBandedMatrix(PseudoBlockArray
 
-        blocks = PseudoBlockArray(pad(B.data.data.blocks,:,(l+u+1)*sum(cols)), bs.data_block_sizes)
-        B.data = _BandedBlockBandedMatrix(blocks, bs)
+        blocks = PseudoBlockArray(pad(B.data.data.blocks,:,(l+u+1)*sum(cols)), rows, cols)
+        B.data = _BandedBlockBandedMatrix(blocks, rows, cols, (l, u), (λ, μ))
 
         jr=B.datasize[2]+1:col
         kr=colstart(B.data,jr[1]):colstop(B.data,jr[end])

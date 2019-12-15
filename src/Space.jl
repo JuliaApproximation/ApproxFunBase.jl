@@ -52,7 +52,7 @@ transpose(sp::Space) = sp  # default no-op
 
 # the default is all spaces have one-coefficient blocks
 blocklengths(S::Space) = Ones{Int}(dimension(S))
-nblocks(S::Space) = length(blocklengths(S))
+blocksize(S::Space) = (length(blocklengths(S)),)
 block(S::Space,k) = Block(k)
 
 Space(s::Space) = s

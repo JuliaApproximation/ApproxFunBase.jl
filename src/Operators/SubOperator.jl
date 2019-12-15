@@ -250,7 +250,7 @@ function BandedBlockBandedMatrix(::Type{Zeros}, S::SubOperator{T,B,Tuple{BlockRa
     KJR = blocklengthrange(dt,JR)
 
     BandedBlockBandedMatrix(Zeros{eltype(KO)}(sum(KBR),sum(KJR)),
-                                (AbstractVector{Int}(KBR),AbstractVector{Int}(KJR)), (l+bl_sh,u-bl_sh), (λ,μ))
+                                AbstractVector{Int}(KBR),AbstractVector{Int}(KJR), (l+bl_sh,u-bl_sh), (λ,μ))
 end
 
 

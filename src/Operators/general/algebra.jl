@@ -457,7 +457,7 @@ for TYP in (:BlockBandedMatrix, :BandedBlockBandedMatrix)
             return $TYP(Zeros, V)
         end
 
-        if Int(maximum(KR)) > nblocks(P,1) || Int(maximum(JR)) > nblocks(P,2) ||
+        if Int(maximum(KR)) > blocksize(P,1) || Int(maximum(JR)) > blocksize(P,2) ||
             Int(minimum(KR)) < 1 || Int(minimum(JR)) < 1
             throw(BoundsError())
         end
