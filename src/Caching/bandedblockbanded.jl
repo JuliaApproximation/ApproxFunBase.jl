@@ -3,7 +3,7 @@ function CachedOperator(::Type{BandedBlockBandedMatrix}, op::Operator)
     l,u = blockbandwidths(op)
     λ,μ = subblockbandwidths(op)
     data = BandedBlockBandedMatrix{eltype(op)}(undef,
-        (blocklengths(rangespace(op))[1:0],blocklengths(domainspace(op))[1:0]),
+        blocklengths(rangespace(op))[1:0],blocklengths(domainspace(op))[1:0],
         (l,u), (λ,μ))
 
     CachedOperator(op,data,size(data),domainspace(op),rangespace(op),(-l,u),false)
@@ -53,14 +53,7 @@ function resizedata!(B::CachedOperator{T,<:BandedBlockBandedMatrix{T}},n::Intege
     K = Int(block(rangespace(B),n))
     rows = blocklengths(rangespace(B.op))[1:K]
 
-    b_bs = BlockSizes((BlockArrays._cumul_vec(rows), B.data.block_sizes.block_sizes.cumul_sizes[2]))
-
-
-    bs = BandedBlockBandedSizes(b_bs, B.data.block_sizes.data_block_sizes,
-                                l, u, λ, μ)
-
-
-    B.data = _BandedBlockBandedMatrix(B.data.data, bs)
+    B.data = _BandedBlockBandedMatrix(B.data.data, blockedrange(rows), (l,u), (λ,μ))
     B.datasize = (n,B.datasize[2])
 
     B

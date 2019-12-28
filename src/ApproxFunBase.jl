@@ -63,7 +63,7 @@ import BandedMatrices: bandrange, bandshift,
                         colstart, colstop, colrange, rowstart, rowstop, rowrange,
                         bandwidths, _BandedMatrix, BandedMatrix
 
-import BlockArrays: blocksize                        
+import BlockArrays: blocksize, block, blockaxes, blockindex                      
 import BlockBandedMatrices: blockbandwidth, blockbandwidths, blockcolstop, blockcolrange,
                             blockcolstart, blockrowstop, blockrowstart, blockrowrange,
                             subblockbandwidth, subblockbandwidths, _BlockBandedMatrix,

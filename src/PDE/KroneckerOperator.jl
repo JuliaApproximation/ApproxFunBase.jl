@@ -87,7 +87,7 @@ function rowstart(A::KroneckerOperator,k::Integer)
     K2 = Int(K)-blockbandwidth(A,1)
     K2 ≤ 1 && return 1
     ds = domainspace(A)
-    K2 ≥ blocksize(ds) && return size(A,2)
+    K2 ≥ blocksize(ds,1) && return size(A,2)
     blockstart(ds,K2)
 end
 

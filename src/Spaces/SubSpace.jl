@@ -71,7 +71,7 @@ blocklengths(sp::SubSpace{DS,BlockRange1}) where {DS} = blocklengths(sp.space)[I
 dimension(sp::SubSpace{DS,BlockRange1}) where {DS} = sum(blocklengths(sp.space)[Int.(sp.indexes)])
 
 
-block(_,B::Block) = B
+block(::Space,B::Block) = B
 
 
 

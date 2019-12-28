@@ -277,7 +277,7 @@ function resizedata!(QR::QROperator{CachedOperator{T,BlockBandedMatrix{T},
          # scale rest of columns in first block
          # for ξ_2 = 2:
 
-         for ξ_2 = ξ:blocksize(bs, 2, J1)
+         for ξ_2 = ξ:length(bs.axes[2][Block(J1)]) 
              # we now apply I-2v*v' in place
              r_sh = r+sz*(shft + st*(ξ_2-ξ)) # the pointer the (j,ξ_2)-th entry
              dt = BandedMatrices.dot(M, wp, 1, r_sh, 1)
@@ -287,7 +287,7 @@ function resizedata!(QR::QROperator{CachedOperator{T,BlockBandedMatrix{T},
          for J = J1+1:min(K1+u,J_end)
              st = bs.block_strides[J]
              shft = bs.block_starts[K1,J] + κ-2 # the index of the pointer to the j, j entry
-             for ξ_2 = 1:blocksize(bs.block_sizes, 2, J)
+             for ξ_2 = axes(bs.axes[2][Block(J)],1)
                  # we now apply I-2v*v' in place
                  # r_sh = r+sz*(shft + st*(ξ_2-1)) # the pointer the (j,ξ_2)-th entry
 
