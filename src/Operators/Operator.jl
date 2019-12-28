@@ -85,8 +85,8 @@ macro functional(FF)
 end
 
 
-nblocks(A::Operator,k) = k==1 ? length(blocklengths(rangespace(A))) : length(blocklengths(domainspace(A)))
-nblocks(A::Operator) = (nblocks(A,1),nblocks(A,2))
+blocksize(A::Operator,k) = k==1 ? length(blocklengths(rangespace(A))) : length(blocklengths(domainspace(A)))
+blocksize(A::Operator) = (blocksize(A,1),blocksize(A,2))
 
 
 Base.size(A::Operator) = (size(A,1),size(A,2))
@@ -247,8 +247,8 @@ defaultgetindex(A::Operator,k,j) = view(A,k,j)
 # TODO: finite dimensional blocks
 blockcolstart(A::Operator,J::Integer) = Block(max(1,J-blockbandwidth(A,2)))
 blockrowstart(A::Operator,K::Integer) = Block(max(1,K-blockbandwidth(A,1)))
-blockcolstop(A::Operator,J::Integer) = Block(min(J+blockbandwidth(A,1),nblocks(A,1)))
-blockrowstop(A::Operator,K::Integer) = Block(min(K+blockbandwidth(A,2),nblocks(A,2)))
+blockcolstop(A::Operator,J::Integer) = Block(min(J+blockbandwidth(A,1),blocksize(A,1)))
+blockrowstop(A::Operator,K::Integer) = Block(min(K+blockbandwidth(A,2),blocksize(A,2)))
 
 blockrows(A::Operator,K::Integer) = blockrange(rangespace(A),K)
 blockcols(A::Operator,J::Integer) = blockrange(domainspace(A),J)
@@ -681,12 +681,12 @@ BandedMatrix(::Type{Zeros}, V::Operator) = BandedMatrix(Zeros{eltype(V)}(size(V)
 Matrix(::Type{Zeros}, V::Operator) = Matrix(Zeros{eltype(V)}(size(V)))
 BandedBlockBandedMatrix(::Type{Zeros}, V::Operator) =
     BandedBlockBandedMatrix(Zeros{eltype(V)}(size(V)),
-                            (blocklengths(rangespace(V)), blocklengths(domainspace(V))),
+                            blocklengths(rangespace(V)), blocklengths(domainspace(V)),
                             blockbandwidths(V), subblockbandwidths(V))
 BlockBandedMatrix(::Type{Zeros}, V::Operator) =
     BlockBandedMatrix(Zeros{eltype(V)}(size(V)),
-                      (AbstractVector{Int}(blocklengths(rangespace(V))),
-                       AbstractVector{Int}(blocklengths(domainspace(V)))),
+                      AbstractVector{Int}(blocklengths(rangespace(V))),
+                       AbstractVector{Int}(blocklengths(domainspace(V))),
                       blockbandwidths(V))
 RaggedMatrix(::Type{Zeros}, V::Operator) =
     RaggedMatrix(Zeros{eltype(V)}(size(V)),

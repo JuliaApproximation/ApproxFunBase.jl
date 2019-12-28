@@ -6,7 +6,7 @@
 function default_BlockBandedMatrix(S::Operator)
     ret = BlockBandedMatrix(Zeros, S)
 
-    @inbounds for J=Block(1):Block(nblocks(ret,2)), K=blockcolrange(ret,Int(J))
+    @inbounds for J=blockaxes(ret,2), K=blockcolrange(ret,Int(J))
         ret[K,J] = view(S,K,J)
     end
     ret
@@ -71,7 +71,7 @@ function CachedOperator(::Type{BlockBandedMatrix},op::Operator;padding::Bool=fal
     l,u=blockbandwidths(op)
     padding && (u+=l+diagblockshift(op))
     data=BlockBandedMatrix{eltype(op)}(undef,
-                                        (Vector{Int}(), Vector{Int}()),
+                                        Vector{Int}(), Vector{Int}(),
                                         (l,u))
     CachedOperator(op,data,(0,0),domainspace(op),rangespace(op),(-l,u),padding)
 end
@@ -251,17 +251,16 @@ function resizedata!(QR::QROperator{CachedOperator{T,BlockBandedMatrix{T},
      bs = R.block_sizes
 
      for j =QR.ncols+1 : col   # first column of block
-         bi = global2blockindex(bs, (j, j)) # converts from global indices to block indices
-         K1, J1 = bi.I  # this is the diagonal block corresponding to j
-         κ, ξ = bi.α
+         bi = findblockindex.(bs.axes, (j, j)) # converts from global indices to block indices
+         K1, J1 = Int.(block.(bi))  # this is the diagonal block corresponding to j
+         κ, ξ = blockindex.(bi)
 
          st = bs.block_strides[J1]  # the stride of the matrix
          shft = bs.block_starts[K1,J1]-1 + st*(ξ-1) + κ-1 # the index of the pointer to the j, j entry
 
 
          K_CS = Int(blockcolstop(R,J1)) # last row in J-th blockcolumn
-         k_end = globalrange(bs, (K_CS, J1))[1][end]
-
+         k_end = last(bs.axes[1][Block(K_CS)])
 
          w_j = W.cols[j]  # the data index  for the j-th column of W
          wp = w+sz*(w_j-1)          # j-th column of W
@@ -278,7 +277,7 @@ function resizedata!(QR::QROperator{CachedOperator{T,BlockBandedMatrix{T},
          # scale rest of columns in first block
          # for ξ_2 = 2:
 
-         for ξ_2 = ξ:blocksize(bs, 2, J1)
+         for ξ_2 = ξ:length(bs.axes[2][Block(J1)]) 
              # we now apply I-2v*v' in place
              r_sh = r+sz*(shft + st*(ξ_2-ξ)) # the pointer the (j,ξ_2)-th entry
              dt = BandedMatrices.dot(M, wp, 1, r_sh, 1)
@@ -288,7 +287,7 @@ function resizedata!(QR::QROperator{CachedOperator{T,BlockBandedMatrix{T},
          for J = J1+1:min(K1+u,J_end)
              st = bs.block_strides[J]
              shft = bs.block_starts[K1,J] + κ-2 # the index of the pointer to the j, j entry
-             for ξ_2 = 1:blocksize(bs.block_sizes, 2, J)
+             for ξ_2 = axes(bs.axes[2][Block(J)],1)
                  # we now apply I-2v*v' in place
                  # r_sh = r+sz*(shft + st*(ξ_2-1)) # the pointer the (j,ξ_2)-th entry
 

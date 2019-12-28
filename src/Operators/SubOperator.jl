@@ -231,7 +231,7 @@ function BandedBlockBandedMatrix(::Type{Zeros}, S::SubOperator)
     rows,cols = blocklengths(rangespace(S)), blocklengths(domainspace(S))
 
     BandedBlockBandedMatrix(Zeros{eltype(KO)}(sum(rows),sum(cols)),
-                                (rows,cols), (l,u), (λ-jsh,μ+ksh))
+                                rows,cols, (l,u), (λ-jsh,μ+ksh))
 end
 
 function BandedBlockBandedMatrix(::Type{Zeros}, S::SubOperator{T,B,Tuple{BlockRange1,BlockRange1}}) where {T,B}
@@ -250,7 +250,7 @@ function BandedBlockBandedMatrix(::Type{Zeros}, S::SubOperator{T,B,Tuple{BlockRa
     KJR = blocklengthrange(dt,JR)
 
     BandedBlockBandedMatrix(Zeros{eltype(KO)}(sum(KBR),sum(KJR)),
-                                (AbstractVector{Int}(KBR),AbstractVector{Int}(KJR)), (l+bl_sh,u-bl_sh), (λ,μ))
+                                AbstractVector{Int}(KBR),AbstractVector{Int}(KJR), (l+bl_sh,u-bl_sh), (λ,μ))
 end
 
 

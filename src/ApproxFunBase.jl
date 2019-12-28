@@ -58,19 +58,17 @@ import SpecialFunctions: sinpi, cospi, airy, besselh,
 
 import StaticArrays: SVector
 
-import BlockArrays: nblocks, blocksize, global2blockindex, globalrange, BlockSizes
-
 import BandedMatrices: bandrange, bandshift,
                         inbands_getindex, inbands_setindex!, bandwidth, AbstractBandedMatrix,
                         colstart, colstop, colrange, rowstart, rowstop, rowrange,
                         bandwidths, _BandedMatrix, BandedMatrix
 
+import BlockArrays: blocksize, block, blockaxes, blockindex                      
 import BlockBandedMatrices: blockbandwidth, blockbandwidths, blockcolstop, blockcolrange,
                             blockcolstart, blockrowstop, blockrowstart, blockrowrange,
                             subblockbandwidth, subblockbandwidths, _BlockBandedMatrix,
                             _BandedBlockBandedMatrix, BandedBlockBandedMatrix, BlockBandedMatrix,
-                            isblockbanded, isbandedblockbanded, bb_numentries, BlockBandedSizes,
-                            BandedBlockBandedSizes
+                            isblockbanded, isbandedblockbanded, bb_numentries, BlockBandedSizes
 
 import FillArrays: AbstractFill, getindex_value
 import LazyArrays: cache

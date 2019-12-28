@@ -52,7 +52,13 @@ transpose(sp::Space) = sp  # default no-op
 
 # the default is all spaces have one-coefficient blocks
 blocklengths(S::Space) = Ones{Int}(dimension(S))
-nblocks(S::Space) = length(blocklengths(S))
+blocksize(S::Space) = (length(blocklengths(S)),)
+blockaxes(S::Space) = (Block.(Base.OneTo(length(blocklengths(S)))),)
+function blockaxes(A::Space, d)
+    @assert d == 1
+    blockaxes(A)[1]
+end
+
 block(S::Space,k) = Block(k)
 
 Space(s::Space) = s

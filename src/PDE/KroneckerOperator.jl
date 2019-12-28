@@ -87,7 +87,7 @@ function rowstart(A::KroneckerOperator,k::Integer)
     K2 = Int(K)-blockbandwidth(A,1)
     K2 ≤ 1 && return 1
     ds = domainspace(A)
-    K2 ≥ nblocks(ds) && return size(A,2)
+    K2 ≥ blocksize(ds,1) && return size(A,2)
     blockstart(ds,K2)
 end
 
@@ -95,7 +95,7 @@ function rowstop(A::KroneckerOperator,k::Integer)
     K=block(rangespace(A),k)
     ds = domainspace(A)
     K2 = Int(K)+blockbandwidth(A,2)
-    K2 ≥ nblocks(ds) && return size(A,2)
+    K2 ≥ blocksize(ds) && return size(A,2)
     st=blockstop(ds,K2)
     # zero indicates above dimension
     st==0 ? size(A,2) : min(size(A,2),st)
@@ -306,7 +306,7 @@ function bandedblockbanded_convert!(ret, S::SubOperator, KO, rt, dt)
 
 
 
-    for J=Block(1):Block(nblocks(ret,2))
+    for J=blockaxes(ret,2)
         jshft = (J==Block(1) ? jr1 : blockstart(dt,J+Jshft)) - 1
         for K=blockcolrange(ret,J)
             Bs = view(ret,K,J)
@@ -359,7 +359,7 @@ function BandedBlockBandedMatrix(S::SubOperator{T,KroneckerOperator{SS,V,DS,RS,
     Bl,Bu = bandwidths(BB)
     λ,μ = subblockbandwidths(ret)
 
-    for J in Block(1):Block(nblocks(ret,2)), K in blockcolrange(ret,J)
+    for J in blockaxes(ret,2), K in blockcolrange(ret,J)
         n,m = KR_i[Int(K)],JR_i[Int(J)]
         Bs = view(ret, K, J)
         l = min(Al,Bu+n-m,λ)
