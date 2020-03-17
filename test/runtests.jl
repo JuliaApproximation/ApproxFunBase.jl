@@ -33,8 +33,6 @@ end
 
     @test ApproxFunBase.AnySegment() == ApproxFunBase.AnySegment()
 
-    @test ApproxFunBase.dimension(Domain{Float64}) == 1
-    @test ApproxFunBase.dimension(Segment{Float64}) == 1
     @test ApproxFunBase.dimension(ChebyshevInterval()) == 1
     @test ApproxFunBase.dimension(ChebyshevInterval()^2) == 2
     @test ApproxFunBase.dimension(ChebyshevInterval()^3) == 3

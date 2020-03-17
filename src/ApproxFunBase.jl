@@ -82,6 +82,7 @@ import Base: view
 
 import StaticArrays: StaticArray, SVector
 
+import DomainSets: dimension
 
 import IntervalSets: (..), endpoints
 
