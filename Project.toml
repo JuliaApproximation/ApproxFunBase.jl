@@ -29,7 +29,7 @@ ToeplitzMatrices = "c751599d-da0a-543b-9d20-d0a503d91d24"
 [compat]
 AbstractFFTs = "0.4, 0.5"
 BandedMatrices = "0.14"
-BlockArrays = "0.11"
+BlockArrays = "0.11, 0.12"
 BlockBandedMatrices = "0.7"
 Calculus = "0.5"
 DSP = "0.6"
