@@ -3,7 +3,9 @@ include("ProductDomain.jl")
 
 ## boundary
 
-boundary(d::ProductDomain{Tuple{A,B}}) where {A<:IntervalOrSegment,B<:IntervalOrSegment} =
+const RectDomain{T,A<:IntervalOrSegment,B<:IntervalOrSegment} = VcatDomain{2,T,(1,1),Tuple{A,B}}
+
+boundary(d::RectDomain) =
     PiecewiseSegment([Vec(leftendpoint(factor(d,1)),leftendpoint(factor(d,2))),
                       Vec(rightendpoint(factor(d,1)),leftendpoint(factor(d,2))),
                       Vec(rightendpoint(factor(d,1)),rightendpoint(factor(d,2))),
