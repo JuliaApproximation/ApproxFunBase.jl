@@ -1,7 +1,7 @@
 module ApproxFunBase
     using Base, BlockArrays, BandedMatrices, BlockBandedMatrices, DomainSets, IntervalSets,
             SpecialFunctions, AbstractFFTs, FFTW, SpecialFunctions, DSP, DualNumbers, 
-            LinearAlgebra, SparseArrays, LowRankApprox, FillArrays, InfiniteArrays #, Arpack
+            LinearAlgebra, SparseArrays, LowRankApprox, FillArrays, InfiniteArrays, ContinuumArrays
 import StaticArrays, Calculus
 
 import DomainSets: Domain, indomain, UnionDomain, ProductDomain, FullSpace, Point, elements, DifferenceDomain,
@@ -25,7 +25,7 @@ import Base: values, convert, getindex, setindex!, *, +, -, ==, <, <=, >, |, !, 
                 getproperty, findfirst, unsafe_getindex, fld, cld, div, real, imag,
                 @_inline_meta, eachindex, firstindex, lastindex, keys, isreal, OneTo,
                 Array, Vector, Matrix, view, ones, @propagate_inbounds, print_array,
-                split, iszero
+                split, iszero, vec
 
 import Base.Broadcast: BroadcastStyle, Broadcasted, AbstractArrayStyle, broadcastable,
                         DefaultArrayStyle, broadcasted
@@ -39,6 +39,8 @@ import LinearAlgebra: BlasInt, BlasFloat, norm, ldiv!, mul!, det, eigvals, dot, 
 
 import SparseArrays: blockdiag
 
+
+import ContinuumArrays: AbstractQuasiMatrix, AbstractQuasiVector, AbstractQuasiArray, arguments
 # import Arpack: eigs
 
 # we need to import all special functions to use Calculus.symbolic_derivatives_1arg
@@ -77,6 +79,7 @@ import InfiniteArrays: Infinity, InfRanges, AbstractInfUnitRange, OneToInf
 
 # convenience for 1-d block ranges
 const BlockRange1 = BlockRange{1,Tuple{UnitRange{Int}}}
+const Space{T} = AbstractQuasiMatrix{T}
 
 import Base: view
 
@@ -94,18 +97,9 @@ export pad!, pad, chop!, sample,
 
 export .., Interval, ChebyshevInterval, leftendpoint, rightendpoint, endpoints, cache
 
+export bilinearform, linebilinearform, innerproduct, lineinnerproduct
 
 
-include("LinearAlgebra/LinearAlgebra.jl")
 include("Fun.jl")
-include("Domains/Domains.jl")
-include("Multivariate/Multivariate.jl")
-include("Operators/Operator.jl")
-include("Caching/caching.jl")
-include("PDE/PDE.jl")
-include("Spaces/Spaces.jl")
-include("hacks.jl")
-include("testing.jl")
-include("specialfunctions.jl")
 
 end #module
