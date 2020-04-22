@@ -20,6 +20,7 @@ struct EmptyDomain <: Domain{Nothing} end
 
 isambiguous(::AnyDomain) = true
 dimension(::AnyDomain) = 1
+dimension(::EmptyDomain) = 0
 
 complexlength(::AnyDomain) = NaN
 arclength(::AnyDomain) = NaN
