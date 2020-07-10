@@ -29,8 +29,6 @@ end
 @testset "Domain" begin
     @test 0.45-0.65im ∉ Segment(-1,1)
 
-    @test ApproxFunBase.AnySegment() == ApproxFunBase.AnySegment()
-
     @test ApproxFunBase.dimension(ChebyshevInterval()) == 1
     @test ApproxFunBase.dimension(ChebyshevInterval()^2) == 2
     @test ApproxFunBase.dimension(ChebyshevInterval()^3) == 3
