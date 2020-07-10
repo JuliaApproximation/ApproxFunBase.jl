@@ -20,7 +20,7 @@ end
     @test space(f') isa ChebyshevU
     @test f''(0.1) ≈ exp(0.1)
     @test space(f'') == Ultraspherical(2)
-    
+
     @test (f+f)(0.1) ≈ 2exp(0.1)
     @test (2f)(0.1) ≈ 2exp(0.1)
 end

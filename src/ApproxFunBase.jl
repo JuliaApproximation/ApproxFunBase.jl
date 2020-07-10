@@ -6,7 +6,7 @@ import StaticArrays, Calculus
 
 import DomainSets: Domain, indomain, UnionDomain, ProductDomain, FullSpace, Point, elements, DifferenceDomain,
             Interval, ChebyshevInterval, boundary, ∂, rightendpoint, leftendpoint,
-            dimension, WrappedDomain
+            dimension, WrappedDomain, VcatDomain
 
             
 
