@@ -14,6 +14,12 @@ import ApproxFunBase: Infinity, ∞
 end
 
 @testset "Chebyshev" begin
+    f = Fun(Chebyshev(), [1.,2.,3.])
+    @test f(0.1) ≈ 1 + 2*0.1 + 3*cos(2acos(0.1))
+    
+    @test Fun(Chebyshev(),Float64[]).([0.,1.]) ≈ [0.,0.]
+    @test Fun(Chebyshev(),[])(0.) ≈ 0.
+
     f = Fun(exp, Chebyshev())
     @test f(0.1) ≈ exp(0.1)
     @test f'(0.1) ≈ exp(0.1)
@@ -25,21 +31,6 @@ end
     @test (2f)(0.1) ≈ 2exp(0.1)
 end
 
-
-@testset "Domain" begin
-    @test 0.45-0.65im ∉ Segment(-1,1)
-
-    @test ApproxFunBase.dimension(ChebyshevInterval()) == 1
-    @test ApproxFunBase.dimension(ChebyshevInterval()^2) == 2
-    @test ApproxFunBase.dimension(ChebyshevInterval()^3) == 3
-
-    @test isambiguous(convert(ApproxFunBase.Point,ApproxFunBase.AnyDomain()))
-    @test isambiguous(ApproxFunBase.Point(ApproxFunBase.AnyDomain()))
-
-    @test_skip ApproxFunBase.Point(NaN) == ApproxFunBase.Point(NaN)
-end
-
-@time include("MatrixTest.jl")
 @time include("SpacesTest.jl")
 
 

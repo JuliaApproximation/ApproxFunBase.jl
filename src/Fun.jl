@@ -15,13 +15,21 @@ mutable struct Fun{S,T,VT} <: Function
 end
 
 const VFun{S,T} = Fun{S,T,Vector{T}}
-Fun(sp::Space, coeff::AbstractVector) = Fun{typeof(sp),eltype(coeff),typeof(coeff)}(sp, coeff)
+
+_pad(c, _, n) = [c; zeros(eltype(c), n-length(c))]
+_pad(c, ::Infinity, ::Infinity) = c
+pad(c, n::Integer) = _pad(c, length(c), n)
+function Fun(sp::Space, c::AbstractVector) 
+    coeff = pad(c, size(sp,2))
+    Fun{typeof(sp),eltype(coeff),typeof(coeff)}(sp, coeff)
+end
 Fun() = Fun(identity)
-Fun(d::Domain) = Fun(identity, d)
-Fun(d::Space) = Fun(identity, d)
+Fun(d) = Fun(identity, d)
 
 Fun(v::AbstractQuasiVector) = Fun(arguments(v)...)
 Fun(f::Function, S::Space) = Fun(S, S \ f.(axes(S,1)))
+
+Fun(f::Function, d) = Fun(f, Space(d))
 
 
 function Fun(sp::Space, v::AbstractVector{Any})
@@ -46,6 +54,7 @@ coefficients(f::Fun) = f.coefficients
 vec(f::Fun) = f.space * coefficients(f)
 coefficients(f::Fun, msp::Space) = msp \ vec(f)
 coefficients(c::Number,sp::Space) = coefficients(Fun(c,sp))
+Fun(f::Fun, S::Space) = Fun(S, coefficients(f, S))
 
 ##Convert routines
 
@@ -208,21 +217,23 @@ copy(f::Fun) = Fun(space(f),copy(f.coefficients))
 
 ## Addition and multiplication
 
+
+
 for op in (:+,:-)
     @eval begin
         function $op(f::Fun, g::Fun)
             if space(f) == space(g)
                 Fun(space(f), ($op)(coefficients(f), coefficients(g)))
             else
-                m = union(f.space,g.space)
-                if isa(m,NoSpace)
+                m = broadcastspace($op, f.space, g.space)
+                if m isa NoSpace
                     error("Cannot "*string($op)*" because no space is the union of "*string(typeof(f.space))*" and "*string(typeof(g.space)))
                 end
                 $op(Fun(f,m), Fun(g,m)) # convert to same space
             end
         end
         $op(f::Fun{S,T},c::T) where {S,T<:Number} = c==0 ? f : $op(f,Fun(c))
-        $op(f::Fun,c::Number) = $op(f,Fun(c))
+        $op(f::Fun,c::Number) = $op(f,Fun(c,space(f)))
         $op(f::Fun,c::UniformScaling) = $op(f,c.λ)
         $op(c::UniformScaling,f::Fun) = $op(c.λ,f)
     end
