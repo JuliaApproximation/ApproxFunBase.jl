@@ -113,20 +113,36 @@ end
 
 for op in (:*,:+,:-)
     @eval begin
-        $op(c::Number,d::Segment) = Segment($op(c,leftendpoint(d)),$op(c,rightendpoint(d)))
-        $op(d::Segment,c::Number) = Segment($op(leftendpoint(d),c),$op(rightendpoint(d),c))
+        $op(c::Number,d::Segment) = broadcast($op,c,d)
+        $op(d::Segment,c::Number) = broadcast($op,d,c)
+        broadcasted(::typeof($op), c::Number, d::Segment) = Segment($op(c,leftendpoint(d)),$op(c,rightendpoint(d)))
+        broadcasted(::typeof($op), d::Segment, c::Number) = Segment($op(leftendpoint(d),c),$op(rightendpoint(d),c))
     end
 end
 
-broadcast(::typeof(^),c::Number,d::Segment) = Segment(c^leftendpoint(d),c^rightendpoint(d))
-broadcast(::typeof(^),d::Segment,c::Number) = Segment(leftendpoint(d)^c,rightendpoint(d)^c)
+broadcasted(::typeof(^),c::Number,d::Segment) = Segment(c^leftendpoint(d),c^rightendpoint(d))
+function broadcasted(::typeof(^),d::Segment,c::Number)
+    a,b = endpoints(d)
+    if a < 0 < b
+        Segment(0, b^c)
+    elseif b < 0 < a
+        Segment(a^c, 0)
+    else
+        Segment(a^c,b^c)
+    end
+end
 
-/(d::Segment,c::Number) = Segment(leftendpoint(d)/c,rightendpoint(d)/c)
+broadcasted(::typeof(Base.literal_pow), ::typeof(^), d::Segment, ::Val{K}) where K = 
+    broadcasted(^, d, K)
 
+/(d::Segment,c::Number) = broadcast(/,d,c)
+broadcasted(::typeof(/), d::Segment,c::Number) = Segment(leftendpoint(d)/c,rightendpoint(d)/c)
 
-sqrt(d::Segment)=Segment(sqrt(leftendpoint(d)),sqrt(rightendpoint(d)))
+sqrt(d::Segment) = broadcast(sqrt, d)
+broadcasted(::typeof(sqrt), d::Segment)=Segment(sqrt(leftendpoint(d)),sqrt(rightendpoint(d)))
 
 +(d1::Segment,d2::Segment)=Segment(d1.a+d2.a,d1.b+d2.b)
+broadcasted(::typeof(+),d1::Segment,d2::Segment) = Segment(d1.a+d2.a,d1.b+d2.b)
 
 
 
