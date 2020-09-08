@@ -41,6 +41,13 @@ end
     @test isambiguous(ApproxFunBase.Point(ApproxFunBase.AnyDomain()))
 
     @test_skip ApproxFunBase.Point(NaN) == ApproxFunBase.Point(NaN)
+
+    @test Segment(-1,1) .+ 1 ≡ Segment(0,2)
+    @test 2 .* Segment(-1,1) .+ 1 ≡ Segment(-1,3)
+    @test Segment(-1,1) .^ 2 ≡ Segment(0,1)
+    @test Segment(1,-1) .^ 2 ≡ Segment(1,0)
+    @test Segment(1,2) .^ 2 ≡ Segment(1,4)
+    @test sqrt.(Segment(1,2)) ≡ Segment(1,sqrt(2))
 end
 
 @time include("MatrixTest.jl")
