@@ -503,7 +503,6 @@ isapprox(g::Number, f::Fun) = g*ones(space(f)) ≈ f
 isreal(f::Fun{<:RealSpace,<:Real}) = true
 isreal(f::Fun) = false
 
-iszero(x::Number) = x == 0
 iszero(f::Fun)    = all(iszero,f.coefficients)
 
 
