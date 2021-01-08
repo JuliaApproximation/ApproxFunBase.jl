@@ -1,6 +1,6 @@
 name = "ApproxFunBase"
 uuid = "fbd15aa5-315a-5a7d-a8a4-24992e37be05"
-version = "0.3.10"
+version = "0.3.11"
 
 [deps]
 AbstractFFTs = "621f4979-c628-5d54-868e-fcf4e3e8185c"
@@ -42,7 +42,7 @@ InfiniteArrays = "0.4, 0.5, 0.6, 0.7, 0.8"
 IntervalSets = "0.5"
 LazyArrays = "0.14, 0.15, 0.16, 0.17, 0.18, 0.19"
 LowRankApprox = "0.2, 0.3, 0.4"
-SpecialFunctions = "0.8, 0.9, 0.10, 1.1"
+SpecialFunctions = "0.8, 0.9, 0.10, 1.0"
 StaticArrays = "0.12, 1.0"
 ToeplitzMatrices = "0.6"
 julia = "1.3"
