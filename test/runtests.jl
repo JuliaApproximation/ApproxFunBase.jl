@@ -16,7 +16,7 @@ end
 @testset "Chebyshev" begin
     f = Fun(Chebyshev(), [1.,2.,3.])
     @test f(0.1) ≈ 1 + 2*0.1 + 3*cos(2acos(0.1))
-    
+
     @test Fun(Chebyshev(),Float64[]).([0.,1.]) ≈ [0.,0.]
     @test Fun(Chebyshev(),[])(0.) ≈ 0.
 
