@@ -27,7 +27,13 @@ Fun() = Fun(identity)
 Fun(d) = Fun(identity, d)
 
 Fun(v::AbstractQuasiVector) = Fun(arguments(v)...)
-Fun(f::Function, S::Space) = Fun(S, S \ f.(axes(S,1)))
+function Fun(f::Function, S::Space)
+    if !applicable(f, checkpoints(S)[1])
+        Fun(x -> f(x...), S)
+    else
+        Fun(S, S \ f.(axes(S,1)))
+    end
+end
 
 Fun(f::Function, d) = Fun(f, Space(d))
 

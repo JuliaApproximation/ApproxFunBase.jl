@@ -40,7 +40,7 @@ import LinearAlgebra: BlasInt, BlasFloat, norm, ldiv!, mul!, det, eigvals, dot, 
 import SparseArrays: blockdiag
 
 
-import ContinuumArrays: AbstractQuasiMatrix, AbstractQuasiVector, AbstractQuasiArray, arguments
+import ContinuumArrays: AbstractQuasiMatrix, AbstractQuasiVector, AbstractQuasiArray, arguments, checkpoints
 # import Arpack: eigs
 
 # we need to import all special functions to use Calculus.symbolic_derivatives_1arg
