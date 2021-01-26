@@ -36,7 +36,7 @@ BandedMatrices = "0.16"
 BlockArrays = "0.14"
 BlockBandedMatrices = "0.10"
 Calculus = "0.5"
-ContinuumArrays = "0.4"
+ContinuumArrays = "0.4.2"
 DSP = "0.6"
 DomainSets = "0.4"
 DualNumbers = "0.6.2"
@@ -54,6 +54,7 @@ ToeplitzMatrices = "0.6"
 julia = "1.5"
 
 [extras]
+OrthogonalPolynomialsQuasi = "aa41a628-2c43-45df-899b-83ab96621781"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [targets]
