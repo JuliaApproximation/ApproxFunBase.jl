@@ -95,6 +95,12 @@ export pad!, pad, chop!, sample,
 export .., Interval, ChebyshevInterval, leftendpoint, rightendpoint, endpoints, cache
 
 
+if VERSION < v"1.6-"
+	oneto(n) = Base.OneTo(n)
+else
+	import Base: oneto
+end
+
 
 include("LinearAlgebra/LinearAlgebra.jl")
 include("Fun.jl")
