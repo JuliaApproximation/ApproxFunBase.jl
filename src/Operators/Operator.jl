@@ -371,8 +371,8 @@ end
 for OP in (:colstart,:colstop,:rowstart,:rowstop)
     defOP = Meta.parse("default_"*string(OP))
     @eval begin
-        $OP(A::Operator,i::Integer) = $defOP(A,i)
-        $OP(A::Operator,i::Infinity) = ℵ₀
+        $OP(A::Operator, i::Integer) = $defOP(A,i)
+        $OP(A::Operator, i::PosInfinity) = ℵ₀
     end
 end
 
@@ -461,7 +461,7 @@ macro wrapperstructure(Wrap)
              $ret
 
              $func(D::$Wrap,k::Integer) = $func(D.op,k)
-             $func(A::$Wrap,i::ApproxFunBase.Infinity) = ℵ₀ # $func(A.op,i) | see PR #42
+             $func(A::$Wrap,i::ApproxFunBase.PosInfinity) = ℵ₀ # $func(A.op,i) | see PR #42
          end
      end
 
