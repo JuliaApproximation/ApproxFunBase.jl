@@ -1,5 +1,5 @@
 using ApproxFunBase, LinearAlgebra, Random, Test
-import ApproxFunBase: Infinity, ∞
+import ApproxFunBase: ∞
 
 @testset "Helper" begin
     @testset "interlace" begin

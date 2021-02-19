@@ -102,7 +102,7 @@ function rowstop(A::KroneckerOperator,k::Integer)
 end
 
 
-bandwidths(K::KroneckerOperator) = (∞,∞)
+bandwidths(K::KroneckerOperator) = (ℵ₀,ℵ₀)
 
 isblockbanded(K::KroneckerOperator) = all(isblockbanded,K.ops)
 isbandedblockbanded(K::KroneckerOperator) =
@@ -123,7 +123,7 @@ subblock_blockbandwidths(K::KroneckerOperator) =
 
 # If each block were in turn BandedMatrix, these are the bandwidths
 function subblockbandwidths(K::KroneckerOperator)
-    isbandedblockbanded(K) || return (∞,∞)
+    isbandedblockbanded(K) || return (ℵ₀,ℵ₀)
 
     if all(hastrivialblocks,domainspace(K).spaces) &&
             all(hastrivialblocks,rangespace(K).spaces)

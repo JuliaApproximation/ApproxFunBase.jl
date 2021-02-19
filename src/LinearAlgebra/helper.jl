@@ -286,7 +286,7 @@ pad(A::AbstractMatrix,::Colon,m::Integer) = pad(A,size(A,1),m)
 pad(A::AbstractMatrix,n::Integer,::Colon) = pad(A,n,size(A,2))
 
 
-function pad(v, ::Infinity)
+function pad(v, ::PosInfinity)
     if isinf(length(v))
         v
     else
@@ -294,7 +294,7 @@ function pad(v, ::Infinity)
     end
 end
 
-function pad(v::AbstractVector{T}, ::Infinity) where T
+function pad(v::AbstractVector{T}, ::PosInfinity) where T
     if isinf(length(v))
         v
     else
@@ -530,8 +530,8 @@ slnorm(m::AbstractMatrix,::Colon,j::Integer) = slnorm(m,1:size(m,1),j)
 
 
 
-Base.isless(x::Block{1}, y::Infinity) = isless(Int(x), y)
-Base.isless(x::Infinity, y::Block{1}) = isless(x, Int(y))
+Base.isless(x::Block{1}, y::PosInfinity) = isless(Int(x), y)
+Base.isless(x::PosInfinity, y::Block{1}) = isless(x, Int(y))
 
 
 ## BandedMatrix
