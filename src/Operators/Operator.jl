@@ -56,7 +56,7 @@ macro functional(FF)
         Base.size(A::$FF,k::Integer) = k==1 ? 1 : dimension(domainspace(A))
         ApproxFunBase.rangespace(F::$FF) = ConstantSpace(eltype(F))
         ApproxFunBase.isafunctional(::$FF) = true
-        ApproxFunBase.blockbandwidths(A::$FF) = 0,hastrivialblocks(domainspace(A)) ? bandwidth(A,2) : ∞
+        ApproxFunBase.blockbandwidths(A::$FF) = 0,hastrivialblocks(domainspace(A)) ? bandwidth(A,2) : ℵ₀
         function ApproxFunBase.defaultgetindex(f::$FF,k::Integer,j::Integer)
             @assert k==1
             f[j]::eltype(f)
@@ -101,7 +101,7 @@ function lastindex(A::Operator, n::Integer)
     elseif n==2
         size(A,2)
     elseif isinf(size(A,2)) || isinf(size(A,1))
-        ∞
+        ℵ₀
     else
         size(A,1)
     end
@@ -372,7 +372,7 @@ for OP in (:colstart,:colstop,:rowstart,:rowstop)
     defOP = Meta.parse("default_"*string(OP))
     @eval begin
         $OP(A::Operator,i::Integer) = $defOP(A,i)
-        $OP(A::Operator,i::Infinity) = ∞
+        $OP(A::Operator,i::Infinity) = ℵ₀
     end
 end
 
@@ -461,7 +461,7 @@ macro wrapperstructure(Wrap)
              $ret
 
              $func(D::$Wrap,k::Integer) = $func(D.op,k)
-             $func(A::$Wrap,i::ApproxFunBase.Infinity) = ∞ # $func(A.op,i) | see PR #42
+             $func(A::$Wrap,i::ApproxFunBase.Infinity) = ℵ₀ # $func(A.op,i) | see PR #42
          end
      end
 

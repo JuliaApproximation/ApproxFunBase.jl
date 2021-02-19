@@ -142,7 +142,7 @@ end
 
 
 blockstart(it,K)::Int = K==1 ? 1 : sum(blocklengths(it)[1:K-1])+1
-blockstop(it,::Infinity) = ∞
+blockstop(it,::PosInfinity) = ℵ₀
 _K_sum(bl::AbstractVector, K) = sum(bl[1:K])
 _K_sum(bl::Integer, K) = bl
 blockstop(it, K)::Int = _K_sum(blocklengths(it), K)
@@ -453,7 +453,7 @@ end
 
 for OP in (:block,:blockstart,:blockstop)
     @eval begin
-        $OP(s::TensorSpace, ::Infinity) = ∞
+        $OP(s::TensorSpace, ::PosInfinity) = ℵ₀
         $OP(s::TensorSpace, M::Block) = $OP(tensorizer(s),M)
         $OP(s::TensorSpace, M) = $OP(tensorizer(s),M)
     end

@@ -77,7 +77,7 @@ function view(A::Operator,kr::InfRanges,jr::InfRanges)
         jr1=first(jr)
         l,u=(bandwidth(A,1)+jr1-kr1)÷st,(bandwidth(A,2)+kr1-jr1)÷st
     else
-        l,u=∞,∞
+        l,u=ℵ₀,ℵ₀
     end
     SubOperator(A,(kr,jr),size(A),(l,u))
 end

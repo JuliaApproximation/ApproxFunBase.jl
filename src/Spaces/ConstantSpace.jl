@@ -9,7 +9,7 @@ getindex(f::Fun{SequenceSpace}, k::Integer) =
 getindex(f::Fun{SequenceSpace},K::CartesianIndex{0}) = f[1]
 getindex(f::Fun{SequenceSpace},K) = cfstype(f)[f[k] for k in K]
 
-length(f::Fun{SequenceSpace}) = ∞
+length(f::Fun{SequenceSpace}) = ℵ₀
 
 
 dotu(f::Fun{SequenceSpace},g::Fun{SequenceSpace}) =
@@ -171,7 +171,7 @@ rangespace(D::ConcreteMultiplication{CS1,CS2,T}) where {CS1<:ConstantSpace,CS2<:
 rangespace(D::ConcreteMultiplication{F,UnsetSpace,T}) where {F<:ConstantSpace,T} =
     UnsetSpace()
 bandwidths(D::ConcreteMultiplication{F,UnsetSpace,T}) where {F<:ConstantSpace,T} =
-    (∞,∞)
+    (ℵ₀,ℵ₀)
 getindex(D::ConcreteMultiplication{F,UnsetSpace,T},k::Integer,j::Integer) where {F<:ConstantSpace,T} =
     error("No range space attached to Multiplication")
 

@@ -17,7 +17,7 @@ dimension(sp::SubSpace) = length(sp.indexes)
 
 
 function |(f::Fun,kr::AbstractInfUnitRange)
-    @assert dimension(space(f)) == ∞
+    @assert dimension(space(f)) ≡ ℵ₀
     Fun(space(f)|kr,f.coefficients[kr[1]:end])
 end
 

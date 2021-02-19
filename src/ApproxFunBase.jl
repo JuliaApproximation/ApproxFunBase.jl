@@ -72,7 +72,7 @@ import BlockBandedMatrices: blockbandwidth, blockbandwidths, blockcolstop, block
 
 import FillArrays: AbstractFill, getindex_value
 import LazyArrays: cache
-import InfiniteArrays: Infinity, InfRanges, AbstractInfUnitRange, OneToInf
+import InfiniteArrays: PosInfinity, InfRanges, AbstractInfUnitRange, OneToInf
 
 
 # convenience for 1-d block ranges
