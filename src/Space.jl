@@ -36,7 +36,7 @@ rangetype(::Type{Space{D,R}}) where {D,R} = R
 rangetype(::Type{FT}) where {FT<:Space} = rangetype(supertype(FT))
 
 domaindimension(sp::Space) = dimension(domain(sp))
-dimension(::Space) = ∞  # We assume infinite-dimensional spaces
+dimension(::Space) = ℵ₀  # We assume infinite-dimensional spaces
 
 
 # add indexing for all spaces, not just DirectSumSpace
