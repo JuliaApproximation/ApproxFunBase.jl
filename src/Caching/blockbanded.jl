@@ -62,9 +62,12 @@ function diagblockshift(a::Vcat{Int,1,<:Tuple{V1,<:AbstractFill{Int}}},
     return 1+diagblockshift(Vcat(a.args[1][2:end],a.args[2]),Vcat([b1-a1;b.args[1][2:end]],b.args[2]))
 end
 
+_cache2vcat(a) = Vcat(cacheddata(a), a.array)
+diagblockshift(a::CachedVector{Int,Vector{Int},<:AbstractFill}, b) = diagblockshift(_cache2vcat(a), b)
+diagblockshift(a, b::CachedVector{Int,Vector{Int},<:AbstractFill}) = diagblockshift(a, _cache2vcat(b))
+diagblockshift(a::CachedVector{Int,Vector{Int},<:AbstractFill}, b::CachedVector{Int,Vector{Int},<:AbstractFill}) = diagblockshift(_cache2vcat(a), _cache2vcat(b))
 
-diagblockshift(op::Operator) =
-    diagblockshift(blocklengths(domainspace(op)),blocklengths(rangespace(op)))
+diagblockshift(op::Operator) = diagblockshift(blocklengths(domainspace(op)),blocklengths(rangespace(op)))
 
 
 function CachedOperator(::Type{BlockBandedMatrix},op::Operator;padding::Bool=false)

@@ -71,7 +71,7 @@ import BlockBandedMatrices: blockbandwidth, blockbandwidths, blockcolstop, block
                             isblockbanded, isbandedblockbanded, bb_numentries, BlockBandedSizes
 
 import FillArrays: AbstractFill, getindex_value
-import LazyArrays: cache
+import LazyArrays: cache, CachedVector, cacheddata
 import InfiniteArrays: PosInfinity, InfRanges, AbstractInfUnitRange, OneToInf, InfiniteCardinal
 
 
