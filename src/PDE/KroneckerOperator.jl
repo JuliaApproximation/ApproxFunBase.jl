@@ -418,7 +418,7 @@ function mul_coefficients(A::SubOperator{T,KKO,Tuple{UnitRange{Int},UnitRange{In
     P = parent(A)
     kr,jr = parentindices(A)
     dt,rt = domaintensorizer(P),rangetensorizer(P)
-    KR,JR = Block(1):block(rt,kr[end]),Block(1):block(dt,jr[end])
+    KR,JR = Block(1):block(rt,last(kr)),Block(1):block(dt,last(jr))
     M = P[KR,JR]
     M*pad(b, size(M,2))
 end
