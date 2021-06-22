@@ -109,8 +109,6 @@ maps the point `x` in `d` to a point in `canonical(d,x)`
 """
 function tocanonical end
 
-issubset(a::Domain,b::Domain) = a==b
-
 
 ## conveninece routines
 
