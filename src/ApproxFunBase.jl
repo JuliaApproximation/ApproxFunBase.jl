@@ -1,12 +1,13 @@
 module ApproxFunBase
-    using Base, BlockArrays, BandedMatrices, BlockBandedMatrices, DomainSets, IntervalSets,
+    using Base: AnyDict
+using Base, BlockArrays, BandedMatrices, BlockBandedMatrices, DomainSets, IntervalSets,
             SpecialFunctions, AbstractFFTs, FFTW, SpecialFunctions, DSP, DualNumbers, 
-            LinearAlgebra, SparseArrays, LowRankApprox, FillArrays, InfiniteArrays #, Arpack
+            LinearAlgebra, SparseArrays, LowRankApprox, FillArrays, InfiniteArrays, InfiniteLinearAlgebra #, Arpack
 import StaticArrays, Calculus
 
 import DomainSets: Domain, indomain, UnionDomain, ProductDomain, FullSpace, Point, elements, DifferenceDomain,
             Interval, ChebyshevInterval, boundary, ∂, rightendpoint, leftendpoint,
-            dimension, WrappedDomain, VcatDomain
+            dimension, WrappedDomain, VcatDomain, component, components, ncomponents
 
             
 

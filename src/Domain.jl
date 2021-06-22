@@ -18,6 +18,9 @@ prectype(d::Domain) = prectype(typeof(d))
 struct AnyDomain <: Domain{UnsetNumber} end
 struct EmptyDomain <: Domain{Nothing} end
 
+==(::AnyDomain, ::AnyDomain) = true
+==(::EmptyDomain, ::EmptyDomain) = true
+
 isambiguous(::AnyDomain) = true
 dimension(::AnyDomain) = 1
 dimension(::EmptyDomain) = 0
@@ -82,13 +85,6 @@ function indomain(x,d::SegmentDomain)
         -100eps(T)/sc ≤ iy ≤ 100eps(T)/sc
 end
 
-ncomponents(s::Domain) = 1
-components(s::Domain) = [s]
-function components(s::Domain,k)
-    k ≠ 1 && throw(BoundsError())
-    s
-end
-
 issubcomponent(a::Domain,b::Domain) = a in components(b)
 
 
@@ -108,8 +104,6 @@ function canonicaldomain end
 maps the point `x` in `d` to a point in `canonical(d,x)`
 """
 function tocanonical end
-
-issubset(a::Domain,b::Domain) = a==b
 
 
 ## conveninece routines
@@ -185,3 +179,6 @@ struct Integers <: Domain{Int} end
 
 const ℕ = PositiveIntegers()
 const ℤ = Integers()
+
+==(::PositiveIntegers, ::PositiveIntegers) = true
+==(::Integers, ::Integers) = true

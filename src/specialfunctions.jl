@@ -54,6 +54,9 @@ end
 midpoints(d::IntervalOrSegment) = [mean(d)]
 midpoints(d::Union{UnionDomain,PiecewiseSegment}) = mapreduce(midpoints,vcat,components(d))
 
+_UnionDomainIfMultiple(d::IntervalOrSegment) = d
+_UnionDomainIfMultiple(d) = UnionDomain(components(d))
+
 for OP in (:sign,:angle)
     @eval function $OP(f::Fun{S,T}) where {S<:RealUnivariateSpace,T<:Real}
         d=domain(f)
@@ -65,7 +68,7 @@ for OP in (:sign,:angle)
         else
             d = split(d , pts)
             midpts = midpoints(d)
-            Fun(UnionDomain(components(d)), $OP.(f.(midpts)))
+            Fun(_UnionDomainIfMultiple(d), $OP.(f.(midpts)))
         end
     end
 end
