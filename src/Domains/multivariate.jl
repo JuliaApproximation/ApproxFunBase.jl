@@ -3,7 +3,7 @@ include("ProductDomain.jl")
 
 ## boundary
 
-const RectDomain{T,A<:IntervalOrSegment,B<:IntervalOrSegment} = VcatDomain{2,T,(1,1),Tuple{A,B}}
+const RectDomain = Union{DomainSets.FixedIntervalProduct{2}, DomainSets.Rectangle, VcatDomain{2,<:Any,(1,1),<:Tuple}}
 
 boundary(d::RectDomain) =
     PiecewiseSegment([Vec(leftendpoint(factor(d,1)),leftendpoint(factor(d,2))),
