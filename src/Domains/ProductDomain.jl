@@ -46,5 +46,5 @@ end
 reverseorientation(d::ProductDomain) = ProductDomain(map(reverseorientation, factors(d)))
 
 domainscompatible(a::ProductDomain,b::ProductDomain) =
-                        length(a.domains)==length(b.domains) &&
-                        all(map(domainscompatible,a.domains,b.domains))
+                        length(factors(a))==length(factors(b)) &&
+                        all(map(domainscompatible,factors(a),factors(b)))

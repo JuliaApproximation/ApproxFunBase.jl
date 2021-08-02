@@ -238,7 +238,7 @@ end
 canonicalspace(T::TensorSpace) = TensorSpace(map(canonicalspace,T.spaces))
 
 
-
+TensorSpace(A::SVector{N,<:Space}) where N = TensorSpace(tuple(A...))
 TensorSpace(A...) = TensorSpace(tuple(A...))
 TensorSpace(A::ProductDomain) = TensorSpace(tuple(map(Space,components(A))...))
 ⊗(A::TensorSpace,B::TensorSpace) = TensorSpace(A.spaces...,B.spaces...)
