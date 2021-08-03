@@ -195,7 +195,7 @@ LowRankFun(f::Function,S::TensorSpace{SV,DD,RR};kwds...) where {SV,DD<:Euclidean
 LowRankFun(f::Function,dx::Domain,dy::Domain;kwds...) =
     LowRankFun(dynamic(f),Space(dx),Space(dy);kwds...)
 LowRankFun(f::Function,d::ProductDomain;kwds...) =
-    LowRankFun(dynamic(f),d.domains...;kwds...)
+    LowRankFun(dynamic(f),factors(d)...;kwds...)
 
 LowRankFun(f::Function;kwds...) = LowRankFun(dynamic(f),ChebyshevInterval(),ChebyshevInterval();kwds...)
 

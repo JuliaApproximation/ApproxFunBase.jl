@@ -25,7 +25,7 @@ function resizedata!(B::CachedOperator{T,<:BandedBlockBandedMatrix{T}}, ::Colon,
 
         # B.data = _BandedBlockBandedMatrix(PseudoBlockArray
 
-        blocks = PseudoBlockArray(pad(B.data.data.blocks,:,(l+u+1)*sum(cols)), rows, cols)
+        blocks = PseudoBlockArray(pad(B.data.data.blocks,:,(l+u+1)*sum(cols)), (axes(B.data.data,1), blockedrange(cols)))
         B.data = _BandedBlockBandedMatrix(blocks, rows, cols, (l, u), (λ, μ))
 
         jr=B.datasize[2]+1:col

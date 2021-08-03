@@ -1,18 +1,20 @@
 
-canonicaldomain(d::ProductDomain) = ProductDomain(map(canonicaldomain,d.domains)...)
+nfactors(d::ProductDomain) = length(components(d))
+factors(d::ProductDomain) = components(d)
+factor(d::ProductDomain,k::Integer) = component(d,k)
+
+canonicaldomain(d::ProductDomain) = ProductDomain(map(canonicaldomain,factors(d))...)
 
 
 # product domains are their own canonical domain
 for OP in (:fromcanonical,:tocanonical)
     @eval begin
-        $OP(d::ProductDomain, x::Vec) = Vec(map($OP,d.domains,x)...)
-        $OP(d::ProductDomain, x::Vec{2}) = Vec($OP(first(d.domains), first(x)), $OP(last(d.domains), last(x)))
+        $OP(d::ProductDomain, x::Vec) = Vec(map($OP,factors(d),x)...)
+        $OP(d::ProductDomain, x::Vec{2}) = Vec($OP(first(factors(d)), first(x)), $OP(last(factors(d)), last(x)))
     end
 end
 
-nfactors(d::ProductDomain) = length(d.domains)
-factors(d::ProductDomain) = d.domains
-factor(d::ProductDomain,k::Integer) = d.domains[k]
+
 
 function pushappendpts!(ret, xx, pts)
     if isempty(pts)
@@ -26,23 +28,23 @@ function pushappendpts!(ret, xx, pts)
 end
 
 function checkpoints(d::ProductDomain)
-    pts = checkpoints.(d.domains)
-    ret=Vector{Vec{sum(dimension.(d.domains)),float(promote_type(eltype.(eltype.(d.domains))...))}}(undef, 0)
+    pts = checkpoints.(factors(d))
+    ret=Vector{Vec{sum(dimension.(factors(d))),float(promote_type(eltype.(eltype.(factors(d)))...))}}(undef, 0)
 
     pushappendpts!(ret,(),pts)
     ret
 end
 
 function points(d::ProductDomain,n::Tuple)
-    @assert length(d.domains) == length(n)
-    pts=map(points,d.domains,n)
-    ret=Vector{Vec{length(d.domains),mapreduce(eltype,promote_type,d.domains)}}(undef, 0)
+    @assert length(factors(d)) == length(n)
+    pts=map(points,factors(d),n)
+    ret=Vector{Vec{length(factors(d)),mapreduce(eltype,promote_type,factors(d))}}(undef, 0)
     pushappendpts!(ret,Vec(x),pts)
     ret
 end
 
-reverseorientation(d::ProductDomain) = ProductDomain(map(reverseorientation, d.domains))
+reverseorientation(d::ProductDomain) = ProductDomain(map(reverseorientation, factors(d)))
 
 domainscompatible(a::ProductDomain,b::ProductDomain) =
-                        length(a.domains)==length(b.domains) &&
-                        all(map(domainscompatible,a.domains,b.domains))
+                        length(factors(a))==length(factors(b)) &&
+                        all(map(domainscompatible,factors(a),factors(b)))

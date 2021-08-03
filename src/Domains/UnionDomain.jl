@@ -10,13 +10,10 @@ convert(::Type{IT},::AnyDomain) where {IT<:UnionDomain} = UnionDomain(tuple())
 
 #support tuple set
 components(d::AbstractVector) = d
-components(d::UnionDomain) = elements(d)
-component(d::UnionDomain,k) = components(d)[k]
-ncomponents(d::UnionDomain) = length(elements(d))
 
-pieces(d::UnionDomain) = elements(d)
+pieces(d::UnionDomain) = components(d)
 piece(d::UnionDomain,k) = pieces(d)[k]
-npieces(d::UnionDomain) = length(elements(d))
+npieces(d::UnionDomain) = length(components(d))
 
 
 union(::AnyDomain, d::UnionDomain) = d
@@ -27,8 +24,8 @@ arclength(d::UnionDomain) = mapreduce(arclength,+,d.domains)
 
 reverseorientation(d::UnionDomain) = UnionDomain(reverse(map(reverseorientation,d.domains)))
 
-leftendpoint(d::UnionDomain) = leftendpoint(first(elements(d)))
-rightendpoint(d::UnionDomain) = rightendpoint(last(elements(d)))
+leftendpoint(d::UnionDomain) = leftendpoint(first(components(d)))
+rightendpoint(d::UnionDomain) = rightendpoint(last(components(d)))
 
 # determine the number of points per piece
 function components_npoints(d, n::Int)
