@@ -39,7 +39,7 @@ end
 
 function hcat(v::ScalarFunTypes...)
     ff = vcat(v...)  # A vectorized version
-    transpose(ff)
+    permutedims(ff)
 end
 
 hvcat(rows::Tuple{Vararg{Int}},v::FunTypes...) = Fun(hvnocat(rows,v...))
@@ -79,7 +79,7 @@ Fun(f::ArrayFun, d::Space) = Fun(f,Space(fill(d,size(space(f)))))
 
 Fun(M::AbstractMatrix{<:Number},sp::Space) = Fun([Fun(M[:,k],sp) for k=1:size(M,2)])
 
-for OP in (:(transpose),)
+for OP in (:transpose,:permutedims)
     @eval begin
         $OP(f::ArrayFun) = Fun($OP(Array(f)))
         $OP(sp::Space{D,R}) where {D,R<:AbstractArray} = Space($OP(Array(sp)))
