@@ -213,7 +213,7 @@ evaluate(f::ProductFun,x,y,z) = canonicalevaluate(f,tocanonical(f,x,y,z)...)
 
 # TensorSpace does not use map
 evaluate(f::ProductFun{S,V,SS,T},x::Number,::Colon) where {S<:UnivariateSpace,V<:UnivariateSpace,SS<:TensorSpace,T} =
-    Fun(factor(space(f),2),T[g(x) for g in f.coefficients])
+    Fun(factor(space(f),2),[g(x) for g in f.coefficients])
 
 evaluate(f::ProductFun{S,V,SS,T},x::Number,y::Number) where {S<:UnivariateSpace,V<:UnivariateSpace,SS<:TensorSpace,T} =
     evaluate(f,x,:)(y)
