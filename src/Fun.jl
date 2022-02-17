@@ -43,10 +43,10 @@ hasnumargs(f::Fun,k) = k == 1 || domaindimension(f) == k  # all funs take a sing
 
 function coefficients(f::Fun,msp::Space)
     #zero can always be converted
-    if ncoefficients(f)==1 && f.coefficients[1]==0
+    if ncoefficients(f) == 0 || (ncoefficients(f) == 1 && f.coefficients[1] == 0)
         f.coefficients
     else
-        coefficients(f.coefficients,space(f),msp)
+        coefficients(f.coefficients, space(f), msp)
     end
 end
 coefficients(f::Fun,::Type{T}) where {T<:Space} = coefficients(f,T(domain(f)))
