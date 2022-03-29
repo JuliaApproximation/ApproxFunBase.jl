@@ -1,5 +1,5 @@
 using ApproxFunBase, ContinuumArrays, ClassicalOrthogonalPolynomials, LinearAlgebra, Random, Test
-import ApproxFunBase: Infinity, ∞
+import ApproxFunBase: ∞
 
 @testset "Spline" begin
     L = LinearSpline(range(0,1; length=1000))

@@ -17,7 +17,7 @@ end
 const VFun{S,T} = Fun{S,T,Vector{T}}
 
 _pad(c, _, n) = [c; zeros(eltype(c), n-length(c))]
-_pad(c, ::Infinity, ::Infinity) = c
+_pad(c, ::PosInfinity, ::PosInfinity) = c
 pad(c, n::Integer) = _pad(c, length(c), n)
 function Fun(sp::Space, c::AbstractVector) 
     coeff = pad(c, size(sp,2))
