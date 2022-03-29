@@ -1,14 +1,16 @@
 module ApproxFunBase
-    using Base, BlockArrays, BandedMatrices, BlockBandedMatrices, DomainSets, IntervalSets,
-            SpecialFunctions, AbstractFFTs, FFTW, SpecialFunctions, DSP, DualNumbers, 
-            LinearAlgebra, SparseArrays, LowRankApprox, FillArrays, InfiniteArrays, ContinuumArrays
+    using Base: AnyDict
+using Base, BlockArrays, BandedMatrices, BlockBandedMatrices, DomainSets, IntervalSets,
+            SpecialFunctions, AbstractFFTs, FFTW, SpecialFunctions, DSP, DualNumbers,
+            LinearAlgebra, SparseArrays, LowRankApprox, FillArrays, InfiniteArrays,
+            InfiniteLinearAlgebra, ContinuumArrays
 import StaticArrays, Calculus
 
 import DomainSets: Domain, indomain, UnionDomain, ProductDomain, FullSpace, Point, elements, DifferenceDomain,
             Interval, ChebyshevInterval, boundary, ∂, rightendpoint, leftendpoint,
-            dimension, WrappedDomain, VcatDomain
+            dimension, WrappedDomain, VcatDomain, component, components, ncomponents
 
-            
+
 
 import AbstractFFTs: Plan, fft, ifft
 import FFTW: plan_r2r!, fftwNumber, REDFT10, REDFT01, REDFT00, RODFT00, R2HC, HC2R,
@@ -25,7 +27,7 @@ import Base: values, convert, getindex, setindex!, *, +, -, ==, <, <=, >, |, !, 
                 getproperty, findfirst, unsafe_getindex, fld, cld, div, real, imag,
                 @_inline_meta, eachindex, firstindex, lastindex, keys, isreal, OneTo,
                 Array, Vector, Matrix, view, ones, @propagate_inbounds, print_array,
-                split, iszero, vec
+                split, iszero, permutedims, vec
 
 import Base.Broadcast: BroadcastStyle, Broadcasted, AbstractArrayStyle, broadcastable,
                         DefaultArrayStyle, broadcasted
@@ -65,7 +67,7 @@ import BandedMatrices: bandrange, bandshift,
                         colstart, colstop, colrange, rowstart, rowstop, rowrange,
                         bandwidths, _BandedMatrix, BandedMatrix
 
-import BlockArrays: blocksize, block, blockaxes, blockindex                      
+import BlockArrays: blocksize, block, blockaxes, blockindex
 import BlockBandedMatrices: blockbandwidth, blockbandwidths, blockcolstop, blockcolrange,
                             blockcolstart, blockrowstop, blockrowstart, blockrowrange,
                             subblockbandwidth, subblockbandwidths, _BlockBandedMatrix,
@@ -73,8 +75,8 @@ import BlockBandedMatrices: blockbandwidth, blockbandwidths, blockcolstop, block
                             isblockbanded, isbandedblockbanded, bb_numentries, BlockBandedSizes
 
 import FillArrays: AbstractFill, getindex_value
-import LazyArrays: cache
-import InfiniteArrays: Infinity, InfRanges, AbstractInfUnitRange, OneToInf
+import LazyArrays: cache, CachedVector, cacheddata
+import InfiniteArrays: PosInfinity, InfRanges, AbstractInfUnitRange, OneToInf, InfiniteCardinal
 
 
 # convenience for 1-d block ranges
@@ -98,6 +100,12 @@ export pad!, pad, chop!, sample,
 export .., Interval, ChebyshevInterval, leftendpoint, rightendpoint, endpoints, cache
 
 export bilinearform, linebilinearform, innerproduct, lineinnerproduct
+
+if VERSION < v"1.6-"
+	oneto(n) = Base.OneTo(n)
+else
+	import Base: oneto
+end
 
 
 include("Fun.jl")

@@ -1,4 +1,4 @@
-using ApproxFunBase, ContinuumArrays, OrthogonalPolynomialsQuasi, LinearAlgebra, Random, Test
+using ApproxFunBase, ContinuumArrays, ClassicalOrthogonalPolynomials, LinearAlgebra, Random, Test
 import ApproxFunBase: Infinity, ∞
 
 @testset "Spline" begin
