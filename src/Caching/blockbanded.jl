@@ -6,7 +6,7 @@
 function default_BlockBandedMatrix(S::Operator)
     ret = BlockBandedMatrix(Zeros, S)
 
-    @inbounds for J=blockaxes(ret,2), K=blockcolrange(ret,Int(J))
+    @inbounds for J=blockaxes(ret,2), K=blockcolrange(ret,J)
         ret[K,J] = view(S,K,J)
     end
     ret
