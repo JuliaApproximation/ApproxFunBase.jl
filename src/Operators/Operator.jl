@@ -245,13 +245,13 @@ defaultgetindex(A::Operator,k,j) = view(A,k,j)
 
 
 # TODO: finite dimensional blocks
-blockcolstart(A::Operator,J::Integer) = Block(max(1,J-blockbandwidth(A,2)))
-blockrowstart(A::Operator,K::Integer) = Block(max(1,K-blockbandwidth(A,1)))
-blockcolstop(A::Operator,J::Integer) = Block(min(J+blockbandwidth(A,1),blocksize(A,1)))
-blockrowstop(A::Operator,K::Integer) = Block(min(K+blockbandwidth(A,2),blocksize(A,2)))
+blockcolstart(A::Operator, J::Block{1}) = Block(max(1,Int(J)-blockbandwidth(A,2)))
+blockrowstart(A::Operator, K::Block{1}) = Block(max(1,Int(K)-blockbandwidth(A,1)))
+blockcolstop(A::Operator, J::Block{1}) = Block(min(Int(J)+blockbandwidth(A,1),blocksize(A,1)))
+blockrowstop(A::Operator, K::Block{1}) = Block(min(Int(K)+blockbandwidth(A,2),blocksize(A,2)))
 
-blockrows(A::Operator,K::Integer) = blockrange(rangespace(A),K)
-blockcols(A::Operator,J::Integer) = blockrange(domainspace(A),J)
+blockrows(A::Operator, K::Block{1}) = blockrange(rangespace(A),K)
+blockcols(A::Operator, J::Block{1}) = blockrange(domainspace(A),J)
 
 
 # default is to use bandwidth
