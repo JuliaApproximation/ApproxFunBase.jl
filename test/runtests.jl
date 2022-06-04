@@ -70,4 +70,11 @@ end
     @test count(i -> i == 0.1, r)/length(r) ≈ 0.3/(3.3) atol=0.01
 end
 
+@testset "empty coefficients" begin
+    v = Float64[]
+    f = Fun(PointSpace(), v)
+    # empty coefficients should short-circuit
+    @test ApproxFunBase.coefficients(f) === v
+end
+
 @time include("ETDRK4Test.jl")
