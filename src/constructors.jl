@@ -80,14 +80,14 @@ Fun(f::Fun,::Type{T}) where {T<:Space} = Fun(f,T(domain(f)))
 
 
 Fun(f,T::Type) = Fun(dynamic(f),T())
-Fun(f::Function,T::Type,n::Integer) = Fun(dynamic(f),T(),n)
+Fun(f,T::Type,n::Integer) = Fun(dynamic(f),T(),n)
 
 Fun(f::AbstractVector,d::Domain) = Fun(f,Space(d))
 Fun(d::Domain,f::AbstractVector{T}) where {T<:Number} = Fun(Space(d),f)
 Fun(d::Domain,f::AbstractVector) = Fun(Space(d),f)
 
 
-Fun(f::Function,d::Domain,n) = Fun(dynamic(f),Space(d),n)
+Fun(f,d::Domain,n) = Fun(dynamic(f),Space(d),n)
 
 
 # We do zero special since zero exists even when one doesn't
@@ -170,11 +170,11 @@ Fun(f::typeof(zero), d::Space) = zeros(eltype(domain(d)),d)
 Fun(f::typeof(one), d::Space) = ones(eltype(domain(d)),d)
 
 Fun(f::Type, d::Domain) = Fun(f,Space(d))
-Fun(f::Function, d::Domain) = Fun(f,Space(d))
+Fun(f, d::Domain) = Fun(f,Space(d))
 
 
 # this is the main constructor
-Fun(f::Function, d::Space) = default_Fun(dynamic(f), d)
+Fun(f, d::Space) = default_Fun(dynamic(f), d)
 
 # this supports expanding a Fun to a larger or smaller domain.
 # we take the union and then intersection to get at any singularities
