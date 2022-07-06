@@ -430,8 +430,8 @@ end
 
 transpose(f::Fun) = f  # default no-op
 
-for op = (:(real),:(imag),:(conj))
-    @eval ($op)(f::Fun{S}) where {S<:RealSpace} = Fun(f.space,($op)(f.coefficients))
+for op = (:real, :imag, :conj)
+    @eval Base.$op(f::Fun{S}) where {S<:RealSpace} = Fun(f.space, ($op)(f.coefficients))
 end
 
 conj(f::Fun) = error("Override conj for $(typeof(f))")
