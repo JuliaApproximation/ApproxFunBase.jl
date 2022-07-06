@@ -1,7 +1,7 @@
 module ApproxFunBase
     using Base: AnyDict
 using Base, BlockArrays, BandedMatrices, BlockBandedMatrices, DomainSets, IntervalSets,
-            SpecialFunctions, AbstractFFTs, FFTW, SpecialFunctions, DSP, DualNumbers, 
+            SpecialFunctions, AbstractFFTs, FFTW, SpecialFunctions, DSP, DualNumbers,
             LinearAlgebra, SparseArrays, LowRankApprox, FillArrays, InfiniteArrays, InfiniteLinearAlgebra #, Arpack
 import StaticArrays, Calculus
 
@@ -9,7 +9,7 @@ import DomainSets: Domain, indomain, UnionDomain, ProductDomain, FullSpace, Poin
             Interval, ChebyshevInterval, boundary, ∂, rightendpoint, leftendpoint,
             dimension, WrappedDomain, VcatDomain, component, components, ncomponents
 
-            
+
 
 import AbstractFFTs: Plan, fft, ifft
 import FFTW: plan_r2r!, fftwNumber, REDFT10, REDFT01, REDFT00, RODFT00, R2HC, HC2R,
@@ -64,7 +64,7 @@ import BandedMatrices: bandrange, bandshift,
                         colstart, colstop, colrange, rowstart, rowstop, rowrange,
                         bandwidths, _BandedMatrix, BandedMatrix
 
-import BlockArrays: blocksize, block, blockaxes, blockindex                      
+import BlockArrays: blocksize, block, blockaxes, blockindex
 import BlockBandedMatrices: blockbandwidth, blockbandwidths, blockcolstop, blockcolrange,
                             blockcolstart, blockrowstop, blockrowstart, blockrowrange,
                             subblockbandwidth, subblockbandwidths, _BlockBandedMatrix,

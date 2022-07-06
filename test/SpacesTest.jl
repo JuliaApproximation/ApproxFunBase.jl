@@ -68,7 +68,7 @@ import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, V
         @test @inferred(domain(a^2)) == domain(a)^2
         @test @inferred(points(a^2)) == vec(Vec.(points(a), points(a)'))
         @test  @inferred(checkpoints(a^2)) == vec(Vec.(checkpoints(a)', checkpoints(a)))
-        
+
         aa2 = TensorSpace(a , a^2)
         @test dimension(aa2) == dimension(a)^3
         @test @inferred(domain(aa2)) == domain(a)^3
