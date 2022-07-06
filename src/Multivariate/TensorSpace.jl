@@ -323,10 +323,10 @@ Base.transpose(d::TensorSpace) = TensorSpace(d.spaces[2],d.spaces[1])
 
 
 
-## Transforms                                                          
+## Transforms
 
-for (plan, plan!, Typ) in ((:plan_transform, :plan_transform!, :TransformPlan), 
-                           (:plan_itransform, :plan_itransform!, :ITransformPlan))                                                             
+for (plan, plan!, Typ) in ((:plan_transform, :plan_transform!, :TransformPlan),
+                           (:plan_itransform, :plan_itransform!, :ITransformPlan))
     @eval begin
         $plan!(S::TensorSpace, M::AbstractMatrix) = $Typ(S,(($plan(S.spaces[1],size(M,1)),size(M,1)),
                                                              ($plan(S.spaces[2],size(M,2)),size(M,2))),
@@ -368,7 +368,7 @@ function plan_transform(sp::TensorSpace, ::Type{T}, n::Integer) where {T}
     TransformPlan(sp,((plan_transform(sp.spaces[1],T,N),N),
                     (plan_transform(sp.spaces[2],T,M),M)),
                 Val{false})
-end  
+end
 
 function plan_transform!(sp::TensorSpace, ::Type{T}, n::Integer) where {T}
     P = plan_transform(sp, T, n)
@@ -383,7 +383,7 @@ function plan_itransform(sp::TensorSpace, v::AbstractVector{T}) where {T}
     ITransformPlan(sp,((plan_itransform(sp.spaces[1],T,N),N),
                     (plan_itransform(sp.spaces[2],T,M),M)),
                 Val{false})
-end   
+end
 
 
 function *(T::TransformPlan{TT,<:TensorSpace,true},v::AbstractVector) where TT # need where TT

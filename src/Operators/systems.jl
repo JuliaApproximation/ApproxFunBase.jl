@@ -41,7 +41,7 @@ else
         zeros(Operator{T}, n, n)
     end
 end
-  
+
 ##TODO: unify with other blockdiag
 function blockdiag(d1::AbstractVector{T},d2::AbstractVector{T}) where T<:Operator
     if isempty(d1)&&isempty(d2)

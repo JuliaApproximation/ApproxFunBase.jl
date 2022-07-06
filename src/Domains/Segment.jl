@@ -132,7 +132,7 @@ function broadcasted(::typeof(^),d::Segment,c::Number)
     end
 end
 
-broadcasted(::typeof(Base.literal_pow), ::typeof(^), d::Segment, ::Val{K}) where K = 
+broadcasted(::typeof(Base.literal_pow), ::typeof(^), d::Segment, ::Val{K}) where K =
     broadcasted(^, d, K)
 
 /(d::Segment,c::Number) = broadcast(/,d,c)
@@ -145,7 +145,7 @@ broadcasted(::typeof(sqrt), d::Segment)=Segment(sqrt(leftendpoint(d)),sqrt(right
 broadcasted(::typeof(+),d1::Segment,d2::Segment) = Segment(d1.a+d2.a,d1.b+d2.b)
 
 
-DomainSets.map_domain(map::DomainSets.AbstractAffineMap, domain::AbstractSegment) = 
+DomainSets.map_domain(map::DomainSets.AbstractAffineMap, domain::AbstractSegment) =
     Segment(map(leftendpoint(domain)),map(rightendpoint(domain)))
 
 ## intersect/union
