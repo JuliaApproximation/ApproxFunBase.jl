@@ -12,6 +12,16 @@ import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, V
         @test f/a == Fun(x->(x-0.1)*exp(-x),space(f))
 
         f = Fun(space(f),[1.,2.,3.])
+
+        @testset "real/complex coefficients" begin
+            c = [1:4;]
+            for c2 in Any[c, c*im]
+                g = Fun(PointSpace(1:4), c2)
+                for fn in [real, imag, conj]
+                    @test coefficients(fn(g)) == fn(c2)
+                end
+            end
+        end
     end
 
     @testset "Derivative operator for HeavisideSpace" begin

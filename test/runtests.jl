@@ -25,6 +25,11 @@ import ApproxFunBase: ∞
             [(1,1),(1,2),(2,1),(2,2),(3,1),(3,2)]
     end
 
+    @testset "issue #94" begin
+        @test ApproxFunBase.real !== Base.real
+        @test_throws MethodError ApproxFunBase.real(1,2)
+    end
+
     # TODO: Tensorizer tests
 end
 
