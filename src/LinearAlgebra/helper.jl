@@ -31,8 +31,7 @@ promote_rule(::Type{UnsetNumber},::Type{N}) where {N<:Number} = N
 promote_rule(::Type{Bool}, ::Type{UnsetNumber}) = Bool
 
 # Test the number of arguments a function takes
-hasnumargs(f,k) = applicable(f,zeros(k)...)
-
+hasnumargs(f,k) = k == 1 ? applicable(f, 0.0) : applicable(f, (1.0:k)...)
 
 # fast implementation of isapprox with atol a non-keyword argument in most cases
 isapprox_atol(a,b,atol;kwds...) = isapprox(a,b;atol=atol,kwds...)

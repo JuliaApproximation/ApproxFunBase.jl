@@ -30,6 +30,13 @@ import ApproxFunBase: ∞
         @test_throws MethodError ApproxFunBase.real(1,2)
     end
 
+    @testset "hasnumargs" begin
+        onearg(x) = x
+        twoargs(x, y) = x + y
+        @test ApproxFunBase.hasnumargs(onearg, 1)
+        @test ApproxFunBase.hasnumargs(twoargs, 2)
+    end
+
     # TODO: Tensorizer tests
 end
 
