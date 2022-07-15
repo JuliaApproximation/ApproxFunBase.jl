@@ -103,4 +103,10 @@ import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, V
         @test @inferred(domain(a^3)) == domain(a)^3
         @test_broken @inferred(points(a^3)) == vec(Vec.(points(a), points(a)', reshape(points(a), 1,1,4)))
     end
+
+    @testset "ConstantSpace" begin
+        @test (@inferred convert(Fun, 2)) == Fun(2)
+        f = Fun(2)
+        @test (@inferred convert(Fun{typeof(space(f))}, 2)) == f
+    end
 end
