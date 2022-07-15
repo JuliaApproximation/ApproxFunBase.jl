@@ -641,8 +641,8 @@ end
 
 ## Dynamic functions
 
-struct DFunction <: Function
-    f
+struct DFunction{F} <: Function
+    f :: F
 end
 (f::DFunction)(args...) = f.f(args...)
 

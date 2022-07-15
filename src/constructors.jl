@@ -97,7 +97,10 @@ Fun(c::Number,d::Space) = c==0 ? c*zeros(prectype(d),d) : c*ones(prectype(d),d)
 
 ## Adaptive constructors
 function default_Fun(f, d::Space)
-    hasnumargs(f,1) || return Fun(xy->f(xy...),d)
+    _default_Fun(hasnumargs(f, 1) ? f : Base.splat(f), d)
+end
+# In _default_Fun, we know that the function takes a single argument
+function _default_Fun(f, d::Space)
     isinf(dimension(d)) || return Fun(f,d,dimension(d))  # use exactly dimension number of sample points
 
     #TODO: reuse function values?
@@ -108,10 +111,7 @@ function default_Fun(f, d::Space)
 
     isa(f0,AbstractArray) && size(d) ≠ size(f0) && return Fun(f,Space(fill(d,size(f0))))
 
-
-
     tol =T==Any ? 20eps() : 20eps(T)
-
 
     fr=map(f,r)
     maxabsfr=norm(fr,Inf)
