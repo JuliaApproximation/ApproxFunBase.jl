@@ -80,19 +80,23 @@ coefficient(f::Fun,::Colon) = coefficient(f,1:dimension(space(f)))
 
 
 convert(::Type{Fun{S,T,VT}},f::Fun{S}) where {T,S,VT} =
-    Fun(f.space,convert(VT,f.coefficients))
-convert(::Type{Fun{S,T,VT}},f::Fun) where {T,S,VT} =
-    Fun(Fun(f.space,convert(VT,f.coefficients)),convert(S,space(f)))
+    Fun{S,T,VT}(f.space, convert(VT,f.coefficients)::VT)
+function convert(::Type{Fun{S,T,VT}},f::Fun) where {T,S,VT}
+    g = Fun(Fun(f.space, convert(VT,f.coefficients)::VT), convert(S,space(f))::S)
+    Fun{S,T,VT}(g.space, g.coefficients)
+end
 
-convert(::Type{Fun{S,T}},f::Fun{S}) where {T,S} =
-    Fun(f.space,convert(AbstractVector{T},f.coefficients))
+function convert(::Type{Fun{S,T}},f::Fun{S}) where {T,S}
+    coeff = convert(AbstractVector{T},f.coefficients)::AbstractVector{T}
+    Fun{S, T, typeof(coeff)}(f.space, coeff)
+end
 
 
 convert(::Type{VFun{S,T}},x::Number) where {T,S} =
-    x==0 ? zeros(T,S(AnyDomain())) : x*ones(T,S(AnyDomain()))
+    (x==0 ? zeros(T,S(AnyDomain())) : x*ones(T,S(AnyDomain())))::VFun{S,T}
 convert(::Type{Fun{S}},x::Number) where {S} =
-    x==0 ? zeros(S(AnyDomain())) : x*ones(S(AnyDomain()))
-convert(::Type{IF},x::Number) where {IF<:Fun} = convert(IF,Fun(x))
+    (x==0 ? zeros(S(AnyDomain())) : x*ones(S(AnyDomain())))::Fun{S}
+convert(::Type{IF},x::Number) where {IF<:Fun} = convert(IF,Fun(x))::IF
 
 Fun{S,T,VT}(f::Fun) where {S,T,VT} = convert(Fun{S,T,VT}, f)
 Fun{S,T}(f::Fun) where {S,T} = convert(Fun{S,T}, f)

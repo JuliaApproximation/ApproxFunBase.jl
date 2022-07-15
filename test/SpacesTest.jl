@@ -13,6 +13,20 @@ import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, V
 
         f = Fun(space(f),[1.,2.,3.])
 
+        @testset "conversions" begin
+            @testset for S in Any[typeof(space(f)), Any]
+                T = Fun{S, Any, Any}
+                fany = convert(T, f)
+                @test fany isa T
+                @test (@inferred oftype(f, fany)) isa typeof(f)
+            end
+            S = typeof(space(f))
+            T = Fun{S, Any}
+            fany = convert(T, f)
+            @test fany isa T
+            @test (@inferred oftype(f, fany)) isa typeof(f)
+        end
+
         @testset "real/complex coefficients" begin
             c = [1:4;]
             for c2 in Any[c, c*im]
