@@ -129,7 +129,7 @@ function _default_Fun(f, d::Space)
 
         # we allow for transformed coefficients being a different size
         ##TODO: how to do scaling for unnormalized bases like Jacobi?
-        if ncoefficients(cf) > 8 && maximum(abs,cf.coefficients[bs:end]) < 10tol*maxabsc &&
+        if ncoefficients(cf) > 8 && maximum(abs, @view cf.coefficients[bs:end]) < 10tol*maxabsc &&
                 all(k->norm(cf(r[k])-fr[k],1)<tol*length(cf.coefficients)*maxabsfr*1000,1:length(r))
             return chop!(cf,tol)
         end

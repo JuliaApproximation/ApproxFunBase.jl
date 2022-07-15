@@ -5,11 +5,11 @@ import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, V
     @testset "PointSpace" begin
         @test eltype(domain(PointSpace([0,0.1,1])) ) == Float64
 
-        f=Fun(x->(x-0.1),PointSpace([0,0.1,1]))
+        f = @inferred Fun(x->(x-0.1),PointSpace([0,0.1,1]))
         @test roots(f) == [0.1]
 
-        a=Fun(exp,space(f))
-        @test f/a == Fun(x->(x-0.1)*exp(-x),space(f))
+        a = @inferred Fun(exp, space(f))
+        @test f/a == @inferred Fun(x->(x-0.1)*exp(-x),space(f))
 
         f = Fun(space(f),[1.,2.,3.])
 
