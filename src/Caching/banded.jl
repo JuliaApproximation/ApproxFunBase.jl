@@ -132,14 +132,14 @@ function resizedata!(QR::QROperator{<:CachedOperator{T,<:BandedMatrix{T},
 
         for j=k:k+R.u
             v=r+sz*(R.u + (k-1)*st + (j-k)*(st-1))
-            dt = BandedMatrices.dot(M,wp,1,v,1)
+            dt = dot(M,wp,1,v,1)
             BLAS.axpy!(M,-2*dt,wp,1,v,1)
         end
 
         for j=k+R.u+1:k+R.u+M-1
             p=j-k-R.u
             v=r+sz*((j-1)*st)  # shift down each time
-            dt = BandedMatrices.dot(M-p,wp+p*sz,1,v,1)
+            dt = dot(M-p,wp+p*sz,1,v,1)
             BLAS.axpy!(M-p,-2*dt,wp+p*sz,1,v,1)
         end
     end

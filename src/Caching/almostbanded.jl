@@ -390,14 +390,14 @@ function resizedata!(QR::QROperator{CachedOperator{T,AlmostBandedMatrix{T},
 
         for j=k:k+R.u
             v=r+sz*(R.u + (k-1)*st + (j-k)*(st-1))
-            dt = BandedMatrices.dot(M,wp,1,v,1)
+            dt = dot(M,wp,1,v,1)
             BLAS.axpy!(M,-2*dt,wp,1,v,1)
         end
 
         for j=k+R.u+1:k+R.u+M-1
             p=j-k-R.u
             v=r+sz*((j-1)*st)  # shift down each time
-            dt = BandedMatrices.dot(M-p,wp+p*sz,1,v,1)
+            dt = dot(M-p,wp+p*sz,1,v,1)
             for ℓ=k:k+p-1
                 @inbounds dt=muladd(conj(W[ℓ-k+1,k]),
                                     unsafe_getindex(MO.data.fill,ℓ,j),dt)
@@ -409,7 +409,7 @@ function resizedata!(QR::QROperator{CachedOperator{T,AlmostBandedMatrix{T},
         fst=stride(F,2)
         for j=1:size(F,2)
             v=fp+fst*(j-1)*sz   # the k,jth entry of F
-            dt = BandedMatrices.dot(M,wp,1,v,1)
+            dt = dot(M,wp,1,v,1)
             BLAS.axpy!(M,-2*dt,wp,1,v,1)
         end
     end
