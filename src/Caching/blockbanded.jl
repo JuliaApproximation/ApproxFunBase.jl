@@ -141,7 +141,7 @@ QROperator(R::CachedOperator{T,BlockBandedMatrix{T}}) where {T} =
 # function resizedata!(QR::QROperator{CachedOperator{T,BlockBandedMatrix{T},
 #                                           MM,DS,RS,BI}},
 #                      ::Colon, col) where {T,MM,DS,RS,BI}
-#     if col ≤ QR.ncols
+#     if col ≤ QR.ncols
 #         return QR
 #     end
 #
@@ -214,7 +214,7 @@ function resizedata!(QR::QROperator{CachedOperator{T,BlockBandedMatrix{T},
      ds = domainspace(QR)
      col = blockstop(ds, COL)  # last column
 
-     if col ≤ QR.ncols
+     if col ≤ QR.ncols
          return QR
      end
 
@@ -297,8 +297,8 @@ function resizedata!(QR::QROperator{CachedOperator{T,BlockBandedMatrix{T},
                  # TODO: remove these debugging statement
                  # @assert w_j-1 + M ≤ length(W.data)
                  # @assert shft + st*(ξ_2-1) + M ≤ length(R.data)
-                 # @assert 0 ≤ w_j-1
-                 # if ! (0 ≤ shft + st*(ξ_2-1))
+                 # @assert 0 ≤ w_j-1
+                 # if ! (0 ≤ shft + st*(ξ_2-1))
                  #     @show shft, st, ξ_2, l, u
                  #     @show κ, bs.block_starts[K1,J]
                  #     @show K1, J

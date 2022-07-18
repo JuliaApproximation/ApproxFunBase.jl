@@ -32,7 +32,7 @@ function resizedata!(B::CachedOperator{T,RaggedMatrix{T}},::Colon,n::Integer) wh
         end
 
         # avoid padding with negative length
-        if B.data.cols[n+1] ≤ 0
+        if B.data.cols[n+1] ≤ 0
             return B
         end
 

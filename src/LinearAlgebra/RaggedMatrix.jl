@@ -14,9 +14,9 @@ mutable struct RaggedMatrix{T} <: AbstractMatrix{T}
         # make sure the cols are monitonically increasing
         @assert 1==cols[1]
         for j=1:length(cols)-1
-            @assert cols[j] ≤ cols[j+1]
+            @assert cols[j] ≤ cols[j+1]
         end
-        @assert cols[end] == length(data)+1
+        @assert cols[end] == length(data)+1
 
         # make sure we have less entries than the size of the matrix
         @assert length(data) ≤ m*(length(cols)-1)
@@ -58,7 +58,7 @@ function Base.setindex!(A::RaggedMatrix,v,k::Int,j::Int)
 
     if A.cols[j]+k-1 < A.cols[j+1]
         A.data[A.cols[j]+k-1]=v
-    elseif v ≠ 0
+    elseif v ≠ 0
         throw(BoundsError(A,(k,j)))
     end
     v
@@ -115,7 +115,7 @@ for (op,bop) in ((:(Base.rand), :rrand),)
 end
 
 function RaggedMatrix{T}(Z::Zeros, colns::AbstractVector{Int}) where {T}
-    if size(Z,2) ≠ length(colns)
+    if size(Z,2) ≠ length(colns)
         throw(DimensionMismatch())
     end
     RaggedMatrix(zeros(T,sum(colns)), [1; (1 .+cumsum(colns))], size(Z,1))
@@ -137,7 +137,7 @@ RaggedMatrix(A::AbstractMatrix, colns::AbstractVector{Int}) = RaggedMatrix{eltyp
 function mul!(y::Vector, A::RaggedMatrix, b::Vector)
     m=size(A,2)
 
-    if m ≠ length(b) || size(A,1) ≠ length(y)
+    if m ≠ length(b) || size(A,1) ≠ length(y)
         throw(BoundsError())
     end
     T=eltype(y)
@@ -151,7 +151,7 @@ end
 
 
 function BLAS.axpy!(a, X::RaggedMatrix, Y::RaggedMatrix)
-    if size(X) ≠ size(Y)
+    if size(X) ≠ size(Y)
         throw(BoundsError())
     end
 
@@ -181,7 +181,7 @@ colstop(X::SubArray{T,2,RaggedMatrix{T},Tuple{UnitRange{Int},UnitRange{Int}}},
 
 function BLAS.axpy!(a,X::RaggedMatrix,
                     Y::SubArray{T,2,RaggedMatrix{T},Tuple{UnitRange{Int},UnitRange{Int}}}) where T
-    if size(X) ≠ size(Y)
+    if size(X) ≠ size(Y)
         throw(BoundsError())
     end
 
@@ -194,7 +194,7 @@ function BLAS.axpy!(a,X::RaggedMatrix,
         cy=colstop(Y,j)
         if cx > cy
             for k=cy+1:cx
-                if X[k,j] ≠ 0
+                if X[k,j] ≠ 0
                     throw(BoundsError("Trying to add a non-zero to a zero."))
                 end
             end
@@ -239,7 +239,7 @@ function mul!(Y::RaggedMatrix,A::RaggedMatrix,B::RaggedMatrix)
             col = max(col,colstop(A,k))
         end
 
-        if col > colstop(Y,j)
+        if col > colstop(Y,j)
             throw(BoundsError())
         end
     end

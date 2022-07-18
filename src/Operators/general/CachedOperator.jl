@@ -73,7 +73,7 @@ blockbandwidths(C::CachedOperator{T,BM,M}) where {T<:Number,BM<:BandedMatrix,M<:
 
 @propagate_inbounds function Base.getindex(B::CachedOperator,k::Integer,j::Integer)
     resizedata!(B,k,j)
-    if k ≤ size(B.data,1) && j ≤ size(B.data,2)
+    if k ≤ size(B.data,1) && j ≤ size(B.data,2)
         B.data[k,j]
     else
         zero(eltype(B))

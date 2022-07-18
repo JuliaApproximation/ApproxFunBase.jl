@@ -87,7 +87,7 @@ function Base.kron(f::Fun,g::Fun)
         # the (N+M)th diagonal we have no more entries
         if k+j > N+M
             break
-        elseif k ≤ N && j ≤ M
+        elseif k ≤ N && j ≤ M
             push!(cfs,f.coefficients[k]*g.coefficients[j])
         else
             push!(cfs,0)

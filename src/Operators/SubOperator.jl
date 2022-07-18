@@ -19,8 +19,8 @@ checkbounds(A::Operator,kr,jr) =
 
 
 checkbounds(A::Operator,K::Block,J::Block) =
-     1 ≤ first(K.n[1]) ≤ length(blocklengths(rangespace(A))) &&
-     1 ≤ first(J.n[1]) ≤ length(blocklengths(domainspace(A)))
+     1 ≤ first(K.n[1]) ≤ length(blocklengths(rangespace(A))) &&
+     1 ≤ first(J.n[1]) ≤ length(blocklengths(domainspace(A)))
 
 checkbounds(A::Operator,K::BlockRange{1},J::BlockRange{1}) =
     isempty(K) || isempty(J) ||
@@ -175,7 +175,7 @@ function colstop(S::SubOperator{T,OP,Tuple{UnitRange{Int},UnitRange{Int}}},j::In
     n = size(S,1)
     if cs < first(kr)
         0
-    elseif cs ≥ last(kr)
+    elseif cs ≥ last(kr)
         n
     else
         min(n,findfirst(isequal(cs),kr))

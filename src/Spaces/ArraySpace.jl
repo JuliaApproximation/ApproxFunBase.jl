@@ -142,7 +142,7 @@ end
 
 
 function Fun(v::AbstractVector,sp::Space{D,R}) where {D,R<:AbstractVector}
-    if size(v) ≠ size(sp)
+    if size(v) ≠ size(sp)
         throw(DimensionMismatch("Cannot convert $v to a Fun in space $sp"))
     end
     Fun(map(Fun,v,components(sp)))
@@ -198,7 +198,7 @@ Base.diff(f::Fun{AS,T},n...) where {AS<:ArraySpace,T} = Fun(diff(Array(f),n...))
 ## conversion
 
 function coefficients(f::AbstractVector, a::VectorSpace, b::VectorSpace)
-    if size(a) ≠ size(b)
+    if size(a) ≠ size(b)
         throw(DimensionMismatch("dimensions must match"))
     end
     interlace(map(coefficients,Fun(a,f),b),b)
@@ -279,14 +279,14 @@ ArraySpace(sp::TensorSpace{Tuple{S1,S2}},k...) where {S1,S2<:Space{D,R}} where {
     ArraySpace(map(a -> sp.spaces[1] ⊗ a, sp.spaces[2]))
 
 function coefficients(f::AbstractVector, a::VectorSpace, b::TensorSpace{Tuple{S1,S2},<:EuclideanDomain{2}}) where {S1<:Space{D,R},S2} where {D,R<:AbstractArray}
-    if size(a) ≠ size(b)
+    if size(a) ≠ size(b)
         throw(DimensionMismatch("dimensions must match"))
     end
     interlace(map(coefficients,Fun(a,f),b),ArraySpace(b))
 end
 
 function coefficients(f::AbstractVector, a::VectorSpace, b::TensorSpace{Tuple{S1,S2},<:EuclideanDomain{2}}) where {S1,S2<:Space{D,R}} where {D,R<:AbstractArray}
-    if size(a) ≠ size(b)
+    if size(a) ≠ size(b)
         throw(DimensionMismatch("dimensions must match"))
     end
     interlace(map(coefficients,Fun(a,f),b),ArraySpace(b))

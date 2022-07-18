@@ -50,10 +50,10 @@ function _affine_setdiff(d::Domain, p::Number)
     isempty(d) && return d
     p ∉ d  && return d
     a,b = endpoints(d)
-    if leftendpoint(d) > rightendpoint(d)
+    if leftendpoint(d) > rightendpoint(d)
         a,b = b,a
     end
-    UnionDomain(a..p, p..b) # TODO: Clopen interval
+    UnionDomain(a..p, p..b) # TODO: Clopen interval
 end
 
 function _affine_setdiff(d::Domain, pts)
@@ -66,7 +66,7 @@ function _affine_setdiff(d::Domain, pts)
     isapprox(db,pts[end];atol=tol) && pop!(pts)
 
     sort!(pts)
-    leftendpoint(d) > rightendpoint(d) && reverse!(pts)
+    leftendpoint(d) > rightendpoint(d) && reverse!(pts)
     filter!(p->p ∈ d,pts)
 
     isempty(pts) && return d

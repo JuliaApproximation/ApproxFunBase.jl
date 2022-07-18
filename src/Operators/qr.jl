@@ -85,7 +85,7 @@ size(Q::Adjoint{<:Any,<:QROperatorQ}) = (size(parent(Q),2), size(parent(Q),1))
 
 function qr!(A::CachedOperator; cached::Int=0)
     QR = QROperator(A)
-    if cached ≠ 0
+    if cached ≠ 0
         resizedata!(QR,:,cached)
     end
     QR

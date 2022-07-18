@@ -283,7 +283,7 @@ function bandedblockbanded_colstart(A::Operator, i::Integer)
 end
 
 function bandedblockbanded_colstop(A::Operator, i::Integer)
-    i ≤ 0 && return 0
+    i ≤ 0 && return 0
     ds = domainspace(A)
     rs = rangespace(A)
     B = block(ds,i)
@@ -744,7 +744,7 @@ for TYP in (:RaggedMatrix, :Matrix)
 end
 
 function Vector(S::Operator)
-    if size(S,2) ≠ 1  || isinf(size(S,1))
+    if size(S,2) ≠ 1  || isinf(size(S,1))
         error("Cannot convert $S to a AbstractVector")
     end
 

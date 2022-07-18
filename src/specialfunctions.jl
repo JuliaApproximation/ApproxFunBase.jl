@@ -5,7 +5,7 @@ function split(d::IntervalOrSegment, pts)
     a,b = endpoints(d)
     isendpoint = true
     for p in pts
-        if !(p ≈ a) && !(p ≈ b)
+        if !(p ≈ a) && !(p ≈ b)
             isendpoint = false
             break
         end
@@ -414,11 +414,11 @@ for SP in (:ConstantSpace,:PointSpace)
     for OP in (:^,)
         @eval begin
             function $OP(z::Fun{<:$SP},k::Integer)
-                k ≠ 0 && return Fun(space(z),$OP.(coefficients(z),k))
+                k ≠ 0 && return Fun(space(z),$OP.(coefficients(z),k))
                 Fun(space(z),$OP.(pad(coefficients(z),dimension(space(z))),k))
             end
             function $OP(z::Fun{<:$SP},k::Number)
-                k ≠ 0 && return Fun(space(z),$OP.(coefficients(z),k))
+                k ≠ 0 && return Fun(space(z),$OP.(coefficients(z),k))
                 Fun(space(z),$OP.(pad(coefficients(z),dimension(space(z))),k))
             end
         end
