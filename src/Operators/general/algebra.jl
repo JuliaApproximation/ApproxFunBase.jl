@@ -54,13 +54,9 @@ function convert(::Type{Operator{T}},P::PlusOperator) where T
 end
 
 function promoteplus(opsin::Vector{Operator{T}}) where T
-    ops=Vector{Operator{T}}()
+    ops = copy(opsin)
     # prune zero ops
-    for op in opsin
-        if !iszeroop(op)
-            push!(ops,op)
-        end
-    end
+    filter!(!iszeroop, ops)
     PlusOperator(promotespaces(ops))
 end
 
