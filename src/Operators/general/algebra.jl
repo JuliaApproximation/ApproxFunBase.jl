@@ -72,16 +72,16 @@ domain(P::PlusOperator) = commondomain(P.ops)
 
 
 +(A::PlusOperator,B::PlusOperator) =
-    promoteplus(Operator{promote_type(eltype(A),eltype(B))}[A.ops...,B.ops...])
+    promoteplus(Operator{promote_type(eltype(A),eltype(B))}[A.ops; B.ops])
 +(A::PlusOperator,B::PlusOperator,C::PlusOperator) =
-    promoteplus(Operator{promote_type(eltype(A),eltype(B),eltype(C))}[A.ops...,B.ops...,C.ops...])
+    promoteplus(Operator{promote_type(eltype(A),eltype(B),eltype(C))}[A.ops; B.ops; C.ops])
 +(A::PlusOperator,B::Operator) =
-    promoteplus(Operator{promote_type(eltype(A),eltype(B))}[A.ops...,B])
+    promoteplus(Operator{promote_type(eltype(A),eltype(B))}[A.ops; B])
 +(A::PlusOperator,B::ZeroOperator) = A
 +(A::PlusOperator,B::Operator,C::Operator) =
-    promoteplus(Operator{promote_type(eltype(A),eltype(B),eltype(C))}[A.ops...,B,C])
+    promoteplus(Operator{promote_type(eltype(A),eltype(B),eltype(C))}[A.ops; B; C])
 +(A::Operator,B::PlusOperator) =
-    promoteplus(Operator{promote_type(eltype(A),eltype(B))}[A,B.ops...])
+    promoteplus(Operator{promote_type(eltype(A),eltype(B))}[A; B.ops])
 +(A::ZeroOperator,B::PlusOperator) = B
 +(A::Operator,B::Operator) =
     promoteplus(Operator{promote_type(eltype(A),eltype(B))}[A,B])
@@ -255,11 +255,11 @@ TimesOperator(ops::Vector{OT}) where {OT<:Operator} =
     TimesOperator(convert(Vector{Operator{eltype(OT)}},ops),bandwidthssum(ops))
 
 TimesOperator(A::TimesOperator,B::TimesOperator) =
-    TimesOperator(Operator{promote_type(eltype(A),eltype(B))}[A.ops...,B.ops...])
+    TimesOperator(Operator{promote_type(eltype(A),eltype(B))}[A.ops; B.ops])
 TimesOperator(A::TimesOperator,B::Operator) =
-    TimesOperator(Operator{promote_type(eltype(A),eltype(B))}[A.ops...,B])
+    TimesOperator(Operator{promote_type(eltype(A),eltype(B))}[A.ops; B])
 TimesOperator(A::Operator,B::TimesOperator) =
-    TimesOperator(Operator{promote_type(eltype(A),eltype(B))}[A,B.ops...])
+    TimesOperator(Operator{promote_type(eltype(A),eltype(B))}[A; B.ops])
 TimesOperator(A::Operator,B::Operator) =
     TimesOperator(Operator{promote_type(eltype(A),eltype(B))}[A,B])
 
@@ -270,7 +270,7 @@ function convert(::Type{Operator{T}},P::TimesOperator) where T
     if T==eltype(P)
         P
     else
-        TimesOperator(Operator{T}[P.ops...])
+        TimesOperator(Operator{T}[P.ops;])
     end
 end
 
@@ -490,19 +490,19 @@ for OP in (:(adjoint),:(transpose))
 end
 
 *(A::TimesOperator,B::TimesOperator) =
-    promotetimes(Operator{promote_type(eltype(A),eltype(B))}[A.ops...,B.ops...])
+    promotetimes(Operator{promote_type(eltype(A),eltype(B))}[A.ops; B.ops])
 function *(A::TimesOperator,B::Operator)
     if isconstop(B)
         promotedomainspace(convert(Number,B)*A,domainspace(B))
     else
-        promotetimes(Operator{promote_type(eltype(A),eltype(B))}[A.ops...,B])
+        promotetimes(Operator{promote_type(eltype(A),eltype(B))}[A.ops; B])
     end
 end
 function *(A::Operator,B::TimesOperator)
     if isconstop(A)
         promoterangespace(convert(Number,A)*B,rangespace(A))
     else
-        promotetimes(Operator{promote_type(eltype(A),eltype(B))}[A,B.ops...])
+        promotetimes(Operator{promote_type(eltype(A),eltype(B))}[A; B.ops])
     end
 end
 function *(A::Operator,B::Operator)
