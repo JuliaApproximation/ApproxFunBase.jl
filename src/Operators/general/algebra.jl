@@ -228,45 +228,27 @@ struct TimesOperator{T,BI} <: Operator{T}
     function TimesOperator{T,BI}(ops::Vector{Operator{T}},bi::BI) where {T,BI}
         # check compatible
         for k=1:length(ops)-1
-            @assert size(ops[k],2) == size(ops[k+1],1)
+            size(ops[k],2) == size(ops[k+1],1) || throw(ArgumentError("incompatible operator sizes"))
+            spacescompatible(domainspace(ops[k]),rangespace(ops[k+1])) || throw(ArgumentError("imcompatible spaces at index $k"))
         end
 
         # remove TimesOperators buried inside ops
-        hastimes = false
-        for k=1:length(ops)-1
-            @assert spacescompatible(domainspace(ops[k]),rangespace(ops[k+1]))
-            hastimes = hastimes || isa(ops[k],TimesOperator)
-        end
-
-        if hastimes
-            newops=Vector{Operator{T}}(0)
-            for op in ops
-               if isa(op,TimesOperator)
-                    for op2 in op.ops
-                        push!(newops,op2)
-                    end
-                else
-                    push!(newops,op)
-                end
+        timesinds = findall(x -> isa(x, TimesOperator), ops)
+        if !isempty(timesinds)
+            newops = copy(ops)
+            for ind in timesinds
+                splice!(newops, ind, ops[ind].ops)
             end
-            ops=newops
+        else
+            newops = ops
         end
 
-
-        new{T,BI}(ops,bi)
+        new{T,BI}(newops,bi)
     end
 end
 
-
-function bandwidthsum(P,k)
-    ret=0
-    for op in P
-        ret+=bandwidths(op)[k]
-    end
-    ret
-end
-
-bandwidthssum(P) = (bandwidthsum(P,1),bandwidthsum(P,2))
+bandwidthssum(P, k) = bandwidthssum(P)[k]
+bandwidthssum(P) = mapreduce(bandwidths, (t1, t2) -> t1 .+ t2, P, init = (0,0))
 
 TimesOperator(ops::Vector{Operator{T}},bi::Tuple{N1,N2}) where {T,N1,N2} =
     TimesOperator{T,typeof(bi)}(ops,bi)
