@@ -112,6 +112,23 @@ end
             end
         end
     end
+    @testset "plus operator" begin
+        c = [1,2,3]
+        f = Fun(PointSpace(1:3), c)
+        M = Multiplication(f)
+        @testset for t in [1, 3]
+            op = M + t * M
+            @test bandwidths(op) == bandwidths(M)
+            @test coefficients(op * f) == @. (1+t)*c^2
+            for op2 in Any[M + M + t * M, op + M]
+                @test bandwidths(op2) == bandwidths(M)
+                @test coefficients(op2 * f) == @. (2+t)*c^2
+            end
+            op3 = op + op
+            @test bandwidths(op3) == bandwidths(M)
+            @test coefficients(op3 * f) == @. 2(1+t)*c^2
+        end
+    end
 end
 
 @time include("ETDRK4Test.jl")
