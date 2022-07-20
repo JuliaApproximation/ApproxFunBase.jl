@@ -39,12 +39,9 @@ end
 
 function PlusOperator(ops::Vector)
     # calculate bandwidths
-    b1,b2=-720,-720  # approximates ∞,-∞
-    for op in ops
-        br=bandwidths(op)
-        b1=max(br[1],b1)
-        b2=max(br[end],b2)
-    end
+    almostneginf=-720  # approximates -∞
+    b1 = mapreduce(first ∘ bandwidths, max, ops, init = almostneginf)
+    b2 = mapreduce(last ∘ bandwidths, max, ops, init = almostneginf)
     PlusOperator(ops,(b1,b2))
 end
 
