@@ -82,4 +82,36 @@ end
     @test ApproxFunBase.coefficients(f) === v
 end
 
+@testset "operator algebra" begin
+    @testset "Multiplication" begin
+        sp = PointSpace(1:3)
+        coeff = [1:3;]
+        f = Fun(sp, coeff)
+        for sp2 in Any[(), (sp,)]
+            a = Multiplication(f, sp2...)
+            b = Multiplication(f, sp2...)
+            @test a == b
+            @test bandwidths(a) == bandwidths(b)
+        end
+    end
+    @testset "TimesOperator" begin
+        sp = PointSpace(1:3)
+        coeff = [1:3;]
+        f = Fun(sp, coeff)
+        for sp2 in Any[(), (sp,)]
+            M = Multiplication(f, sp2...)
+            a = (M * M) * M
+            b = M * (M * M)
+            @test a == b
+            @test bandwidths(a) == bandwidths(b)
+        end
+        @testset "unwrap TimesOperator" begin
+            M = Multiplication(f)
+            for ops in Any[Operator{Float64}[M, M * M], Operator{Float64}[M*M, M]]
+                @test TimesOperator(ops).ops == [M, M, M]
+            end
+        end
+    end
+end
+
 @time include("ETDRK4Test.jl")
