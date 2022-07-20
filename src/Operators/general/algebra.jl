@@ -362,7 +362,7 @@ for TYP in (:Matrix, :BandedMatrix, :RaggedMatrix)
         P = parent(V)
 
         if isbanded(P)
-            if $TYP ≠ BandedMatrix
+            if $TYP ≠ BandedMatrix
                 return $TYP(BandedMatrix(V))
             end
         elseif isbandedblockbanded(P)

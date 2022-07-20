@@ -187,7 +187,7 @@ for (OPrule,OP) in ((:conversion_rule,:conversion_type),(:maxspace_rule,:maxspac
             if length(S1) != length(S2)
                 NoSpace()
             elseif canonicalspace(S1sp) == canonicalspace(S2sp)  # this sorts S1 and S2
-                S1sp ≤ S2sp ? S1sp : S2sp  # choose smallest space by sorting
+                S1sp ≤ S2sp ? S1sp : S2sp  # choose smallest space by sorting
             elseif cs1 == cs2
                 # we can just map down
                 # $TYP(map($OP,S1.spaces,S2.spaces))

@@ -90,7 +90,7 @@ function standardchoplength(coeffs, tol)
     # included to bias the result towards the left end, is minimal.
     #
 
-    if  plateauPoint ≠ 0 && envelope[plateauPoint] == 0
+    if  plateauPoint ≠ 0 && envelope[plateauPoint] == 0
         return plateauPoint
     end
 

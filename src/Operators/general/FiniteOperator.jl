@@ -30,7 +30,7 @@ domainspace(F::FiniteOperator) = F.domainspace
 rangespace(F::FiniteOperator) = F.rangespace
 
 function getindex(F::FiniteOperator,k::Integer,j::Integer)
-    if k ≤ size(F.matrix,1) && j ≤ size(F.matrix,2)
+    if k ≤ size(F.matrix,1) && j ≤ size(F.matrix,2)
         F.matrix[k,j]
     elseif k ≤ size(F,1) && j ≤ size(F,2)
         zero(eltype(F))
@@ -51,8 +51,8 @@ end
 
 function BandedMatrix(S::SubOperator{T,FiniteOperator{AT,T}}) where {AT<:BandedMatrix,T}
     kr,jr=parentindices(S)
-    if last(kr[1]) ≤ size(S.matrix,1) &&
-        last(jr[2]) ≤ size(S.matrix,2)
+    if last(kr[1]) ≤ size(S.matrix,1) &&
+        last(jr[2]) ≤ size(S.matrix,2)
         matrix[kr,jr]
     else
         default_copy(S)

@@ -59,7 +59,7 @@ function next(a::Tensorizer{Tuple{AA,BB}}, ((K,J), (k,j), (rsh,csh), (n,m), (i,t
 end
 
 
-done(a::Tensorizer, ((K,J), (k,j), (rsh,csh), (n,m), (i,tot))) = i ≥ tot
+done(a::Tensorizer, ((K,J), (k,j), (rsh,csh), (n,m), (i,tot))) = i ≥ tot
 
 iterate(a::Tensorizer) = next(a, start(a))
 function iterate(a::Tensorizer, st)
@@ -442,7 +442,7 @@ function totensor(it::Tensorizer,M::AbstractVector)
                         sum(it.blocks[2][1:min(B.n[1],length(it.blocks[2]))]))
     k=1
     for (K,J) in it
-        if k > n
+        if k > n
             break
         end
         ret[K,J] = M[k]

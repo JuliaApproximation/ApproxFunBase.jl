@@ -285,7 +285,7 @@ function chebmult_getindex(cfs::AbstractVector,k::Integer,j::Integer)
     end
 
     # Hankel part
-    if k ≥ 2 && k+j-1 ≤ n
+    if k ≥ 2 && k+j-1 ≤ n
         ret += cfs[k+j-1]/2
     end
 

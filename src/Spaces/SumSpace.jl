@@ -479,7 +479,7 @@ union_rule(P::PiecewiseSpace,C::ConstantSpace{AnyDomain}) =
 
 ## Multiplication
 function *(f::Fun{<:PiecewiseSpace,T},g::Fun{<:PiecewiseSpace,N}) where {T,N}
-    domain(f) ≠ domain(g) && return default_mult(f,g)
+    domain(f) ≠ domain(g) && return default_mult(f,g)
 
     Fun(map(*,components(f),components(g)),PiecewiseSpace)
 end

@@ -5,7 +5,7 @@ iterate(::Fun{SequenceSpace}) = 1
 iterate(f::Fun{SequenceSpace}, st) = f[st], st+1
 
 getindex(f::Fun{SequenceSpace}, k::Integer) =
-    k ≤ ncoefficients(f) ? f.coefficients[k] : zero(cfstype(f))
+    k ≤ ncoefficients(f) ? f.coefficients[k] : zero(cfstype(f))
 getindex(f::Fun{SequenceSpace},K::CartesianIndex{0}) = f[1]
 getindex(f::Fun{SequenceSpace},K) = cfstype(f)[f[k] for k in K]
 
@@ -125,7 +125,7 @@ function getindex(C::ConcreteConversion{CS,S,T},k::Integer,j::Integer) where {CS
         throw(BoundsError())
     end
     on=ones(rangespace(C))
-    k ≤ ncoefficients(on) ? convert(T,on.coefficients[k]) : zero(T)
+    k ≤ ncoefficients(on) ? convert(T,on.coefficients[k]) : zero(T)
 end
 
 

@@ -19,7 +19,7 @@ function resizedata!(B::CachedOperator{T,Matrix{T}},n::Integer,m::Integer) where
         B.data = unsafe_resize!(B.data,:,m)
     end
 
-    if n ≤ B.datasize[1] && m ≤ B.datasize[2]
+    if n ≤ B.datasize[1] && m ≤ B.datasize[2]
         # do nothing
         B
     elseif n ≤ B.datasize[1]
@@ -56,7 +56,7 @@ function mulpars(Ac::Adjoint{T,<:QROperatorQ{QROperator{RR,Matrix{T},T},T}},
 
     k=1
     yp=view(Y,1:M)
-    while (k ≤ m+M || norm(yp) > tolerance )
+    while (k ≤ m+M || norm(yp) > tolerance )
         if k > maxlength
             @warn "Maximum length $maxlength reached."
             break
@@ -119,7 +119,7 @@ function mulpars(Ac::Adjoint{T,<:QROperatorQ{QROperator{RR,Matrix{T},T},T}},
 
     k=1
     yp=y
-    while (k ≤ min(m+M,A_dim) || BLAS.nrm2(M,yp,1) > tolerance )
+    while (k ≤ min(m+M,A_dim) || BLAS.nrm2(M,yp,1) > tolerance )
         if k > maxlength
             @warn "Maximum length $maxlength reached."
             break

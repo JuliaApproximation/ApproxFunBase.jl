@@ -110,7 +110,7 @@ scal!(n::Integer,cst::BlasFloat,ret::DenseArray{T},k::Integer) where {T<:BlasFlo
     BLAS.scal!(n,convert(T,cst),ret,k)
 
 function scal!(n::Integer,cst::Number,ret::AbstractArray,k::Integer)
-    @assert k*n ≤ length(ret)
+    @assert k*n ≤ length(ret)
     @simd for j=1:k:k*(n-1)+1
         @inbounds ret[j] *= cst
     end

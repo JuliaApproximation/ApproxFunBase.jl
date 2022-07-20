@@ -60,7 +60,7 @@ end
 function default_Fun(f,d::Space{ReComp},n::Integer,::Type{Val{true}}) where ReComp
     pts=points(d, n)
     f1=f(pts[1]...)
-    if isa(f1,AbstractArray) && size(d) ≠ size(f1)
+    if isa(f1,AbstractArray) && size(d) ≠ size(f1)
         return Fun(f,Space(fill(d,size(f1))),n)
     end
 

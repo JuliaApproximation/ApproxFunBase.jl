@@ -19,7 +19,7 @@ function CachedOperator(io::InterlaceOperator{T,1};padding::Bool=false) where T
     nds=0
     md=0
     for k=1:length(io.ops)
-        if k ≠ i
+        if k ≠ i
             d=dimension(rs[k])
             nds+=d
             md=max(md,d)
@@ -57,7 +57,7 @@ function CachedOperator(io::InterlaceOperator{T,1};padding::Bool=false) where T
     for k=1:n
         K,J=io.rangeinterlacer[k]
 
-        if K ≠ i
+        if K ≠ i
             # fill the fill matrix
             ret.fill.V[:,bcrow] = Matrix(view(io.ops[K],J:J,jr))
             ret.fill.U[k,bcrow] = 1
@@ -104,13 +104,13 @@ function CachedOperator(io::InterlaceOperator{T,2};padding::Bool=false) where T
     # we only support block size 1 for now
     for k in d∞
         bl = blocklengths(ds[k])
-        if !(bl isa AbstractFill) || getindex_value(bl) ≠ 1
+        if !(bl isa AbstractFill) || getindex_value(bl) ≠ 1
             return default_CachedOperator(io;padding=padding)
         end
     end
     for k in r∞
         bl = blocklengths(rs[k])
-        if !(bl isa AbstractFill) || getindex_value(bl) ≠ 1
+        if !(bl isa AbstractFill) || getindex_value(bl) ≠ 1
             return default_CachedOperator(io;padding=padding)
         end
     end
@@ -191,7 +191,7 @@ function resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},
 
     k=1
     for (K,J) in co.op.rangeinterlacer
-        if K ≠ ind
+        if K ≠ ind
             co.data.fill.V[co.datasize[2]:end,k] = co.op.ops[K][J,co.datasize[2]:n+u]
             k += 1
             if k > r
@@ -240,7 +240,7 @@ function resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},
 
     # fill rows
     K=k=1
-    while k ≤ r
+    while k ≤ r
         if isfinite(dimension(rs[ri[K][1]]))
             co.data.fill.V[co.datasize[2]:end,k] = co.op[K,co.datasize[2]:n+u]
             k += 1
@@ -287,7 +287,7 @@ end
 function resizedata!(QR::QROperator{CachedOperator{T,AlmostBandedMatrix{T},
                                                   MM,DS,RS,BI}},
          ::Colon,col) where {T,MM,DS,RS,BI}
-    if col ≤ QR.ncols
+    if col ≤ QR.ncols
         return QR
     end
 
@@ -353,7 +353,7 @@ end
 function resizedata!(QR::QROperator{CachedOperator{T,AlmostBandedMatrix{T},
                                        MM,DS,RS,BI}},
 ::Colon,col) where {T<:BlasFloat,MM,DS,RS,BI}
-    if col ≤ QR.ncols
+    if col ≤ QR.ncols
         return QR
     end
 

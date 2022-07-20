@@ -66,7 +66,7 @@ end
 function coefficient(f::Fun,kr::AbstractRange)
     b = maximum(kr)
 
-    if b ≤ ncoefficients(f)
+    if b ≤ ncoefficients(f)
         f.coefficients[kr]
     else
         [coefficient(f,k) for k in kr]
@@ -591,7 +591,7 @@ function copy(bc::Broadcasted{FunStyle})
 end
 
 function copyto!(dest::Fun, bc::Broadcasted{FunStyle})
-    if broadcastdomain(bc) ≠ domain(dest)
+    if broadcastdomain(bc) ≠ domain(dest)
         throw(ArgumentError("Domain of right-hand side incompatible with destination"))
     end
     ret = copy(bc)

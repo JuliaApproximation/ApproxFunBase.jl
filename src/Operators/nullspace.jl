@@ -41,7 +41,7 @@ function transpose_nullspace(QR::QROperator,tolerance,maxlength)
         QQ=(Matrix(I,m,m)-2v*v')
         K[:,:]=K*QQ[1:end-1,2:end]
 
-        if k+m-1 > size(K,1)
+        if k+m-1 > size(K,1)
             K=pad(K,k+m+100,:)
         end
         K[k+m-1,:]=QQ[end,2:end]
