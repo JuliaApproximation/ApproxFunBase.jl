@@ -13,6 +13,20 @@ import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, V
 
         f = Fun(space(f),[1.,2.,3.])
 
+        @testset "conversions" begin
+            @testset for S in Any[typeof(space(f)), Any]
+                T = Fun{S, Any, Any}
+                fany = convert(T, f)
+                @test fany isa T
+                @test (@inferred oftype(f, fany)) isa typeof(f)
+            end
+            S = typeof(space(f))
+            T = Fun{S, Any}
+            fany = convert(T, f)
+            @test fany isa T
+            @test (@inferred oftype(f, fany)) isa typeof(f)
+        end
+
         @testset "real/complex coefficients" begin
             c = [1:4;]
             for c2 in Any[c, c*im]
@@ -88,5 +102,11 @@ import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, V
         @test dimension(a^3) == dimension(a)^3
         @test @inferred(domain(a^3)) == domain(a)^3
         @test_broken @inferred(points(a^3)) == vec(Vec.(points(a), points(a)', reshape(points(a), 1,1,4)))
+    end
+
+    @testset "ConstantSpace" begin
+        @test (@inferred convert(Fun, 2)) == Fun(2)
+        f = Fun(2)
+        @test (@inferred convert(Fun{typeof(space(f))}, 2)) == f
     end
 end
