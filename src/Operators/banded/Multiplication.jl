@@ -26,6 +26,8 @@ function ConcreteMultiplication(f::Fun{D,T},sp::Space) where {D,T}
     ConcreteMultiplication{D,typeof(sp),V}(convert(Fun{D,V},chop(f,40*eps(cfstype(f)))),sp)
 end
 
+==(A::ConcreteMultiplication, B::ConcreteMultiplication) = (A.f == B.f) && (A.space == B.space)
+
 # We do this in two stages to support Modifier spaces
 # without ambiguity errors
 function defaultMultiplication(f::Fun,sp::Space)

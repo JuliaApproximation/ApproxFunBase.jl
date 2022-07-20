@@ -19,6 +19,7 @@ FiniteOperator(M::AbstractMatrix{<:Number}) =
 convert(::Type{Operator{T}},F::FiniteOperator) where {T} =
     FiniteOperator(convert(AbstractMatrix{T},F.matrix),F.domainspace,F.rangespace)::Operator{T}
 
+==(A::FiniteOperator, B::FiniteOperator) = A.matrix == B.matrix && A.domainspace == B.domainspace && A.rangespace == B.rangespace
 
 Base.promote_rule(::Type{OT},::Type{MT}) where {OT<:Operator,MT<:AbstractMatrix} = Operator{promote_type(eltype(OT),eltype(MT))}
 
