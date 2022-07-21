@@ -37,11 +37,11 @@ import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, V
             end
         end
         @testset "intpow" begin
-            @test f^0 == Fun(space(f), ones(ncoefficients(f)))
-            @test f^1 == f
-            @test f^2 == f*f
-            @test f^3 == f*f*f
-            @test f^-2 == 1/(f*f)
+            @test ApproxFunBase.intpow(f, 0) == f^0 == Fun(space(f), ones(ncoefficients(f)))
+            for n in 1:3
+                @test ApproxFunBase.intpow(f, n) == f^n == reduce(*, fill(f, n))
+            end
+            @test ApproxFunBase.intpow(f,-2) == f^-2 == 1/(f*f)
         end
     end
 
