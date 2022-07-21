@@ -240,8 +240,13 @@ struct TimesOperator{T,BI} <: Operator{T}
     end
 end
 
-bandwidthssum(P, k) = bandwidthssum(P)[k]
+bandwidthssum(P, k::Integer) = bandwidthssum(P)[k]
 bandwidthssum(P) = mapreduce(bandwidths, (t1, t2) -> t1 .+ t2, P, init = (0,0))
+_bandwidthssum(A::Operator, B::Operator) = __bandwidthssum(bandwidths(A), bandwidths(B))
+__bandwidthssum(A::NTuple{2,InfiniteCardinal{0}}, B::NTuple{2,InfiniteCardinal{0}}) = A
+__bandwidthssum(A::NTuple{2,InfiniteCardinal{0}}, B) = A
+__bandwidthssum(A, B::NTuple{2,InfiniteCardinal{0}}) = B
+__bandwidthssum(A, B) = reduce((t1, t2) -> t1 .+ t2, (A, B), init = (0,0))
 
 TimesOperator(ops::Vector{Operator{T}},bi::Tuple{N1,N2}) where {T,N1,N2} =
     TimesOperator{T,typeof(bi)}(ops,bi)
@@ -251,13 +256,13 @@ TimesOperator(ops::Vector{OT}) where {OT<:Operator} =
     TimesOperator(convert(Vector{Operator{eltype(OT)}},ops),bandwidthssum(ops))
 
 TimesOperator(A::TimesOperator,B::TimesOperator) =
-    TimesOperator(Operator{promote_type(eltype(A),eltype(B))}[A.ops; B.ops])
+    TimesOperator(Operator{promote_type(eltype(A),eltype(B))}[A.ops; B.ops], _bandwidthssum(A, B))
 TimesOperator(A::TimesOperator,B::Operator) =
-    TimesOperator(Operator{promote_type(eltype(A),eltype(B))}[A.ops; B])
+    TimesOperator(Operator{promote_type(eltype(A),eltype(B))}[A.ops; B], _bandwidthssum(A, B))
 TimesOperator(A::Operator,B::TimesOperator) =
-    TimesOperator(Operator{promote_type(eltype(A),eltype(B))}[A; B.ops])
+    TimesOperator(Operator{promote_type(eltype(A),eltype(B))}[A; B.ops], _bandwidthssum(A, B))
 TimesOperator(A::Operator,B::Operator) =
-    TimesOperator(Operator{promote_type(eltype(A),eltype(B))}[A,B])
+    TimesOperator(Operator{promote_type(eltype(A),eltype(B))}[A,B], _bandwidthssum(A, B))
 
 
 ==(A::TimesOperator,B::TimesOperator)=A.ops==B.ops
