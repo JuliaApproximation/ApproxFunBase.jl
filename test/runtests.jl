@@ -36,6 +36,12 @@ import ApproxFunBase: ∞
         @test ApproxFunBase.hasnumargs(onearg, 1)
         @test ApproxFunBase.hasnumargs(twoargs, 2)
     end
+    @testset "don't pirate dot" begin
+        @test ApproxFunBase.dot !== LinearAlgebra.dot
+        struct DotTester end
+        # check that unknown types don't lead to a stack overflow
+        @test_throws MethodError ApproxFunBase.dot(DotTester())
+    end
 
     # TODO: Tensorizer tests
 end
