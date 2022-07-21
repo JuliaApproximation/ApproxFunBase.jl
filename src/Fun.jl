@@ -363,10 +363,13 @@ function intpow(f::Fun,k::Integer)
         ones(space(f))
     elseif k==1
         f
-    elseif k > 1
-        f*f^(k-1)
     else
-        1/f^(-k)
+        t = reduce(*, fill(f, abs(k)))
+        if k > 0
+            return t
+        else
+            return 1/t
+        end
     end
 end
 

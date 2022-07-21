@@ -36,6 +36,13 @@ import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, V
                 end
             end
         end
+        @testset "intpow" begin
+            @test ApproxFunBase.intpow(f, 0) == f^0 == Fun(space(f), ones(ncoefficients(f)))
+            for n in 1:3
+                @test ApproxFunBase.intpow(f, n) == f^n == reduce(*, fill(f, n))
+            end
+            @test ApproxFunBase.intpow(f,-2) == f^-2 == 1/(f*f)
+        end
     end
 
     @testset "Derivative operator for HeavisideSpace" begin
