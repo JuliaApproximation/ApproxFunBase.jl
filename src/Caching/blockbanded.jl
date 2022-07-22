@@ -223,9 +223,9 @@ function resizedata!(QR::QROperator{CachedOperator{T,BlockBandedMatrix{T},
 
      # last block, convoluted def to match blockbandedmatrix
      J_col = Int(COL)
-     K_end = Int(blockcolstop(MO, J_col))  # last row block in last column
-     J_end = Int(blockrowstop(MO, K_end))  # QR will affect up to this column
-     j_end = blockstop(domainspace(MO), J_end)  # we need to resize up this column
+     K_end = Int(blockcolstop(MO, Block(J_col)))  # last row block in last column
+     J_end = Int(blockrowstop(MO, Block(K_end)))  # QR will affect up to this column
+     j_end = blockstop(domainspace(MO), Block(J_end))  # we need to resize up this column
      sz = sizeof(T)
 
      if j_end ≥ MO.datasize[2]
@@ -262,7 +262,7 @@ function resizedata!(QR::QROperator{CachedOperator{T,BlockBandedMatrix{T},
          shft = bs.block_starts[K1,J1]-1 + st*(ξ-1) + κ-1 # the index of the pointer to the j, j entry
 
 
-         K_CS = Int(blockcolstop(R,J1)) # last row in J-th blockcolumn
+         K_CS = Int(blockcolstop(R, Block(J1))) # last row in J-th blockcolumn
          k_end = last(bs.axes[1][Block(K_CS)])
 
          w_j = W.cols[j]  # the data index  for the j-th column of W
