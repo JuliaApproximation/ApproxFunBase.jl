@@ -94,6 +94,15 @@ using ApproxFunOrthogonalPolynomials
         M2 = M + M
         infty = ApproxFunBase.InfiniteCardinal{0}()
         @test (@inferred size(M2)) == (infty, infty)
+
+        @testset "literal pow" begin
+            local f = Fun(PointSpace(1:3), Float64[1:3;])
+            @test (@inferred (x -> x^0)(f)) == ApproxFunBase.intpow(f,0)
+            @test (@inferred (x -> x^1)(f)) == ApproxFunBase.intpow(f,1)
+            @test (@inferred (x -> x^2)(f)) == ApproxFunBase.intpow(f,2)
+            @test (@inferred (x -> x^3)(f)) == ApproxFunBase.intpow(f,3)
+            @test (@inferred (x -> x^4)(f)) == ApproxFunBase.intpow(f,4)
+        end
     end
 
     @testset "Derivative operator for HeavisideSpace" begin
