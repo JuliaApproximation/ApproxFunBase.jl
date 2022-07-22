@@ -36,7 +36,7 @@ domain(A::Operator) = domain(domainspace(A))
 
 isconstspace(_) = false
 ## Functionals
-isafunctional(A::Operator) = size(A,1)==1 && isconstspace(rangespace(A))
+isafunctional(A::Operator)::Bool = size(A,1)==1 && isconstspace(rangespace(A))
 
 
 isonesvec(A) = A isa AbstractFill && getindex_value(A) == 1

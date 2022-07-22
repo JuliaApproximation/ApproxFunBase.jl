@@ -30,6 +30,10 @@ import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, V
         A = @inferred f * Multiplication(f)
         @test A * f == f^3
 
+        @testset "inafunctional inference" begin
+            @test @inferred !ApproxFunBase.isafunctional(Multiplication(f))
+        end
+
         @testset "real/complex coefficients" begin
             c = [1:4;]
             for c2 in Any[c, c*im]
