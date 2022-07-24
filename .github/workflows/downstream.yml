@@ -21,6 +21,7 @@ jobs:
         package:
           - {repo: ApproxFun.jl, group: JuliaApproximation}
           - {repo: ApproxFunOrthogonalPolynomials.jl, group: JuliaApproximation}
+          - {repo: ApproxFunFourier.jl, group: JuliaApproximation}
 
     steps:
       - uses: actions/checkout@v2
