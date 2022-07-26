@@ -71,7 +71,7 @@ end
 
 default_Fun(f,d::Space{ReComp},n::Integer) where {ReComp} = default_Fun(f,d,n,Val{!hasnumargs(f,1)})
 
-Fun(f::Function,d::Space{ReComp},n::Integer) where {ReComp} = default_Fun(dynamic(f),d,n)
+Fun(f,d::Space{ReComp},n::Integer) where {ReComp} = default_Fun(dynamic(f),d,n)
 
 # the following is to avoid ambiguity
 # Fun(f::Fun,d) should be equivalent to Fun(x->f(x),d)

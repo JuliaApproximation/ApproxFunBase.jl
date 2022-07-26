@@ -50,6 +50,14 @@ import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, V
             end
             @test ApproxFunBase.intpow(f,-2) == f^-2 == 1/(f*f)
         end
+
+        @testset "Fun accepts callables" begin
+            struct Foo end
+            (::Foo)(x) = x
+            f1 = Fun(Foo(), PointSpace(1:10))
+            f2 = Fun(Foo(), PointSpace(1:10), 10)
+            @test coefficients(f1) == coefficients(f2)
+        end
     end
 
     @testset "Derivative operator for HeavisideSpace" begin
