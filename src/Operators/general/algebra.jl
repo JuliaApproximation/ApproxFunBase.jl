@@ -18,8 +18,9 @@ end
 
 Base.size(P::PlusOperator,k::Integer) = size(first(P.ops),k)
 
+bandwidthsmax(ops) = mapreduce(bandwidths, (t1,t2) -> max.(t1, t2), ops, init = (-720, -720) #= approximate (-∞,-∞) =#)
 
-PlusOperator(opsin::Vector{Operator{T}},bi::Tuple{UT,VT}) where {T,UT,VT} =
+PlusOperator(opsin::Vector{Operator{T}},bi::Tuple{Any,Any} = bandwidthsmax(opsin)) where {T} =
     PlusOperator{T,typeof(bi)}(opsin,bi)
 
 bandwidths(P::PlusOperator) = P.bandwidths
@@ -35,14 +36,6 @@ for (OP,mn) in ((:colstart,:min),(:colstop,:max),(:rowstart,:min),(:rowstop,:max
             mapreduce(op->$OP(op,k),$mn,P.ops)
         end
     end
-end
-
-function PlusOperator(ops::Vector)
-    # calculate bandwidths
-    almostneginf=-720  # approximates -∞
-    b1 = mapreduce(first ∘ bandwidths, max, ops, init = almostneginf)
-    b2 = mapreduce(last ∘ bandwidths, max, ops, init = almostneginf)
-    PlusOperator(ops,(b1,b2))
 end
 
 function convert(::Type{Operator{T}},P::PlusOperator) where T
@@ -69,25 +62,18 @@ domain(P::PlusOperator) = commondomain(P.ops)
 _promote_eltypeof(As...) = _promote_eltypeof(As)
 _promote_eltypeof(As::Union{Vector, Tuple}) = mapreduce(eltype, promote_type, As)
 
-+(A::PlusOperator,B::PlusOperator) =
-    promoteplus(Operator{_promote_eltypeof(A,B)}[A.ops; B.ops])
-+(A::PlusOperator,B::PlusOperator,C::PlusOperator) =
-    promoteplus(Operator{_promote_eltypeof(A,B,C)}[A.ops; B.ops; C.ops])
-+(A::PlusOperator,B::Operator) =
-    promoteplus(Operator{_promote_eltypeof(A,B)}[A.ops; B])
-+(A::PlusOperator,B::ZeroOperator) = A
-+(A::PlusOperator,B::Operator,C::Operator) =
-    promoteplus(Operator{_promote_eltypeof(A,B,C)}[A.ops; B; C])
-+(A::Operator,B::PlusOperator) =
-    promoteplus(Operator{_promote_eltypeof(A,B)}[A; B.ops])
-+(A::ZeroOperator,B::PlusOperator) = B
-+(A::Operator,B::Operator) =
-    promoteplus(Operator{_promote_eltypeof(A,B)}[A,B])
-+(A::Operator,B::Operator,C::Operator) =
-    promoteplus(Operator{_promote_eltypeof(A,B,C)}[A,B,C])
+_extractops(A, ::Any) = [A]
+_extractops(A::PlusOperator, ::typeof(+)) = A.ops
 
-
-
+function +(A::Operator,B::Operator)
+    v = Operator{_promote_eltypeof(A,B)}[_extractops(A, +); _extractops(B, +)]
+    promoteplus(v)
+end
+# Optimization for 3-term sum
+function +(A::Operator,B::Operator,C::Operator)
+    v = Operator{_promote_eltypeof(A,B,C)}[_extractops(A,+); _extractops(B, +); _extractops(C, +)]
+    promoteplus(v)
+end
 
 Base.stride(P::PlusOperator)=mapreduce(stride,gcd,P.ops)
 
@@ -137,7 +123,7 @@ for TYP in (:ZeroOperator,:Operator)
     end
 end
 +(A::ZeroOperator,B::Operator) = B+A
-
++(Z1::ZeroOperator, Z2::ZeroOperator, Z3::ZeroOperator) = (Z1 + Z2) + Z3
 
 
 
@@ -257,14 +243,12 @@ TimesOperator(ops::Vector{Operator{T}}) where {T} = TimesOperator(ops,bandwidths
 TimesOperator(ops::Vector{OT}) where {OT<:Operator} =
     TimesOperator(convert(Vector{Operator{eltype(OT)}},ops),bandwidthssum(ops))
 
-TimesOperator(A::TimesOperator,B::TimesOperator) =
-    TimesOperator(Operator{_promote_eltypeof(A,B)}[A.ops; B.ops], _bandwidthssum(A, B))
-TimesOperator(A::TimesOperator,B::Operator) =
-    TimesOperator(Operator{_promote_eltypeof(A,B)}[A.ops; B], _bandwidthssum(A, B))
-TimesOperator(A::Operator,B::TimesOperator) =
-    TimesOperator(Operator{_promote_eltypeof(A,B)}[A; B.ops], _bandwidthssum(A, B))
-TimesOperator(A::Operator,B::Operator) =
-    TimesOperator(Operator{_promote_eltypeof(A,B)}[A,B], _bandwidthssum(A, B))
+_extractops(A::TimesOperator, ::typeof(*)) = A.ops
+
+function TimesOperator(A::Operator,B::Operator)
+    v = Operator{_promote_eltypeof(A,B)}[_extractops(A, *); _extractops(B, *)]
+    TimesOperator(v, _bandwidthssum(A, B))
+end
 
 
 ==(A::TimesOperator,B::TimesOperator)=A.ops==B.ops
@@ -492,29 +476,13 @@ for OP in (:(adjoint),:(transpose))
     @eval $OP(A::TimesOperator)=TimesOperator(reverse!(map($OP,A.ops)))
 end
 
-*(A::TimesOperator,B::TimesOperator) =
-    promotetimes(Operator{_promote_eltypeof(A, B)}[A.ops; B.ops])
-function *(A::TimesOperator,B::Operator)
-    if isconstop(B)
-        promotedomainspace(convert(Number,B)*A,domainspace(B))
-    else
-        promotetimes(Operator{_promote_eltypeof(A, B)}[A.ops; B])
-    end
-end
-function *(A::Operator,B::TimesOperator)
-    if isconstop(A)
-        promoterangespace(convert(Number,A)*B,rangespace(A))
-    else
-        promotetimes(Operator{_promote_eltypeof(A, B)}[A; B.ops])
-    end
-end
 function *(A::Operator,B::Operator)
     if isconstop(A)
         promoterangespace(convert(Number,A)*B,rangespace(A))
     elseif isconstop(B)
         promotedomainspace(convert(Number,B)*A,domainspace(B))
     else
-        promotetimes(Operator{_promote_eltypeof(A, B)}[A,B])
+        promotetimes(Operator{_promote_eltypeof(A, B)}[_extractops(A, *); _extractops(B, *)])
     end
 end
 

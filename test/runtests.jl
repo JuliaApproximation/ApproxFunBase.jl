@@ -124,6 +124,17 @@ end
                 @test TimesOperator(ops).ops == [M, M, M]
             end
         end
+        M = Multiplication(f)
+        @test coefficients(((M * M) * M) * f) == coefficients((M * M * M) * f)
+        T = @inferred TimesOperator(M, M)
+        TM = @inferred TimesOperator(T, M)
+        MT = @inferred TimesOperator(M, T)
+        TT = @inferred TimesOperator(T, T)
+        @test T == M * M
+        @test TM == T * M
+        @test MT == M * T
+        @test T * M == M * T == M * M * M
+        @test TT == T * T == M * M * M * M
     end
     @testset "plus operator" begin
         c = [1,2,3]
@@ -140,7 +151,16 @@ end
             op3 = op + op
             @test bandwidths(op3) == bandwidths(M)
             @test coefficients(op3 * f) == @. 2(1+t)*c^2
+
+            f1 = (op + op - op)*f
+            f2 = ((op + op) - op)*f
+            f3 = op * f
+            @test coefficients(f1) == coefficients(f2) == coefficients(f3)
         end
+        Z = ApproxFunBase.ZeroOperator()
+        @test Z + Z == Z
+        @test Z + Z + Z == Z
+        @test Z + Z + Z + Z == Z
     end
 end
 
