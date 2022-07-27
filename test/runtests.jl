@@ -127,8 +127,14 @@ end
         M = Multiplication(f)
         @test coefficients(((M * M) * M) * f) == coefficients((M * M * M) * f)
         T = @inferred TimesOperator(M, M)
+        TM = @inferred TimesOperator(T, M)
+        MT = @inferred TimesOperator(M, T)
+        TT = @inferred TimesOperator(T, T)
         @test T == M * M
+        @test TM == T * M
+        @test MT == M * T
         @test T * M == M * T == M * M * M
+        @test TT == T * T == M * M * M * M
     end
     @testset "plus operator" begin
         c = [1,2,3]
