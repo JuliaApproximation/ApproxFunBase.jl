@@ -126,6 +126,9 @@ end
         end
         M = Multiplication(f)
         @test coefficients(((M * M) * M) * f) == coefficients((M * M * M) * f)
+        T = @inferred TimesOperator(M, M)
+        @test T == M * M
+        @test T * M == M * T == M * M * M
     end
     @testset "plus operator" begin
         c = [1,2,3]

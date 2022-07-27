@@ -476,29 +476,13 @@ for OP in (:(adjoint),:(transpose))
     @eval $OP(A::TimesOperator)=TimesOperator(reverse!(map($OP,A.ops)))
 end
 
-*(A::TimesOperator,B::TimesOperator) =
-    promotetimes(Operator{_promote_eltypeof(A, B)}[A.ops; B.ops])
-function *(A::TimesOperator,B::Operator)
-    if isconstop(B)
-        promotedomainspace(convert(Number,B)*A,domainspace(B))
-    else
-        promotetimes(Operator{_promote_eltypeof(A, B)}[A.ops; B])
-    end
-end
-function *(A::Operator,B::TimesOperator)
-    if isconstop(A)
-        promoterangespace(convert(Number,A)*B,rangespace(A))
-    else
-        promotetimes(Operator{_promote_eltypeof(A, B)}[A; B.ops])
-    end
-end
 function *(A::Operator,B::Operator)
     if isconstop(A)
         promoterangespace(convert(Number,A)*B,rangespace(A))
     elseif isconstop(B)
         promotedomainspace(convert(Number,B)*A,domainspace(B))
     else
-        promotetimes(Operator{_promote_eltypeof(A, B)}[A,B])
+        promotetimes(Operator{_promote_eltypeof(A, B)}[_extractops(A, *); _extractops(B, *)])
     end
 end
 
