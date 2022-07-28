@@ -38,7 +38,7 @@ struct PrintShow
 end
 Base.show(io::IO,N::PrintShow) = print(io,N.str)
 
-show(io::IO, B::Operator) = summary(io, B)
+show(io::IO, B::Operator; kw...) = summary(io, B)
 
 function show(io::IO, ::MIME"text/plain", B::Operator;header::Bool=true)
     header && summary(io, B)
