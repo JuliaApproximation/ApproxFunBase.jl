@@ -37,5 +37,13 @@
 			show(io, MIME"text/plain"(), D)
 			@test contains(String(take!(io)), dsum)
 		end
+		@testset "QuotientSpace" begin
+			Q = QuotientSpace(Dirichlet(ConstantSpace(0..1)))
+			@test startswith(repr(Q), "ConstantSpace(0..1) /")
+			io = IOBuffer()
+			show(io, MIME"text/plain"(), Q)
+			s = String(take!(io))
+			@test startswith(s, "ConstantSpace(0..1) /")
+		end
 	end
 end

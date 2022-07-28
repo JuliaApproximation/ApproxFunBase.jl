@@ -120,7 +120,13 @@ end
 function show(io::IO,s::QuotientSpace)
     show(io,s.space)
     print(io," /\n")
-    show(io,s.bcs;header=false)
+    show(io,s.bcs)
+end
+
+function show(io::IO, m::MIME"text/plain", s::QuotientSpace)
+    show(io,s.space)
+    print(io," /\n")
+    show(io, m, s.bcs)
 end
 
 
