@@ -245,7 +245,7 @@ At the moment it is implemented as `Dirichlet(sp,1)`.
 Neumann(sp::Space)
 
 """
-`Neumann( is the operator associated with restricting the
+`Neumann()` is the operator associated with restricting the
 normal derivative on the boundary.
 """
 Neumann()
