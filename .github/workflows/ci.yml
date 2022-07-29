@@ -4,6 +4,7 @@ on:
     tags:
   push:
     branches:
+      - 'backport**'
       - master
     paths-ignore:
       - 'LICENSE'
