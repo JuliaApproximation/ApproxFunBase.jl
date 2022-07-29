@@ -9,7 +9,7 @@ export domainspace,rangespace
 abstract type Operator{T} end #T is the entry type, Float64 or Complex{Float64}
 
 eltype(::Operator{T}) where {T} = T
-eltype(::Type{Operator{T}}) where {T} = T
+eltype(::Type{<:Operator{T}}) where {T} = T
 eltype(::Type{OT}) where {OT<:Operator} = eltype(supertype(OT))
 
 
