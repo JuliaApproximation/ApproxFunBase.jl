@@ -276,7 +276,7 @@ Integral(::Space,::Int)
 Integral(::Space)
 
 """
-Integral(k)` represents the `k`-th integral, acting on an unset space.
+`Integral(k)` represents the `k`-th integral, acting on an unset space.
 Spaces will be inferred when applying or manipulating the operator.
 """
 Integral(k)
