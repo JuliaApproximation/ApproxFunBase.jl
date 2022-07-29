@@ -131,4 +131,14 @@ import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, V
         f = Fun(2)
         @test (@inferred convert(Fun{typeof(space(f))}, 2)) == f
     end
+
+    @testset "promotion" begin
+        M = Multiplication(Fun(PointSpace(1:3), [1:3;]));
+        D = Derivative()
+        for v in Any[[M, M], [D, D], [D, M]]
+            @test (@inferred ApproxFunBase.promotedomainspace(v)) == v
+            @test (@inferred ApproxFunBase.promoterangespace(v)) == v
+            @test (@inferred ApproxFunBase.promotespaces(v)) == v
+        end
+    end
 end
