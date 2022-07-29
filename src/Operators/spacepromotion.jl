@@ -47,24 +47,12 @@ rangespace(S::SpaceOperator) = S.rangespace
 
 
 ##TODO: Do we need both max and min?
-function findmindomainspace(ops::AbstractVector)::Any
-    sp = UnsetSpace()
-
-    for op in ops
-        sp = union(sp,domainspace(op))
-    end
-
-    sp
+function findmindomainspace(ops::AbstractVector)
+    mapreduce(domainspace, union, ops, init = UnsetSpace())
 end
 
-function findmaxrangespace(ops::AbstractVector)::Any
-    sp = UnsetSpace()
-
-    for op in ops
-        sp = maxspace(sp,rangespace(op))
-    end
-
-    sp
+function findmaxrangespace(ops::AbstractVector)
+    mapreduce(rangespace, maxspace, ops, init = UnsetSpace())
 end
 
 
@@ -80,9 +68,9 @@ promoterangespace(P::Operator,sp::Space) = promoterangespace(P,sp,rangespace(P))
 promotedomainspace(P::Operator,sp::Space) = promotedomainspace(P,sp,domainspace(P))
 
 
-promoterangespace(P::Operator,sp::Space,cursp::Space)::Any =
+promoterangespace(P::Operator,sp::Space,cursp::Space) =
     (sp==cursp) ? P : Conversion(cursp,sp)*P
-promotedomainspace(P::Operator,sp::Space,cursp::Space)::Any =
+promotedomainspace(P::Operator,sp::Space,cursp::Space) =
     (sp==cursp) ? P : P*Conversion(sp,cursp)
 
 
@@ -90,21 +78,21 @@ promotedomainspace(P::Operator,sp::Space,cursp::Space)::Any =
 
 
 function promoterangespace(ops::AbstractVector{O}) where O<:Operator
-    isempty(ops) && return ops
+    isempty(ops) && return convert(Vector{Operator{eltype(O)}}, ops)
     k=findmaxrangespace(ops)
     #TODO: T might be incorrect
     T=mapreduce(eltype,promote_type,ops)
     Operator{T}[promoterangespace(op,k) for op in ops]
 end
 function promotedomainspace(ops::AbstractVector{O}) where O<:Operator
-    isempty(ops) && return ops
+    isempty(ops) && return convert(Vector{Operator{eltype(O)}}, ops)
     k=findmindomainspace(ops)
     #TODO: T might be incorrect
     T=mapreduce(eltype,promote_type,ops)
     Operator{T}[promotedomainspace(op,k) for op in ops]
 end
 function promotedomainspace(ops::AbstractVector{O},S::Space) where O<:Operator
-    isempty(ops) && return ops
+    isempty(ops) && return convert(Vector{Operator{eltype(O)}}, ops)
     k=conversion_type(findmindomainspace(ops),S)
     #TODO: T might be incorrect
     T=promote_type(mapreduce(eltype,promote_type,ops),prectype(S))
