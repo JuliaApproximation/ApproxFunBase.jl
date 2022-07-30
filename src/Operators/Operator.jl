@@ -5,6 +5,8 @@ export ldirichlet,rdirichlet,lneumann,rneumann
 export ldiffbc,rdiffbc,diffbcs
 export domainspace,rangespace
 
+const VectorIndices = Union{AbstractRange, Colon}
+const IntOrVectorIndices = Union{Integer, VectorIndices}
 
 abstract type Operator{T} end #T is the entry type, Float64 or Complex{Float64}
 
