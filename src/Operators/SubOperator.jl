@@ -272,11 +272,13 @@ end
 size(V::SubOperator) = V.dims
 size(V::SubOperator,k::Int) = V.dims[k]
 
+axes(V::SubOperator) = map(Base.OneTo, size(V))
+axes(V::SubOperator, k::Integer) = k <= 2 ? axes(V)[k] : Base.OneTo(1)
+
 unsafe_getindex(V::SubOperator,k::Integer,j::Integer) = V.parent[reindex(V,parentindices(V),(k,j))...]
-getindex(V::SubOperator,k::Integer,j::Integer) = V.parent[reindex(V,parentindices(V),(k,j))...]
-getindex(V::SubOperator,k::Integer,j::AbstractRange) = V.parent[reindex(V,parentindices(V),(k,j))...]
-getindex(V::SubOperator,k::AbstractRange,j::Integer) = V.parent[reindex(V,parentindices(V),(k,j))...]
-getindex(V::SubOperator,k::AbstractRange,j::AbstractRange) = V.parent[reindex(V,parentindices(V),(k,j))...]
+function getindex(V::SubOperator,k::IntOrVectorIndices,j::IntOrVectorIndices)
+    V.parent[reindex(V,parentindices(V),(k,j))...]
+end
 Base.parent(S::SubOperator) = S.parent
 Base.parentindices(S::SubOperator) = S.indexes
 

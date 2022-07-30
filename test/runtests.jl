@@ -164,4 +164,34 @@ end
     end
 end
 
+@testset "operator indexing" begin
+    @testset "SubOperator" begin
+        D = Dirichlet(ConstantSpace(0..1))
+        S = D[:, :]
+        @test S[1,1] == 1
+        ax1 = axes(S, 1)
+        ax2 = axes(S, 2)
+        inds1 = Any[ax1, StepRange(ax1), :]
+        inds2 = Any[ax2, StepRange(ax2), :]
+        @testset for r2 in inds2, r1 in inds1
+            M = S[r1, r2]
+            @test M isa AbstractMatrix
+            @test size(M) == (2,1)
+            @test all(==(1), M)
+        end
+        @testset for r1 in inds1
+            V = S[r1, 1]
+            @test V isa AbstractVector
+            @test size(V) == (2,)
+            @test all(==(1), V)
+        end
+        @testset for r2 in inds2
+            V = S[1, r2]
+            @test V isa AbstractVector
+            @test size(V) == (1,)
+            @test all(==(1), V)
+        end
+    end
+end
+
 @time include("ETDRK4Test.jl")
