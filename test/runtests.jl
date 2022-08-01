@@ -95,102 +95,109 @@ end
     @test ApproxFunBase.coefficients(f) === v
 end
 
-@testset "operator algebra" begin
-    @testset "Multiplication" begin
-        sp = PointSpace(1:3)
-        coeff = [1:3;]
-        f = Fun(sp, coeff)
-        for sp2 in Any[(), (sp,)]
-            a = Multiplication(f, sp2...)
-            b = Multiplication(f, sp2...)
-            @test a == b
-            @test bandwidths(a) == bandwidths(b)
+@testset "operator" begin
+    @testset "operator algebra" begin
+        @testset "Multiplication" begin
+            sp = PointSpace(1:3)
+            coeff = [1:3;]
+            f = Fun(sp, coeff)
+            for sp2 in Any[(), (sp,)]
+                a = Multiplication(f, sp2...)
+                b = Multiplication(f, sp2...)
+                @test a == b
+                @test bandwidths(a) == bandwidths(b)
+            end
         end
-    end
-    @testset "TimesOperator" begin
-        sp = PointSpace(1:3)
-        coeff = [1:3;]
-        f = Fun(sp, coeff)
-        for sp2 in Any[(), (sp,)]
-            M = Multiplication(f, sp2...)
-            a = (M * M) * M
-            b = M * (M * M)
-            @test a == b
-            @test bandwidths(a) == bandwidths(b)
-        end
-        @testset "unwrap TimesOperator" begin
+        @testset "TimesOperator" begin
+            sp = PointSpace(1:3)
+            coeff = [1:3;]
+            f = Fun(sp, coeff)
+            for sp2 in Any[(), (sp,)]
+                M = Multiplication(f, sp2...)
+                a = (M * M) * M
+                b = M * (M * M)
+                @test a == b
+                @test bandwidths(a) == bandwidths(b)
+            end
+            @testset "unwrap TimesOperator" begin
+                M = Multiplication(f)
+                for ops in Any[Operator{Float64}[M, M * M], Operator{Float64}[M*M, M]]
+                    @test TimesOperator(ops).ops == [M, M, M]
+                end
+            end
             M = Multiplication(f)
-            for ops in Any[Operator{Float64}[M, M * M], Operator{Float64}[M*M, M]]
-                @test TimesOperator(ops).ops == [M, M, M]
+            @test coefficients(((M * M) * M) * f) == coefficients((M * M * M) * f)
+            T = @inferred TimesOperator(M, M)
+            TM = @inferred TimesOperator(T, M)
+            MT = @inferred TimesOperator(M, T)
+            TT = @inferred TimesOperator(T, T)
+            @test T == M * M
+            @test TM == T * M
+            @test MT == M * T
+            @test T * M == M * T == M * M * M
+            @test TT == T * T == M * M * M * M
+        end
+        @testset "plus operator" begin
+            c = [1,2,3]
+            f = Fun(PointSpace(1:3), c)
+            M = Multiplication(f)
+            @testset for t in [1, 3]
+                op = M + t * M
+                @test bandwidths(op) == bandwidths(M)
+                @test coefficients(op * f) == @. (1+t)*c^2
+                for op2 in Any[M + M + t * M, op + M]
+                    @test bandwidths(op2) == bandwidths(M)
+                    @test coefficients(op2 * f) == @. (2+t)*c^2
+                end
+                op3 = op + op
+                @test bandwidths(op3) == bandwidths(M)
+                @test coefficients(op3 * f) == @. 2(1+t)*c^2
+
+                f1 = (op + op - op)*f
+                f2 = ((op + op) - op)*f
+                f3 = op * f
+                @test coefficients(f1) == coefficients(f2) == coefficients(f3)
+            end
+            Z = ApproxFunBase.ZeroOperator()
+            @test Z + Z == Z
+            @test Z + Z + Z == Z
+            @test Z + Z + Z + Z == Z
+        end
+    end
+
+    @testset "operator indexing" begin
+        @testset "SubOperator" begin
+            D = Dirichlet(ConstantSpace(0..1))
+            S = D[:, :]
+            @test S[1,1] == 1
+            ax1 = axes(S, 1)
+            ax2 = axes(S, 2)
+            inds1 = Any[ax1, StepRange(ax1), :]
+            inds2 = Any[ax2, StepRange(ax2), :]
+            @testset for r2 in inds2, r1 in inds1
+                M = S[r1, r2]
+                @test M isa AbstractMatrix
+                @test size(M) == (2,1)
+                @test all(==(1), M)
+            end
+            @testset for r1 in inds1
+                V = S[r1, 1]
+                @test V isa AbstractVector
+                @test size(V) == (2,)
+                @test all(==(1), V)
+            end
+            @testset for r2 in inds2
+                V = S[1, r2]
+                @test V isa AbstractVector
+                @test size(V) == (1,)
+                @test all(==(1), V)
             end
         end
-        M = Multiplication(f)
-        @test coefficients(((M * M) * M) * f) == coefficients((M * M * M) * f)
-        T = @inferred TimesOperator(M, M)
-        TM = @inferred TimesOperator(T, M)
-        MT = @inferred TimesOperator(M, T)
-        TT = @inferred TimesOperator(T, T)
-        @test T == M * M
-        @test TM == T * M
-        @test MT == M * T
-        @test T * M == M * T == M * M * M
-        @test TT == T * T == M * M * M * M
     end
-    @testset "plus operator" begin
-        c = [1,2,3]
-        f = Fun(PointSpace(1:3), c)
-        M = Multiplication(f)
-        @testset for t in [1, 3]
-            op = M + t * M
-            @test bandwidths(op) == bandwidths(M)
-            @test coefficients(op * f) == @. (1+t)*c^2
-            for op2 in Any[M + M + t * M, op + M]
-                @test bandwidths(op2) == bandwidths(M)
-                @test coefficients(op2 * f) == @. (2+t)*c^2
-            end
-            op3 = op + op
-            @test bandwidths(op3) == bandwidths(M)
-            @test coefficients(op3 * f) == @. 2(1+t)*c^2
 
-            f1 = (op + op - op)*f
-            f2 = ((op + op) - op)*f
-            f3 = op * f
-            @test coefficients(f1) == coefficients(f2) == coefficients(f3)
-        end
-        Z = ApproxFunBase.ZeroOperator()
-        @test Z + Z == Z
-        @test Z + Z + Z == Z
-        @test Z + Z + Z + Z == Z
-    end
-end
-
-@testset "operator indexing" begin
-    @testset "SubOperator" begin
-        D = Dirichlet(ConstantSpace(0..1))
-        S = D[:, :]
-        @test S[1,1] == 1
-        ax1 = axes(S, 1)
-        ax2 = axes(S, 2)
-        inds1 = Any[ax1, StepRange(ax1), :]
-        inds2 = Any[ax2, StepRange(ax2), :]
-        @testset for r2 in inds2, r1 in inds1
-            M = S[r1, r2]
-            @test M isa AbstractMatrix
-            @test size(M) == (2,1)
-            @test all(==(1), M)
-        end
-        @testset for r1 in inds1
-            V = S[r1, 1]
-            @test V isa AbstractVector
-            @test size(V) == (2,)
-            @test all(==(1), V)
-        end
-        @testset for r2 in inds2
-            V = S[1, r2]
-            @test V isa AbstractVector
-            @test size(V) == (1,)
-            @test all(==(1), V)
-        end
+    @testset "conversion to a matrix" begin
+        M = Multiplication(Fun(identity, PointSpace(1:3)))
+        @test_throws ErrorException Matrix(M)
     end
 end
 
