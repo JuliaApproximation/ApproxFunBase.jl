@@ -731,10 +731,10 @@ end
 
 # TODO: Unify with SubOperator
 for TYP in (:RaggedMatrix, :Matrix)
-    def_TYP = Meta.parse("default_" * string(TYP))
+    def_TYP = Symbol(string("default_", TYP))
     @eval function $TYP(S::Operator)
         if isinf(size(S,1)) || isinf(size(S,2))
-            error("Cannot convert $S to a $TYP")
+            error("Cannot convert $S to a ", $TYP)
         end
 
         if isbanded(S)
