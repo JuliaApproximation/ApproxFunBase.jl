@@ -1,5 +1,9 @@
-using ApproxFunBase, LinearAlgebra, Random, Test
+using ApproxFunBase
 import ApproxFunBase: ∞
+using BlockArrays: Block
+using LinearAlgebra
+using Random
+using Test
 
 @testset "Helper" begin
     @testset "interlace" begin
@@ -216,6 +220,16 @@ end
                 @test V isa AbstractVector
                 @test size(V) == (1,)
                 @test all(==(1), V)
+            end
+            @testset "view" begin
+                M = Multiplication(Fun(PointSpace(1:3), [1:3;]), PointSpace(1:3))
+                inds = Any[:, 1:3, Block(1)]
+                for ind1 in inds, ind2 in inds
+                    S = view(M, ind1, ind2)
+                    @test AbstractMatrix(S) == Diagonal(1:3)
+                    S2 = view(S, ind1, ind2)
+                    @test AbstractMatrix(S2) == Diagonal(1:3)
+                end
             end
         end
     end
