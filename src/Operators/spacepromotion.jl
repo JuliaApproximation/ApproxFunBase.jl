@@ -122,7 +122,7 @@ choosedomainspace(A::Operator,_) = choosedomainspace(A)
 
 choosedomainspace(A) = choosedomainspace(A,UnsetSpace())
 
-function choosedomainspace(ops::AbstractVector,spin)::Any
+function choosedomainspace(ops::AbstractVector,spin)
     sp = UnsetSpace()
 
     for op in ops
