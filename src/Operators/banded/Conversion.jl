@@ -26,7 +26,7 @@ rangespace(C::ConcreteConversion)=C.rangespace
 
 
 
-function defaultConversion(a::Space,b::Space)::Any
+function defaultConversion(a::Space,b::Space)
     if a==b
         Conversion(a)
     elseif conversion_type(a,b)==NoSpace()
