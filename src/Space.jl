@@ -1,7 +1,5 @@
-
-
 export Space, domainspace, rangespace, maxspace,Space,conversion_type, transform,
-            itransform, SequenceSpace, ConstantSpace
+            itransform, transform!, itransform!, SequenceSpace, ConstantSpace
 
 
 
