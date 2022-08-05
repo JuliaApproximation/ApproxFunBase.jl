@@ -384,11 +384,13 @@ function CanonicalTransformPlan(space,v)
     csp = canonicalspace(space)
     CanonicalTransformPlan(eltype(v),space,plan_transform(csp,v),csp)
 end
-function plan_transform(sp::Space,vals)
+function checkcanonicalspace(sp)
     csp = canonicalspace(sp)
-    if sp == csp
-        error("Override for $sp")
-    end
+    sp == csp && error("Override for $sp")
+    csp
+end
+function plan_transform(sp::Space,vals)
+    csp = checkcanonicalspace(sp)
     CanonicalTransformPlan(sp,plan_transform(csp,vals),csp)
 end
 
@@ -398,10 +400,7 @@ function ICanonicalTransformPlan(space,v)
     ICanonicalTransformPlan(eltype(v),space,plan_itransform(csp,cfs),csp)
 end
 function plan_itransform(sp::Space,v)
-    csp = canonicalspace(sp)
-    if sp == csp
-        error("Override for $sp")
-    end
+    csp = checkcanonicalspace(sp)
     cfs = coefficients(v,sp,csp)
     ICanonicalTransformPlan(sp,plan_itransform(csp,cfs),csp)
 end

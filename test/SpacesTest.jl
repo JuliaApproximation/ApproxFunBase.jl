@@ -1,5 +1,6 @@
 using ApproxFunBase, Test
 import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, Vec, checkpoints
+using ApproxFunOrthogonalPolynomials
 
 @testset "Spaces" begin
     @testset "PointSpace" begin
@@ -164,5 +165,11 @@ import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, V
             @test union(b, a) == a
             @test union(b, b) == b
         end
+    end
+
+    @testset "ApproxFunOrthogonalPolynomials" begin
+        v = rand(4)
+        v2 = transform(NormalizedChebyshev(), v)
+        @test itransform(NormalizedChebyshev(), v2) ≈ v
     end
 end

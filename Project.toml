@@ -29,6 +29,7 @@ ToeplitzMatrices = "c751599d-da0a-543b-9d20-d0a503d91d24"
 
 [compat]
 AbstractFFTs = "0.5, 1"
+ApproxFunOrthogonalPolynomials = "0.4"
 BandedMatrices = "0.16, 0.17"
 BlockArrays = "0.14, 0.15, 0.16"
 BlockBandedMatrices = "0.10, 0.11"
@@ -50,7 +51,8 @@ ToeplitzMatrices = "0.6, 0.7"
 julia = "1.5"
 
 [extras]
+ApproxFunOrthogonalPolynomials = "b70543e2-c0d9-56b8-a290-0d4d6d4de211"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [targets]
-test = ["Random"]
+test = ["ApproxFunOrthogonalPolynomials", "Random"]
