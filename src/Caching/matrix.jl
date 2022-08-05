@@ -40,9 +40,8 @@ end
 
 # Apply Householder
 
-
 function mulpars(Ac::Adjoint{T,<:QROperatorQ{QROperator{RR,Matrix{T},T},T}},
-                      B::AbstractVector{T},tolerance,maxlength) where {RR,T}
+                      B::AbstractVector{T},tolerance,maxlength, inplace::Val = Val(false)) where {RR,T}
     A = parent(Ac)
     if length(B) > A.QR.ncols
         # upper triangularize extra columns to prepare for \
@@ -52,7 +51,7 @@ function mulpars(Ac::Adjoint{T,<:QROperatorQ{QROperator{RR,Matrix{T},T},T}},
     H=A.QR.H
     M=size(H,1)
     m=length(B)
-    Y=pad(B,m+M+10)
+    Y=_pad!!(inplace)(B,m+M+10)
 
     k=1
     yp=view(Y,1:M)

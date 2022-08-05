@@ -147,9 +147,17 @@ det(A::Operator) = det(qr(A))
 
 mul_coefficients(At::Transpose{T,<:QROperatorQ{T}},B::AbstractVector{T}) where {T<:Real} = parent(At)'*B
 mul_coefficients(At::Transpose{T,<:QROperatorQ{T}},B::AbstractMatrix{T}) where {T<:Real} = parent(At)'*B
+mul_coefficients!(At::Transpose{T,<:QROperatorQ{T}},B::AbstractVector{T}) where {T<:Real} = mul!(B, parent(At)', B)
+mul_coefficients!(At::Transpose{T,<:QROperatorQ{T}},B::AbstractMatrix{T}) where {T<:Real} = mul!(B, parent(At)', B)
 
-mul_coefficients(Ac::Adjoint{T,<:QROperatorQ{QR,T}},B::AbstractVector{T};tolerance=eps(eltype(Ac))/10,maxlength=1000000) where {QR,T} =
-        mulpars(Ac,B,tolerance,maxlength)
+function mul_coefficients(Ac::Adjoint{T,<:QROperatorQ{QR,T}},B::AbstractVector{T};
+            tolerance=eps(eltype(Ac))/10,maxlength=1000000) where {QR,T}
+    mulpars(Ac,B,tolerance,maxlength)
+end
+function mul_coefficients!(Ac::Adjoint{T,<:QROperatorQ{QR,T}},B::AbstractVector{T};
+            tolerance=eps(eltype(Ac))/10,maxlength=1000000) where {QR,T}
+    mulpars(Ac,B,tolerance,maxlength,Val(true))
+end
 
 mul_coefficients(Ac::Adjoint{T,<:QROperatorQ{QR,T}},B::AbstractVector{V};opts...) where {QR,T,V} =
     mul_coefficients(Ac,AbstractVector{T}(B); opts...)
@@ -167,21 +175,30 @@ end
 
 
 ldiv_coefficients(A::QROperatorQ, B; opts...) = mul_coefficients(A', B; opts...)
+ldiv_coefficients!(A::QROperatorQ, B; opts...) = mul_coefficients!(A', B; opts...)
 \(A::QROperatorQ, B::Fun; opts...) = *(A', B; opts...)
 
 
 # R
-function ldiv_coefficients(R::QROperatorR, b::AbstractVector)
-    if length(b) > R.QR.ncols
+function uppertriangularview!(R, lenb)
+    if lenb > R.QR.ncols
         # upper triangularize columns
-        resizedata!(R.QR, :, length(b))
+        resizedata!(R.QR, :, lenb)
     end
-    UpperTriangular(view(R.QR.R_cache.data, 1:length(b), 1:length(b))) \ b
+    return UpperTriangular(view(R.QR.R_cache.data, 1:lenb, 1:lenb))
+end
+function ldiv_coefficients(R::QROperatorR, b::AbstractVector)
+    U = uppertriangularview!(R, length(b))
+    U \ b
+end
+function ldiv_coefficients!(R::QROperatorR, b::AbstractVector)
+    U = uppertriangularview!(R, length(b))
+    ldiv!(U, b)
 end
 
 \(R::QROperatorR,b::Fun{SequenceSpace};kwds...) =
     Fun(domainspace(R),ldiv_coefficients(R,b.coefficients;kwds...))
-\(A::QROperatorR,b::Fun;kwds...) = error("\\ not implement for $(typeof(b)) right-hand sides")
+\(A::QROperatorR,b::Fun;kwds...) = error(\, " not implement for ", typeof(b), " right-hand sides")
 
 
 # QR
@@ -189,6 +206,8 @@ end
 for TYP in (:Real,:Complex,:Number)
     @eval ldiv_coefficients(QR::QROperator{CO,MT,T},b::AbstractVector{T}; kwds...) where {CO,MT,T<:$TYP} =
         ldiv_coefficients(QR.R, mul_coefficients(QR.Q',b;kwds...))
+    @eval ldiv_coefficients!(QR::QROperator{CO,MT,T},b::AbstractVector{T}; kwds...) where {CO,MT,T<:$TYP} =
+        ldiv_coefficients!(QR.R, mul_coefficients!(QR.Q',b;kwds...))
 end
 
 
