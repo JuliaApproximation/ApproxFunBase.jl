@@ -242,8 +242,8 @@ end
 # this is used primarily for addition of two funs
 # that may be incompatible
 union(a::AmbiguousSpace, b::AmbiguousSpace) = b
-union(a::AmbiguousSpace, b::Space) = b
-union(a::Space, b::AmbiguousSpace) = a
+union_by_union_rule(a::AmbiguousSpace, b::Space) = b
+union_by_union_rule(a::Space, b::AmbiguousSpace) = a
 
 
 function union_by_union_rule(a::Space,b::Space)
