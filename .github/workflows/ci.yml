@@ -1,4 +1,9 @@
 name: CI
+
+concurrency:
+  group: build-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 on:
   create:
     tags:
