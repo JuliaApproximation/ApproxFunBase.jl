@@ -145,22 +145,14 @@ for op in (:tocanonical,:fromcanonical,:tocanonicalD,:fromcanonicalD,:invfromcan
     @eval ($op)(sp::Space,x...)=$op(domain(sp),x...)
 end
 
-mappoint(a::Space,b::Space,x)=mappoint(domain(a),domain(b),x)
-mappoint(a::Space,b::Domain,x)=mappoint(domain(a),b,x)
-mappoint(a::Domain,b::Space,x)=mappoint(a,domain(b),x)
+_domain(s::Space) = domain(s)
+_domain(s) = s
+mappoint(a, b, x) = mappoint(map(_domain, (a, b, x))...)
 
-
+_conversion_rule(a, b) = spacescompatible(a, b) ? a : NoSpace()
 
 for FUNC in (:conversion_rule,:maxspace_rule,:union_rule)
-    @eval begin
-        function $FUNC(a,b)
-            if spacescompatible(a,b)
-                a
-            else
-                NoSpace()
-            end
-        end
-    end
+    @eval $FUNC(a, b) = _conversion_rule(a, b)
 end
 
 
@@ -250,8 +242,8 @@ end
 # this is used primarily for addition of two funs
 # that may be incompatible
 union(a::AmbiguousSpace, b::AmbiguousSpace) = b
-union(a::AmbiguousSpace, b::Space) = b
-union(a::Space, b::AmbiguousSpace) = a
+union_by_union_rule(a::AmbiguousSpace, b::Space) = b
+union_by_union_rule(a::Space, b::AmbiguousSpace) = a
 
 
 function union_by_union_rule(a::Space,b::Space)
@@ -287,12 +279,7 @@ function union(a::Space, b::Space)
     a ⊕ b
 end
 
-union(a::Space) = a
-
-union(a::Space,b::Space,c::Space) = union(union(a,b),c)
-union(a::Space,b::Space,c::Space,d::Space...) =
-    union(union(a,b),c,d...)
-
+union(a::Space, bs::Space...) = foldl(union, bs, init = a)
 
 # tests whether a Conversion operator exists
 hasconversion(a,b) = maxspace(a,b) == b

@@ -25,6 +25,11 @@ import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, V
             fany = convert(T, f)
             @test fany isa T
             @test (@inferred oftype(f, fany)) isa typeof(f)
+
+            # some trivial cases
+            s = PointSpace(1:3)
+            @test conversion_type(s, s) == s
+            @test maxspace(s, s) == s
         end
 
         A = @inferred f * Multiplication(f)
@@ -57,6 +62,16 @@ import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, V
             f1 = Fun(Foo(), PointSpace(1:10))
             f2 = Fun(Foo(), PointSpace(1:10), 10)
             @test coefficients(f1) == coefficients(f2)
+        end
+
+        @testset "union" begin
+            @testset "trivial" begin
+                s = PointSpace(0:3)
+                @test union(s) == s
+                @test union(s, s) == s
+                @test union(s, s, s) == s
+                @test union(s, s, s, s) == s
+            end
         end
     end
 
@@ -139,6 +154,15 @@ import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, V
             @test (@inferred ApproxFunBase.promotedomainspace(v)) == v
             @test (@inferred ApproxFunBase.promoterangespace(v)) == v
             @test (@inferred ApproxFunBase.promotespaces(v)) == v
+        end
+    end
+
+    @testset "AmbiguousSpace" begin
+        a = PointSpace(1:3)
+        for b in Any[ApproxFunBase.UnsetSpace(), ApproxFunBase.NoSpace()]
+            @test union(a, b) == a
+            @test union(b, a) == a
+            @test union(b, b) == b
         end
     end
 end

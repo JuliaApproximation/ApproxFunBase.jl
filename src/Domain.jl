@@ -1,5 +1,3 @@
-
-
 export Domain, SegmentDomain, tocanonical, fromcanonical, fromcanonicalD, ∂
 export chebyshevpoints, fourierpoints, isambiguous, arclength
 export components, component, ncomponents
@@ -21,6 +19,8 @@ struct EmptyDomain <: Domain{Nothing} end
 ==(::AnyDomain, ::AnyDomain) = true
 ==(::EmptyDomain, ::EmptyDomain) = true
 
+const AnyOrEmptyDomain = Union{AnyDomain, EmptyDomain}
+
 isambiguous(::AnyDomain) = true
 dimension(::AnyDomain) = 1
 dimension(::EmptyDomain) = 0
@@ -32,21 +32,21 @@ arclength(::DomainSets.EmptySpace) = false
 
 isempty(::AnyDomain) = false
 
-reverseorientation(a::Union{AnyDomain,EmptyDomain}) = a
+reverseorientation(a::AnyOrEmptyDomain) = a
 
-canonicaldomain(a::Union{AnyDomain,EmptyDomain}) = a
+canonicaldomain(a::AnyOrEmptyDomain) = a
 
 indomain(x::Domain,::EmptyDomain) = false
 
 convert(::Type{Domain{T}}, ::AnyDomain) where T = Domain(T)
 
+# empty domain should have priority over over any domain
+_promoteanyemptydomain(::AnyDomain, ::AnyDomain) = AnyDomain()
+_promoteanyemptydomain(::AnyOrEmptyDomain, ::AnyOrEmptyDomain) = EmptyDomain()
 
-union(::AnyDomain, d::Domain) = d
-union(d::Domain, ::AnyDomain) = d
-
-union(::EmptyDomain, ::EmptyDomain) = EmptyDomain()
-union(::EmptyDomain, a::Domain) = a
-union(a::Domain, ::EmptyDomain) = a
+union(a::AnyOrEmptyDomain, b::AnyOrEmptyDomain) = _promoteanyemptydomain(a, b)
+union(::AnyOrEmptyDomain, a::Domain) = a
+union(a::Domain, ::AnyOrEmptyDomain) = a
 
 ##General routines
 isempty(::EmptyDomain) = true

@@ -66,6 +66,21 @@ end
     @test Segment(1,-1) .^ 2 ≡ Segment(1,0)
     @test Segment(1,2) .^ 2 ≡ Segment(1,4)
     @test sqrt.(Segment(1,2)) ≡ Segment(1,sqrt(2))
+
+    @testset "union" begin
+        a = ApproxFunBase.EmptyDomain()
+        b = ApproxFunBase.AnyDomain()
+
+        @test union(a, a) == a
+        @test union(a, b) == a
+        @test union(b, a) == a
+        @test union(b, b) == b
+
+        @testset for d in Any[a, b]
+            @test union(d, 1..2) == 1..2
+            @test union(1..2, d) == 1..2
+        end
+    end
 end
 
 @time include("MatrixTest.jl")
