@@ -156,4 +156,13 @@ import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, V
             @test (@inferred ApproxFunBase.promotespaces(v)) == v
         end
     end
+
+    @testset "AmbiguousSpace" begin
+        a = PointSpace(1:3)
+        for b in Any[ApproxFunBase.UnsetSpace(), ApproxFunBase.NoSpace()]
+            @test union(a, b) == a
+            @test union(b, a) == a
+            @test union(b, b) == b
+        end
+    end
 end
