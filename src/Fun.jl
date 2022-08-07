@@ -167,10 +167,6 @@ iterate(A::ArrayFun, i=1) = (@_inline_meta; (i % UInt) - 1 < length(A) ? (@inbou
 
 in(x::ScalarFun, y::ScalarFun) = x == y
 
-
-
-
-
 setspace(v::AbstractVector,s::Space) = Fun(s,v)
 setspace(f::Fun,s::Space) = Fun(s,f.coefficients)
 
@@ -341,7 +337,7 @@ function axpy!(a,xcfs::AbstractVector,Y::Fun)
 end
 
 
-
++(a::Fun) = copy(a)
 -(f::Fun) = Fun(f.space,-f.coefficients)
 -(c::Number,f::Fun) = -(f-c)
 
