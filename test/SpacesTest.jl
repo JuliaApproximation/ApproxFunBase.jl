@@ -173,5 +173,9 @@ using ApproxFunOrthogonalPolynomials
         v = rand(4)
         v2 = transform(NormalizedChebyshev(), v)
         @test itransform(NormalizedChebyshev(), v2) ≈ v
+
+        f = Fun(x->x^2, Chebyshev())
+        v = coefficients(f, Chebyshev(), Legendre())
+        @test v ≈ coefficients(Fun(x->x^2, Legendre()))
     end
 end
