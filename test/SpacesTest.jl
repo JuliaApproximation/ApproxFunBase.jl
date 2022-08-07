@@ -173,5 +173,10 @@ using ApproxFunOrthogonalPolynomials
         v = rand(4)
         v2 = transform(NormalizedChebyshev(), v)
         @test itransform(NormalizedChebyshev(), v2) ≈ v
+
+        @testset "ApproxFun.jl issue 616" begin
+            x, D = Fun(), Derivative(Chebyshev())
+            @test (D*Multiplication(x)*D)*x ≈ 1
+        end
     end
 end
