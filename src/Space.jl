@@ -304,6 +304,8 @@ coefficients(f::AbstractVector,sp1::Space,::Type{T2}) where {T2<:Space} = coeffi
 ## coefficients defaults to calling Conversion, otherwise it tries to pipe through Chebyshev
 
 
+_Fun(v::AbstractVector, sp) = Fun(sp, v)
+_Fun(v, sp) = Fun(v, sp)
 function defaultcoefficients(f,a,b)
     ct=conversion_type(a,b) # gives a space that has a banded conversion to both a and b
 
@@ -321,7 +323,7 @@ function defaultcoefficients(f,a,b)
         end
         if spacescompatible(a,csp) || spacescompatible(b,csp)
             # b is csp too, so we are stuck, try Fun constructor
-            coefficients(default_Fun(Fun(a,f),b))
+            coefficients(default_Fun(_Fun(f,a),b))
         else
             coefficients(f,a,csp,b)
         end
