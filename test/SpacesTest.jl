@@ -13,6 +13,8 @@ import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, V
 
         f = Fun(space(f),[1.,2.,3.])
 
+        @test (+f) == f
+
         @testset "conversions" begin
             @testset for S in Any[typeof(space(f)), Any]
                 T = Fun{S, Any, Any}
