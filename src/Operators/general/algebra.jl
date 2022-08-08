@@ -16,7 +16,9 @@ struct PlusOperator{T,BI} <: Operator{T}
     end
 end
 
-Base.size(P::PlusOperator,k::Integer) = size(first(P.ops),k)
+_size(::PlusOperator{<:Any, NTuple{2,InfiniteCardinal{0}}}, k) = InfiniteCardinal{0}()
+_size(P, k) = size(first(P.ops),k)
+Base.size(P::PlusOperator,k::Integer) = _size(P, k)
 
 bandwidthsmax(ops) = mapreduce(bandwidths, (t1,t2) -> max.(t1, t2), ops, init = (-720, -720) #= approximate (-∞,-∞) =#)
 
