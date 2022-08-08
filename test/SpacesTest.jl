@@ -179,7 +179,7 @@ using ApproxFunOrthogonalPolynomials
         @test v ≈ coefficients(Fun(x->x^2, Legendre()))
 
         @testset "inplace transform" begin
-            @testset for sp_c in Any[Legendre(), Chebyshev(), Jacobi(1,2), Jacobi(0.3, 2.3), 
+            @testset for sp_c in Any[Legendre(), Chebyshev(), Jacobi(1,2), Jacobi(0.3, 2.3),
                     Ultraspherical(1), Ultraspherical(2)]
                 @testset for sp in Any[sp_c, NormalizedPolynomialSpace(sp_c)]
                     v = rand(10)
