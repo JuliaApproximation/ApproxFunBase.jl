@@ -76,6 +76,15 @@ using ApproxFunOrthogonalPolynomials
                 @test union(s, s, s, s) == s
             end
         end
+
+        M = Multiplication(Fun(PointSpace(1:3), [1:3;]), PointSpace(1:3))
+        @test (@inferred size(M)) == (3,3)
+        M2 = M + M
+        @test size(M2) == (3,3)
+        M = Multiplication(Fun(PointSpace(1:3), [1:3;]))
+        M2 = M + M
+        infty = ApproxFunBase.InfiniteCardinal{0}()
+        @test (@inferred size(M2)) == (infty, infty)
     end
 
     @testset "Derivative operator for HeavisideSpace" begin
