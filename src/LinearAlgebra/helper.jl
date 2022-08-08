@@ -301,6 +301,8 @@ function pad(v::AbstractVector{T}, ::PosInfinity) where T
     end
 end
 
+_pad!!(::Val{false}) = pad
+_pad!!(::Val{true}) = pad!
 
 #TODO:padleft!
 

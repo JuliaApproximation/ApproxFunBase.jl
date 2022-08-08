@@ -351,3 +351,11 @@ function mul_coefficients(A::SubOperator{T,B,Tuple{UnitRange{Int},UnitRange{Int}
         view(A,:,1:length(b))*b
     end
 end
+function mul_coefficients!(A::SubOperator{T,B,Tuple{UnitRange{Int},UnitRange{Int}}},b) where {T,B}
+    if size(A,2) == length(b)
+        mul!(b, AbstractMatrix(A), b)
+    else
+        mul!(b, view(A,:,1:length(b)), b)
+    end
+    return b
+end

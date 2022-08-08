@@ -177,5 +177,24 @@ using ApproxFunOrthogonalPolynomials
         f = Fun(x->x^2, Chebyshev())
         v = coefficients(f, Chebyshev(), Legendre())
         @test v ≈ coefficients(Fun(x->x^2, Legendre()))
+
+        @testset "inplace transform" begin
+            @testset for sp_c in Any[Legendre(), Chebyshev(), Jacobi(1,2), Jacobi(0.3, 2.3), 
+                    Ultraspherical(1), Ultraspherical(2)]
+                @testset for sp in Any[sp_c, NormalizedPolynomialSpace(sp_c)]
+                    v = rand(10)
+                    v2 = copy(v)
+                    @test itransform!(sp, transform!(sp, v)) ≈ v
+                    @test transform!(sp, v) ≈ transform(sp, v2)
+                    @test itransform(sp, v) ≈ v2
+                    @test itransform!(sp, v) ≈ v2
+
+                    # different vector
+                    p_fwd = ApproxFunBase.plan_transform!(sp, v)
+                    p_inv = ApproxFunBase.plan_itransform!(sp, v)
+                    @test p_inv * copy(p_fwd * copy(v)) ≈ v
+                end
+            end
+        end
     end
 end

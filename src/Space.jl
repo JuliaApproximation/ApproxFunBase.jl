@@ -303,18 +303,22 @@ coefficients(f::AbstractVector,sp1::Space,::Type{T2}) where {T2<:Space} = coeffi
 
 ## coefficients defaults to calling Conversion, otherwise it tries to pipe through Chebyshev
 
+_mul_coefficients!!(inplace::Val{true}) = mul_coefficients!
+_mul_coefficients!!(inplace::Val{false}) = mul_coefficients
+_ldiv_coefficients!!(inplace::Val{true}) = ldiv_coefficients!
+_ldiv_coefficients!!(inplace::Val{false}) = ldiv_coefficients
 
 _Fun(v::AbstractVector, sp) = Fun(sp, v)
 _Fun(v, sp) = Fun(v, sp)
-function defaultcoefficients(f,a,b)
+function defaultcoefficients(f,a,b,inplace = Val(false))
     ct=conversion_type(a,b) # gives a space that has a banded conversion to both a and b
 
     if spacescompatible(a,b)
         f
     elseif hasconversion(a,b)
-        mul_coefficients(Conversion(a,b),f)
+        _mul_coefficients!!(inplace)(Conversion(a,b),f)
     elseif hasconversion(b,a)
-        ldiv_coefficients(Conversion(b,a),f)
+        _ldiv_coefficients!!(inplace)(Conversion(b,a),f)
     else
         csp=canonicalspace(a)
 
@@ -323,14 +327,15 @@ function defaultcoefficients(f,a,b)
         end
         if spacescompatible(a,csp) || spacescompatible(b,csp)
             # b is csp too, so we are stuck, try Fun constructor
-            coefficients(default_Fun(_Fun(f,a),b))
+            _coefficients!!(inplace)(default_Fun(_Fun(f,a),b))
         else
-            coefficients(f,a,csp,b)
+            _coefficients!!(inplace)(f,a,csp,b)
         end
     end
 end
 
 coefficients(f,a,b) = defaultcoefficients(f,a,b)
+coefficients!(f,a,b) = defaultcoefficients(f,a,b,Val(true))
 
 
 
@@ -368,50 +373,43 @@ end
 
 for Typ in (:CanonicalTransformPlan,:ICanonicalTransformPlan)
     @eval begin
-        struct $Typ{T,SP,PL,CSP} <: AbstractTransformPlan{T}
+        struct $Typ{T,SP,PL,CSP,inplace} <: AbstractTransformPlan{T}
             space::SP
             plan::PL
             canonicalspace::CSP
         end
-        $Typ(space,plan,csp) =
-            $Typ{eltype(plan),typeof(space),typeof(plan),typeof(csp)}(space,plan,csp)
-        $Typ(::Type{T},space,plan,csp) where {T} =
-            $Typ{T,typeof(space),typeof(plan),typeof(csp)}(space,plan,csp)
+        $Typ(space,plan,csp) = $Typ(space,plan,csp,Val(false))
+        $Typ(space,plan,csp,ip::Val{inplace}) where {inplace} =
+            $Typ{eltype(plan),typeof(space),typeof(plan),typeof(csp),inplace}(space,plan,csp)
     end
 end
-
+inplace(::CanonicalTransformPlan{<:Any,<:Any,<:Any,<:Any,IP}) where {IP} = IP
+inplace(::ICanonicalTransformPlan{<:Any,<:Any,<:Any,<:Any,IP}) where {IP} = IP
 
 # Canonical plan uses coefficients
-function CanonicalTransformPlan(space,v)
-    csp = canonicalspace(space)
-    CanonicalTransformPlan(eltype(v),space,plan_transform(csp,v),csp)
-end
 function checkcanonicalspace(sp)
     csp = canonicalspace(sp)
     sp == csp && error("Override for $sp")
     csp
 end
-function plan_transform(sp::Space,vals)
-    csp = checkcanonicalspace(sp)
-    CanonicalTransformPlan(sp,plan_transform(csp,vals),csp)
+_plan_transform!!(::Val{true}) = plan_transform!
+_plan_transform!!(::Val{false}) = plan_transform
+function CanonicalTransformPlan(space, v, inplace::Val = Val(false))
+    csp = checkcanonicalspace(space)
+    CanonicalTransformPlan(space, _plan_transform!!(inplace)(csp,v), csp, inplace)
 end
+plan_transform(sp::Space,vals) = CanonicalTransformPlan(sp, vals, Val(false))
+plan_transform!(sp::Space,vals) = CanonicalTransformPlan(sp, vals, Val(true))
 
-function ICanonicalTransformPlan(space,v)
-    csp = canonicalspace(space)
-    cfs = coefficients(v,space,csp)
-    ICanonicalTransformPlan(eltype(v),space,plan_itransform(csp,cfs),csp)
+_plan_itransform!!(::Val{true}) = plan_itransform!
+_plan_itransform!!(::Val{false}) = plan_itransform
+function ICanonicalTransformPlan(space, v, ip::Val{inplace} = Val(false)) where {inplace}
+    csp = checkcanonicalspace(space)
+    cfs = inplace ? coefficients(v,space,csp) : v
+    ICanonicalTransformPlan(space, _plan_itransform!!(ip)(csp,cfs), csp, ip)
 end
-function plan_itransform(sp::Space,v)
-    csp = checkcanonicalspace(sp)
-    cfs = coefficients(v,sp,csp)
-    ICanonicalTransformPlan(sp,plan_itransform(csp,cfs),csp)
-end
-
-
-plan_transform!(sp::Space,vals) = error("Override for $sp")
-plan_itransform!(sp::Space,cfs) = error("Override for $sp")
-
-
+plan_itransform(sp::Space,v) = ICanonicalTransformPlan(sp, v, Val(false))
+plan_itransform!(sp::Space,v) = ICanonicalTransformPlan(sp, v, Val(true))
 
 # transform converts from values at points(S,n) to coefficients
 # itransform converts from coefficients to values at points(S,n)
@@ -423,9 +421,11 @@ itransform!(S::Space,cfs) = plan_itransform!(S,cfs)*cfs
 transform!(S::Space,cfs) = plan_transform!(S,cfs)*cfs
 
 
-*(P::CanonicalTransformPlan,vals::AbstractVector) = coefficients(P.plan*vals,P.canonicalspace,P.space)
-*(P::ICanonicalTransformPlan,cfs::AbstractVector) = P.plan*coefficients(cfs,P.space,P.canonicalspace)
-
+_coefficients!!(::Val{true}) = coefficients!
+_coefficients!!(::Val{false}) = coefficients
+_mul(P::CanonicalTransformPlan, ip, vals) = _coefficients!!(ip)(P.plan * vals, P.canonicalspace, P.space)
+_mul(P::ICanonicalTransformPlan, ip, cfs) = P.plan * _coefficients!!(ip)(cfs, P.space, P.canonicalspace)
+*(P::Union{CanonicalTransformPlan, ICanonicalTransformPlan}, vals::AbstractVector) = _mul(P, Val(inplace(P)), vals)
 
 
 for OP in (:plan_transform,:plan_itransform,:plan_transform!,:plan_itransform!)

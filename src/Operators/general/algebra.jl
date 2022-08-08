@@ -535,18 +535,22 @@ end
 
 
 ## Operations
-function mul_coefficients(A::Operator,b)
-    n=size(b,1)
-    ret = n>0 ? mul_coefficients(view(A,FiniteRange,1:n),b) : b
-end
+for mulcoeff in [:mul_coefficients, :mul_coefficients!]
+    @eval begin
+        function $mulcoeff(A::Operator,b)
+            n=size(b,1)
+            ret = n>0 ? $mulcoeff(view(A,FiniteRange,1:n),b) : b
+        end
 
-function mul_coefficients(A::TimesOperator,b)
-    ret = b
-    for k=length(A.ops):-1:1
-        ret = mul_coefficients(A.ops[k],ret)
+        function $mulcoeff(A::TimesOperator,b)
+            ret = b
+            for k=length(A.ops):-1:1
+                ret = $mulcoeff(A.ops[k],ret)
+            end
+
+            ret
+        end
     end
-
-    ret
 end
 
 

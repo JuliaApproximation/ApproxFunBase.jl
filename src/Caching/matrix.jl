@@ -40,9 +40,8 @@ end
 
 # Apply Householder
 
-
 function mulpars(Ac::Adjoint{T,<:QROperatorQ{QROperator{RR,Matrix{T},T},T}},
-                      B::AbstractVector{T},tolerance,maxlength) where {RR,T}
+                      B::AbstractVector{T},tolerance,maxlength, inplace::Val = Val(false)) where {RR,T}
     A = parent(Ac)
     if length(B) > A.QR.ncols
         # upper triangularize extra columns to prepare for \
@@ -52,7 +51,7 @@ function mulpars(Ac::Adjoint{T,<:QROperatorQ{QROperator{RR,Matrix{T},T},T}},
     H=A.QR.H
     M=size(H,1)
     m=length(B)
-    Y=pad(B,m+M+10)
+    Y=_pad!!(inplace)(B,m+M+10)
 
     k=1
     yp=view(Y,1:M)
@@ -86,7 +85,7 @@ end
 
 function mulpars(Ac::Adjoint{T,<:QROperatorQ{QROperator{RR,Matrix{T},T},T}},
                        B::AbstractVector{T},
-                       tolerance,maxlength) where {RR,T<:BlasFloat}
+                       tolerance,maxlength, inplace::Val = Val(false)) where {RR,T<:BlasFloat}
 
     A = parent(Ac)
 
@@ -99,7 +98,7 @@ function mulpars(Ac::Adjoint{T,<:QROperatorQ{QROperator{RR,Matrix{T},T},T}},
 
     if size(A.QR.H,1) == 1  # diagonal scaling, avoid growing
         diagv=view(A.QR.H,1,1:length(B))
-        ret=similar(B)
+        ret = inplace isa Val{true} ? B : similar(B)
         @simd for k=1:length(ret)
             @inbounds ret[k]=(1-2A.QR.H[1,k]^2)*B[k]
         end
@@ -114,7 +113,7 @@ function mulpars(Ac::Adjoint{T,<:QROperatorQ{QROperator{RR,Matrix{T},T},T}},
     sz=sizeof(T)
 
     m=length(B)
-    Y=pad(B,m+M+10)
+    Y=_pad!!(inplace)(B,m+M+10)
     y=pointer(Y)
 
     k=1
