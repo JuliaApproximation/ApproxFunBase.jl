@@ -1,7 +1,3 @@
-
-
-
-
 mutable struct QROperator{CO,MT,T} <: Operator{T}
     R_cache::CO
     H::MT # Contains the Householder reflections

@@ -85,7 +85,7 @@ end
 
 function mulpars(Ac::Adjoint{T,<:QROperatorQ{QROperator{RR,Matrix{T},T},T}},
                        B::AbstractVector{T},
-                       tolerance,maxlength) where {RR,T<:BlasFloat}
+                       tolerance,maxlength, inplace::Val = Val(false)) where {RR,T<:BlasFloat}
 
     A = parent(Ac)
 
@@ -98,7 +98,7 @@ function mulpars(Ac::Adjoint{T,<:QROperatorQ{QROperator{RR,Matrix{T},T},T}},
 
     if size(A.QR.H,1) == 1  # diagonal scaling, avoid growing
         diagv=view(A.QR.H,1,1:length(B))
-        ret=similar(B)
+        ret = inplace isa Val{true} ? B : similar(B)
         @simd for k=1:length(ret)
             @inbounds ret[k]=(1-2A.QR.H[1,k]^2)*B[k]
         end
@@ -113,7 +113,7 @@ function mulpars(Ac::Adjoint{T,<:QROperatorQ{QROperator{RR,Matrix{T},T},T}},
     sz=sizeof(T)
 
     m=length(B)
-    Y=pad(B,m+M+10)
+    Y=_pad!!(inplace)(B,m+M+10)
     y=pointer(Y)
 
     k=1

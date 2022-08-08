@@ -179,7 +179,8 @@ using ApproxFunOrthogonalPolynomials
         @test v ≈ coefficients(Fun(x->x^2, Legendre()))
 
         @testset "inplace transform" begin
-            @testset for sp_c in Any[Legendre(), Chebyshev(), Jacobi(1,2), Jacobi(0.3, 2.3)]
+            @testset for sp_c in Any[Legendre(), Chebyshev(), Jacobi(1,2), Jacobi(0.3, 2.3), 
+                    Ultraspherical(1), Ultraspherical(2)]
                 @testset for sp in Any[sp_c, NormalizedPolynomialSpace(sp_c)]
                     v = rand(10)
                     v2 = copy(v)
@@ -192,14 +193,6 @@ using ApproxFunOrthogonalPolynomials
                     p_fwd = ApproxFunBase.plan_transform!(sp, v)
                     p_inv = ApproxFunBase.plan_itransform!(sp, v)
                     @test p_inv * copy(p_fwd * copy(v)) ≈ v
-                end
-            end
-            @testset for sp_c in Any[Ultraspherical(1), Ultraspherical(2)]
-                @testset for sp in Any[sp_c, NormalizedPolynomialSpace(sp_c)]
-                    v = rand(10)
-                    v2 == copy(v)
-                    @test transform(sp, v2) ≈ transform!(sp, v)
-                    @test_broken itransform!(sp, v) ≈ v2
                 end
             end
         end
