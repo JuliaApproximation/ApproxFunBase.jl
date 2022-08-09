@@ -25,21 +25,32 @@ rangespace(C::ConcreteConversion)=C.rangespace
 
 
 
-
+function _implementconversionerror(a, b)
+    error("Implement Conversion from ", typeof(a), " to ", typeof(b))
+end
+function _defaultConversion(a, spa, b)
+    if typeof(spa) == typeof(a)
+        spb = canonicalspace(b)
+        if typeof(spb) == typeof(a)
+            _implementconversionerror(spb, b)
+        elseif typeof(spb) == typeof(b)
+            _implementconversionerror(a, spb)
+        else
+            return _defaultConversion(a, spb, b)
+        end
+    elseif typeof(spa) == typeof(b)
+        _implementconversionerror(a, spa)
+    end
+    Conversion(a, spa, b)
+end
 function defaultConversion(a::Space,b::Space)
     if a==b
         Conversion(a)
     elseif conversion_type(a,b)==NoSpace()
-        sp=canonicalspace(a)
-        if typeof(sp) == typeof(a)
-            error("Implement Conversion from " * string(typeof(sp)) * " to " * string(typeof(b)))
-        elseif typeof(sp) == typeof(b)
-            error("Implement Conversion from " * string(typeof(a)) * " to " * string(typeof(sp)))
-        else
-            Conversion(a,sp,b)
-        end
+        spa = canonicalspace(a)
+        _defaultConversion(a, spa, b)
     else
-        error("Implement Conversion from " * string(typeof(a)) * " to " * string(typeof(b)))
+        _implementconversionerror(a, b)
     end
 end
 
