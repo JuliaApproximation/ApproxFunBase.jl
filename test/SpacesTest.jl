@@ -205,5 +205,17 @@ using ApproxFunOrthogonalPolynomials
                 end
             end
         end
+
+        @testset "conversion" begin
+            C12 = Conversion(Chebyshev(), NormalizedLegendre())
+            C21 = Conversion(NormalizedLegendre(), Chebyshev())
+            @test Matrix((C12 * C21)[1:10, 1:10]) ≈ I
+            @test Matrix((C21 * C12)[1:10, 1:10]) ≈ I
+
+            C12 = Conversion(Chebyshev(), NormalizedPolynomialSpace(Ultraspherical(1)))
+            C1C2 = Conversion(Ultraspherical(1), NormalizedPolynomialSpace(Ultraspherical(1))) *
+                    Conversion(Chebyshev(), Ultraspherical(1))
+            @test Matrix(C12[1:10, 1:10]) ≈ Matrix(C1C2[1:10, 1:10])
+        end
     end
 end
