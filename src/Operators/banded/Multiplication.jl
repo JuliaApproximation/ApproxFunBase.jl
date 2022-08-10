@@ -135,7 +135,7 @@ function default_mult(f::Fun,g::Fun)
     if domainscompatible(space(f),space(g))
         default_mult_compatible(f, g)
     else
-        sp=union(space(f),space(g))
+        sp=union(space(f),space(g))::Space
         fnew = Fun(f,sp)
         gnew = Fun(g,sp)
         default_mult_compatible(fnew, gnew)
@@ -146,16 +146,16 @@ end
 
 coefficienttimes(f::Fun,g::Fun) = Multiplication(f,space(g))*g
 
-function transformtimes(f::Fun,g::Fun,n)
-    @assert pointscompatible(space(f),space(g))
-    isempty(f.coefficients) && return f
-    isempty(g.coefficients) && return g
-    f2,g2,sp = pad(f,n),pad(g,n),space(f)
-    hc = transform(sp,values(f2).*values(g2))
+function transformtimes(f::Fun,g::Fun, n = ncoefficients(f) + ncoefficients(g) - 1, sp = space(f))
+    @assert pointscompatible(sp,space(g))::Bool
+    iszero(ncoefficients(f)) && return f
+    iszero(ncoefficients(g)) && return g
+    f2,g2 = pad(f,n), pad(g,n)
+    v = values(f2)
+    v .*= values(g2)
+    hc = transform(sp, v)
     chop!(Fun(sp,hc),10eps(eltype(hc)))
 end
-transformtimes(f::Fun,g::Fun) = transformtimes(f,g,ncoefficients(f) + ncoefficients(g) - 1)
-
 
 
 *(a::Fun,L::UniformScaling) = Multiplication(a*L.λ,UnsetSpace())

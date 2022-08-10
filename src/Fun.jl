@@ -41,12 +41,15 @@ hasnumargs(f::Fun,k) = k == 1 || domaindimension(f) == k  # all funs take a sing
 ##Coefficient routines
 #TODO: domainscompatible?
 
+_coefficients(fc::Vector, sp, msp) = oftype(fc, coefficients(fc, sp, msp))::typeof(fc)
+_coefficients(fc, sp, msp) = coefficients(fc, sp, msp)
 function coefficients(f::Fun,msp::Space)
     #zero can always be converted
-    if ncoefficients(f) == 0 || (ncoefficients(f) == 1 && f.coefficients[1] == 0)
-        f.coefficients
+    fc = f.coefficients
+    if ncoefficients(f) == 0 || (ncoefficients(f) == 1 && fc[1] == 0)
+        fc
     else
-        coefficients(f.coefficients, space(f), msp)
+        _coefficients(fc, space(f), msp)
     end
 end
 coefficients(f::Fun,::Type{T}) where {T<:Space} = coefficients(f,T(domain(f)))
@@ -65,12 +68,7 @@ end
 
 function coefficient(f::Fun,kr::AbstractRange)
     b = maximum(kr)
-
-    if b ≤ ncoefficients(f)
-        f.coefficients[kr]
-    else
-        [coefficient(f,k) for k in kr]
-    end
+    f.coefficients[first(kr):min(b, end)]
 end
 
 coefficient(f::Fun,K::Block) = coefficient(f,blockrange(space(f),K.n[1]))
@@ -241,7 +239,9 @@ extrapolate(f::Fun,x,y,z...) = extrapolate(f.coefficients,f.space,Vec(x,y,z...))
 ##Data routines
 
 
-values(f::Fun,dat...) = itransform(f.space,f.coefficients,dat...)
+values(f::Fun,dat...) = _values(f.space, f.coefficients, dat...)
+_values(sp, v, dat...) = itransform(sp, v, dat...)
+_values(sp, v::Vector{T}, dat...) where {T} = itransform(sp, v, dat...)::Vector{float(T)}
 points(f::Fun) = points(f.space,ncoefficients(f))
 ncoefficients(f::Fun)::Int = length(f.coefficients)
 blocksize(f::Fun) = (block(space(f),ncoefficients(f)).n[1],)
