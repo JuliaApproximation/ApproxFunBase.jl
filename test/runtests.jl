@@ -9,8 +9,28 @@ import ApproxFunBase: ∞
     @test space(f') isa HeavisideSpline
     @test f'(0.1) ≈ exp(0.1) atol=1E-2
 
+
     @test (f+f)(0.1) ≈ 2exp(0.1) atol=1E-2
     @test (2f)(0.1) ≈ 2exp(0.1) atol=1E-2
+
+
+    @testset "issue #94" begin
+        @test ApproxFunBase.real !== Base.real
+        @test_throws MethodError ApproxFunBase.real(1,2)
+    end
+
+    @testset "hasnumargs" begin
+        onearg(x) = x
+        twoargs(x, y) = x + y
+        @test ApproxFunBase.hasnumargs(onearg, 1)
+        @test ApproxFunBase.hasnumargs(twoargs, 2)
+    end
+    @testset "don't pirate dot" begin
+        @test ApproxFunBase.dot !== LinearAlgebra.dot
+        struct DotTester end
+        # check that unknown types don't lead to a stack overflow
+        @test_throws MethodError ApproxFunBase.dot(DotTester())
+    end
 end
 
 @testset "Chebyshev" begin

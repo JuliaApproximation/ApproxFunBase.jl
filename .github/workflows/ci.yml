@@ -1,7 +1,24 @@
 name: CI
+
+concurrency:
+  group: build-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 on:
-  - push
-  - pull_request
+  create:
+    tags:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - 'LICENSE'
+      - 'README.md'
+      - '.github/workflows/TagBot.yml'
+  pull_request:
+    paths-ignore:
+      - 'LICENSE'
+      - 'README.md'
+      - '.github/workflows/TagBot.yml'
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}

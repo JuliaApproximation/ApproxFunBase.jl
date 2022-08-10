@@ -19,7 +19,7 @@ const VFun{S,T} = Fun{S,T,Vector{T}}
 _pad(c, _, n) = [c; zeros(eltype(c), n-length(c))]
 _pad(c, ::PosInfinity, ::PosInfinity) = c
 pad(c, n::Integer) = _pad(c, length(c), n)
-function Fun(sp::Space, c::AbstractVector) 
+function Fun(sp::Space, c::AbstractVector)
     coeff = pad(c, size(sp,2))
     Fun{typeof(sp),eltype(coeff),typeof(coeff)}(sp, coeff)
 end
@@ -195,7 +195,9 @@ extrapolate(f::Fun,x,y,z...) = extrapolate(f.coefficients,f.space,Vec(x,y,z...))
 ##Data routines
 
 
-values(f::Fun,dat...) = itransform(f.space,f.coefficients,dat...)
+values(f::Fun,dat...) = _values(f.space, f.coefficients, dat...)
+_values(sp, v, dat...) = itransform(sp, v, dat...)
+_values(sp, v::Vector{T}, dat...) where {T} = itransform(sp, v, dat...)::Vector{float(T)}
 points(f::Fun) = points(f.space,ncoefficients(f))
 ncoefficients(f::Fun) = nzeros(f.coefficients)
 
@@ -272,6 +274,7 @@ end
 
 
 
++(a::Fun) = copy(a)
 -(f::Fun) = Fun(f.space, -f.coefficients)
 -(c::Number,f::Fun) = -(f-c)
 
@@ -293,10 +296,13 @@ function intpow(f::Fun,k::Integer)
         ones(space(f))
     elseif k==1
         f
-    elseif k > 1
-        f*f^(k-1)
     else
-        1/f^(-k)
+        t = reduce(*, fill(f, abs(k)))
+        if k > 0
+            return t
+        else
+            return 1/t
+        end
     end
 end
 
@@ -363,8 +369,8 @@ end
 
 transpose(f::Fun) = f  # default no-op
 
-for op = (:(real),:(imag),:(conj))
-    @eval ($op)(f::Fun{S}) where {S<:RealSpace} = Fun(f.space,($op)(f.coefficients))
+for op = (:real, :imag, :conj)
+    @eval Base.$op(f::Fun{S}) where {S<:RealSpace} = Fun(f.space, ($op)(f.coefficients))
 end
 
 conj(f::Fun) = error("Override conj for $(typeof(f))")
@@ -391,7 +397,7 @@ function differentiate(f::Fun,k::Integer)
 end
 
 # use conj(transpose(f)) for ArraySpace
-function differentiate(f) 
+function differentiate(f)
     v = vec(f)
     D = Derivative(axes(v,1))
     Fun(D*v)
@@ -529,7 +535,7 @@ function copy(bc::Broadcasted{FunStyle})
 end
 
 function copyto!(dest::Fun, bc::Broadcasted{FunStyle})
-    if broadcastdomain(bc) ≠ domain(dest)
+    if broadcastdomain(bc) ≠ domain(dest)
         throw(ArgumentError("Domain of right-hand side incompatible with destination"))
     end
     ret = copy(bc)

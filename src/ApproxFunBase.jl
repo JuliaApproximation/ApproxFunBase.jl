@@ -24,7 +24,7 @@ import Base: values, convert, getindex, setindex!, *, +, -, ==, <, <=, >, |, !, 
                 isless, union, angle, join, isnan, isapprox, isempty, sort, merge, promote_rule,
                 minimum, maximum, extrema, argmax, argmin, findmax, findmin, isfinite,
                 zeros, zero, one, promote_rule, repeat, length, resize!, isinf,
-                getproperty, findfirst, unsafe_getindex, fld, cld, div, real, imag,
+                getproperty, findfirst, unsafe_getindex, fld, cld, div, imag,
                 @_inline_meta, eachindex, firstindex, lastindex, keys, isreal, OneTo,
                 Array, Vector, Matrix, view, ones, @propagate_inbounds, print_array,
                 split, iszero, permutedims, vec
@@ -34,7 +34,7 @@ import Base.Broadcast: BroadcastStyle, Broadcasted, AbstractArrayStyle, broadcas
 
 import Statistics: mean
 
-import LinearAlgebra: BlasInt, BlasFloat, norm, ldiv!, mul!, det, eigvals, dot, cross,
+import LinearAlgebra: BlasInt, BlasFloat, norm, ldiv!, mul!, det, eigvals, cross,
                         qr, qr!, rank, isdiag, istril, istriu, issymmetric, ishermitian,
                         Tridiagonal, diagm, diagm_container, factorize, nullspace,
                         Hermitian, Symmetric, adjoint, transpose, char_uplo
