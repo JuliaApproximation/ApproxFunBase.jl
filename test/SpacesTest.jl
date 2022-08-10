@@ -12,9 +12,12 @@ using ApproxFunOrthogonalPolynomials
         a = @inferred Fun(exp, space(f))
         @test f/a == @inferred Fun(x->(x-0.1)*exp(-x),space(f))
 
-        f = Fun(space(f),[1.,2.,3.])
+        f = @inferred Fun(space(f),[1.,2.,3.])
 
         @test (+f) == f
+
+        f2 = @inferred Fun(space(f), view(Float64[1:3;], :))
+        @test coefficients(f2) == coefficients(f)
 
         @testset "conversions" begin
             @testset for S in Any[typeof(space(f)), Any]
@@ -169,12 +172,13 @@ using ApproxFunOrthogonalPolynomials
         end
     end
 
-    @testset "AmbiguousSpace" begin
+    @testset "union and AmbiguousSpace" begin
         a = PointSpace(1:3)
+        @test (@inferred union(a, a)) == a
         for b in Any[ApproxFunBase.UnsetSpace(), ApproxFunBase.NoSpace()]
-            @test union(a, b) == a
-            @test union(b, a) == a
-            @test union(b, b) == b
+            @test (@inferred union(a, b)) == a
+            @test (@inferred union(b, a)) == a
+            @test (@inferred union(b, b)) == b
         end
     end
 
@@ -183,7 +187,7 @@ using ApproxFunOrthogonalPolynomials
         v2 = transform(NormalizedChebyshev(), v)
         @test itransform(NormalizedChebyshev(), v2) ≈ v
 
-        f = Fun(x->x^2, Chebyshev())
+        f = @inferred Fun(x->x^2, Chebyshev())
         v = coefficients(f, Chebyshev(), Legendre())
         @test v ≈ coefficients(Fun(x->x^2, Legendre()))
 
@@ -216,6 +220,30 @@ using ApproxFunOrthogonalPolynomials
             C1C2 = Conversion(Ultraspherical(1), NormalizedPolynomialSpace(Ultraspherical(1))) *
                     Conversion(Chebyshev(), Ultraspherical(1))
             @test Matrix(C12[1:10, 1:10]) ≈ Matrix(C1C2[1:10, 1:10])
+        end
+
+        @testset "union" begin
+            @test union(Chebyshev(), NormalizedLegendre()) == Jacobi(Chebyshev())
+            @test union(Chebyshev(), Legendre()) == Jacobi(Chebyshev())
+        end
+
+        @testset "Fun constructor" begin
+            # we make the fun go through somewhat complicated chains of functions
+            # that break inference of the space
+            # however, the type of coefficients should be inferred correctly.
+            f = Fun(Chebyshev(0..1))
+            newfc(f) = coefficients(Fun(Fun(f, Legendre(0..1)), space(f)))
+            newvals(f) = values(Fun(Fun(f, Legendre(0..1)), space(f)))
+            @test newfc(f) ≈ coefficients(f)
+            @test newvals(f) ≈ values(f)
+
+            newfc2(f) = coefficients(chop(pad(f, 10)))
+            @test newfc2(f) == coefficients(f)
+
+            f2 = Fun(space(f), view(Float64[1:4;], :))
+            f3 = Fun(space(f), Float64[1:4;])
+            @test newvals(f2) ≈ values(f3)
+            @test values(f2) ≈ values(f3)
         end
     end
 end

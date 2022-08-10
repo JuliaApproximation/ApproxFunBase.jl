@@ -146,27 +146,27 @@ mul_coefficients(At::Transpose{T,<:QROperatorQ{T}},B::AbstractMatrix{T}) where {
 mul_coefficients!(At::Transpose{T,<:QROperatorQ{T}},B::AbstractVector{T}) where {T<:Real} = mul!(B, parent(At)', B)
 mul_coefficients!(At::Transpose{T,<:QROperatorQ{T}},B::AbstractMatrix{T}) where {T<:Real} = mul!(B, parent(At)', B)
 
-function mul_coefficients(Ac::Adjoint{T,<:QROperatorQ{QR,T}},B::AbstractVector{T};
-            tolerance=eps(eltype(Ac))/10,maxlength=1000000) where {QR,T}
+function mul_coefficients(Ac::Adjoint{T,<:QROperatorQ{<:Any,T}},B::AbstractVector{T};
+            tolerance=eps(eltype(Ac))/10,maxlength=1000000) where {T}
     mulpars(Ac,B,tolerance,maxlength)
 end
-function mul_coefficients!(Ac::Adjoint{T,<:QROperatorQ{QR,T}},B::AbstractVector{T};
-            tolerance=eps(eltype(Ac))/10,maxlength=1000000) where {QR,T}
+function mul_coefficients!(Ac::Adjoint{T,<:QROperatorQ{<:Any,T}},B::AbstractVector{T};
+            tolerance=eps(eltype(Ac))/10,maxlength=1000000) where {T}
     mulpars(Ac,B,tolerance,maxlength,Val(true))
 end
 
-mul_coefficients(Ac::Adjoint{T,<:QROperatorQ{QR,T}},B::AbstractVector{V};opts...) where {QR,T,V} =
-    mul_coefficients(Ac,AbstractVector{T}(B); opts...)
+mul_coefficients(Ac::Adjoint{<:Any,<:QROperatorQ}, B::AbstractVector; opts...) =
+    mul_coefficients(Ac, AbstractVector{eltype(Ac)}(B); opts...)
 
 
 function *(Ac::Adjoint{<:Any,<:QROperatorQ}, b::AbstractVector; kwds...)
     A = parent(Ac)
-    Fun(domainspace(A),mul_coefficients(Ac,coefficients(b,rangespace(A));kwds...))
+    Fun(domainspace(A), mul_coefficients(Ac,coefficients(b,rangespace(A)); kwds...))
 end
 
 function *(Ac::Adjoint{<:Any,<:QROperatorQ}, b; kwds...)
     A = parent(Ac)
-    Fun(domainspace(A),mul_coefficients(Ac,coefficients(b,rangespace(A));kwds...))
+    Fun(domainspace(A), mul_coefficients(Ac,coefficients(b,rangespace(A)); kwds...))
 end
 
 
@@ -200,26 +200,26 @@ end
 # QR
 
 for TYP in (:Real,:Complex,:Number)
-    @eval ldiv_coefficients(QR::QROperator{CO,MT,T},b::AbstractVector{T}; kwds...) where {CO,MT,T<:$TYP} =
-        ldiv_coefficients(QR.R, mul_coefficients(QR.Q',b;kwds...))
-    @eval ldiv_coefficients!(QR::QROperator{CO,MT,T},b::AbstractVector{T}; kwds...) where {CO,MT,T<:$TYP} =
-        ldiv_coefficients!(QR.R, mul_coefficients!(QR.Q',b;kwds...))
+    @eval ldiv_coefficients(QR::QROperator{<:Any,<:Any,T}, b::AbstractVector{T}; kwds...) where {T<:$TYP} =
+        ldiv_coefficients(QR.R, mul_coefficients(QR.Q', b; kwds...))
+    @eval ldiv_coefficients!(QR::QROperator{<:Any,<:Any,T}, b::AbstractVector{T}; kwds...) where {T<:$TYP} =
+        ldiv_coefficients!(QR.R, mul_coefficients!(QR.Q', b; kwds...))
 end
 
 
-function ldiv_coefficients(QR::QROperator{CO,MT,T},b::AbstractVector{V};kwds...) where {CO,MT,T,V<:Number}
-    TV = promote_type(T,V)
-    ldiv_coefficients(convert(Operator{TV}, QR),convert(Vector{TV}, b);kwds...)
+function ldiv_coefficients(QR::QROperator, b::AbstractVector{<:Number}; kwds...)
+    TV = promote_type(eltype(QR), eltype(b))
+    ldiv_coefficients(convert(Operator{TV}, QR), convert(Vector{TV}, b); kwds...)
 end
 
-function ldiv_coefficients(QR::QROperator{CO,MT,T},b::AbstractVector{V};kwds...) where {CO,MT,T<:Real,V<:Complex}
+function ldiv_coefficients(QR::QROperator{<:Any,<:Any,<:Real}, b::AbstractVector{<:Complex}; kwds...)
     a=ldiv_coefficients(QR,real(b);kwds...)
     b=im*ldiv_coefficients(QR,imag(b);kwds...)
     n=max(length(a),length(b))
     pad!(a,n)+pad!(b,n)
 end
-ldiv_coefficients(QR::QROperator{CO,MT,T},b::AbstractVector{V};kwds...) where {CO,MT,T<:Complex,V<:Real} =
-    ldiv_coefficients(QR,Vector{T}(b);kwds...)
+ldiv_coefficients(QR::QROperator{<:Any,<:Any,<:Complex}, b::AbstractVector{<:Real}; kwds...) =
+    ldiv_coefficients(QR, Vector{eltype(QR)}(b);kwds...)
 
 
 \(A::QROperator,b::Fun;kwds...) =

@@ -244,7 +244,7 @@ union_by_union_rule(a::AmbiguousSpace, b::Space) = b
 union_by_union_rule(a::Space, b::AmbiguousSpace) = a
 
 
-function union_by_union_rule(a::Space,b::Space)
+function union_by_union_rule(@nospecialize(a::Space), @nospecialize(b::Space))
     if spacescompatible(a,b)
         if isambiguous(domain(a))
             return b
@@ -259,20 +259,19 @@ function union_by_union_rule(a::Space,b::Space)
     union_rule(b,a)
 end
 
-function union(a::Space, b::Space)
+function union(@nospecialize(a::Space), @nospecialize(b::Space))
     cr = union_by_union_rule(a,b)
     cr isa NoSpace || return cr
 
     cspa=canonicalspace(a)
     cspb=canonicalspace(b)
     if cspa!=a || cspb!=b
-        cr = union_by_union_rule(cspa,cspb)
+        crc = union_by_union_rule(cspa,cspb)
+        crc isa NoSpace || return crc
     end
     # TODO: Uncomment when Julia bug is fixed
-    cr=maxspace(a,b)  #Max space since we can convert both to it
-    if !isa(cr,NoSpace)
-        return cr
-    end
+    cr2=maxspace(a,b)  #Max space since we can convert both to it
+    cr2 isa NoSpace || return cr2
 
     a ⊕ b
 end
