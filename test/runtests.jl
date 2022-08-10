@@ -215,5 +215,11 @@ end
     end
 end
 
+@testset "misc" begin
+    a = @inferred ApproxFunBase.specialfunctionnormalizationpoint(exp,real,Fun())
+    @test a[1] == 1
+    @test a[2] ≈ exp(1)
+end
+
 @time include("ETDRK4Test.jl")
 include("show.jl")
