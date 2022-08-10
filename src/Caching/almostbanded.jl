@@ -20,7 +20,7 @@ function CachedOperator(io::InterlaceOperator{T,1};padding::Bool=false) where T
     md=0
     for k=1:length(io.ops)
         if k ≠ i
-            d=dimension(rs[k])
+            d=dimension(component(rs,k))
             nds+=d
             md=max(md,d)
         end
@@ -29,7 +29,7 @@ function CachedOperator(io::InterlaceOperator{T,1};padding::Bool=false) where T
 
     isend=true
     for k=i+1:length(io.ops)
-        if dimension(rs[k]) == md
+        if dimension(component(rs,k)) == md
             isend=false
         end
     end
@@ -103,13 +103,13 @@ function CachedOperator(io::InterlaceOperator{T,2};padding::Bool=false) where T
 
     # we only support block size 1 for now
     for k in d∞
-        bl = blocklengths(ds[k])
+        bl = blocklengths(component(ds,k))
         if !(bl isa AbstractFill) || getindex_value(bl) ≠ 1
             return default_CachedOperator(io;padding=padding)
         end
     end
     for k in r∞
-        bl = blocklengths(rs[k])
+        bl = blocklengths(component(rs,k))
         if !(bl isa AbstractFill) || getindex_value(bl) ≠ 1
             return default_CachedOperator(io;padding=padding)
         end
@@ -241,7 +241,7 @@ function resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},
     # fill rows
     K=k=1
     while k ≤ r
-        if isfinite(dimension(rs[ri[K][1]]))
+        if isfinite(dimension(component(rs,ri[K][1])))
             co.data.fill.V[co.datasize[2]:end,k] = co.op[K,co.datasize[2]:n+u]
             k += 1
         end
