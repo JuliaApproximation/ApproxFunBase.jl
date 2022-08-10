@@ -119,7 +119,7 @@ end
 
 
 # Default is just try solving ODE
-function ^(f::Fun{S,T},β) where {S,T}
+function ^(f::Fun, β)
     A=Derivative()-β*differentiate(f)/f
     B=Evaluation(leftendpoint(domain(f)))
     [B;A]\[first(f)^β;0]
@@ -149,34 +149,38 @@ atan(f::Fun)=cumsum(f'/(1+f^2))+atan(first(f))
 # condition in calculating secial functions
 function specialfunctionnormalizationpoint(op,growth,f)
     g=chop(growth(f),eps(cfstype(f)))
-    xmin = isempty(g.coefficients) ? leftendpoint(domain(g)) : argmin(g)
-    xmax = isempty(g.coefficients) ? rightendpoint(domain(g)) : argmax(g)
+    d = domain(g)
+    T = eltype(d)
+    xmin = isempty(g.coefficients) ? leftendpoint(d) : T(argmin(g))::T
+    xmax = isempty(g.coefficients) ? rightendpoint(d) : T(argmax(g))::T
     opfxmin,opfxmax = op(f(xmin)),op(f(xmax))
     opmax = maximum(abs,(opfxmin,opfxmax))
-    if abs(opfxmin) == opmax xmax,opfxmax = xmin,opfxmin end
+    if abs(opfxmin) == opmax
+        xmax,opfxmax = xmin,opfxmin
+    end
     xmax,opfxmax,opmax
 end
 
 # ODE gives the first order ODE a special function op satisfies,
 # RHS is the right hand side
 # growth says what to use to choose a good point to impose an initial condition
-for (op,ODE,RHS,growth) in ((:(exp),"D-f'","0",:(real)),
-                            (:(asinh),"sqrt(f^2+1)*D","f'",:(real)),
-                            (:(acosh),"sqrt(f^2-1)*D","f'",:(real)),
-                            (:(atanh),"(1-f^2)*D","f'",:(real)),
-                            (:(erfcx),"D-2f*f'","-2f'/sqrt(π)",:(real)),
-                            (:(dawson),"D+2f*f'","f'",:(real)))
-    L,R = Meta.parse(ODE),Meta.parse(RHS)
+for (op, ODE, RHS, growth) in ((:(exp),    "D-f'",           "0",        :(real)),
+                            (:(asinh),  "sqrt(f^2+1)*D",     "f'",       :(real)),
+                            (:(acosh),  "sqrt(f^2-1)*D",     "f'",       :(real)),
+                            (:(atanh),  "(1-f^2)*D",         "f'",       :(real)),
+                            (:(erfcx),  "D-2f*f'",       "-2f'/sqrt(π)", :(real)),
+                            (:(dawson), "D+2f*f'",           "f'",       :(real)))
+    L,R = Meta.parse(ODE), Meta.parse(RHS)
     @eval begin
         # depice before doing op
-        $op(f::Fun{<:PiecewiseSpace}) = Fun(map(f->$op(f),components(f)),PiecewiseSpace)
+        $op(f::Fun{<:PiecewiseSpace}) = Fun(map($op, components(f)),PiecewiseSpace)
 
         # We remove the MappedSpace
         # function $op{MS<:MappedSpace}(f::Fun{MS})
         #     g=exp(Fun(f.coefficients,space(f).space))
         #     Fun(g.coefficients,MappedSpace(domain(f),space(g)))
         # end
-        function $op(fin::Fun{S,T}) where {S,T}
+        function $op(fin::Fun)
             f=setcanonicaldomain(fin)  # removes possible issues with roots
 
             xmax,opfxmax,opmax=specialfunctionnormalizationpoint($op,$growth,f)
@@ -185,7 +189,7 @@ for (op,ODE,RHS,growth) in ((:(exp),"D-f'","0",:(real)),
             # This supports Line/Rays
             D=Derivative(domain(f))
             B=Evaluation(domainspace(D),xmax)
-            u=\([B,eval($L)],Any[opfxmax,eval($R)];tolerance=eps(T)*opmax)
+            u=\([B, $L], Any[opfxmax, $R]; tolerance=eps(cfstype(fin))*opmax)
 
             setdomain(u,domain(fin))
         end
@@ -451,11 +455,11 @@ for (funsym, exp) in Calculus.symbolic_derivatives_1arg()
     funsym == :exp && continue
     funsym == :sqrt && continue
     @eval begin
-        $(funsym)(z::Fun{CS,T}) where {CS<:ConstantSpace,T<:Real} =
+        $(funsym)(z::Fun{<:ConstantSpace,<:Real}) =
             Fun($(funsym)(Number(z)),space(z))
-        $(funsym)(z::Fun{CS,T}) where {CS<:ConstantSpace,T<:Complex} =
+        $(funsym)(z::Fun{<:ConstantSpace,<:Complex}) =
             Fun($(funsym)(Number(z)),space(z))
-        $(funsym)(z::Fun{CS}) where {CS<:ConstantSpace} =
+        $(funsym)(z::Fun{<:ConstantSpace}) =
             Fun($(funsym)(Number(z)),space(z))
     end
 end
@@ -464,23 +468,31 @@ end
 
 for op in (:(argmax),:(argmin))
     @eval begin
-        function $op(f::Fun{S,T}) where {S<:RealSpace,T<:Real}
+        function $op(f::Fun{<:RealSpace,<:Real})
             # need to check for zero as extremal_args is not defined otherwise
+            d = domain(f)
+            T = eltype(d)
             iszero(f) && return leftendpoint(domain(f))
             # the following avoids warning when differentiate(f)==0
             pts = extremal_args(f)
             # the extra real avoids issues with complex round-off
-            pts[$op(real(f.(pts)))]
+            v = map(real∘f, pts)::Vector
+            x = pts[convert(Int, $op(v))::Int]
+            convert(T, x)::T
         end
 
-        function $op(f::Fun{S,T}) where {S,T}
+        function $op(f::Fun)
             # need to check for zero as extremal_args is not defined otherwise
+            d = domain(f)
+            T = eltype(d)
             iszero(f) && return leftendpoint(domain(f))
             # the following avoids warning when differentiate(f)==0
             pts = extremal_args(f)
-            fp=f.(pts)
+            fp = map(f, pts)
             @assert norm(imag(fp))<100eps()
-            pts[$op(real(fp))]
+            v = real(fp)::Vector
+            x = pts[convert(Int, $op(v))::Int]
+            convert(T, x)::T
         end
     end
 end
@@ -512,8 +524,8 @@ end
 for op in (:(maximum),:(minimum),:(extrema))
     @eval function $op(f::Fun{S,T}) where {S<:RealSpace,T<:Real}
         pts = iszero(f') ? [leftendpoint(domain(f))] : extremal_args(f)
-
-        $op(f.(pts))
+        v = map(f, pts)
+        $op(v)
     end
 end
 
