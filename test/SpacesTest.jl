@@ -183,6 +183,8 @@ using ApproxFunOrthogonalPolynomials
     end
 
     @testset "ApproxFunOrthogonalPolynomials" begin
+        @test (@inferred Fun()) == Fun(x->x, Chebyshev())
+
         v = rand(4)
         v2 = transform(NormalizedChebyshev(), v)
         @test itransform(NormalizedChebyshev(), v2) ≈ v
