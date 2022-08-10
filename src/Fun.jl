@@ -243,7 +243,7 @@ extrapolate(f::Fun,x,y,z...) = extrapolate(f.coefficients,f.space,Vec(x,y,z...))
 
 values(f::Fun,dat...) = itransform(f.space,f.coefficients,dat...)
 points(f::Fun) = points(f.space,ncoefficients(f))
-ncoefficients(f::Fun) = length(f.coefficients)
+ncoefficients(f::Fun)::Int = length(f.coefficients)
 blocksize(f::Fun) = (block(space(f),ncoefficients(f)).n[1],)
 
 function stride(f::Fun)

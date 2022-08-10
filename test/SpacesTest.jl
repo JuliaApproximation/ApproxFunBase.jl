@@ -12,7 +12,7 @@ using ApproxFunOrthogonalPolynomials
         a = @inferred Fun(exp, space(f))
         @test f/a == @inferred Fun(x->(x-0.1)*exp(-x),space(f))
 
-        f = Fun(space(f),[1.,2.,3.])
+        f = @inferred Fun(space(f),[1.,2.,3.])
 
         @test (+f) == f
 
@@ -169,12 +169,13 @@ using ApproxFunOrthogonalPolynomials
         end
     end
 
-    @testset "AmbiguousSpace" begin
+    @testset "union and AmbiguousSpace" begin
         a = PointSpace(1:3)
+        @test (@inferred union(a, a)) == a
         for b in Any[ApproxFunBase.UnsetSpace(), ApproxFunBase.NoSpace()]
-            @test union(a, b) == a
-            @test union(b, a) == a
-            @test union(b, b) == b
+            @test (@inferred union(a, b)) == a
+            @test (@inferred union(b, a)) == a
+            @test (@inferred union(b, b)) == b
         end
     end
 
@@ -183,7 +184,7 @@ using ApproxFunOrthogonalPolynomials
         v2 = transform(NormalizedChebyshev(), v)
         @test itransform(NormalizedChebyshev(), v2) ≈ v
 
-        f = Fun(x->x^2, Chebyshev())
+        f = @inferred Fun(x->x^2, Chebyshev())
         v = coefficients(f, Chebyshev(), Legendre())
         @test v ≈ coefficients(Fun(x->x^2, Legendre()))
 

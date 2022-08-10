@@ -244,7 +244,7 @@ union_by_union_rule(a::AmbiguousSpace, b::Space) = b
 union_by_union_rule(a::Space, b::AmbiguousSpace) = a
 
 
-function union_by_union_rule(a::Space,b::Space)
+function union_by_union_rule(@nospecialize(a::Space), @nospecialize(b::Space))
     if spacescompatible(a,b)
         if isambiguous(domain(a))
             return b
@@ -259,7 +259,7 @@ function union_by_union_rule(a::Space,b::Space)
     union_rule(b,a)
 end
 
-function union(a::Space, b::Space)
+function union(@nospecialize(a::Space), @nospecialize(b::Space))
     cr = union_by_union_rule(a,b)
     cr isa NoSpace || return cr
 

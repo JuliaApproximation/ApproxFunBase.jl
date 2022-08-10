@@ -114,26 +114,31 @@ end
 
 
 hasfasttransform(_) = false
-hasfasttransform(f::Fun) = hasfasttransform(space(f))
-hasfasttransformtimes(f,g) = pointscompatible(f,g) && hasfasttransform(f) && hasfasttransform(g)
+hasfasttransform(f::Fun)::Bool = hasfasttransform(space(f))
+hasfasttransformtimes(f,g)::Bool = pointscompatible(f,g) && hasfasttransform(f) && hasfasttransform(g)
 
 
+function default_mult_compatible(f::Fun, g::Fun)
+    m,n = ncoefficients(f), ncoefficients(g)
+    # Heuristic division of parameter space between value-space and coefficient-space multiplication.
+    if log10(m)*log10(n)>4 && hasfasttransformtimes(f,g)
+        transformtimes(f,g)
+    elseif m≤n
+        coefficienttimes(f,g)
+    else
+        coefficienttimes(g,f)
+    end
+end
 # This should be overriden whenever the multiplication space is different
 function default_mult(f::Fun,g::Fun)
     # When the spaces differ we promote and multiply
     if domainscompatible(space(f),space(g))
-        m,n = ncoefficients(f),ncoefficients(g)
-        # Heuristic division of parameter space between value-space and coefficient-space multiplication.
-        if hasfasttransformtimes(f,g) && log10(m)*log10(n)>4
-            transformtimes(f,g)
-        elseif m≤n
-            coefficienttimes(f,g)
-        else
-            coefficienttimes(g,f)
-        end
+        default_mult_compatible(f, g)
     else
         sp=union(space(f),space(g))
-        Fun(f,sp)*Fun(g,sp)
+        fnew = Fun(f,sp)
+        gnew = Fun(g,sp)
+        default_mult_compatible(fnew, gnew)
     end
 end
 
