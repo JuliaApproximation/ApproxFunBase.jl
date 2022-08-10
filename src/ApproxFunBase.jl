@@ -2,7 +2,8 @@ module ApproxFunBase
     using Base: AnyDict
 using Base, BlockArrays, BandedMatrices, BlockBandedMatrices, DomainSets, IntervalSets,
             SpecialFunctions, AbstractFFTs, FFTW, SpecialFunctions, DSP, DualNumbers,
-            LinearAlgebra, SparseArrays, LowRankApprox, FillArrays, InfiniteArrays, InfiniteLinearAlgebra #, Arpack
+            LinearAlgebra, SparseArrays, LowRankApprox, FillArrays, InfiniteArrays,
+            InfiniteLinearAlgebra, ContinuumArrays
 import StaticArrays, Calculus
 
 import DomainSets: Domain, indomain, UnionDomain, ProductDomain, FullSpace, Point, elements, DifferenceDomain,
@@ -26,7 +27,7 @@ import Base: values, convert, getindex, setindex!, *, +, -, ==, <, <=, >, |, !, 
                 getproperty, findfirst, unsafe_getindex, fld, cld, div, imag,
                 @_inline_meta, eachindex, firstindex, lastindex, keys, isreal, OneTo,
                 Array, Vector, Matrix, view, ones, @propagate_inbounds, print_array,
-                split, iszero, permutedims
+                split, iszero, permutedims, vec
 
 import Base.Broadcast: BroadcastStyle, Broadcasted, AbstractArrayStyle, broadcastable,
                         DefaultArrayStyle, broadcasted
@@ -40,6 +41,8 @@ import LinearAlgebra: BlasInt, BlasFloat, norm, ldiv!, mul!, det, eigvals, cross
 
 import SparseArrays: blockdiag
 
+
+import ContinuumArrays: AbstractQuasiMatrix, AbstractQuasiVector, AbstractQuasiArray, arguments, checkpoints
 # import Arpack: eigs
 
 # we need to import all special functions to use Calculus.symbolic_derivatives_1arg
@@ -78,6 +81,7 @@ import InfiniteArrays: PosInfinity, InfRanges, AbstractInfUnitRange, OneToInf, I
 
 # convenience for 1-d block ranges
 const BlockRange1 = BlockRange{1,Tuple{UnitRange{Int}}}
+const Space{T} = AbstractQuasiMatrix{T}
 
 import Base: view
 
@@ -95,6 +99,7 @@ export pad!, pad, chop!, sample,
 
 export .., Interval, ChebyshevInterval, leftendpoint, rightendpoint, endpoints, cache
 
+export bilinearform, linebilinearform, innerproduct, lineinnerproduct
 
 if VERSION < v"1.6-"
 	oneto(n) = Base.OneTo(n)
@@ -103,17 +108,6 @@ else
 end
 
 
-include("LinearAlgebra/LinearAlgebra.jl")
 include("Fun.jl")
-include("Domains/Domains.jl")
-include("Multivariate/Multivariate.jl")
-include("Operators/Operator.jl")
-include("Caching/caching.jl")
-include("PDE/PDE.jl")
-include("Spaces/Spaces.jl")
-include("hacks.jl")
-include("testing.jl")
-include("specialfunctions.jl")
-include("show.jl")
 
 end #module

@@ -2,97 +2,83 @@ export Fun, evaluate, values, points, extrapolate, setdomain
 export coefficients, ncoefficients, coefficient
 export integrate, differentiate, domain, space, linesum, linenorm
 
-include("Domain.jl")
-include("Space.jl")
-
 ##  Constructors
 
 
 mutable struct Fun{S,T,VT} <: Function
     space::S
     coefficients::VT
-    function Fun{S,T,VT}(sp::S,coeff::VT) where {S,T,VT}
-        @assert length(coeff) ≤ dimension(sp)
+    function Fun{S,T,VT}(sp::S, coeff::VT) where {S,T,VT}
+        axes(sp,2) == axes(coeff,1) || throw(DimensionMismatch(""))
         new{S,T,VT}(sp,coeff)
     end
 end
 
 const VFun{S,T} = Fun{S,T,Vector{T}}
 
-Fun(sp::Space,coeff::AbstractVector) = Fun{typeof(sp),eltype(coeff),typeof(coeff)}(sp,coeff)
+_pad(c, _, n) = [c; zeros(eltype(c), n-length(c))]
+_pad(c, ::PosInfinity, ::PosInfinity) = c
+pad(c, n::Integer) = _pad(c, length(c), n)
+function Fun(sp::Space, c::AbstractVector)
+    coeff = pad(c, size(sp,2))
+    Fun{typeof(sp),eltype(coeff),typeof(coeff)}(sp, coeff)
+end
 Fun() = Fun(identity)
-Fun(d::Domain) = Fun(identity,d)
-Fun(d::Space) = Fun(identity,d)
+Fun(d) = Fun(identity, d)
+
+Fun(v::AbstractQuasiVector) = Fun(arguments(v)...)
+function Fun(f::Function, S::Space)
+    if !applicable(f, checkpoints(S)[1])
+        Fun(x -> f(x...), S)
+    else
+        Fun(S, S \ f.(axes(S,1)))
+    end
+end
+
+Fun(f::Function, d) = Fun(f, Space(d))
 
 
-function Fun(sp::Space,v::AbstractVector{Any})
+function Fun(sp::Space, v::AbstractVector{Any})
     if isempty(v)
-        Fun(sp,Float64[])
+        Fun(sp, Float64[])
     elseif all(x->isa(x,Number),v)
-        Fun(sp,Vector{mapreduce(typeof,promote_type,v)}(v))
+        Fun(sp, Vector{mapreduce(typeof,promote_type,v)}(v))
     else
         error("Cannot construct Fun with coefficients $v and space $sp")
     end
 end
 
 
-hasnumargs(f::Fun,k) = k == 1 || domaindimension(f) == k  # all funs take a single argument as a Vec
+hasnumargs(f::Fun, k) = k == 1 || domaindimension(f) == k  # all funs take a single argument as a Vec
 
 ##Coefficient routines
 #TODO: domainscompatible?
 
-function coefficients(f::Fun,msp::Space)
-    #zero can always be converted
-    fc = f.coefficients
-    if ncoefficients(f) == 0 || (ncoefficients(f) == 1 && fc[1] == 0)
-        fc
-    else
-        coefficients(fc, space(f), msp)
-    end
-end
-coefficients(f::Fun,::Type{T}) where {T<:Space} = coefficients(f,T(domain(f)))
+
 coefficients(f::Fun) = f.coefficients
-coefficients(c::Number,sp::Space) = Fun(c,sp).coefficients
 
-function coefficient(f::Fun,k::Integer)
-    if k > dimension(space(f)) || k < 1
-        throw(BoundsError())
-    elseif k > ncoefficients(f)
-        zero(cfstype(f))
-    else
-        f.coefficients[k]
-    end
-end
-
-function coefficient(f::Fun,kr::AbstractRange)
-    b = maximum(kr)
-    f.coefficients[first(kr):min(b, end)]
-end
-
-coefficient(f::Fun,K::Block) = coefficient(f,blockrange(space(f),K.n[1]))
-coefficient(f::Fun,::Colon) = coefficient(f,1:dimension(space(f)))
+vec(f::Fun) = f.space * coefficients(f)
+coefficients(f::Fun, msp::Space) = msp \ vec(f)
+coefficients(c::Number,sp::Space) = coefficients(Fun(c,sp))
+Fun(f::Fun, S::Space) = Fun(S, coefficients(f, S))
 
 ##Convert routines
 
 
-convert(::Type{Fun{S,T,VT}},f::Fun{S}) where {T,S,VT} =
-    Fun{S,T,VT}(f.space, convert(VT,f.coefficients)::VT)
-function convert(::Type{Fun{S,T,VT}},f::Fun) where {T,S,VT}
-    g = Fun(Fun(f.space, convert(VT,f.coefficients)::VT), convert(S,space(f))::S)
-    Fun{S,T,VT}(g.space, g.coefficients)
-end
+convert(::Type{Fun{S,T,VT}}, f::Fun{S}) where {T,S,VT} =
+    Fun(f.space,convert(VT,f.coefficients))
+convert(::Type{Fun{S,T,VT}}, f::Fun) where {T,S,VT} =
+    Fun(Fun(f.space,convert(VT,f.coefficients)),convert(S,space(f)))
 
-function convert(::Type{Fun{S,T}},f::Fun{S}) where {T,S}
-    coeff = convert(AbstractVector{T},f.coefficients)::AbstractVector{T}
-    Fun{S, T, typeof(coeff)}(f.space, coeff)
-end
+convert(::Type{Fun{S,T}}, f::Fun{S}) where {T,S} =
+    Fun(f.space,convert(AbstractVector{T},f.coefficients))
 
 
-convert(::Type{VFun{S,T}},x::Number) where {T,S} =
-    (x==0 ? zeros(T,S(AnyDomain())) : x*ones(T,S(AnyDomain())))::VFun{S,T}
-convert(::Type{Fun{S}},x::Number) where {S} =
-    (x==0 ? zeros(S(AnyDomain())) : x*ones(S(AnyDomain())))::Fun{S}
-convert(::Type{IF},x::Number) where {IF<:Fun} = convert(IF,Fun(x))::IF
+convert(::Type{VFun{S,T}}, x::Number) where {T,S} =
+    x==0 ? zeros(T,S(AnyDomain())) : x*ones(T,S(AnyDomain()))
+convert(::Type{Fun{S}}, x::Number) where {S} =
+    x==0 ? zeros(S(AnyDomain())) : x*ones(S(AnyDomain()))
+convert(::Type{IF}, x::Number) where {IF<:Fun} = convert(IF,Fun(x))
 
 Fun{S,T,VT}(f::Fun) where {S,T,VT} = convert(Fun{S,T,VT}, f)
 Fun{S,T}(f::Fun) where {S,T} = convert(Fun{S,T}, f)
@@ -104,7 +90,7 @@ Base.promote_rule(::Type{Fun{S,T,VT1}},::Type{Fun{S,V,VT2}}) where {T,V,S,VT1,VT
 
 
 # TODO: Never assume!
-Base.promote_op(::typeof(*),::Type{F1},::Type{F2}) where {F1<:Fun,F2<:Fun} =
+Base.promote_op(::typeof(*), ::Type{F1}, ::Type{F2}) where {F1<:Fun,F2<:Fun} =
     promote_type(F1,F2) # assume multiplication is defined between same types
 
 # we know multiplication by numbers preserves types
@@ -143,14 +129,15 @@ coefficients(f::AbstractArray) = f
 
 
 #supports broadcasting and scalar iterator
-const ScalarFun = Fun{S} where S<:Space{D,R} where {D,R<:Number}
-const ArrayFun = Fun{S} where {S<:Space{D,R}} where {D,R<:AbstractArray}
-const MatrixFun = Fun{S} where {S<:Space{D,R}} where {D,R<:AbstractMatrix}
-const VectorFun = Fun{S} where {S<:Space{D,R}} where {D,R<:AbstractVector}
+const ScalarSpace = Space{<:Number}
+const RealSpace = Space{<:Real}
+const ScalarFun = Fun{<:ScalarSpace}
+const ArrayFun = Fun{<:Space{<:AbstractArray}}
+const MatrixFun = Fun{<:Space{<:AbstractMatrix}}
+const VectorFun = Fun{<:Space{<:AbstractVector}}
 
-size(f::Fun,k...) = size(space(f),k...)
-length(f::Fun) = length(space(f))
-
+size(f::Fun, k...) = size(first(axes(space(f),1)), k...)
+length(f::Fun) = length(first(axes(space(f),1)))
 
 getindex(f::ScalarFun, ::CartesianIndex{0}) = f
 getindex(f::ScalarFun, k::Integer) = k == 1 ? f : throw(BoundsError())
@@ -163,8 +150,7 @@ iterate(A::ArrayFun, i=1) = (@_inline_meta; (i % UInt) - 1 < length(A) ? (@inbou
 
 in(x::ScalarFun, y::ScalarFun) = x == y
 
-setspace(v::AbstractVector,s::Space) = Fun(s,v)
-setspace(f::Fun,s::Space) = Fun(s,f.coefficients)
+setspace(f::Fun, s::Space) = Fun(s, coefficients(f))
 
 
 ## domain
@@ -173,61 +159,33 @@ setspace(f::Fun,s::Space) = Fun(s,f.coefficients)
 ## General routines
 
 
-domain(f::Fun) = domain(f.space)
-domain(v::AbstractMatrix{T}) where {T<:Fun} = map(domain,v)
+domain(f::Fun) = axes(f.space, 1)
+domain(v::AbstractMatrix{T}) where {T<:Fun} = map(domain, v)
 domaindimension(f::Fun) = domaindimension(f.space)
 
 setdomain(f::Fun,d::Domain) = Fun(setdomain(space(f),d),f.coefficients)
 
-for op in (:tocanonical,:tocanonicalD,:fromcanonical,:fromcanonicalD,:invfromcanonicalD)
-    @eval $op(f::Fun,x...) = $op(space(f),x...)
-end
-
-for op in (:tocanonical,:tocanonicalD)
-    @eval $op(d::Domain) = $op(d,Fun(identity,d))
-end
-for op in (:fromcanonical,:fromcanonicalD,:invfromcanonicalD)
-    @eval $op(d::Domain) = $op(d,Fun(identity,canonicaldomain(d)))
-end
-
-
 space(f::Fun) = f.space
-spacescompatible(f::Fun,g::Fun) = spacescompatible(space(f),space(g))
-pointscompatible(f::Fun,g::Fun) = pointscompatible(space(f),space(g))
+spacescompatible(f::Fun, g::Fun) = spacescompatible(space(f),space(g))
+pointscompatible(f::Fun, g::Fun) = pointscompatible(space(f),space(g))
 canonicalspace(f::Fun) = canonicalspace(space(f))
 canonicaldomain(f::Fun) = canonicaldomain(space(f))
 
 
 ##Evaluation
 
-function evaluate(f::AbstractVector,S::Space,x...)
-    csp=canonicalspace(S)
-    if spacescompatible(csp,S)
-        error("Override evaluate for " * string(typeof(csp)))
-    else
-        evaluate(coefficients(f,S,csp),csp,x...)
-    end
-end
-
-evaluate(f::Fun,x) = evaluate(f.coefficients,f.space,x)
-evaluate(f::Fun,x,y,z...) = evaluate(f.coefficients,f.space,Vec(x,y,z...))
-
-
-(f::Fun)(x...) = evaluate(f,x...)
+evaluate(f::Fun, x) = vec(f)[x]
+evaluate(f::Fun, x, y, z...) = evaluate(f, Vec(x,y,z...))
+(f::Fun)(x...) = evaluate(f, x...)
 
 dynamic(f::Fun) = f # Fun's are already dynamic in that they compile by type
-
-for (op,dop) in ((:first,:leftendpoint),(:last,:rightendpoint))
-    @eval $op(f::Fun{S,T}) where {S,T} = f($dop(domain(f)))
-end
-
 
 
 ## Extrapolation
 
 
 # Default extrapolation is evaluation. Override this function for extrapolation enabled spaces.
-extrapolate(f::AbstractVector,S::Space,x...) = evaluate(f,S,x...)
+extrapolate(f::AbstractVector, S::Space, x...) = evaluate(f, S, x...)
 
 # Do not override these
 extrapolate(f::Fun,x) = extrapolate(f.coefficients,f.space,x)
@@ -241,38 +199,19 @@ values(f::Fun,dat...) = _values(f.space, f.coefficients, dat...)
 _values(sp, v, dat...) = itransform(sp, v, dat...)
 _values(sp, v::Vector{T}, dat...) where {T} = itransform(sp, v, dat...)::Vector{float(T)}
 points(f::Fun) = points(f.space,ncoefficients(f))
-ncoefficients(f::Fun)::Int = length(f.coefficients)
-blocksize(f::Fun) = (block(space(f),ncoefficients(f)).n[1],)
-
-function stride(f::Fun)
-    # Check only for stride 2 at the moment
-    # as higher stride is very rare anyways
-    M=maximum(abs,f.coefficients)
-    for k=2:2:ncoefficients(f)
-        if abs(f.coefficients[k])>40*M*eps()
-            return 1
-        end
-    end
-
-    2
-end
-
-
+ncoefficients(f::Fun) = nzeros(f.coefficients)
 
 ## Manipulate length
 
-pad!(f::Fun,n::Integer) = (pad!(f.coefficients,n);f)
-pad(f::Fun,n::Integer) = Fun(f.space,pad(f.coefficients,n))
 
-
-function chop!(sp::UnivariateSpace,cfs,tol::Real)
-    n=standardchoplength(cfs,tol)
+function chop!(sp::ScalarSpace, cfs, tol::Real)
+    n = standardchoplength(cfs, tol)
     resize!(cfs,n)
     cfs
 end
 
-chop!(sp::Space,cfs,tol::Real) = chop!(cfs,maximum(abs,cfs)*tol)
-chop!(sp::Space,cfs) = chop!(sp,cfs,10eps())
+chop!(sp::Space, cfs, tol::Real) = chop!(cfs,maximum(abs,cfs)*tol)
+chop!(sp::Space, cfs) = chop!(sp,cfs,10eps())
 
 function chop!(f::Fun,tol...)
     chop!(space(f),f.coefficients,tol...)
@@ -286,24 +225,23 @@ copy(f::Fun) = Fun(space(f),copy(f.coefficients))
 
 ## Addition and multiplication
 
+
+
 for op in (:+,:-)
     @eval begin
-        function $op(f::Fun,g::Fun)
-            if spacescompatible(f,g)
-                n = max(ncoefficients(f),ncoefficients(g))
-                f2 = pad(f,n); g2 = pad(g,n)
-
-                Fun(isambiguous(domain(f)) ? g.space : f.space,($op)(f2.coefficients,g2.coefficients))
+        function $op(f::Fun, g::Fun)
+            if space(f) == space(g)
+                Fun(space(f), ($op)(coefficients(f), coefficients(g)))
             else
-                m=union(f.space,g.space)
-                if isa(m,NoSpace)
+                m = broadcastspace($op, f.space, g.space)
+                if m isa NoSpace
                     error("Cannot "*string($op)*" because no space is the union of "*string(typeof(f.space))*" and "*string(typeof(g.space)))
                 end
-                $op(Fun(f,m),Fun(g,m)) # convert to same space
+                $op(Fun(f,m), Fun(g,m)) # convert to same space
             end
         end
         $op(f::Fun{S,T},c::T) where {S,T<:Number} = c==0 ? f : $op(f,Fun(c))
-        $op(f::Fun,c::Number) = $op(f,Fun(c))
+        $op(f::Fun,c::Number) = $op(f,Fun(c,space(f)))
         $op(f::Fun,c::UniformScaling) = $op(f,c.λ)
         $op(c::UniformScaling,f::Fun) = $op(c.λ,f)
     end
@@ -311,7 +249,7 @@ end
 
 
 # equivalent to Y+=a*X
-axpy!(a,X::Fun,Y::Fun)=axpy!(a,coefficients(X,space(Y)),Y)
+axpy!(a, X::Fun, Y::Fun)=axpy!(a,coefficients(X,space(Y)),Y)
 function axpy!(a,xcfs::AbstractVector,Y::Fun)
     if a!=0
         n=ncoefficients(Y); m=length(xcfs)
@@ -335,8 +273,9 @@ function axpy!(a,xcfs::AbstractVector,Y::Fun)
 end
 
 
+
 +(a::Fun) = copy(a)
--(f::Fun) = Fun(f.space,-f.coefficients)
+-(f::Fun) = Fun(f.space, -f.coefficients)
 -(c::Number,f::Fun) = -(f-c)
 
 
@@ -373,7 +312,6 @@ inv(f::Fun) = 1/f
 
 # Integrals over two Funs, which are fast with the orthogonal weight.
 
-export bilinearform, linebilinearform, innerproduct, lineinnerproduct
 
 # Having fallbacks allow for the fast implementations.
 
@@ -406,7 +344,7 @@ for (OP,SUM) in ((:(norm),:(sum)),(:linenorm,:linesum))
     @eval begin
         $OP(f::Fun) = $OP(f,2)
 
-        function $OP(f::Fun{S},p::Real) where S<:Space{D,R} where {D,R<:Number}
+        function $OP(f::ScalarFun, p::Real)
             if p < 1
                 return error("p should be 1 ≤ p ≤ ∞")
             elseif 1 ≤ p < Inf
@@ -416,7 +354,7 @@ for (OP,SUM) in ((:(norm),:(sum)),(:linenorm,:linesum))
             end
         end
 
-        function $OP(f::Fun{S},p::Int) where S<:Space{D,R} where {D,R<:Number}
+        function $OP(f::ScalarFun,p::Int)
             if 1 ≤ p < Inf
                 return iseven(p) ? abs($SUM(abs2(f)^(p÷2)))^(1/p) : abs($SUM(abs2(f)^(p/2)))^(1/p)
             else
@@ -459,6 +397,11 @@ function differentiate(f::Fun,k::Integer)
 end
 
 # use conj(transpose(f)) for ArraySpace
+function differentiate(f)
+    v = vec(f)
+    D = Derivative(axes(v,1))
+    Fun(D*v)
+end
 adjoint(f::Fun) = differentiate(f)
 
 
@@ -601,5 +544,3 @@ function copyto!(dest::Fun, bc::Broadcasted{FunStyle})
     dest.coefficients[:] = cfs
     dest
 end
-
-include("constructors.jl")
