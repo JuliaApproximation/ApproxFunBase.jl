@@ -218,5 +218,10 @@ using ApproxFunOrthogonalPolynomials
                     Conversion(Chebyshev(), Ultraspherical(1))
             @test Matrix(C12[1:10, 1:10]) ≈ Matrix(C1C2[1:10, 1:10])
         end
+
+        @testset "union" begin
+            @test union(Chebyshev(), NormalizedLegendre()) == Jacobi(Chebyshev())
+            @test union(Chebyshev(), Legendre()) == Jacobi(Chebyshev())
+        end
     end
 end
