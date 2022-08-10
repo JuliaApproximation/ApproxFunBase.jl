@@ -34,7 +34,7 @@ function testtransforms(S::Space;minpoints=1,invertibletransform=true)
 end
 
 function testcalculus(S::Space;haslineintegral=true,hasintegral=true)
-    for k=1:min(5,dimension(S))
+    @testset for k=1:min(5,dimension(S))
         v = [zeros(k-1);1.0]
         f = Fun(S,v)
         @test abs(DefiniteIntegral()*f-sum(f)) < 100eps()
@@ -51,7 +51,7 @@ function testcalculus(S::Space;haslineintegral=true,hasintegral=true)
 end
 
 function testmultiplication(spa,spb)
-    for k=1:10
+    @testset for k=1:10
         a = Fun(spa,[zeros(k-1);1.])
         M = Multiplication(a,spb)
         pts = ApproxFunBase.checkpoints(rangespace(M))

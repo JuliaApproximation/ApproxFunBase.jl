@@ -234,11 +234,11 @@ using ApproxFunOrthogonalPolynomials
             f = Fun(Chebyshev(0..1))
             newfc(f) = coefficients(Fun(Fun(f, Legendre(0..1)), space(f)))
             newvals(f) = values(Fun(Fun(f, Legendre(0..1)), space(f)))
-            @test @inferred(newfc(f)) ≈ coefficients(f)
-            @test @inferred(newvals(f)) ≈ values(f)
+            @test newfc(f) ≈ coefficients(f)
+            @test newvals(f) ≈ values(f)
 
             newfc2(f) = coefficients(chop(pad(f, 10)))
-            @test @inferred(newfc2(f)) == coefficients(f)
+            @test newfc2(f) == coefficients(f)
 
             f2 = Fun(space(f), view(Float64[1:4;], :))
             f3 = Fun(space(f), Float64[1:4;])

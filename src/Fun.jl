@@ -41,15 +41,13 @@ hasnumargs(f::Fun,k) = k == 1 || domaindimension(f) == k  # all funs take a sing
 ##Coefficient routines
 #TODO: domainscompatible?
 
-_coefficients(fc::Vector, sp, msp) = oftype(fc, coefficients(fc, sp, msp))::typeof(fc)
-_coefficients(fc, sp, msp) = coefficients(fc, sp, msp)
 function coefficients(f::Fun,msp::Space)
     #zero can always be converted
     fc = f.coefficients
     if ncoefficients(f) == 0 || (ncoefficients(f) == 1 && fc[1] == 0)
         fc
     else
-        _coefficients(fc, space(f), msp)
+        coefficients(fc, space(f), msp)
     end
 end
 coefficients(f::Fun,::Type{T}) where {T<:Space} = coefficients(f,T(domain(f)))
