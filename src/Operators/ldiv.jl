@@ -2,16 +2,20 @@
 for TYP in (:Fun,:StridedVector,:AbstractVector,:Any)
     @eval function \(A::Operator,b::$TYP;kwds...)
         if isambiguous(domainspace(A))
-            A=choosespaces(A,b)
-            if isambiguous(domainspace(A))
+            A2=choosespaces(A,b)
+            if isambiguous(domainspace(A2))
                 error("Cannot infer spaces")
             end
-            \(A,b;kwds...)
+            ldiv_nonambiguous(A2, b; kwds...)
         else
-            Fun(domainspace(A),
-                ldiv_coefficients(A,coefficients(b,rangespace(A));kwds...))
+            ldiv_nonambiguous(A, b; kwds...)
         end
     end
+end
+
+function ldiv_nonambiguous(A, b; kwds...)
+    Fun(domainspace(A),
+        ldiv_coefficients(A,coefficients(b,rangespace(A));kwds...))
 end
 
 """

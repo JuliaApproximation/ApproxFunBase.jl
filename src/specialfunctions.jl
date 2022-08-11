@@ -256,8 +256,8 @@ for (op,oprecip,opinv,opinvrecip) in ((:(sin),:(csc),:(asin),:(acsc)),
     end
 end
 
-rad2deg(f::Fun) = 180*f/π
-deg2rad(f::Fun) = π*f/180
+rad2deg(f::Fun) = 180/π*f
+deg2rad(f::Fun) = π/180*f
 
 for (op,opd,opinv,opinvd) in ((:(sin),:(sind),:(asin),:(asind)),
                               (:(cos),:(cosd),:(acos),:(acosd)),
