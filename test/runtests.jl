@@ -242,6 +242,17 @@ end
         LinearAlgebra.BLAS.gemv!('N', 1.0, A, x, 1.0, b)
         @test a == b == 2:2:8
     end
+
+    @testset "hesseneigs" begin
+        A = Float64[1 4 2 3; 1 4 1 7; 0 2 3 4; 0 0 1 3]
+        λ1 = sort(ApproxFunBase.hesseneigvals(A), by = x->(real(x), imag(x)))
+        λ2 = eigvals(A)
+        @test λ1 ≈ λ2
+        B = ComplexF64.(A)
+        λ1 = sort(ApproxFunBase.hesseneigvals(B), by = x->(real(x), imag(x)))
+        λ2 = eigvals(B)
+        @test λ1 ≈ λ2
+    end
 end
 
 @time include("ETDRK4Test.jl")
