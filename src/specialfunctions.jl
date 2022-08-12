@@ -32,6 +32,7 @@ end
 
 function abs(f::Fun{<:RealUnivariateSpace,<:Real})
     d=domain(f)
+    T = cfstype(f)
     pts = iszero(f) ? T[] : roots(f)
     splitmap(x->abs(f(x)),d,pts)
 end
