@@ -27,14 +27,14 @@ split(d::SegmentDomain, pts) = d
 function splitatroots(f::Fun)
     d=domain(f)
     pts=union(roots(f)) # union removes multiplicities
-    splitmap(x->f(x),d,pts)
+    splitmap(f,d,pts)
 end
 
 function abs(f::Fun{<:RealUnivariateSpace,<:Real})
     d=domain(f)
     T = cfstype(f)
     pts = iszero(f) ? T[] : roots(f)
-    splitmap(x->abs(f(x)),d,pts)
+    splitmap(abs∘f,d,pts)
 end
 
 function abs(f::Fun)
