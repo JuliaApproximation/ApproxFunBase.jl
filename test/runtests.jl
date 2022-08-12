@@ -228,6 +228,20 @@ end
     a = @inferred ApproxFunBase.specialfunctionnormalizationpoint(exp,real,Fun())
     @test a[1] == 1
     @test a[2] ≈ exp(1)
+
+    @testset "gemv" begin
+        # test for the pointer versions, and assert that libblastrampoline works
+        a = zeros(4)
+        b = zeros(4)
+        A = Matrix{Float64}(I,4,4)
+        x = Float64[1:4;]
+        ApproxFunBase.gemv!('N', 1.0, A, x, 0.0, a)
+        LinearAlgebra.BLAS.gemv!('N', 1.0, A, x, 0.0, b)
+        @test a == b == 1:4
+        ApproxFunBase.gemv!('N', 1.0, A, x, 1.0, a)
+        LinearAlgebra.BLAS.gemv!('N', 1.0, A, x, 1.0, b)
+        @test a == b == 2:2:8
+    end
 end
 
 @time include("ETDRK4Test.jl")
