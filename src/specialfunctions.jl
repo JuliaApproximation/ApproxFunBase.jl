@@ -312,7 +312,7 @@ end
 
 ## <,≤,>,≥
 
-for op in (:<,:>)
+for op in (:<,)
     @eval begin
         function $op(f::Fun,c::Number)
             if length(roots(f-c))==0
@@ -333,7 +333,7 @@ end
 
 
 
-for op in (:(<=),:(>=))
+for op in (:(<=),)
     @eval begin
         function $op(f::Fun,c::Number)
             rts=roots(f-c)
@@ -429,7 +429,7 @@ for SP in (:ConstantSpace,:PointSpace)
     end
 end
 
-for OP in (:<,:(Base.isless),:(<=),:>,:(>=))
+for OP in (:<,:(Base.isless),:(<=))
     @eval begin
         $OP(a::Fun{CS},b::Fun{CS}) where {CS<:ConstantSpace} = $OP(convert(Number,a),Number(b))
         $OP(a::Fun{CS},b::Number) where {CS<:ConstantSpace} = $OP(convert(Number,a),b)
