@@ -126,8 +126,8 @@ Base.promote_op(::typeof(LinearAlgebra.matprod),::Type{NN},::Type{Fun{S,T,VT}}) 
 zero(::Type{Fun}) = Fun(0.)
 zero(::Type{Fun{S,T,VT}}) where {T,S<:Space,VT} = zeros(T,S(AnyDomain()))
 one(::Type{Fun{S,T,VT}}) where {T,S<:Space,VT} = ones(T,S(AnyDomain()))
-zero(f::Fun{S,T}) where {S,T} = zeros(T,f.space)
-one(f::Fun{S,T}) where {S,T} = ones(T,f.space)
+zero(f::Fun) = zeros(cfstype(f), space(f))
+one(f::Fun) = ones(cfstype(f), space(f))
 
 cfstype(::Fun{S,T}) where {S,T} = T
 cfstype(::Type{Fun{S,T,VT}}) where {S,T,VT} = T
@@ -218,7 +218,7 @@ evaluate(f::Fun,x,y,z...) = evaluate(f.coefficients,f.space,Vec(x,y,z...))
 dynamic(f::Fun) = f # Fun's are already dynamic in that they compile by type
 
 for (op,dop) in ((:first,:leftendpoint),(:last,:rightendpoint))
-    @eval $op(f::Fun{S,T}) where {S,T} = f($dop(domain(f)))
+    @eval $op(f::Fun) = f($dop(domain(f)))
 end
 
 
@@ -406,7 +406,7 @@ for (OP,SUM) in ((:(norm),:(sum)),(:linenorm,:linesum))
     @eval begin
         $OP(f::Fun) = $OP(f,2)
 
-        function $OP(f::Fun{S},p::Real) where S<:Space{D,R} where {D,R<:Number}
+        function $OP(f::Fun{<:Space{<:Any,<:Number}}, p::Real)
             if p < 1
                 return error("p should be 1 ≤ p ≤ ∞")
             elseif 1 ≤ p < Inf
@@ -416,7 +416,7 @@ for (OP,SUM) in ((:(norm),:(sum)),(:linenorm,:linesum))
             end
         end
 
-        function $OP(f::Fun{S},p::Int) where S<:Space{D,R} where {D,R<:Number}
+        function $OP(f::Fun{<:Space{<:Any,<:Number}}, p::Int)
             if 1 ≤ p < Inf
                 return iseven(p) ? abs($SUM(abs2(f)^(p÷2)))^(1/p) : abs($SUM(abs2(f)^(p/2)))^(1/p)
             else
@@ -432,13 +432,13 @@ end
 transpose(f::Fun) = f  # default no-op
 
 for op = (:real, :imag, :conj)
-    @eval Base.$op(f::Fun{S}) where {S<:RealSpace} = Fun(f.space, ($op)(f.coefficients))
+    @eval Base.$op(f::Fun{<:RealSpace}) = Fun(f.space, ($op)(f.coefficients))
 end
 
 conj(f::Fun) = error("Override conj for $(typeof(f))")
 
-abs2(f::Fun{S,T}) where {S<:RealSpace,T<:Real} = f^2
-abs2(f::Fun{S,T}) where {S<:RealSpace,T<:Complex} = real(f)^2+imag(f)^2
+abs2(f::Fun{<:RealSpace,<:Real}) = f^2
+abs2(f::Fun{<:RealSpace,<:Complex}) = real(f)^2+imag(f)^2
 abs2(f::Fun)=f*conj(f)
 
 ##  integration
@@ -478,7 +478,8 @@ Base.rtoldefault(x::Union{T,Type{T}}, y::Union{S,Type{S}}, atol) where {T<:Fun,S
     Base.rtoldefault(cfstype(x),cfstype(y), atol)
 
 
-function isapprox(f::Fun{S1,T},g::Fun{S2,S};rtol::Real=Base.rtoldefault(T,S,0), atol::Real=0, norm::Function=coefficientnorm) where {S1,S2,T,S}
+function isapprox(f::Fun,g::Fun;
+        rtol::Real=Base.rtoldefault(cfstype(f),cfstype(g),0), atol::Real=0, norm::Function=coefficientnorm)
     if spacescompatible(f,g)
         d = norm(f - g)
         if isfinite(d)
