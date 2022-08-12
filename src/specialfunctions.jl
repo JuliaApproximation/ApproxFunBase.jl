@@ -27,13 +27,14 @@ split(d::SegmentDomain, pts) = d
 function splitatroots(f::Fun)
     d=domain(f)
     pts=union(roots(f)) # union removes multiplicities
-    splitmap(x->f(x),d,pts)
+    splitmap(f,d,pts)
 end
 
-function abs(f::Fun{S,T}) where {S<:RealUnivariateSpace,T<:Real}
+function abs(f::Fun{<:RealUnivariateSpace,<:Real})
     d=domain(f)
+    T = cfstype(f)
     pts = iszero(f) ? T[] : roots(f)
-    splitmap(x->abs(f(x)),d,pts)
+    splitmap(abs∘f,d,pts)
 end
 
 function abs(f::Fun)
@@ -58,9 +59,9 @@ _UnionDomainIfMultiple(d::IntervalOrSegment) = d
 _UnionDomainIfMultiple(d) = UnionDomain(components(d))
 
 for OP in (:sign,:angle)
-    @eval function $OP(f::Fun{S,T}) where {S<:RealUnivariateSpace,T<:Real}
+    @eval function $OP(f::Fun{<:RealUnivariateSpace,<:Real})
         d=domain(f)
-
+        T = cfstype(f)
         pts = iszero(f) ? T[] : roots(f)
 
         if isempty(pts)
@@ -75,14 +76,15 @@ end
 
 for op in (:(max),:(min))
     @eval begin
-        function $op(f::Fun{S,T1},g::Fun{V,T2}) where {S<:RealUnivariateSpace,V<:RealUnivariateSpace,T1<:Real,T2<:Real}
+        function $op(f::Fun{<:RealUnivariateSpace,<:Real},
+                g::Fun{<:RealUnivariateSpace,<:Real})
             h=f-g
             d=domain(h)
             pts=iszero(h) ? cfstype(h)[] : roots(h)
             splitmap(x->$op(f(x),g(x)),d,pts)
         end
-        $op(f::Fun{S,T},g::Real) where {S<:RealUnivariateSpace,T<:Real} = $op(f,Fun(g,domain(f)))
-        $op(f::Real,g::Fun{S,T}) where {S<:RealUnivariateSpace,T<:Real} = $op(Fun(f,domain(g)),g)
+        $op(f::Fun{<:RealUnivariateSpace,<:Real},g::Real) = $op(f,Fun(g,domain(f)))
+        $op(f::Real,g::Fun{<:RealUnivariateSpace,<:Real}) = $op(Fun(f,domain(g)),g)
     end
 end
 
@@ -125,8 +127,8 @@ function ^(f::Fun, β)
     [B;A]\[first(f)^β;0]
 end
 
-sqrt(f::Fun{S,T}) where {S,T} = f^0.5
-cbrt(f::Fun{S,T}) where {S,T} = f^(1/3)
+sqrt(f::Fun) = f^0.5
+cbrt(f::Fun) = f^(1/3)
 
 ## We use \ as the Fun constructor might miss isolated features
 
@@ -210,9 +212,10 @@ for (op,ODE,RHS,growth) in ((:(erf),"f'*D^2+(2f*f'^2-f'')*D","0",:(imag)),
                             (:(airybiprime),"f'*D^2-f''*D-f*f'^3","airybi(f)*f'^3",:(imag)))
     L,R = Meta.parse(ODE),Meta.parse(RHS)
     @eval begin
-        function $op(fin::Fun{S,T}) where {S,T}
+        function $op(fin::Fun)
             f=setcanonicaldomain(fin)
 
+            T = cfstype(fin)
             g=chop($growth(f),eps(T))
             xmin = isempty(g.coefficients) ? leftendpoint(domain(g)) : argmin(g)
             xmax = isempty(g.coefficients) ? rightendpoint(domain(g)) : argmax(g)
@@ -291,11 +294,11 @@ end
 
 besselh(ν,k::Integer,f::Fun) = k == 1 ? hankelh1(ν,f) : k == 2 ? hankelh2(ν,f) : throw(Base.Math.AmosException(1))
 
-for jy in ("j","y"), ν in (0,1)
-    bjy = Symbol(string("bessel",jy))
-    bjynu = Meta.parse(string("SpecialFunctions.bessel",jy,ν))
-    @eval begin
-        $bjynu(f::Fun) = $bjy($ν,f)
+for jy in (:j, :y)
+    bjy = Symbol(:bessel, jy)
+    for ν in (0,1)
+        bjynu = Symbol(bjy, ν)
+        @eval SpecialFunctions.$bjynu(f::Fun) = $bjy($ν,f)
     end
 end
 
@@ -305,7 +308,7 @@ for op in (:(expm1),:(log1p),:(lfact),:(sinc),:(cosc),
            :(eta),:(zeta),:(gamma),:(lgamma),
            :(polygamma),:(invdigamma),:(digamma),:(trigamma))
     @eval begin
-        $op(f::Fun{S,T}) where {S,T}=Fun($op ∘ f,domain(f))
+        $op(f::Fun) = Fun($op ∘ f,domain(f))
     end
 end
 
@@ -378,9 +381,9 @@ for op in (:(<=),)
     end
 end
 
-/(c::Number,f::Fun{S}) where {S<:PiecewiseSpace} = Fun(map(f->c/f,components(f)),PiecewiseSpace)
-^(f::Fun{S},c::Integer) where {S<:PiecewiseSpace} = Fun(map(f->f^c,components(f)),PiecewiseSpace)
-^(f::Fun{S},c::Number) where {S<:PiecewiseSpace} = Fun(map(f->f^c,components(f)),PiecewiseSpace)
+/(c::Number,f::Fun{<:PiecewiseSpace}) = Fun(map(f->c/f,components(f)),PiecewiseSpace)
+^(f::Fun{<:PiecewiseSpace},c::Integer) = Fun(map(f->f^c,components(f)),PiecewiseSpace)
+^(f::Fun{<:PiecewiseSpace},c::Number) = Fun(map(f->f^c,components(f)),PiecewiseSpace)
 
 for OP in (:abs,:sign,:log,:angle)
     @eval begin
@@ -431,19 +434,19 @@ end
 
 for OP in (:<,:(Base.isless),:(<=))
     @eval begin
-        $OP(a::Fun{CS},b::Fun{CS}) where {CS<:ConstantSpace} = $OP(convert(Number,a),Number(b))
-        $OP(a::Fun{CS},b::Number) where {CS<:ConstantSpace} = $OP(convert(Number,a),b)
-        $OP(a::Number,b::Fun{CS}) where {CS<:ConstantSpace} = $OP(a,convert(Number,b))
+        $OP(a::Fun{<:ConstantSpace},b::Fun{<:ConstantSpace}) = $OP(convert(Number,a),Number(b))
+        $OP(a::Fun{<:ConstantSpace},b::Number) = $OP(convert(Number,a),b)
+        $OP(a::Number,b::Fun{<:ConstantSpace}) = $OP(a,convert(Number,b))
     end
 end
 
 for OP in (:(Base.max),:(Base.min))
     @eval begin
-        $OP(a::Fun{CS1,T},b::Fun{CS2,V}) where {CS1<:ConstantSpace,CS2<:ConstantSpace,T<:Real,V<:Real} =
+        $OP(a::Fun{<:ConstantSpace,<:Real},b::Fun{<:ConstantSpace,<:Real}) =
             Fun($OP(Number(a),Number(b)),space(a) ∪ space(b))
-        $OP(a::Fun{CS,T},b::Real) where {CS<:ConstantSpace,T<:Real} =
+        $OP(a::Fun{<:ConstantSpace,<:Real},b::Real) =
             Fun($OP(Number(a),b),space(a))
-        $OP(a::Real,b::Fun{CS,T}) where {CS<:ConstantSpace,T<:Real} =
+        $OP(a::Real,b::Fun{<:ConstantSpace,<:Real}) =
             Fun($OP(a,Number(b)),space(b))
     end
 end
@@ -499,7 +502,7 @@ end
 
 for op in (:(findmax),:(findmin))
     @eval begin
-        function $op(f::Fun{S,T}) where {S<:RealSpace,T<:Real}
+        function $op(f::Fun{<:RealSpace,<:Real})
             # the following avoids warning when differentiate(f)==0
             pts = extremal_args(f)
             ext,ind = $op(f.(pts))
@@ -508,7 +511,7 @@ for op in (:(findmax),:(findmin))
     end
 end
 
-extremal_args(f::Fun{S}) where {S<:PiecewiseSpace} = cat(1,[extremal_args(fp) for fp in components(f)]..., dims=1)
+extremal_args(f::Fun{<:PiecewiseSpace}) = cat(1,[extremal_args(fp) for fp in components(f)]..., dims=1)
 
 function extremal_args(f::Fun)
     d = domain(f)
@@ -522,7 +525,7 @@ function extremal_args(f::Fun)
 end
 
 for op in (:(maximum),:(minimum),:(extrema))
-    @eval function $op(f::Fun{S,T}) where {S<:RealSpace,T<:Real}
+    @eval function $op(f::Fun{<:RealSpace,<:Real})
         pts = iszero(f') ? [leftendpoint(domain(f))] : extremal_args(f)
         v = map(f, pts)
         $op(v)
@@ -532,7 +535,7 @@ end
 
 for op in (:(maximum),:(minimum))
     @eval begin
-        function $op(::typeof(abs), f::Fun{S,T}) where {S<:RealSpace,T<:Real}
+        function $op(::typeof(abs), f::Fun{<:RealSpace,<:Real})
             pts = iszero(f') ? [leftendpoint(domain(f))] : extremal_args(f)
             $op(f.(pts))
         end
@@ -541,20 +544,20 @@ for op in (:(maximum),:(minimum))
             pts = extremal_args(abs(f))
             $op(f.(pts))
         end
-        $op(f::Fun{PiecewiseSpace{SV,DD,RR},T}) where {SV,DD<:UnionDomain,RR<:Real,T<:Real} =
+        $op(f::Fun{PiecewiseSpace{<:Any,<:UnionDomain,<:Real},<:Real}) =
             $op(map($op,components(f)))
-        $op(::typeof(abs), f::Fun{PiecewiseSpace{SV,DD,RR},T}) where {SV,DD<:UnionDomain,RR<:Real,T<:Real} =
+        $op(::typeof(abs), f::Fun{PiecewiseSpace{<:Any,<:UnionDomain,<:Real},<:Real}) =
             $op(abs, map(g -> $op(abs, g),components(f)))
     end
 end
 
 
-extrema(f::Fun{PiecewiseSpace{SV,DD,RR},T}) where {SV,DD<:UnionDomain,RR<:Real,T<:Real} =
+extrema(f::Fun{PiecewiseSpace{<:Any,<:UnionDomain,<:Real},<:Real}) =
     mapreduce(extrema,(x,y)->extrema([x...;y...]),components(f))
 
 function complexroots end
 
-function roots(f::Fun{P}) where P<:PiecewiseSpace
+function roots(f::Fun{<:PiecewiseSpace})
     rts=mapreduce(roots,vcat,components(f))
     k=1
     while k < length(rts)
@@ -568,7 +571,7 @@ function roots(f::Fun{P}) where P<:PiecewiseSpace
     rts
 end
 
-roots(f::Fun{S,T}) where {S<:PointSpace,T} = space(f).points[values(f) .== 0]
+roots(f::Fun{<:PointSpace}) = space(f).points[values(f) .== 0]
 
 
 
