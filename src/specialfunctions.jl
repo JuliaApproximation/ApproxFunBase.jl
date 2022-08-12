@@ -333,7 +333,7 @@ end
 
 
 
-for op in (:(<=),:(>=))
+for op in (:(<=),)
     @eval begin
         function $op(f::Fun,c::Number)
             rts=roots(f-c)
