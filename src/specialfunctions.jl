@@ -60,7 +60,7 @@ _UnionDomainIfMultiple(d) = UnionDomain(components(d))
 for OP in (:sign,:angle)
     @eval function $OP(f::Fun{<:RealUnivariateSpace,<:Real})
         d=domain(f)
-
+        T = cfstype(f)
         pts = iszero(f) ? T[] : roots(f)
 
         if isempty(pts)
