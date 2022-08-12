@@ -81,6 +81,15 @@ end
             @test union(1..2, d) == 1..2
         end
     end
+
+    @testset "comparison" begin
+        # Lexicographic comparison
+        @test ApproxFunBase.AnyDomain() < ApproxFunBase.EmptyDomain()
+        @test 1..2 < 1..3
+        @test 1..2 <= 1..2
+        @test 1..2 >= 1..2
+        @test 1..3 >= 1..2
+    end
 end
 
 @time include("MatrixTest.jl")

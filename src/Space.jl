@@ -439,7 +439,7 @@ end
 ## sorting
 # we sort spaces lexigraphically by default
 
-for OP in (:<,:(<=),:>,:(>=),:(isless))
+for OP in (:<,:(<=),:(isless))
     @eval $OP(a::Space,b::Space)=$OP(string(a),string(b))
 end
 

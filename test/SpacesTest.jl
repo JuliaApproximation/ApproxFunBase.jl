@@ -160,6 +160,14 @@ using ApproxFunOrthogonalPolynomials
         @test (@inferred convert(Fun, 2)) == Fun(2)
         f = Fun(2)
         @test (@inferred convert(Fun{typeof(space(f))}, 2)) == f
+
+        f = Fun(2, ConstantSpace(0..1))
+        g = Fun(3, ConstantSpace(0..1))
+        @test f < g
+        @test f <= g
+        @test g > f
+        @test g >= f
+        @test 1 < f < 3
     end
 
     @testset "promotion" begin
@@ -170,6 +178,10 @@ using ApproxFunOrthogonalPolynomials
             @test (@inferred ApproxFunBase.promoterangespace(v)) == v
             @test (@inferred ApproxFunBase.promotespaces(v)) == v
         end
+    end
+
+    @testset "Comparison" begin
+        @test PointSpace(1:3) > ConstantSpace(0..1)
     end
 
     @testset "union and AmbiguousSpace" begin

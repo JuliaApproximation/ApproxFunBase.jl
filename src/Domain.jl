@@ -167,7 +167,7 @@ invfromcanonicalD(d::Domain,x...) = 1/fromcanonicalD(d,x...)
 ## sorting
 # we sort spaces lexigraphically by default
 
-for OP in (:<,:(<=),:>,:(>=),:(isless))
+for OP in (:<,:(<=),:(isless))
     @eval $OP(a::Domain,b::Domain)=$OP(string(a),string(b))
 end
 
