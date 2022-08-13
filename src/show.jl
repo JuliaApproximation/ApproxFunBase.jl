@@ -34,9 +34,9 @@ summarystr(B::Operator) = string(typeof(B).name.name, " : ", domainspace(B), " �
 summary(io::IO, B::Operator) = print(io, summarystr(B))
 
 struct PrintShow
-    str
+    c::Char
 end
-Base.show(io::IO,N::PrintShow) = print(io,N.str)
+Base.show(io::IO, N::PrintShow) = print(io, N.c)
 
 show(io::IO, B::Operator; kw...) = summary(io, B)
 
@@ -49,57 +49,57 @@ function show(io::IO, ::MIME"text/plain", B::Operator;header::Bool=true)
         if isbanded(B) && isinf(size(B,1)) && isinf(size(B,2))
             BM=B[1:10,1:10]
 
-            M=Matrix{Any}(undef,11,11)
-            fill!(M,PrintShow("⋅"))
+            M=Matrix{Union{eltype(B), PrintShow}}(undef,11,11)
+            fill!(M,PrintShow('⋅'))
             for j = 1:size(BM,2),k = colrange(BM,j)
                 M[k,j]=BM[k,j]
             end
 
             for k=max(1,11-bandwidth(B,2)):11
-                M[k,end]=PrintShow("⋱")
+                M[k,end]=PrintShow('⋱')
             end
             for j=max(1,11-bandwidth(B,1)):10
-                M[end,j]=PrintShow("⋱")
+                M[end,j]=PrintShow('⋱')
             end
 
             print_array(io, M)
         elseif isinf(size(B,1)) && isinf(size(B,2))
             BM=B[1:10,1:10]
 
-            M=Matrix{Any}(undef,11,11)
+            M=Matrix{Union{eltype(B), PrintShow}}(undef,11,11)
             for k=1:10,j=1:10
                 M[k,j]=BM[k,j]
             end
 
-            M[1,end]=PrintShow("⋯")
-            M[end,1]=PrintShow("⋮")
+            M[1,end]=PrintShow('⋯')
+            M[end,1]=PrintShow('⋮')
 
             for k=2:11
-                M[k,end]=M[end,k]=PrintShow("⋱")
+                M[k,end]=M[end,k]=PrintShow('⋱')
             end
 
             print_array(io, M)
         elseif isinf(size(B,1))
             BM=B[1:10,1:size(B,2)]
 
-            M=Matrix{Any}(undef,11,size(B,2))
+            M=Matrix{Union{eltype(B), PrintShow}}(undef,11,size(B,2))
             for k=1:10,j=1:size(B,2)
                 M[k,j]=BM[k,j]
             end
             for k=1:size(B,2)
-                M[end,k]=PrintShow("⋮")
+                M[end,k]=PrintShow('⋮')
             end
 
             print_array(io, M)
         elseif isinf(size(B,2))
             BM=B[1:size(B,1),1:10]
 
-            M=Matrix{Any}(undef,size(B,1),11)
+            M=Matrix{Union{eltype(B), PrintShow}}(undef,size(B,1),11)
             for k=1:size(B,1),j=1:10
                 M[k,j]=BM[k,j]
             end
             for k=1:size(B,1)
-                M[k,end]=PrintShow("⋯")
+                M[k,end]=PrintShow('⋯')
             end
 
             print_array(io, M)
