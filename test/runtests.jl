@@ -228,19 +228,43 @@ end
     a = @inferred ApproxFunBase.specialfunctionnormalizationpoint(exp,real,Fun())
     @test a[1] == 1
     @test a[2] ≈ exp(1)
+end
 
+@testset "BLAS/LAPACK" begin
     @testset "gemv" begin
         # test for the pointer versions, and assert that libblastrampoline works
-        a = zeros(4)
-        b = zeros(4)
-        A = Matrix{Float64}(I,4,4)
-        x = Float64[1:4;]
-        ApproxFunBase.gemv!('N', 1.0, A, x, 0.0, a)
-        LinearAlgebra.BLAS.gemv!('N', 1.0, A, x, 0.0, b)
-        @test a == b == 1:4
-        ApproxFunBase.gemv!('N', 1.0, A, x, 1.0, a)
-        LinearAlgebra.BLAS.gemv!('N', 1.0, A, x, 1.0, b)
-        @test a == b == 2:2:8
+        @testset for T in [Float32, Float64, ComplexF32, ComplexF64]
+            a = zeros(T, 4)
+            b = zeros(T, 4)
+            A = Matrix{T}(I,4,4)
+            x = T[1:4;]
+            α, β = T(1.0), T(0.0)
+            ApproxFunBase.gemv!('N', α, A, x, β, a)
+            LinearAlgebra.BLAS.gemv!('N', α, A, x, β, b)
+            @test a == b == x
+            β = T(1.0)
+            ApproxFunBase.gemv!('N', α, A, x, β, a)
+            LinearAlgebra.BLAS.gemv!('N', α, A, x, β, b)
+            @test a == b == 2x
+        end
+    end
+
+    @testset "gemm" begin
+        # test for the pointer versions, and assert that libblastrampoline works
+        @testset for T in [Float32, Float64, ComplexF32, ComplexF64]
+            C1 = zeros(T, 4, 4)
+            C2 = zeros(T, 4, 4)
+            A = Matrix{T}(I,4,4)
+            B = reshape(T[1:16;], 4, 4)
+            α, β = T(1.0), T(0.0)
+            ApproxFunBase.gemm!('N', 'N', α, A, B, β, C1)
+            LinearAlgebra.BLAS.gemm!('N', 'N', α, A, B, β, C2)
+            @test C1 == C2 == B
+            β = T(1.0)
+            ApproxFunBase.gemm!('N', 'N', α, A, B, β, C1)
+            LinearAlgebra.BLAS.gemm!('N', 'N', α, A, B, β, C2)
+            @test C1 == C2 == 2B
+        end
     end
 
     @testset "hesseneigs" begin
