@@ -346,6 +346,8 @@ function getindex(P::TimesOperator,k::AbstractVector)
     vec(Matrix(P[1:1,k]))
 end
 
+_rettype(::Type{BandedMatrix{T}}) where {T} = BandedMatrix{T,Matrix{T},Base.OneTo{Int}}
+_rettype(T) = T
 for TYP in (:Matrix, :BandedMatrix, :RaggedMatrix)
     @eval function $TYP(V::SubOperator{T,TO,Tuple{UnitRange{Int},UnitRange{Int}}}) where {T,TO<:TimesOperator}
         P = parent(V)
@@ -406,12 +408,14 @@ for TYP in (:Matrix, :BandedMatrix, :RaggedMatrix)
 
         # The following returns a banded Matrix with all rows
         # for large k its upper triangular
-        BA = convert($TYP{T}, P.ops[end][krl[end,1]:krl[end,2],jr])
+        RT = $TYP{T}
+        RT2 = _rettype(RT)
+        BA::RT2 = convert(RT, P.ops[end][krl[end,1]:krl[end,2],jr])::RT
         for m = (length(P.ops)-1):-1:1
-            BA = convert($TYP{T}, P.ops[m][krl[m,1]:krl[m,2],krl[m+1,1]:krl[m+1,2]])*BA
+            BA = convert(RT, P.ops[m][krl[m,1]:krl[m,2],krl[m+1,1]:krl[m+1,2]])::RT * BA
         end
 
-        $TYP{T}(BA)
+        RT(BA)::RT2
     end
 end
 
