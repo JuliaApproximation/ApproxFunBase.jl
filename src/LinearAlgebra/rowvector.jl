@@ -40,7 +40,7 @@ end
 
 # Conversion of underlying storage
 convert(::Type{RowVector{T,V}}, rowvec::RowVector) where {T,V<:AbstractVector} =
-    RowVector{T,V}(convert(V,rowvec.vec))
+    RowVector{T,V}(strictconvert(V,rowvec.vec))
 
 # similar tries to maintain the RowVector wrapper and the parent type
 @inline similar(rowvec::RowVector) = RowVector(similar(parent(rowvec)))

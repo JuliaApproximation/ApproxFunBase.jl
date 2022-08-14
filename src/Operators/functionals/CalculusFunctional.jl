@@ -45,7 +45,7 @@ macro calculus_functional(Op)
 
 
         Base.convert(::Type{Operator{T}},Σ::$WrappOp) where {T} =
-            (T==eltype(Σ) ? Σ : $WrappOp(convert(Operator{T},Σ.op)))::Operator{T}
+            (T==eltype(Σ) ? Σ : $WrappOp(strictconvert(Operator{T},Σ.op)))::Operator{T}
     end)
 end
 

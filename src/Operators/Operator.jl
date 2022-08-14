@@ -628,12 +628,12 @@ Operator(L::UniformScaling{Bool}, s::Space) = L.λ ? IdentityOperator(s) : ZeroO
 Operator(L::UniformScaling, d::Domain) = Operator(L, Space(d))
 
 Operator{T}(f::Fun) where {T} =
-    norm(f.coefficients)==0 ? zero(Operator{T}) : convert(Operator{T}, Multiplication(f))
+    norm(f.coefficients)==0 ? zero(Operator{T}) : strictconvert(Operator{T}, Multiplication(f))
 
 Operator(f::Fun) = norm(f.coefficients)==0 ? ZeroOperator() : Multiplication(f)
 
 convert(::Type{O}, f::Fun) where O<:Operator = O(f)
-Operator{T}(A::Operator) where T = convert(Operator{T}, A)
+Operator{T}(A::Operator) where T = strictconvert(Operator{T}, A)
 
 
 ## Promotion

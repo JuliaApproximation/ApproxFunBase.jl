@@ -159,15 +159,15 @@ end
 # Check that the tests pass after conversion as well
 function testinfoperator(A::Operator{T}) where T<:Real
     backend_testinfoperator(A)
-    backend_testinfoperator(convert(Operator{Float64}, A))
-    backend_testinfoperator(convert(Operator{Float32}, A))
-    backend_testinfoperator(convert(Operator{ComplexF64}, A))
+    backend_testinfoperator(strictconvert(Operator{Float64}, A))
+    backend_testinfoperator(strictconvert(Operator{Float32}, A))
+    backend_testinfoperator(strictconvert(Operator{ComplexF64}, A))
 end
 
 function testinfoperator(A::Operator{T}) where T<:Complex
     backend_testinfoperator(A)
-    backend_testinfoperator(convert(Operator{ComplexF32}, A))
-    backend_testinfoperator(convert(Operator{ComplexF64}, A))
+    backend_testinfoperator(strictconvert(Operator{ComplexF32}, A))
+    backend_testinfoperator(strictconvert(Operator{ComplexF64}, A))
 end
 
 function testraggedbelowoperator(A)

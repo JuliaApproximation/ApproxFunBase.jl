@@ -133,9 +133,9 @@ end
 for OP in (:+,:-)
     @eval begin
         $OP(c::Union{UniformScaling,Number},A::Operator) =
-            $OP(convert(Operator{_promote_eltypeof(A, c)},c),A)
+            $OP(strictconvert(Operator{_promote_eltypeof(A, c)},c),A)
         $OP(A::Operator,c::Union{UniformScaling,Number}) =
-            $OP(A,convert(Operator{_promote_eltypeof(A, c)},c))
+            $OP(A,strictconvert(Operator{_promote_eltypeof(A, c)},c))
     end
 end
 
@@ -150,7 +150,7 @@ struct ConstantTimesOperator{B,T} <: Operator{T}
 end
 function ConstantTimesOperator(c::Number,op::Operator{TT}) where TT<:Number
     T=promote_type(typeof(c),eltype(op))
-    B=convert(Operator{T},op)
+    B=strictconvert(Operator{T},op)
     ConstantTimesOperator{typeof(B),T}(T(c),B)
 end
 
@@ -160,7 +160,7 @@ ConstantTimesOperator(c::Number,op::ConstantTimesOperator) =
 @wrapperstructure ConstantTimesOperator
 @wrapperspaces ConstantTimesOperator
 
-convert(::Type{T},C::ConstantTimesOperator) where {T<:Number} = T(C.λ)*convert(T,C.op)
+convert(::Type{T},C::ConstantTimesOperator) where {T<:Number} = T(C.λ)*strictconvert(T,C.op)
 
 choosedomainspace(C::ConstantTimesOperator,sp::Space) = choosedomainspace(C.op,sp)
 
@@ -174,7 +174,7 @@ function convert(::Type{Operator{T}},C::ConstantTimesOperator) where T
     if T==eltype(C)
         C
     else
-        op=convert(Operator{T},C.op)
+        op=strictconvert(Operator{T},C.op)
         ConstantTimesOperator{typeof(op),T}(T(C.λ),op)
     end
 end
@@ -243,7 +243,7 @@ TimesOperator(ops::Vector{Operator{T}},bi::Tuple{N1,N2}) where {T,N1,N2} =
 
 TimesOperator(ops::Vector{Operator{T}}) where {T} = TimesOperator(ops,bandwidthssum(ops))
 TimesOperator(ops::Vector{OT}) where {OT<:Operator} =
-    TimesOperator(convert(Vector{Operator{eltype(OT)}},ops),bandwidthssum(ops))
+    TimesOperator(strictconvert(Vector{Operator{eltype(OT)}},ops),bandwidthssum(ops))
 
 _extractops(A::TimesOperator, ::typeof(*)) = A.ops
 
@@ -410,9 +410,9 @@ for TYP in (:Matrix, :BandedMatrix, :RaggedMatrix)
         # for large k its upper triangular
         RT = $TYP{T}
         RT2 = _rettype(RT)
-        BA::RT2 = convert(RT, P.ops[end][krl[end,1]:krl[end,2],jr])::RT
+        BA::RT2 = strictconvert(RT, P.ops[end][krl[end,1]:krl[end,2],jr])::RT
         for m = (length(P.ops)-1):-1:1
-            BA = convert(RT, P.ops[m][krl[m,1]:krl[m,2],krl[m+1,1]:krl[m+1,2]])::RT * BA
+            BA = strictconvert(RT, P.ops[m][krl[m,1]:krl[m,2],krl[m+1,1]:krl[m+1,2]])::RT * BA
         end
 
         RT(BA)::RT2
@@ -465,12 +465,12 @@ for TYP in (:BlockBandedMatrix, :BandedBlockBandedMatrix)
 
         # The following returns a banded Matrix with all rows
         # for large k its upper triangular
-        BA = convert($TYP, view(P.ops[end],KRl[end,1]:KRl[end,2],JR))
+        BA = strictconvert($TYP, view(P.ops[end],KRl[end,1]:KRl[end,2],JR))
         for m = (length(P.ops)-1):-1:1
-            BA = convert($TYP, view(P.ops[m],KRl[m,1]:KRl[m,2],KRl[m+1,1]:KRl[m+1,2]))*BA
+            BA = strictconvert($TYP, view(P.ops[m],KRl[m,1]:KRl[m,2],KRl[m+1,1]:KRl[m+1,2]))*BA
         end
 
-        convert($TYP, BA)
+        strictconvert($TYP, BA)
     end
 end
 
@@ -480,15 +480,15 @@ end
 
 for OP in (:(adjoint),:(transpose))
     @eval $OP(A::TimesOperator) = TimesOperator(
-        convert(Vector{Operator{eltype(A)}}, reverse!(map($OP,A.ops)))::Vector{Operator{eltype(A)}},
+        strictconvert(Vector{Operator{eltype(A)}}, reverse!(map($OP,A.ops))),
         reverse(bandwidths(A)))
 end
 
 function *(A::Operator,B::Operator)
     if isconstop(A)
-        promoterangespace(convert(Number,A)*B,rangespace(A))
+        promoterangespace(strictconvert(Number,A)*B,rangespace(A))
     elseif isconstop(B)
-        promotedomainspace(convert(Number,B)*A,domainspace(B))
+        promotedomainspace(strictconvert(Number,B)*A,domainspace(B))
     else
         promotetimes(Operator{_promote_eltypeof(A, B)}[_extractops(A, *); _extractops(B, *)])
     end
@@ -509,9 +509,9 @@ end
 *(A::Conversion,B::TimesOperator) = TimesOperator(A,B)
 *(A::TimesOperator,B::Conversion) = TimesOperator(A,B)
 *(A::Operator,B::Conversion) =
-    isconstop(A) ? promoterangespace(convert(Number,A)*B,rangespace(A)) : TimesOperator(A,B)
+    isconstop(A) ? promoterangespace(strictconvert(Number,A)*B,rangespace(A)) : TimesOperator(A,B)
 *(A::Conversion,B::Operator) =
-    isconstop(B) ? promotedomainspace(convert(Number,B)*A,domainspace(B)) : TimesOperator(A,B)
+    isconstop(B) ? promotedomainspace(strictconvert(Number,B)*A,domainspace(B)) : TimesOperator(A,B)
 
 ^(A::Operator, p::Integer) = Base.power_by_squaring(A, p)
 
@@ -579,7 +579,7 @@ mul_coefficients(A::PlusOperator,b::Fun) =
     mapreduce(x->mul_coefficients(x,b),+,A.ops)
 
 *(A::Operator, b::AbstractMatrix{<:Fun}) = A*Fun(b)
-*(A::Vector{<:Operator}, b::Fun) = map(a->a*b,convert(Array{Any,1},A))
+*(A::Vector{<:Operator}, b::Fun) = map(a->a*b,strictconvert(Array{Any,1},A))
 
 
 

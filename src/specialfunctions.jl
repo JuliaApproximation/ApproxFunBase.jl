@@ -434,9 +434,9 @@ end
 
 for OP in (:<,:(Base.isless),:(<=))
     @eval begin
-        $OP(a::Fun{<:ConstantSpace},b::Fun{<:ConstantSpace}) = $OP(convert(Number,a),Number(b))
-        $OP(a::Fun{<:ConstantSpace},b::Number) = $OP(convert(Number,a),b)
-        $OP(a::Number,b::Fun{<:ConstantSpace}) = $OP(a,convert(Number,b))
+        $OP(a::Fun{<:ConstantSpace},b::Fun{<:ConstantSpace}) = $OP(strictconvert(Number,a),Number(b))
+        $OP(a::Fun{<:ConstantSpace},b::Number) = $OP(strictconvert(Number,a),b)
+        $OP(a::Number,b::Fun{<:ConstantSpace}) = $OP(a,strictconvert(Number,b))
     end
 end
 
@@ -480,8 +480,8 @@ for op in (:(argmax),:(argmin))
             pts = extremal_args(f)
             # the extra real avoids issues with complex round-off
             v = map(real∘f, pts)::Vector
-            x = pts[convert(Int, $op(v))::Int]
-            convert(T, x)::T
+            x = pts[strictconvert(Int, $op(v))::Int]
+            strictconvert(T, x)::T
         end
 
         function $op(f::Fun)
@@ -494,8 +494,8 @@ for op in (:(argmax),:(argmin))
             fp = map(f, pts)
             @assert norm(imag(fp))<100eps()
             v = real(fp)::Vector
-            x = pts[convert(Int, $op(v))::Int]
-            convert(T, x)::T
+            x = pts[strictconvert(Int, $op(v))::Int]
+            strictconvert(T, x)
         end
     end
 end
@@ -516,7 +516,7 @@ extremal_args(f::Fun{<:PiecewiseSpace}) = cat(1,[extremal_args(fp) for fp in com
 function extremal_args(f::Fun)
     d = domain(f)
 
-    dab = convert(Vector{Number}, collect(components(∂(domain(f)))))
+    dab = strictconvert(Vector{Number}, collect(components(∂(domain(f)))))
     if ncoefficients(f) <=2 #TODO this is only relevant for Polynomial bases
         dab
     else

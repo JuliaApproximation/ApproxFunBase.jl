@@ -27,8 +27,8 @@ LowRankFun(A::Vector{VFun{S,T}},B::Vector{VFun{M,T}},space::SS) where {S,M,SS,T}
 LowRankFun(A::Vector{VFun{S,T}},B::Vector{VFun{M,T}}) where {S,M,T} =
     LowRankFun(A,B,space(first(A))⊗space(first(B)))
 LowRankFun(A::Vector{VFun{S,T}},B::Vector{VFun{M,V}}) where {S,M,T,V} =
-    LowRankFun(convert(Vector{VFun{S,promote_type(T,V)}},A),
-               convert(Vector{VFun{M,promote_type(T,V)}},B),
+    LowRankFun(strictconvert(Vector{VFun{S,promote_type(T,V)}},A),
+               strictconvert(Vector{VFun{M,promote_type(T,V)}},B),
                space(first(A))⊗space(first(B)))
 rank(f::LowRankFun) = length(f.A)
 size(f::LowRankFun,k::Integer) = k==1 ? mapreduce(length,max,f.A) : mapreduce(length,max,f.B)

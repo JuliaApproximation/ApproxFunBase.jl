@@ -13,7 +13,7 @@ ToeplitzOperator(V::AbstractVector,W::AbstractVector) =
     ToeplitzOperator(collect(V),collect(W))
 
 convert(::Type{Operator{TT}},T::ToeplitzOperator) where {TT} =
-    ToeplitzOperator(convert(Vector{TT},T.negative),convert(Vector{TT},T.nonnegative))
+    ToeplitzOperator(strictconvert(Vector{TT},T.negative),strictconvert(Vector{TT},T.nonnegative))
 
 for op in (:(Base.real), :(Base.imag))
     @eval $op(T::ToeplitzOperator) = ToeplitzOperator($op(T.negative), $op(T.nonnegative))
@@ -105,7 +105,7 @@ HankelOperator(f::Fun)=HankelOperator(f.coefficients)
 
 
 
-@eval convert(::Type{Operator{TT}},T::HankelOperator) where {TT}=HankelOperator(convert(Vector{TT},T.coefficients))
+@eval convert(::Type{Operator{TT}},T::HankelOperator) where {TT}=HankelOperator(strictconvert(Vector{TT},T.coefficients))
 
 function hankel_getindex(v::AbstractVector,k::Integer,j::Integer)
    if k+j-1 ≤ length(v)

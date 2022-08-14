@@ -3,8 +3,8 @@ export ConstantOperator, IdentityOperator, BasisFunctional
 struct ConstantOperator{T,DS} <: Operator{T}
     λ::T
     space::DS
-    ConstantOperator{T,DS}(c::Number,sp::DS) where {T,DS} = new{T,DS}(convert(T,c),sp)
-    ConstantOperator{T,DS}(L::UniformScaling,sp::DS) where {T,DS} = new{T,DS}(convert(T,L.λ),sp)
+    ConstantOperator{T,DS}(c::Number,sp::DS) where {T,DS} = new{T,DS}(strictconvert(T,c),sp)
+    ConstantOperator{T,DS}(L::UniformScaling,sp::DS) where {T,DS} = new{T,DS}(strictconvert(T,L.λ),sp)
 end
 
 
@@ -47,11 +47,11 @@ end
 # zero needs to be different since it can take a space to
 # a ConstantSpace, in creating functionals
 convert(::Type{Operator{T}}, x::Number) where {T} =
-    x==0 ? ZeroOperator(T) : Multiplication(convert(T,x))
+    x==0 ? ZeroOperator(T) : Multiplication(strictconvert(T,x))
 convert(::Type{Operator{T}}, L::UniformScaling) where {T} =
     ConstantOperator(T,L.λ)
 
-convert(::Type{Operator},n::Number) = convert(Operator{typeof(n)}, n)
+convert(::Type{Operator},n::Number) = strictconvert(Operator{typeof(n)}, n)
 convert(::Type{Operator},L::UniformScaling) = ConstantOperator(L.λ)
 
 ## Algebra
@@ -79,7 +79,7 @@ domainspace(B::BasisFunctional) = B.space
 convert(::Type{Operator{T}},B::BasisFunctional) where {T} = BasisFunctional{T,typeof(B.space)}(B.k,B.space)
 
 Base.getindex(op::BasisFunctional{T},k::Integer) where {T} = (k==op.k) ? one(T) : zero(T)
-Base.getindex(op::BasisFunctional{T},k::AbstractRange) where {T} = convert(Vector{T},k.==op.k)
+Base.getindex(op::BasisFunctional{T},k::AbstractRange) where {T} = strictconvert(Vector{T},k.==op.k)
 
 struct FillFunctional{T} <: Operator{T}
     λ::T
@@ -144,8 +144,8 @@ iszeroop(A::ConstantOperator) = A.λ==0.0
 iszeroop(A) = false
 
 convert(::Type{T},::ZeroOperator) where {T<:Number} = zero(T)
-convert(::Type{T},C::ConstantOperator) where {T<:Number} = convert(T,C.λ)
-convert(::Type{T},S::SpaceOperator) where {T<:Number} = convert(T,S.op)
+convert(::Type{T},C::ConstantOperator) where {T<:Number} = strictconvert(T,C.λ)
+convert(::Type{T},S::SpaceOperator) where {T<:Number} = strictconvert(T,S.op)
 
 
 

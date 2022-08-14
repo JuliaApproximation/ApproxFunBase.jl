@@ -27,7 +27,7 @@ function getindex(P::PermutationOperator{T},k::Integer,j::Integer) where T
     if (k-1)÷n == (j-1)÷n  # diagonal blocks
         k=mod(k-1,n)+1
         j=mod(j-1,n)+1
-        convert(T,P.perm[k]==j)
+        strictconvert(T,P.perm[k]==j)
     else
         zero(T)
     end

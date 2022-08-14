@@ -19,7 +19,7 @@ function convert(::Type{Operator{T}},S::SpaceOperator) where T
     if T==eltype(S)
         S
     else
-        op=convert(Operator{T},S.op)
+        op=strictconvert(Operator{T},S.op)
         SpaceOperator{typeof(op),typeof(S.domainspace),typeof(S.rangespace),T}(op,S.domainspace,S.rangespace)
     end
 end
@@ -78,21 +78,21 @@ promotedomainspace(P::Operator,sp::Space,cursp::Space) =
 
 
 function promoterangespace(ops::AbstractVector{O}) where O<:Operator
-    isempty(ops) && return convert(Vector{Operator{eltype(O)}}, ops)
+    isempty(ops) && return strictconvert(Vector{Operator{eltype(O)}}, ops)
     k=findmaxrangespace(ops)
     #TODO: T might be incorrect
     T=mapreduce(eltype,promote_type,ops)
     Operator{T}[promoterangespace(op,k) for op in ops]
 end
 function promotedomainspace(ops::AbstractVector{O}) where O<:Operator
-    isempty(ops) && return convert(Vector{Operator{eltype(O)}}, ops)
+    isempty(ops) && return strictconvert(Vector{Operator{eltype(O)}}, ops)
     k=findmindomainspace(ops)
     #TODO: T might be incorrect
     T=mapreduce(eltype,promote_type,ops)
     Operator{T}[promotedomainspace(op,k) for op in ops]
 end
 function promotedomainspace(ops::AbstractVector{O},S::Space) where O<:Operator
-    isempty(ops) && return convert(Vector{Operator{eltype(O)}}, ops)
+    isempty(ops) && return strictconvert(Vector{Operator{eltype(O)}}, ops)
     k=conversion_type(findmindomainspace(ops),S)
     #TODO: T might be incorrect
     T=promote_type(mapreduce(eltype,promote_type,ops),prectype(S))

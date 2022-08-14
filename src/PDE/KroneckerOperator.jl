@@ -353,9 +353,9 @@ function BandedBlockBandedMatrix(S::SubOperator{T,KroneckerOperator{SS,V,DS,RS,
     A,B = KO.ops
 
 
-    AA = convert(BandedMatrix, view(A, Block(1):last(KR),Block(1):last(JR)))::BandedMatrix{eltype(S)}
+    AA = strictconvert(BandedMatrix, view(A, Block(1):last(KR),Block(1):last(JR)))::BandedMatrix{eltype(S)}
     Al,Au = bandwidths(AA)
-    BB = convert(BandedMatrix, view(B, Block(1):last(KR),Block(1):last(JR)))::BandedMatrix{eltype(S)}
+    BB = strictconvert(BandedMatrix, view(B, Block(1):last(KR),Block(1):last(JR)))::BandedMatrix{eltype(S)}
     Bl,Bu = bandwidths(BB)
     λ,μ = subblockbandwidths(ret)
 

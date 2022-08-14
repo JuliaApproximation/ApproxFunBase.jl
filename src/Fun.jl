@@ -76,14 +76,14 @@ coefficient(f::Fun,::Colon) = coefficient(f,1:dimension(space(f)))
 
 
 convert(::Type{Fun{S,T,VT}},f::Fun{S}) where {T,S,VT} =
-    Fun{S,T,VT}(f.space, convert(VT,f.coefficients)::VT)
+    Fun{S,T,VT}(f.space, strictconvert(VT,f.coefficients))
 function convert(::Type{Fun{S,T,VT}},f::Fun) where {T,S,VT}
-    g = Fun(Fun(f.space, convert(VT,f.coefficients)::VT), convert(S,space(f))::S)
+    g = Fun(Fun(f.space, strictconvert(VT,f.coefficients)), strictconvert(S,space(f)))
     Fun{S,T,VT}(g.space, g.coefficients)
 end
 
 function convert(::Type{Fun{S,T}},f::Fun{S}) where {T,S}
-    coeff = convert(AbstractVector{T},f.coefficients)::AbstractVector{T}
+    coeff = strictconvert(AbstractVector{T},f.coefficients)
     Fun{S, T, typeof(coeff)}(f.space, coeff)
 end
 
@@ -92,11 +92,11 @@ convert(::Type{VFun{S,T}},x::Number) where {T,S} =
     (x==0 ? zeros(T,S(AnyDomain())) : x*ones(T,S(AnyDomain())))::VFun{S,T}
 convert(::Type{Fun{S}},x::Number) where {S} =
     (x==0 ? zeros(S(AnyDomain())) : x*ones(S(AnyDomain())))::Fun{S}
-convert(::Type{IF},x::Number) where {IF<:Fun} = convert(IF,Fun(x))::IF
+convert(::Type{IF},x::Number) where {IF<:Fun} = strictconvert(IF,Fun(x))
 
-Fun{S,T,VT}(f::Fun) where {S,T,VT} = convert(Fun{S,T,VT}, f)
-Fun{S,T}(f::Fun) where {S,T} = convert(Fun{S,T}, f)
-Fun{S}(f::Fun) where {S} = convert(Fun{S}, f)
+Fun{S,T,VT}(f::Fun) where {S,T,VT} = strictconvert(Fun{S,T,VT}, f)
+Fun{S,T}(f::Fun) where {S,T} = strictconvert(Fun{S,T}, f)
+Fun{S}(f::Fun) where {S} = strictconvert(Fun{S}, f)
 
 # if we are promoting, we need to change to a VFun
 Base.promote_rule(::Type{Fun{S,T,VT1}},::Type{Fun{S,V,VT2}}) where {T,V,S,VT1,VT2} =

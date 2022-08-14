@@ -57,7 +57,7 @@ cache(::Type{MT},O::Operator;kwds...) where {MT<:AbstractMatrix} = CachedOperato
 
 convert(::Type{Operator{T}},S::CachedOperator{T}) where {T} = S
 convert(::Type{Operator{T}},S::CachedOperator) where {T} =
-    CachedOperator(convert(Operator{T}, S.op),convert(AbstractMatrix{T}, S.data),
+    CachedOperator(strictconvert(Operator{T}, S.op),strictconvert(AbstractMatrix{T}, S.data),
                     S.datasize,S.domainspace,S.rangespace,S.bandwidths)
 
 

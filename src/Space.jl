@@ -449,7 +449,7 @@ end
 struct ZeroSpace{DD,R} <: Space{DD,R}
     domain::DD
     ZeroSpace{DD,R}(d::DD) where {DD,R} = new(d)
-    ZeroSpace{DD,R}(d::AnyDomain) where {DD,R} = new(convert(DD,d))
+    ZeroSpace{DD,R}(d::AnyDomain) where {DD,R} = new(strictconvert(DD,d))
 end
 
 
@@ -474,7 +474,7 @@ end
 struct ConstantSpace{DD,R} <: Space{DD,R}
     domain::DD
     ConstantSpace{DD,R}(d::DD) where {DD,R} = new(d)
-    ConstantSpace{DD,R}(d::AnyDomain) where {DD,R} = new(convert(DD,d))
+    ConstantSpace{DD,R}(d::AnyDomain) where {DD,R} = new(strictconvert(DD,d))
 end
 
 ConstantSpace(d::Domain) = ConstantSpace{typeof(d),real(prectype(d))}(d)
@@ -484,9 +484,9 @@ ConstantSpace(::Type{N}) where {N<:Number} = ConstantSpace(N,AnyDomain())
 ConstantSpace() = ConstantSpace(Float64)
 
 
-convert(::Type{Space}, z::Number) = ConstantSpace(convert(Domain, z))  # Spaces
+convert(::Type{Space}, z::Number) = ConstantSpace(strictconvert(Domain, z))  # Spaces
 convert(::Type{ConstantSpace}, d::Domain) = ConstantSpace(d)
-Space(z::Number) = convert(Space, z)
+Space(z::Number) = strictconvert(Space, z)
 
 isconstspace(::ConstantSpace) = true
 

@@ -32,11 +32,11 @@ convert(::Type{Domain{T}}, d::Segment) where {T<:Number} = Segment{T}(leftendpoi
 convert(::Type{Domain{T}}, d::Segment) where {T<:SVector} = Segment{T}(leftendpoint(d),rightendpoint(d))
 convert(::Type{Segment{T}}, d::Segment) where {T<:Number} = Segment{T}(leftendpoint(d),rightendpoint(d))
 convert(::Type{Segment}, d::AbstractInterval) = Segment(leftendpoint(d), rightendpoint(d))
-convert(::Type{Segment{T}}, d::AbstractInterval) where T =convert(Segment{T}, convert(Segment, d))
+convert(::Type{Segment{T}}, d::AbstractInterval) where T =strictconvert(Segment{T}, strictconvert(Segment, d))
 
 
 
-Segment(d::AbstractInterval) = convert(Segment, d)
+Segment(d::AbstractInterval) = strictconvert(Segment, d)
 
 
 
@@ -48,7 +48,7 @@ convert(::Type{Segment},::AnyDomain) = AnySegment()
 convert(::Type{Interval}, d::Segment{<:Real}) = d.a < d.b ? d.a .. d.b : d.b .. d.a
 convert(::Type{ClosedInterval}, ::AnyDomain) = NaN..NaN
 convert(::Type{ClosedInterval{T}}, ::AnyDomain) where T = T(NaN)..T(NaN)
-Interval(d::Segment) = convert(Interval, d)
+Interval(d::Segment) = strictconvert(Interval, d)
 
 
 ## Information

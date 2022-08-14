@@ -27,21 +27,21 @@ end
 
 LowRankOperator(U::Vector{VFun{S,T}},V::Vector{Operator{T}}) where {S,T} = LowRankOperator{S,T}(U,V)
 LowRankOperator(U::Vector{VFun{S,T1}},V::Vector{Operator{T2}}) where {S,T1,T2} =
-    LowRankOperator(convert(Vector{VFun{S,promote_type(T1,T2)}},U),
-                    convert(Vector{Operator{promote_type(T1,T2)}},V))
+    LowRankOperator(strictconvert(Vector{VFun{S,promote_type(T1,T2)}},U),
+                    strictconvert(Vector{Operator{promote_type(T1,T2)}},V))
 LowRankOperator(U::Vector{FF},V::Vector{FT}) where {FF<:Fun,FT<:Operator} =
-    LowRankOperator(U,convert(Vector{Operator{eltype(FT)}},V))
+    LowRankOperator(U,strictconvert(Vector{Operator{eltype(FT)}},V))
 
 
 
-LowRankOperator(B::AbstractVector,S...) = LowRankOperator(convert(Vector{Operator{Float64}},B),S...)
+LowRankOperator(B::AbstractVector,S...) = LowRankOperator(strictconvert(Vector{Operator{Float64}},B),S...)
 
 LowRankOperator(A::Fun,B::Operator) = LowRankOperator([A],[B])
 
 
 convert(::Type{Operator{T}},L::LowRankOperator{S}) where {S,T} =
-    LowRankOperator{S,T}(convert(Vector{VFun{S,T}},L.U),
-                         convert(Vector{Operator{T}},L.V))
+    LowRankOperator{S,T}(strictconvert(Vector{VFun{S,T}},L.U),
+                         strictconvert(Vector{Operator{T}},L.V))
 
 
 datasize(L::LowRankOperator,k) =

@@ -9,7 +9,7 @@ QROperator(R::CachedOperator,H::AbstractArray,ncs::Int) =
 
 
 convert(::Type{Operator{T}},QR::QROperator) where {T} =
-    QROperator(convert(Operator{T},QR.R_cache), convert(AbstractArray{T}, QR.H),QR.ncols)
+    QROperator(strictconvert(Operator{T},QR.R_cache), strictconvert(AbstractArray{T}, QR.H),QR.ncols)
 
 qr(QR::QROperator) = QR
 factorize(QR::QROperator) = QR
@@ -209,7 +209,7 @@ end
 
 function ldiv_coefficients(QR::QROperator, b::AbstractVector{<:Number}; kwds...)
     TV = promote_type(eltype(QR), eltype(b))
-    ldiv_coefficients(convert(Operator{TV}, QR), convert(Vector{TV}, b); kwds...)
+    ldiv_coefficients(strictconvert(Operator{TV}, QR), strictconvert(Vector{TV}, b); kwds...)
 end
 
 function ldiv_coefficients(QR::QROperator{<:Any,<:Any,<:Real}, b::AbstractVector{<:Complex}; kwds...)
