@@ -479,7 +479,9 @@ end
 
 
 for OP in (:(adjoint),:(transpose))
-    @eval $OP(A::TimesOperator)=TimesOperator(reverse!(map($OP,A.ops)))
+    @eval $OP(A::TimesOperator) = TimesOperator(
+        convert(Vector{Operator{eltype(A)}}, reverse!(map($OP,A.ops)))::Vector{Operator{eltype(A)}},
+        reverse(bandwidths(A)))
 end
 
 function *(A::Operator,B::Operator)
