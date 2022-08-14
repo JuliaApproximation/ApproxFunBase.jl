@@ -106,7 +106,7 @@ function convert(::Type{Operator{T}},E::EvaluationWrapper) where T
     if T == eltype(E)
         E
     else
-        EvaluationWrapper(E.space,E.x,E.order,convert(Operator{T},E.op))::Operator{T}
+        EvaluationWrapper(E.space,E.x,E.order,strictconvert(Operator{T},E.op))::Operator{T}
     end
 end
 

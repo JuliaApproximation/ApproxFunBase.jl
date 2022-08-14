@@ -17,7 +17,7 @@ FiniteOperator(M::AbstractMatrix{<:Number}) =
     FiniteOperator(M,EuclideanSpace(size(M,2)),EuclideanSpace(size(M,1)))
 
 convert(::Type{Operator{T}},F::FiniteOperator) where {T} =
-    FiniteOperator(convert(AbstractMatrix{T},F.matrix),F.domainspace,F.rangespace)::Operator{T}
+    FiniteOperator(strictconvert(AbstractMatrix{T},F.matrix),F.domainspace,F.rangespace)::Operator{T}
 
 ==(A::FiniteOperator, B::FiniteOperator) = A.matrix == B.matrix && A.domainspace == B.domainspace && A.rangespace == B.rangespace
 

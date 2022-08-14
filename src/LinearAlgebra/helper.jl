@@ -106,7 +106,7 @@ end
 
 
 scal!(n::Integer,cst::BlasFloat,ret::DenseArray{T},k::Integer) where {T<:BlasFloat} =
-    BLAS.scal!(n,convert(T,cst),ret,k)
+    BLAS.scal!(n,strictconvert(T,cst),ret,k)
 
 function scal!(n::Integer,cst::Number,ret::AbstractArray,k::Integer)
     @assert k*n ≤ length(ret)
@@ -161,8 +161,6 @@ end
 const alternatesign! = negateeven!
 
 alternatesign(v::AbstractVector) = alternatesign!(copy(v))
-
-alternatingvector(n::Integer) = 2*mod([1:n],2) .- 1
 
 function alternatingsum(v::AbstractVector)
     ret = zero(eltype(v))
@@ -664,7 +662,7 @@ conv(x::AbstractVector, y::AbstractVector) = DSP.conv(x, y)
 @generated function conv(x::SVector{N}, y::SVector{M}) where {N,M}
     NM = N+M-1
     quote
-        convert(SVector{$NM}, DSP.conv(Vector(x), Vector(y)))
+        strictconvert(SVector{$NM}, DSP.conv(Vector(x), Vector(y)))
     end
 end
 

@@ -68,9 +68,9 @@ evaluate(f::AbstractVector,::ZeroSpace,x...)=zero(eltype(f))
 
 
 convert(::Type{T}, f::Fun{CS}) where {CS<:ConstantSpace,T<:Number} =
-    convert(T, f.coefficients[1])
+    strictconvert(T, f.coefficients[1])
 
-Number(f::Fun) = convert(Number, f)
+Number(f::Fun) = strictconvert(Number, f)
 
 
 # promoting numbers to Fun
@@ -125,7 +125,7 @@ function getindex(C::ConcreteConversion{CS,S,T},k::Integer,j::Integer) where {CS
         throw(BoundsError())
     end
     on=ones(rangespace(C))
-    k ≤ ncoefficients(on) ? convert(T,on.coefficients[k]) : zero(T)
+    k ≤ ncoefficients(on) ? strictconvert(T,on.coefficients[k]) : zero(T)
 end
 
 
@@ -162,7 +162,7 @@ defaultMultiplication(f::Fun,b::ConstantSpace) = ConcreteMultiplication(f,b)
 bandwidths(D::ConcreteMultiplication{CS1,CS2,T}) where {CS1<:ConstantSpace,CS2<:ConstantSpace,T} =
     0,0
 getindex(D::ConcreteMultiplication{CS1,CS2,T},k::Integer,j::Integer) where {CS1<:ConstantSpace,CS2<:ConstantSpace,T} =
-    k==j==1 ? convert(T,D.f.coefficients[1]) : one(T)
+    k==j==1 ? strictconvert(T,D.f.coefficients[1]) : one(T)
 
 rangespace(D::ConcreteMultiplication{CS1,CS2,T}) where {CS1<:ConstantSpace,CS2<:ConstantSpace,T} =
     D.space
@@ -184,13 +184,13 @@ subblockbandwidths(D::ConcreteMultiplication{CS,F,T}, k) where {CS<:ConstantSpac
 isbandedblockbanded(D::ConcreteMultiplication{CS,F,T}) where {CS<:ConstantSpace,F<:Space,T} = true
 isblockbanded(D::ConcreteMultiplication{CS,F,T}) where {CS<:ConstantSpace,F<:Space,T} = true
 getindex(D::ConcreteMultiplication{CS,F,T},k::Integer,j::Integer) where {CS<:ConstantSpace,F<:Space,T} =
-    k==j ? convert(T, D.f) : zero(T)
+    k==j ? strictconvert(T, D.f) : zero(T)
 rangespace(D::ConcreteMultiplication{CS,F,T}) where {CS<:ConstantSpace,F<:Space,T} = D.space
 
 
 bandwidths(D::ConcreteMultiplication{F,CS,T}) where {CS<:ConstantSpace,F<:Space,T} = ncoefficients(D.f)-1,0
 function getindex(D::ConcreteMultiplication{F,CS,T},k::Integer,j::Integer) where {CS<:ConstantSpace,F<:Space,T}
-    k≤ncoefficients(D.f) && j==1 ? convert(T,D.f.coefficients[k]) : zero(T)
+    k≤ncoefficients(D.f) && j==1 ? strictconvert(T,D.f.coefficients[k]) : zero(T)
 end
 rangespace(D::ConcreteMultiplication{F,CS,T}) where {CS<:ConstantSpace,F<:Space,T} = space(D.f)
 
@@ -204,7 +204,7 @@ end
 
 
 for op = (:*,:/)
-    @eval $op(f::Fun,c::Fun{CS}) where {CS<:ConstantSpace} = f*convert(Number,c)
+    @eval $op(f::Fun,c::Fun{CS}) where {CS<:ConstantSpace} = f*strictconvert(Number,c)
 end
 
 
@@ -215,7 +215,7 @@ union_rule(a::TensorSpace,b::ConstantSpace{AnyDomain})=TensorSpace(map(sp->union
 
 function convert(::Type{T},f::Fun{TS}) where {TS<:TensorSpace,T<:Number}
     if all(sp->isa(sp,ConstantSpace),space(f).spaces)
-        convert(T,f.coefficients[1])
+        strictconvert(T,f.coefficients[1])
     else
         error("Cannot convert $f to type $T")
     end
@@ -223,7 +223,7 @@ end
 
 convert(::Type{T},
             f::Fun{TensorSpace{Tuple{CS1,CS2},DD,RR}}) where {CS1<:ConstantSpace,CS2<:ConstantSpace,T<:Number,DD,RR} =
-    convert(T,f.coefficients[1])
+    strictconvert(T,f.coefficients[1])
 
 isconstspace(sp::TensorSpace) = all(isconstspace,sp.spaces)
 

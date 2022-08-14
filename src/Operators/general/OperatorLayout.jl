@@ -9,7 +9,7 @@ struct HermitianOperator{T<:Number,B<:Operator} <: Operator{T}
 end
 
 HermitianOperator(B::Operator{T}, uplo::Symbol=:U) where {T<:Number} = HermitianOperator{T,typeof(B)}(B, char_uplo(uplo))
-convert(::Type{Operator{T}},A::HermitianOperator) where {T}=HermitianOperator(convert(Operator{T},A.op), A.uplo)
+convert(::Type{Operator{T}},A::HermitianOperator) where {T}=HermitianOperator(strictconvert(Operator{T},A.op), A.uplo)
 
 domainspace(P::HermitianOperator)=domainspace(P.op)
 rangespace(P::HermitianOperator)=rangespace(P.op)
@@ -42,7 +42,7 @@ struct SymmetricOperator{T<:Number,B<:Operator} <: Operator{T}
 end
 
 SymmetricOperator(B::Operator{T}, uplo::Symbol=:U) where {T<:Number} = SymmetricOperator{T,typeof(B)}(B, char_uplo(uplo))
-convert(::Type{Operator{T}},A::SymmetricOperator) where {T}=SymmetricOperator(convert(Operator{T},A.op), A.uplo)
+convert(::Type{Operator{T}},A::SymmetricOperator) where {T}=SymmetricOperator(strictconvert(Operator{T},A.op), A.uplo)
 
 domainspace(P::SymmetricOperator)=domainspace(P.op)
 rangespace(P::SymmetricOperator)=rangespace(P.op)
@@ -74,7 +74,7 @@ struct AdjointOperator{T<:Number,B<:Operator} <: Operator{T}
 end
 
 AdjointOperator(B::Operator{T}) where {T<:Number}=AdjointOperator{T,typeof(B)}(B)
-convert(::Type{Operator{T}},A::AdjointOperator) where {T}=AdjointOperator(convert(Operator{T},A.op))
+convert(::Type{Operator{T}},A::AdjointOperator) where {T}=AdjointOperator(strictconvert(Operator{T},A.op))
 
 domainspace(P::AdjointOperator)=rangespace(P.op)
 rangespace(P::AdjointOperator)=domainspace(P.op)
@@ -96,7 +96,7 @@ struct TransposeOperator{T<:Number,B<:Operator} <: Operator{T}
 end
 
 TransposeOperator(B::Operator{T}) where {T<:Number}=TransposeOperator{T,typeof(B)}(B)
-convert(::Type{Operator{T}},A::TransposeOperator) where {T}=TransposeOperator(convert(Operator{T},A.op))
+convert(::Type{Operator{T}},A::TransposeOperator) where {T}=TransposeOperator(strictconvert(Operator{T},A.op))
 
 domainspace(P::TransposeOperator)=rangespace(P.op)
 rangespace(P::TransposeOperator)=domainspace(P.op)

@@ -2,7 +2,7 @@
 
 
 convert(::Type{Array}, f::ArrayFun) = reshape(vec(f), size(space(f))...)
-Array(f::ArrayFun) = convert(Array, f)
+Array(f::ArrayFun) = strictconvert(Array, f)
 Vector(f::VectorFun) = Array(f)
 Matrix(f::MatrixFun) = Array(f)
 

@@ -86,7 +86,7 @@ function convert(::Type{Operator{T}},D::ConversionWrapper) where T
     if T==eltype(D)
         D
     else
-        BO=convert(Operator{T},D.op)
+        BO=strictconvert(Operator{T},D.op)
         ConversionWrapper{typeof(BO),T}(BO)
     end
 end

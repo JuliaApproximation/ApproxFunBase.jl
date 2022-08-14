@@ -83,7 +83,6 @@ Fun(f,T::Type) = Fun(dynamic(f),T())
 Fun(f,T::Type,n::Integer) = Fun(dynamic(f),T(),n)
 
 Fun(f::AbstractVector,d::Domain) = Fun(f,Space(d))
-Fun(d::Domain,f::AbstractVector{T}) where {T<:Number} = Fun(Space(d),f)
 Fun(d::Domain,f::AbstractVector) = Fun(Space(d),f)
 
 

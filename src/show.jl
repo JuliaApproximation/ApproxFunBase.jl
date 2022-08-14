@@ -11,10 +11,10 @@ function show(io::IO, f::Fun)
 end
 
 show(io::IO,f::Fun{<:ConstantSpace{AnyDomain}}) =
-    print(io,"$(convert(Number,f)) anywhere")
+    print(io, convert(Number,f), " anywhere")
 
 show(io::IO,f::Fun{<:ConstantSpace}) =
-    print(io,"$(convert(Number,f)) on $(domain(f))")
+    print(io, convert(Number,f), " on ", domain(f))
 
 ## MultivariateFun
 

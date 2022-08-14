@@ -102,6 +102,8 @@ else
 	import Base: oneto
 end
 
+# assert that the conversion succeeds. This helps with inference as well as sanity
+strictconvert(T::Type, x) = convert(T, x)::T
 
 include("LinearAlgebra/LinearAlgebra.jl")
 include("Fun.jl")
