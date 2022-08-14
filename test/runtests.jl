@@ -160,6 +160,7 @@ end
             @test MT == M * T
             @test T * M == M * T == M * M * M
             @test TT == T * T == M * M * M * M
+            @test (@inferred adjoint(T)) == adjoint(M) * adjoint(M)
         end
         @testset "plus operator" begin
             c = [1,2,3]
