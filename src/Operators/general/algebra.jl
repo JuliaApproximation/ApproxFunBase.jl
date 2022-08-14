@@ -409,12 +409,13 @@ for TYP in (:Matrix, :BandedMatrix, :RaggedMatrix)
         # The following returns a banded Matrix with all rows
         # for large k its upper triangular
         RT = $TYP{T}
-        BA::_rettype(RT) = convert(RT, P.ops[end][krl[end,1]:krl[end,2],jr])
+        RT2 = _rettype(RT)
+        BA::RT2 = convert(RT, P.ops[end][krl[end,1]:krl[end,2],jr])::RT
         for m = (length(P.ops)-1):-1:1
             BA = convert(RT, P.ops[m][krl[m,1]:krl[m,2],krl[m+1,1]:krl[m+1,2]])::RT * BA
         end
 
-        $TYP{T}(BA)::RT
+        RT(BA)::RT2
     end
 end
 
