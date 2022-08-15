@@ -80,6 +80,12 @@ using ApproxFunOrthogonalPolynomials
             end
         end
 
+        f = @inferred (T -> ones(T, PointSpace(1:3)))(Float64)
+        @test f == Fun(PointSpace(1:3), [1.0, 1.0, 1.0])
+        f = @inferred (T -> zeros(T, PointSpace(1:3)))(Float64)
+        @test space(f) == PointSpace(1:3)
+        @test all(iszero(coefficients(f)))
+
         M = Multiplication(Fun(PointSpace(1:3), [1:3;]), PointSpace(1:3))
         @test (@inferred size(M)) == (3,3)
         M2 = M + M
