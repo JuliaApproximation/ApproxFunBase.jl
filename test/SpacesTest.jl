@@ -102,6 +102,14 @@ using ApproxFunOrthogonalPolynomials
             @test (@inferred (x -> x^2)(f)) == ApproxFunBase.intpow(f,2)
             @test (@inferred (x -> x^3)(f)) == ApproxFunBase.intpow(f,3)
             @test (@inferred (x -> x^4)(f)) == ApproxFunBase.intpow(f,4)
+
+            local f = Fun(PointSpace(Float32[1:3;]), Float32[1:3;])
+            g = @inferred (x -> x^0)(f)
+            @test eltype(coefficients(g)) == Float32
+            g = @inferred (x -> x^1)(f)
+            @test eltype(coefficients(g)) == Float32
+            g = @inferred (x -> x^2)(f)
+            @test eltype(coefficients(g)) == Float32
         end
     end
 

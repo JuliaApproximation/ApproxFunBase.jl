@@ -369,11 +369,11 @@ end
 
 ^(f::Fun, k::Integer) = intpow(f,k)
 # some common cases
-Base.literal_pow(f::typeof(^), x::Fun, ::Val{0}) = ones(space(x))
-Base.literal_pow(f::typeof(^), x::Fun, ::Val{1}) = x
-Base.literal_pow(f::typeof(^), x::Fun, ::Val{2}) = x * x
-Base.literal_pow(f::typeof(^), x::Fun, ::Val{3}) = x * x * x
-Base.literal_pow(f::typeof(^), x::Fun, ::Val{4}) = x * x * x * x
+Base.literal_pow(::typeof(^), x::Fun, ::Val{0}) = ones(cfstype(x), space(x))
+Base.literal_pow(::typeof(^), x::Fun, ::Val{1}) = x
+Base.literal_pow(::typeof(^), x::Fun, ::Val{2}) = x * x
+Base.literal_pow(::typeof(^), x::Fun, ::Val{3}) = x * x * x
+Base.literal_pow(::typeof(^), x::Fun, ::Val{4}) = x * x * x * x
 
 inv(f::Fun) = 1/f
 
