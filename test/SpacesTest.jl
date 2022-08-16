@@ -225,8 +225,13 @@ using ApproxFunOrthogonalPolynomials
         @test itransform(NormalizedChebyshev(), v2) ≈ v
 
         f = @inferred Fun(x->x^2, Chebyshev())
-        v = coefficients(f, Chebyshev(), Legendre())
+        v = @inferred coefficients(f, Chebyshev(), Legendre())
+        @test eltype(v) == eltype(coefficients(f))
         @test v ≈ coefficients(Fun(x->x^2, Legendre()))
+
+        # inference check for coefficients
+        v = @inferred coefficients(Float64[0,0,1], Chebyshev(), Ultraspherical(1))
+        @test v ≈ [-0.5, 0, 0.5]
 
         @testset "inplace transform" begin
             @testset for sp_c in Any[Legendre(), Chebyshev(), Jacobi(1,2), Jacobi(0.3, 2.3),
