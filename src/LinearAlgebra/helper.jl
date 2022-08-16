@@ -50,6 +50,7 @@ function isapprox_atol(x::AbstractArray{T}, y::AbstractArray{S},atol::Real=0; rt
 end
 
 # The second case handles zero
+isapproxinteger(::Integer) = true
 isapproxinteger(x) = isapprox(x,round(Int,x))  || isapprox(x+1,round(Int,x+1))
 
 

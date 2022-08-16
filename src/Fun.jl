@@ -72,6 +72,9 @@ end
 coefficient(f::Fun,K::Block) = coefficient(f,blockrange(space(f),K.n[1]))
 coefficient(f::Fun,::Colon) = coefficient(f,1:dimension(space(f)))
 
+# convert to vector while computing coefficients
+_maybeconvert(inplace::Val{false}, f::Fun, v) = strictconvert(Vector{cfstype(f)}, v)
+
 ##Convert routines
 
 

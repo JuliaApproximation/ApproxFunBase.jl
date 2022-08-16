@@ -309,10 +309,12 @@ _ldiv_coefficients!!(inplace::Val{false}) = ldiv_coefficients
 
 _Fun(v::AbstractVector, sp) = Fun(sp, v)
 _Fun(v, sp) = Fun(v, sp)
+_maybeconvert(inplace::Val{true}, f, v) = v
+_maybeconvert(inplace::Val{false}, f::AbstractVector, v) = strictconvert(Vector{eltype(f)}, v)
 function defaultcoefficients(f,a,b,inplace = Val(false))
     ct=conversion_type(a,b) # gives a space that has a banded conversion to both a and b
 
-    if spacescompatible(a,b)
+    x = if spacescompatible(a,b)
         f
     elseif hasconversion(a,b)
         _mul_coefficients!!(inplace)(Conversion(a,b),f)
@@ -331,6 +333,7 @@ function defaultcoefficients(f,a,b,inplace = Val(false))
             _coefficients!!(inplace)(f,a,csp,b)
         end
     end
+    _maybeconvert(inplace, f, x)
 end
 
 coefficients(f,a,b) = defaultcoefficients(f,a,b)
