@@ -198,7 +198,7 @@ canonicaldomain(f::ProductFun) = canonicaldomain(space(f))
 function canonicalevaluate(f::ProductFun{S,V,SS,T},x::Number,::Colon) where {S,V,SS,T}
     cd = canonicaldomain(f)
     Fun(setdomain(factor(space(f),2),factor(cd,2)),
-                    T[setdomain(fc,factor(cd,1))(x) for fc in f.coefficients])
+                    [setdomain(fc,factor(cd,1))(x) for fc in f.coefficients])
 end
 canonicalevaluate(f::ProductFun,x::Number,y::Number) = canonicalevaluate(f,x,:)(y)
 canonicalevaluate(f::ProductFun{S,V,SS},x::Colon,y::Number) where {S,V,SS<:TensorSpace} =
@@ -213,7 +213,7 @@ evaluate(f::ProductFun,x,y,z) = canonicalevaluate(f,tocanonical(f,x,y,z)...)
 
 # TensorSpace does not use map
 evaluate(f::ProductFun{S,V,SS,T},x::Number,::Colon) where {S<:UnivariateSpace,V<:UnivariateSpace,SS<:TensorSpace,T} =
-    Fun(factor(space(f),2),T[g(x) for g in f.coefficients])
+    Fun(factor(space(f),2),[g(x) for g in f.coefficients])
 
 evaluate(f::ProductFun{S,V,SS,T},x::Number,y::Number) where {S<:UnivariateSpace,V<:UnivariateSpace,SS<:TensorSpace,T} =
     evaluate(f,x,:)(y)
