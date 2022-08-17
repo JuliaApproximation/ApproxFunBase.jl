@@ -108,19 +108,25 @@ function view(A::Operator,kr::UnitRange,jr::UnitRange)
     end
 end
 
-view(A::Operator,::Colon,::Colon) = view(A,1:size(A,1),1:size(A,2))
-view(A::Operator,::Colon,jr) = view(A,1:size(A,1),jr)
-view(A::Operator,kr,::Colon) = view(A,kr,1:size(A,2))
+_replace_inds(A, ax, inds::Tuple{}, out, n) = out
+function _replace_inds(A, ax, inds::Tuple{Any, Vararg}, out, n)
+    outnew = (out..., inds[1])
+    _replace_inds(A, Base.tail(ax), Base.tail(inds), outnew, n+1)
+end
+function _replace_inds(A, ax, inds::Tuple{Colon, Vararg}, out, n)
+    outnew = (out..., ax[1])
+    _replace_inds(A, Base.tail(ax), Base.tail(inds), outnew, n+1)
+end
+function _replace_inds(A, ax, inds::Tuple{Block, Vararg}, out, n)
+    blkind = n == 1 ? blockrows(A, inds[1]) : n == 2 ? blockcols(A, inds[1]) : error("invalid dimension ", n)
+    outnew = (out..., blkind)
+    _replace_inds(A, Base.tail(ax), Base.tail(inds), outnew, n+1)
+end
 
-
-view(A::Operator,K::Block,J::Block) = SubOperator(A,(K,J))
-view(A::Operator,K::Block,j::Colon) = view(A,blockrows(A,K),j)
-view(A::Operator,k::Colon,J::Block) = view(A,k,blockcols(A,J))
-view(A::Operator, K::Block, j) = view(A,blockrows(A,Int(K)),j)
-view(A::Operator, k, J::Block) = view(A,k,blockcols(A,Int(J))) #TODO: fix view
-view(A::Operator,KR::BlockRange,JR::BlockRange) = SubOperator(A,(KR,JR))
-
-view(A::Operator,k,j) = SubOperator(A,(k,j))
+function view(A::Operator, k, j)
+    inds = _replace_inds(A, axes(A), (k,j), (), 1)
+    SubOperator(A, inds)
+end
 
 defaultgetindex(B::Operator,k::InfRanges, j::InfRanges) = view(B, k, j)
 defaultgetindex(B::Operator,k::AbstractRange, j::InfRanges) = view(B, k, j)
