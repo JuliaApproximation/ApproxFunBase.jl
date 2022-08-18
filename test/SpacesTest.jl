@@ -287,5 +287,15 @@ using ApproxFunOrthogonalPolynomials
             @test newvals(f2) ≈ values(f3)
             @test values(f2) ≈ values(f3)
         end
+
+        @testset "Multivariate" begin
+            @testset for S in Any[Chebyshev(), Legendre()]
+                f = Fun(x->ones(2,2), S)
+                @test (f+1) * f ≈ (1+f) * f ≈ f^2 + f
+                @test (f-1) * f ≈ f^2 - f
+                @test (1-f) * f ≈ f - f^2
+                @test f + f ≈ 2f ≈ f*2
+            end
+        end
     end
 end
