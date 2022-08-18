@@ -57,8 +57,8 @@ function standardchoplength(coeffs, tol)
     # Step 1: Convert COEFFS to a new monotonically nonincreasing
     #         vector ENVELOPE normalized to begin with the value 1.
 
-    b = abs.(coeffs)
-    m = b[end]*fill(1.0,n)
+    b = map(abs, coeffs)
+    m = fill(b[end]*1.0, n)
     for j = n-1:-1:1
         m[j] = max(b[j], m[j+1]);
     end
@@ -94,13 +94,16 @@ function standardchoplength(coeffs, tol)
         return plateauPoint
     end
 
-    j3 = sum(envelope .≥ tol^(7/6))
+    j3 = count(≥(tol^(7/6)), envelope)
     if j3 < j2
         j2 = j3 + 1
         envelope[j2] = tol^(7/6)
     end
-    cc = log10.(envelope[1:j2])
-    cc .+= range(0, stop=(-1/3)*log10(tol), length=j2)
+    cc = map(log10, @view envelope[1:j2])
+    rng = range(0, stop=(-1/3)*log10(tol), length=j2)
+    for (i,ri) in enumerate(rng)
+        cc[i] += ri
+    end
     d = argmin(cc)
     return max(d - 1, 1)
 end

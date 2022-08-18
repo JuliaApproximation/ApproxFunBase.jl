@@ -63,6 +63,7 @@ domain(P::PlusOperator) = commondomain(P.ops)
 
 _promote_eltypeof(As...) = _promote_eltypeof(As)
 _promote_eltypeof(As::Union{Vector, Tuple}) = mapreduce(eltype, promote_type, As)
+_promote_eltypeof(As::Vector{Operator{T}}) where {T} = T
 
 _extractops(A, ::Any) = [A]
 _extractops(A::PlusOperator, ::typeof(+)) = A.ops
@@ -265,37 +266,25 @@ end
 
 
 
-function promotetimes(opsin::Vector{B},dsp) where B<:Operator
+function promotetimes(opsin::Vector{<:Operator}, dsp = domainspace(last(opsin)))
+
+    @assert length(opsin) > 1 "need at least 2 operators"
     ops=Vector{Operator{_promote_eltypeof(opsin)}}(undef,0)
+    sizehint!(ops, length(opsin))
 
     for k=length(opsin):-1:1
         if !isa(opsin[k],Conversion)
             op=promotedomainspace(opsin[k],dsp)
-            if op==()
-                # do nothing
-            elseif isa(op,TimesOperator)
-                for j=length(op.ops):-1:1
-                    push!(ops,op.ops[j])
-                end
-                dsp=rangespace(op)
+            dsp=rangespace(op)
+            if isa(op,TimesOperator)
+                append!(ops, view(op.ops, reverse(axes(op.ops,1))))
             else
                 push!(ops,op)
-                dsp=rangespace(op)
             end
         end
     end
-    if isempty(ops)
-        ConstantOperator(1.0,dsp)
-    elseif length(ops)==1
-        first(ops)
-    else
-        TimesOperator(reverse!(ops))  # change order in TImesOperator if this is slow
-    end
+    TimesOperator(reverse!(ops))
 end
-
-promotetimes(opsin::Vector{B}) where {B<:Operator}=promotetimes(opsin,domainspace(last(opsin)))
-
-
 
 domainspace(P::TimesOperator)=domainspace(last(P.ops))
 rangespace(P::TimesOperator)=rangespace(first(P.ops))
@@ -490,7 +479,8 @@ function *(A::Operator,B::Operator)
     elseif isconstop(B)
         promotedomainspace(strictconvert(Number,B)*A,domainspace(B))
     else
-        promotetimes(Operator{_promote_eltypeof(A, B)}[_extractops(A, *); _extractops(B, *)])
+        promotetimes([_extractops(A, *); _extractops(B, *)],
+            domainspace(B))
     end
 end
 
@@ -619,7 +609,7 @@ function promotedomainspace(P::TimesOperator,sp::Space,cursp::Space)
     elseif length(P.ops)==2
         P.ops[1]*promotedomainspace(P.ops[end],sp)
     else
-        promotetimes([P.ops[1:end-1];promotedomainspace(P.ops[end],sp)])
+        promotetimes([P.ops[1:end-1];promotedomainspace(P.ops[end],sp)], sp)
     end
 end
 
