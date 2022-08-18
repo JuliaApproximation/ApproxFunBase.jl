@@ -3,21 +3,15 @@ splitmap(g,d::Domain,pts) = Fun(g,split(d , pts))
 
 function split(d::IntervalOrSegment, pts)
     a,b = endpoints(d)
-    isendpoint = true
-    for p in pts
-        if !(p ≈ a) && !(p ≈ b)
-            isendpoint = false
-            break
-        end
-    end
+    isendpoint = all(p -> p ≈ a || p ≈ b, pts)
     isendpoint && return d
 
-    @assert all(in.(pts, Ref(d)))
+    @assert all(in(d), pts)
     PiecewiseSegment(sort!(union(endpoints(d), pts)))
 end
 
 function split(d::PiecewiseSegment, pts)
-    @assert all(in.(pts, Ref(d)))
+    @assert all(in(d), pts)
     PiecewiseSegment(sort!(union(d.points, pts)))
 end
 
@@ -411,9 +405,9 @@ end
 for SP in (:ConstantSpace,:PointSpace)
     for OP in (:abs,:sign,:exp,:sqrt,:angle)
         @eval begin
-            $OP(z::Fun{<:$SP,<:Complex}) = Fun(space(z),$OP.(coefficients(z)))
-            $OP(z::Fun{<:$SP,<:Real}) = Fun(space(z),$OP.(coefficients(z)))
-            $OP(z::Fun{<:$SP}) = Fun(space(z),$OP.(coefficients(z)))
+            $OP(z::Fun{<:$SP,<:Complex}) = Fun(space(z),map($OP, coefficients(z)))
+            $OP(z::Fun{<:$SP,<:Real}) = Fun(space(z),map($OP, coefficients(z)))
+            $OP(z::Fun{<:$SP}) = Fun(space(z),map($OP, coefficients(z)))
         end
     end
 
@@ -500,35 +494,42 @@ for op in (:(argmax),:(argmin))
     end
 end
 
+if VERSION < v"1.7"
+    _maybemap(rf, f, pts) = rf(map(f, pts))
+else
+    _maybemap(rf, f, pts) = rf(f, pts)
+end
+
 for op in (:(findmax),:(findmin))
     @eval begin
         function $op(f::Fun{<:RealSpace,<:Real})
             # the following avoids warning when differentiate(f)==0
             pts = extremal_args(f)
-            ext,ind = $op(f.(pts))
-	    ext,pts[ind]
+            ext,ind = _maybemap($op, f, pts)
+    	    ext,pts[ind]
         end
     end
 end
 
-extremal_args(f::Fun{<:PiecewiseSpace}) = cat(1,[extremal_args(fp) for fp in components(f)]..., dims=1)
+extremal_args(f::Fun{<:PiecewiseSpace}) = cat(1,[extremal_args(fp) for fp in components(f)], dims=1)
 
 function extremal_args(f::Fun)
     d = domain(f)
-
-    dab = strictconvert(Vector{Number}, collect(components(∂(domain(f)))))
-    if ncoefficients(f) <=2 #TODO this is only relevant for Polynomial bases
-        dab
-    else
-        [dab;roots(differentiate(f))]
+    T = prectype(d)
+    dab = strictconvert(Vector{T}, collect(components(∂(domain(f)))))
+    if ncoefficients(f) > 2 #TODO this is only relevant for Polynomial bases
+        r = roots(differentiate(f))
+        if !isempty(r)
+            append!(dab, r)
+        end
     end
+    return dab
 end
 
 for op in (:(maximum),:(minimum),:(extrema))
     @eval function $op(f::Fun{<:RealSpace,<:Real})
         pts = iszero(f') ? [leftendpoint(domain(f))] : extremal_args(f)
-        v = map(f, pts)
-        $op(v)
+        _maybemap($op, f, pts)
     end
 end
 
@@ -537,12 +538,12 @@ for op in (:(maximum),:(minimum))
     @eval begin
         function $op(::typeof(abs), f::Fun{<:RealSpace,<:Real})
             pts = iszero(f') ? [leftendpoint(domain(f))] : extremal_args(f)
-            $op(f.(pts))
+            _maybemap($op, f, pts)
         end
         function $op(::typeof(abs), f::Fun)
             # complex spaces/types can have different extrema
             pts = extremal_args(abs(f))
-            $op(f.(pts))
+            _maybemap($op, f, pts)
         end
         $op(f::Fun{PiecewiseSpace{<:Any,<:UnionDomain,<:Real},<:Real}) =
             $op(map($op,components(f)))
