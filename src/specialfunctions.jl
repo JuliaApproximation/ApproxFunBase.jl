@@ -405,9 +405,9 @@ end
 for SP in (:ConstantSpace,:PointSpace)
     for OP in (:abs,:sign,:exp,:sqrt,:angle)
         @eval begin
-            $OP(z::Fun{<:$SP,<:Complex}) = Fun(space(z),$OP.(coefficients(z)))
-            $OP(z::Fun{<:$SP,<:Real}) = Fun(space(z),$OP.(coefficients(z)))
-            $OP(z::Fun{<:$SP}) = Fun(space(z),$OP.(coefficients(z)))
+            $OP(z::Fun{<:$SP,<:Complex}) = Fun(space(z),map($OP, coefficients(z)))
+            $OP(z::Fun{<:$SP,<:Real}) = Fun(space(z),map($OP, coefficients(z)))
+            $OP(z::Fun{<:$SP}) = Fun(space(z),map($OP, coefficients(z)))
         end
     end
 
