@@ -1,6 +1,7 @@
 using ApproxFunBase, Test
 import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, Vec, checkpoints
 using ApproxFunOrthogonalPolynomials
+using StaticArrays
 
 @testset "Spaces" begin
     @testset "PointSpace" begin
@@ -110,6 +111,11 @@ using ApproxFunOrthogonalPolynomials
             @test eltype(coefficients(g)) == Float32
             g = @inferred (x -> x^2)(f)
             @test eltype(coefficients(g)) == Float32
+        end
+
+        @testset "static coeffs" begin
+            f = Fun(PointSpace(1:3), SA[1,2,3])
+            @test coefficients(f^2) == coefficients(f).^2
         end
     end
 
