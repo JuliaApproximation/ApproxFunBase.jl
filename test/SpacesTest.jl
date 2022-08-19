@@ -239,6 +239,18 @@ using StaticArrays
         v = @inferred coefficients(Float64[0,0,1], Chebyshev(), Ultraspherical(1))
         @test v ≈ [-0.5, 0, 0.5]
 
+        @testset "int coeffs" begin
+            f = Fun(Chebyshev(), [0,1])
+            @test f(0.4) ≈ 0.4
+            f = Fun(NormalizedChebyshev(), [0,1])
+            @test f(0.4) ≈ 0.4 * √(2/pi)
+
+            f = Fun(Chebyshev(), [1])
+            @test f(0.4) ≈ 1
+            f = Fun(NormalizedChebyshev(), [1])
+            @test f(0.4) ≈ √(1/pi)
+        end
+
         @testset "inplace transform" begin
             @testset for sp_c in Any[Legendre(), Chebyshev(), Jacobi(1,2), Jacobi(0.3, 2.3),
                     Ultraspherical(1), Ultraspherical(2)]
