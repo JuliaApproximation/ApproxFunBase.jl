@@ -313,7 +313,7 @@ using StaticArrays
         @testset "Derivative" begin
             @test Derivative() == Derivative()
             for d in Any[(), (0..1,)]
-                for ST in Any[Chebyshev, NormalizedChebyshev, Legendre]
+                for ST in Any[Chebyshev, Legendre]
                     S = ST(d...)
                     @test Derivative(S) == Derivative(S)
                     @test Derivative(S,2) == Derivative(S,2)
@@ -321,8 +321,6 @@ using StaticArrays
             end
             @test Derivative(Chebyshev()) != Derivative(Chebyshev(), 2)
             @test Derivative(Chebyshev()) != Derivative(Legendre())
-            @test Derivative(Chebyshev()) != Derivative(NormalizedChebyshev())
-            @test Derivative(Chebyshev()) != Derivative(NormalizedChebyshev(),2)
         end
     end
 end
