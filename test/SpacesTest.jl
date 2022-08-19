@@ -303,5 +303,11 @@ using StaticArrays
                 @test f + f ≈ 2f ≈ f*2
             end
         end
+
+        @testset "static coeffs" begin
+            f = Fun(Chebyshev(), SA[1,2,3])
+            g = Fun(Chebyshev(), [1,2,3])
+            @test coefficients(f^2) == coefficients(g^2)
+        end
     end
 end
