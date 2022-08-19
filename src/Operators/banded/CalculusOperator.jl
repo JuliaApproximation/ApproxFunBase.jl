@@ -229,6 +229,8 @@ for TYP in (:Derivative,:Integral,:Laplacian)
     end
 end
 
+==(A::Derivative, B::Derivative) = A.order == B.order && domainspace(A) == domainspace(B)
+
 
 """
 `Derivative(sp::Space,k::Int)` represents the `k`-th derivative on `sp`.

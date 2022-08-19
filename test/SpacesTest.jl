@@ -309,5 +309,20 @@ using StaticArrays
             g = Fun(Chebyshev(), [1,2,3])
             @test coefficients(f^2) == coefficients(g^2)
         end
+
+        @testset "Derivative" begin
+            @test Derivative() == Derivative()
+            for d in Any[(), (0..1,)]
+                for ST in Any[Chebyshev, NormalizedChebyshev, Legendre]
+                    S = ST(d...)
+                    @test Derivative(S) == Derivative(S)
+                    @test Derivative(S,2) == Derivative(S,2)
+                end
+            end
+            @test Derivative(Chebyshev()) != Derivative(Chebyshev(), 2)
+            @test Derivative(Chebyshev()) != Derivative(Legendre())
+            @test Derivative(Chebyshev()) != Derivative(NormalizedChebyshev())
+            @test Derivative(Chebyshev()) != Derivative(NormalizedChebyshev(),2)
+        end
     end
 end
