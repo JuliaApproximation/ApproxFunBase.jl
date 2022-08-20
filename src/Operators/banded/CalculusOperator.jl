@@ -59,8 +59,9 @@ macro calculus_operator(Op)
             end
         end
 
-        $WrappOp(op::Operator,order) =
-            $WrappOp{typeof(op),typeof(domainspace(op)),typeof(order),eltype(op)}(op,order)
+        $WrappOp(op::Operator,d,order) =
+            $WrappOp{typeof(op),typeof(d),typeof(order),eltype(op)}(op,order)
+        $WrappOp(op::Operator,order) = $WrappOp(op, domainspace(op), order)
         $WrappOp(op::Operator) = $WrappOp(op,1)
 
         function Base.convert(::Type{Operator{T}},D::$WrappOp) where T
@@ -181,16 +182,25 @@ function DefaultDerivative(sp::Space,k::Integer)
         # this is the normal default constructor
         csp=canonicalspace(sp)
         if conversion_type(csp,sp)==csp   # Conversion(sp,csp) is not banded, or sp==csp
-           error("Implement Derivative($(string(sp)),$k)")
+           error("Implement Derivative(", sp, ",", k,")")
         end
-        DerivativeWrapper(TimesOperator([Derivative(csp,k),Conversion(sp,csp)]),k)
+        DerivativeWrapper(TimesOperator(Derivative(csp,k),Conversion(sp,csp)), sp, k)
     else
-        D1=invfromcanonicalD(sp)*Derivative(setdomain(sp,canonicaldomain(sp)))
-        D=DerivativeWrapper(SpaceOperator(D1,sp,setdomain(rangespace(D1),domain(sp))),1)
+        csp = canonicalspace(sp)
+        D1 = if csp == sp
+            _Dsp = invfromcanonicalD(sp)*Derivative(setdomain(sp,canonicaldomain(sp)))
+            rsp = rangespace(_Dsp)
+            _Dsp
+        else
+            Dcsp = Derivative(csp)
+            rsp = rangespace(Dcsp)
+            Dcsp * Conversion(sp, csp)
+        end
+        D=DerivativeWrapper(SpaceOperator(D1,sp,setdomain(rsp,domain(sp))),1)
         if k==1
             D
         else
-            DerivativeWrapper(TimesOperator(Derivative(rangespace(D),k-1),D),k)
+            DerivativeWrapper(TimesOperator(Derivative(rangespace(D),k-1),D), sp, k)
         end
     end
 end
