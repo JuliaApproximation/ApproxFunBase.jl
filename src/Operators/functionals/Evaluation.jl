@@ -57,8 +57,12 @@ end
 
 
 ## default getindex
-getindex(D::ConcreteEvaluation,k::Integer) =
-    eltype(D)(differentiate(Fun(D.space,[zeros(eltype(D),k-1);one(eltype(D))]),D.order)(D.x))
+function getindex(D::ConcreteEvaluation,k::Integer)
+    f = Fun(D.space, [zeros(eltype(D),k-1); one(eltype(D))])
+    df = differentiate(f,D.order)
+    v = df(D.x)
+    strictconvert(eltype(D), v)
+end
 
 #special leftendpoint/rightendpoint overrides
 for (dop, fop) in ((:leftendpoint,:first), (:rightendpoint,:last))

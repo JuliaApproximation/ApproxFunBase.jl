@@ -59,6 +59,11 @@
 			summarystr = ApproxFunBase.summarystr(EA)
 			show(io, MIME"text/plain"(), EA)
 			@test contains(String(take!(io)), summarystr)
+
+			EA = transpose(Evaluation(Chebyshev(), 0))
+			summarystr = ApproxFunBase.summarystr(EA)
+			show(io, MIME"text/plain"(), EA)
+			@test contains(String(take!(io)), summarystr)
 		end
 		@testset "QuotientSpace" begin
 			Q = QuotientSpace(Dirichlet(ConstantSpace(0..1)))
