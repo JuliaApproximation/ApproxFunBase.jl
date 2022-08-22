@@ -81,7 +81,7 @@ values(f::Fun{S}) where S<:PointSpace = coefficient(f,:)
 
 function evaluate(f::AbstractVector,PS::PointSpace,x::Number)
     p = findfirst(y->isapprox(x,y),PS.points)
-    if p == 0 || p > length(f)
+    if p === nothing
         zero(eltype(f))
     else
         f[p]
@@ -92,7 +92,7 @@ function evaluate(f::AbstractVector, PS::DiracSpace, x::Number)
     x ∉ domain(PS) && return zero(eltype(f))
 
     p = findfirst(y->isapprox(x,y), PS.points)
-    if p == 0 || p > length(f)
+    if p === nothing
         zero(eltype(f))
     else
         f[p]*Inf

@@ -105,6 +105,7 @@ domain(P::TransposeOperator)=domain(P.op)
 bandwidths(P::TransposeOperator) = reverse(bandwidths(P.op))
 
 getindex(P::TransposeOperator,k::Integer,j::Integer) = P.op[j,k]
+getindex(P::TransposeOperator,inds...) = transpose(P.op[reverse(inds)...])
 
 function BandedMatrix(S::SubOperator{T,TO}) where {T,TO<:TransposeOperator}
     kr,jr=parentindices(S)

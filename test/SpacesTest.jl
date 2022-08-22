@@ -118,6 +118,21 @@ using BandedMatrices: rowrange, colrange
             f = Fun(PointSpace(1:3), SA[1,2,3])
             @test coefficients(f^2) == coefficients(f).^2
         end
+
+        @testset "indexing outside bounds" begin
+            f = Fun(PointSpace(1:3), Float64[1:3;])
+            @test f(0) == 0
+            @test f(1) == 1
+            @test f(4) == 0
+        end
+    end
+
+    @testset "DiracSpace" begin
+        f = Fun(ApproxFunBase.DiracSpace(Float64[-1,0,1]), Float64[1,2,3])
+        @test f(-5) == 0
+        @test f(0.5) == 0
+        @test f(5) == 0
+        @test isinf(f(0))
     end
 
     @testset "Derivative operator for HeavisideSpace" begin
