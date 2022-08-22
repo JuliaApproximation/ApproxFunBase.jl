@@ -25,7 +25,7 @@ import Base: values, convert, getindex, setindex!, *, +, -, ==, <, <=, >, |, !, 
                 zeros, zero, one, promote_rule, repeat, length, resize!, isinf,
                 getproperty, findfirst, unsafe_getindex, fld, cld, div, imag,
                 @_inline_meta, eachindex, firstindex, lastindex, keys, isreal, OneTo,
-                Array, Vector, Matrix, view, ones, @propagate_inbounds,
+                Array, Vector, Matrix, view, ones, @propagate_inbounds, print_array,
                 split, iszero, permutedims, rad2deg, deg2rad
 
 import Base.Broadcast: BroadcastStyle, Broadcasted, AbstractArrayStyle, broadcastable,

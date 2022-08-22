@@ -46,6 +46,8 @@ function show(io::IO, mimetype::MIME"text/plain", @nospecialize(B::Operator); he
 
     sz1_B, sz2_B = size(B)
 
+    iocompact = haskey(io, :compact) ? io : IOContext(io, :compact => true)
+
     if !isambiguous(domainspace(B)) && (eltype(B) <: Number)
         println(io)
         if isbanded(B) && isinf(sz1_B) && isinf(sz2_B)
@@ -64,7 +66,7 @@ function show(io::IO, mimetype::MIME"text/plain", @nospecialize(B::Operator); he
                 M[end,j]=PrintShow('⋱')
             end
 
-            show(io, mimetype, M)
+            print_array(iocompact, M)
         elseif isinf(sz1_B) && isinf(sz2_B)
             BM=B[1:10,1:10]
 
@@ -83,7 +85,7 @@ function show(io::IO, mimetype::MIME"text/plain", @nospecialize(B::Operator); he
                 M[end,k]=PrintShow('⋱')
             end
 
-            show(io, mimetype, M)
+            print_array(iocompact, M)
         elseif isinf(sz1_B)
             sz2int = Int(sz2_B)::Int
             BM=B[1:10,1:sz2int]
@@ -96,7 +98,7 @@ function show(io::IO, mimetype::MIME"text/plain", @nospecialize(B::Operator); he
                 M[end,k]=PrintShow('⋮')
             end
 
-            show(io, mimetype, M)
+            print_array(iocompact, M)
         elseif isinf(sz2_B)
             sz1int = Int(sz1_B)::Int
             BM=B[1:sz1int,1:10]
@@ -109,11 +111,11 @@ function show(io::IO, mimetype::MIME"text/plain", @nospecialize(B::Operator); he
                 M[k,end]=PrintShow('⋯')
             end
 
-            show(io, mimetype, M)
+            print_array(iocompact, M)
         else
             sz1int = Int(sz1_B)::Int
             sz2int = Int(sz2_B)::Int
-            show(io, mimetype, AbstractMatrix(B)[1:sz1int,1:sz2int])
+            print_array(iocompact, AbstractMatrix(B)[1:sz1int,1:sz2int])
         end
     end
 end
