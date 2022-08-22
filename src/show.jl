@@ -40,9 +40,11 @@ Base.show(io::IO, N::PrintShow) = print(io, N.c)
 
 show(io::IO, B::Operator; kw...) = summary(io, B)
 
-function show(io::IO, ::MIME"text/plain", B::Operator;header::Bool=true)
+function show(io::IO, ::MIME"text/plain", @nospecialize(B::Operator); header::Bool=true)
     header && summary(io, B)
     dsp = domainspace(B)
+
+    iocompact = haskey(io, :compact) ? io : IOContext(io, :compact=>true)
 
     if !isambiguous(domainspace(B)) && (eltype(B) <: Number)
         println()
@@ -62,7 +64,7 @@ function show(io::IO, ::MIME"text/plain", B::Operator;header::Bool=true)
                 M[end,j]=PrintShow('⋱')
             end
 
-            print_array(io, M)
+            print_array(iocompact, M)
         elseif isinf(size(B,1)) && isinf(size(B,2))
             BM=B[1:10,1:10]
 
@@ -78,7 +80,7 @@ function show(io::IO, ::MIME"text/plain", B::Operator;header::Bool=true)
                 M[k,end]=M[end,k]=PrintShow('⋱')
             end
 
-            print_array(io, M)
+            print_array(iocompact, M)
         elseif isinf(size(B,1))
             BM=B[1:10,1:size(B,2)]
 
@@ -90,7 +92,7 @@ function show(io::IO, ::MIME"text/plain", B::Operator;header::Bool=true)
                 M[end,k]=PrintShow('⋮')
             end
 
-            print_array(io, M)
+            print_array(iocompact, M)
         elseif isinf(size(B,2))
             BM=B[1:size(B,1),1:10]
 
@@ -102,9 +104,9 @@ function show(io::IO, ::MIME"text/plain", B::Operator;header::Bool=true)
                 M[k,end]=PrintShow('⋯')
             end
 
-            print_array(io, M)
+            print_array(iocompact, M)
         else
-            print_array(io, AbstractMatrix(B)[1:size(B,1),1:size(B,2)])
+            print_array(iocompact, AbstractMatrix(B)[1:size(B,1),1:size(B,2)])
         end
     end
 end
