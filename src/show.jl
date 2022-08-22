@@ -40,11 +40,9 @@ Base.show(io::IO, N::PrintShow) = print(io, N.c)
 
 show(io::IO, B::Operator; kw...) = summary(io, B)
 
-function show(io::IO, ::MIME"text/plain", @nospecialize(B::Operator); header::Bool=true)
+function show(io::IO, mimetype::MIME"text/plain", @nospecialize(B::Operator); header::Bool=true)
     header && summary(io, B)
     dsp = domainspace(B)
-
-    iocompact = haskey(io, :compact) ? io : IOContext(io, :compact=>true)
 
     sz1_B, sz2_B = size(B)
 
@@ -66,12 +64,12 @@ function show(io::IO, ::MIME"text/plain", @nospecialize(B::Operator); header::Bo
                 M[end,j]=PrintShow('⋱')
             end
 
-            print_array(iocompact, M)
+            show(io, mimetype, M)
         elseif isinf(sz1_B) && isinf(sz2_B)
             BM=B[1:10,1:10]
 
             M=Matrix{Union{eltype(B), PrintShow}}(undef,11,11)
-            for I in CartesianIndices((1:10, 1:10))
+            for I in CartesianIndices(BM)
                 M[I]=BM[Tuple(I)...] # not certain if indexing with CartesianIndex is implemented
             end
 
@@ -85,37 +83,37 @@ function show(io::IO, ::MIME"text/plain", @nospecialize(B::Operator); header::Bo
                 M[end,k]=PrintShow('⋱')
             end
 
-            print_array(iocompact, M)
+            show(io, mimetype, M)
         elseif isinf(sz1_B)
             sz2int = Int(sz2_B)::Int
             BM=B[1:10,1:sz2int]
 
             M=Matrix{Union{eltype(B), PrintShow}}(undef,11,sz2int)
-            for I in CartesianIndices((1:10, 1:10))
+            for I in CartesianIndices(BM)
                 M[I]=BM[Tuple(I)...]
             end
             for k=1:sz2int
                 M[end,k]=PrintShow('⋮')
             end
 
-            print_array(iocompact, M)
+            show(io, mimetype, M)
         elseif isinf(sz2_B)
             sz1int = Int(sz1_B)::Int
             BM=B[1:sz1int,1:10]
 
             M=Matrix{Union{eltype(B), PrintShow}}(undef,sz1int,11)
-            for I in CartesianIndices((1:10, 1:10))
+            for I in CartesianIndices(BM)
                 M[I]=BM[Tuple(I)...]
             end
             for k=1:sz1int
                 M[k,end]=PrintShow('⋯')
             end
 
-            print_array(iocompact, M)
+            show(io, mimetype, M)
         else
             sz1int = Int(sz1_B)::Int
             sz2int = Int(sz2_B)::Int
-            print_array(iocompact, AbstractMatrix(B)[1:sz1int,1:sz2int])
+            show(io, mimetype, AbstractMatrix(B)[1:sz1int,1:sz2int])
         end
     end
 end
