@@ -36,6 +36,18 @@
 			io = IOBuffer()
 			show(io, MIME"text/plain"(), D)
 			@test contains(String(take!(io)), dsum)
+
+			D = Derivative(Chebyshev())
+			dsum = ApproxFunBase.summarystr(D)
+			show(io, MIME"text/plain"(), D)
+			@test contains(String(take!(io)), dsum)
+		end
+		@testset "SubOperator" begin
+			D = Derivative(Chebyshev())
+			S = @view D[1:10, 1:10]
+			dsum = ApproxFunBase.summarystr(S)
+			show(io, MIME"text/plain"(), S)
+			@test contains(String(take!(io)), dsum)
 		end
 		@testset "QuotientSpace" begin
 			Q = QuotientSpace(Dirichlet(ConstantSpace(0..1)))

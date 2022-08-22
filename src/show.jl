@@ -69,7 +69,7 @@ function show(io::IO, mimetype::MIME"text/plain", @nospecialize(B::Operator); he
             BM=B[1:10,1:10]
 
             M=Matrix{Union{eltype(B), PrintShow}}(undef,11,11)
-            for I in CartesianIndices(BM)
+            for I in CartesianIndices(axes(BM))
                 M[I]=BM[Tuple(I)...] # not certain if indexing with CartesianIndex is implemented
             end
 
@@ -89,7 +89,7 @@ function show(io::IO, mimetype::MIME"text/plain", @nospecialize(B::Operator); he
             BM=B[1:10,1:sz2int]
 
             M=Matrix{Union{eltype(B), PrintShow}}(undef,11,sz2int)
-            for I in CartesianIndices(BM)
+            for I in CartesianIndices(axes(BM))
                 M[I]=BM[Tuple(I)...]
             end
             for k=1:sz2int
@@ -102,7 +102,7 @@ function show(io::IO, mimetype::MIME"text/plain", @nospecialize(B::Operator); he
             BM=B[1:sz1int,1:10]
 
             M=Matrix{Union{eltype(B), PrintShow}}(undef,sz1int,11)
-            for I in CartesianIndices(BM)
+            for I in CartesianIndices(axes(BM))
                 M[I]=BM[Tuple(I)...]
             end
             for k=1:sz1int
