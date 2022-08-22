@@ -181,12 +181,20 @@ function colstop(S::SubOperator{<:Any,<:Any,NTuple{2,UnitRange{Int}}},j::Integer
         min(n,findfirst(isequal(cs),kr))
     end
 end
-colstart(S::SubOperator{<:Any,<:Any,NTuple{2,UnitRange{Int}}},j::Integer) =
-    max(findfirst(parentindices(S)[1],colstart(parent(S),parentindices(S)[2][j])),1)
-rowstart(S::SubOperator{<:Any,<:Any,NTuple{2,UnitRange{Int}}},j::Integer) =
-    max(1,findfirst(parentindices(S)[2],rowstart(parent(S),parentindices(S)[1][j])))
-rowstop(S::SubOperator{<:Any,<:Any,NTuple{2,UnitRange{Int}}},j::Integer) =
-        findfirst(parentindices(S)[2],rowstop(parent(S),parentindices(S)[1][j]))
+function colstart(S::SubOperator{<:Any,<:Any,NTuple{2,UnitRange{Int}}},j::Integer)
+    cind = colstart(parent(S),parentindices(S)[2][j])
+    ind = findfirst(==(cind), parentindices(S)[1])
+    max(ind,1)
+end
+function rowstart(S::SubOperator{<:Any,<:Any,NTuple{2,UnitRange{Int}}},j::Integer)
+    rind = rowstart(parent(S),parentindices(S)[1][j])
+    ind = findfirst(==(rind), parentindices(S)[2],)
+    max(1,ind)
+end
+function rowstop(S::SubOperator{<:Any,<:Any,NTuple{2,UnitRange{Int}}},j::Integer)
+    ind = rowstop(parent(S),parentindices(S)[1][j])
+    findfirst(==(ind), parentindices(S)[2])
+end
 
 
 # blocks don't change
