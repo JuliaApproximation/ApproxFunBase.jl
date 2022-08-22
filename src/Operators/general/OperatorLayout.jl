@@ -82,6 +82,7 @@ domain(P::AdjointOperator)=domain(P.op)
 bandwidths(P::AdjointOperator) = reverse(bandwidths(P.op))
 
 getindex(P::AdjointOperator,k::Integer,j::Integer) = conj(P.op[j,k])
+getindex(P::AdjointOperator,inds...) = adjoint(P.op[reverse(inds)...])
 
 function BandedMatrix(S::SubOperator{T,TO}) where {T,TO<:AdjointOperator}
     kr,jr=parentindices(S)

@@ -40,13 +40,17 @@ Base.show(io::IO, N::PrintShow) = print(io, N.c)
 
 show(io::IO, B::Operator; kw...) = summary(io, B)
 
-function show(io::IO, ::MIME"text/plain", B::Operator;header::Bool=true)
+function show(io::IO, mimetype::MIME"text/plain", @nospecialize(B::Operator); header::Bool=true)
     header && summary(io, B)
     dsp = domainspace(B)
 
+    sz1_B, sz2_B = size(B)
+
+    iocompact = haskey(io, :compact) ? io : IOContext(io, :compact => true)
+
     if !isambiguous(domainspace(B)) && (eltype(B) <: Number)
-        println()
-        if isbanded(B) && isinf(size(B,1)) && isinf(size(B,2))
+        println(io)
+        if isbanded(B) && isinf(sz1_B) && isinf(sz2_B)
             BM=B[1:10,1:10]
 
             M=Matrix{Union{eltype(B), PrintShow}}(undef,11,11)
@@ -62,49 +66,56 @@ function show(io::IO, ::MIME"text/plain", B::Operator;header::Bool=true)
                 M[end,j]=PrintShow('⋱')
             end
 
-            print_array(io, M)
-        elseif isinf(size(B,1)) && isinf(size(B,2))
+            print_array(iocompact, M)
+        elseif isinf(sz1_B) && isinf(sz2_B)
             BM=B[1:10,1:10]
 
             M=Matrix{Union{eltype(B), PrintShow}}(undef,11,11)
-            for k=1:10,j=1:10
-                M[k,j]=BM[k,j]
+            for I in CartesianIndices(axes(BM))
+                M[I]=BM[Tuple(I)...] # not certain if indexing with CartesianIndex is implemented
             end
 
             M[1,end]=PrintShow('⋯')
             M[end,1]=PrintShow('⋮')
 
             for k=2:11
-                M[k,end]=M[end,k]=PrintShow('⋱')
+                M[k,end]=PrintShow('⋱')
+            end
+            for k=2:11
+                M[end,k]=PrintShow('⋱')
             end
 
-            print_array(io, M)
-        elseif isinf(size(B,1))
-            BM=B[1:10,1:size(B,2)]
+            print_array(iocompact, M)
+        elseif isinf(sz1_B)
+            sz2int = Int(sz2_B)::Int
+            BM=B[1:10,1:sz2int]
 
-            M=Matrix{Union{eltype(B), PrintShow}}(undef,11,size(B,2))
-            for k=1:10,j=1:size(B,2)
-                M[k,j]=BM[k,j]
+            M=Matrix{Union{eltype(B), PrintShow}}(undef,11,sz2int)
+            for I in CartesianIndices(axes(BM))
+                M[I]=BM[Tuple(I)...]
             end
-            for k=1:size(B,2)
+            for k=1:sz2int
                 M[end,k]=PrintShow('⋮')
             end
 
-            print_array(io, M)
-        elseif isinf(size(B,2))
-            BM=B[1:size(B,1),1:10]
+            print_array(iocompact, M)
+        elseif isinf(sz2_B)
+            sz1int = Int(sz1_B)::Int
+            BM=B[1:sz1int,1:10]
 
-            M=Matrix{Union{eltype(B), PrintShow}}(undef,size(B,1),11)
-            for k=1:size(B,1),j=1:10
-                M[k,j]=BM[k,j]
+            M=Matrix{Union{eltype(B), PrintShow}}(undef,sz1int,11)
+            for I in CartesianIndices(axes(BM))
+                M[I]=BM[Tuple(I)...]
             end
-            for k=1:size(B,1)
+            for k=1:sz1int
                 M[k,end]=PrintShow('⋯')
             end
 
-            print_array(io, M)
+            print_array(iocompact, M)
         else
-            print_array(io, AbstractMatrix(B)[1:size(B,1),1:size(B,2)])
+            sz1int = Int(sz1_B)::Int
+            sz2int = Int(sz2_B)::Int
+            print_array(iocompact, AbstractMatrix(B)[1:sz1int,1:sz2int])
         end
     end
 end

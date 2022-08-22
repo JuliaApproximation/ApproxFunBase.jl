@@ -1,4 +1,5 @@
 @testset "show" begin
+	io = IOBuffer()
 	@testset "Domain" begin
 		@testset "Segment" begin
 			s = Segment(0, 1)
@@ -31,16 +32,37 @@
 	@testset "Operator" begin
 		@testset "Derivative" begin
 			D = Derivative()
-			dsum = ApproxFunBase.summarystr(D)
-			@test repr(D) == dsum
-			io = IOBuffer()
+			summarystr = ApproxFunBase.summarystr(D)
+			@test repr(D) == summarystr
 			show(io, MIME"text/plain"(), D)
-			@test contains(String(take!(io)), dsum)
+			@test contains(String(take!(io)), summarystr)
+
+			D = Derivative(Chebyshev())
+			summarystr = ApproxFunBase.summarystr(D)
+			show(io, MIME"text/plain"(), D)
+			@test contains(String(take!(io)), summarystr)
+		end
+		@testset "SubOperator" begin
+			D = Derivative(Chebyshev())
+			S = @view D[1:10, 1:10]
+			summarystr = ApproxFunBase.summarystr(S)
+			show(io, MIME"text/plain"(), S)
+			@test contains(String(take!(io)), summarystr)
+		end
+		@testset "Evaluation" begin
+			E = Evaluation(Chebyshev(), 0)
+			summarystr = ApproxFunBase.summarystr(E)
+			show(io, MIME"text/plain"(), E)
+			@test contains(String(take!(io)), summarystr)
+
+			EA = Evaluation(Chebyshev(), 0)'
+			summarystr = ApproxFunBase.summarystr(EA)
+			show(io, MIME"text/plain"(), EA)
+			@test contains(String(take!(io)), summarystr)
 		end
 		@testset "QuotientSpace" begin
 			Q = QuotientSpace(Dirichlet(ConstantSpace(0..1)))
 			@test startswith(repr(Q), "ConstantSpace(0..1) /")
-			io = IOBuffer()
 			show(io, MIME"text/plain"(), Q)
 			s = String(take!(io))
 			@test startswith(s, "ConstantSpace(0..1) /")

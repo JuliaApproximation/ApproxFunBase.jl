@@ -2,6 +2,7 @@ using ApproxFunBase, Test
 import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, Vec, checkpoints
 using ApproxFunOrthogonalPolynomials
 using StaticArrays
+using BandedMatrices: rowrange, colrange
 
 @testset "Spaces" begin
     @testset "PointSpace" begin
@@ -339,6 +340,13 @@ using StaticArrays
             end
             @test Derivative(Chebyshev()) != Derivative(Chebyshev(), 2)
             @test Derivative(Chebyshev()) != Derivative(Legendre())
+        end
+
+        @testset "SubOperator" begin
+            D = Derivative(Chebyshev())
+            S = @view D[1:10, 1:10]
+            @test rowrange(S, 1) == 2:2
+            @test colrange(S, 2) == 1:1
         end
     end
 end
