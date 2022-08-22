@@ -343,14 +343,16 @@ using BandedMatrices: rowrange, colrange
             for d in Any[(), (0..1,)]
                 for ST in Any[Chebyshev, Legendre,
                         (x...) -> Jacobi(2,2,x...), (x...) -> Jacobi(1.5,2.5,x...)]
-                    S = ST(d...)
-                    @test Derivative(S) == Derivative(S,1)
-                    @test Derivative(S)^2 == Derivative(S,2)
-                    f = Fun(x->x^3, S)
-                    @test Derivative(S) * f ≈ Fun(x->3x^2, S)
-                    @test Derivative(S,2) * f ≈ Fun(x->6x, S)
-                    @test Derivative(S,3) * f ≈ Fun(x->6, S)
-                    @test Derivative(S,4) * f ≈ zeros(S)
+                    S1 = ST(d...)
+                    for S in [S1, NormalizedPolynomialSpace(S1)]
+                        @test Derivative(S) == Derivative(S,1)
+                        @test Derivative(S)^2 == Derivative(S,2)
+                        f = Fun(x->x^3, S)
+                        @test Derivative(S) * f ≈ Fun(x->3x^2, S)
+                        @test Derivative(S,2) * f ≈ Fun(x->6x, S)
+                        @test Derivative(S,3) * f ≈ Fun(x->6, S)
+                        @test Derivative(S,4) * f ≈ zeros(S)
+                    end
                 end
             end
             @test Derivative(Chebyshev()) != Derivative(Chebyshev(), 2)
