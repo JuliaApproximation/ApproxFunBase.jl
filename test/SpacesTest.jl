@@ -362,6 +362,7 @@ using BandedMatrices: rowrange, colrange
             S = @view D[1:10, 1:10]
             @test rowrange(S, 1) == 2:2
             @test colrange(S, 2) == 1:1
+            @test (@inferred BandedMatrix(S)) == (@inferred Matrix(S))
         end
     end
 end
