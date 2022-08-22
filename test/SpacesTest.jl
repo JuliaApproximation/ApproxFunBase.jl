@@ -2,7 +2,7 @@ using ApproxFunBase, Test
 import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, Vec, checkpoints
 using ApproxFunOrthogonalPolynomials
 using StaticArrays
-using BandedMatrices: rowrange, colrange
+using BandedMatrices: rowrange, colrange, BandedMatrix
 
 @testset "Spaces" begin
     @testset "PointSpace" begin
