@@ -188,7 +188,7 @@ function colstart(S::SubOperator{<:Any,<:Any,NTuple{2,UnitRange{Int}}},j::Intege
 end
 function rowstart(S::SubOperator{<:Any,<:Any,NTuple{2,UnitRange{Int}}},j::Integer)
     rind = rowstart(parent(S),parentindices(S)[1][j])
-    ind = findfirst(==(rind), parentindices(S)[2],)
+    ind = findfirst(==(rind), parentindices(S)[2])
     max(1,ind)
 end
 function rowstop(S::SubOperator{<:Any,<:Any,NTuple{2,UnitRange{Int}}},j::Integer)
