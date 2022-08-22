@@ -2,7 +2,7 @@ using ApproxFunBase, Test
 import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, Vec, checkpoints
 using ApproxFunOrthogonalPolynomials
 using StaticArrays
-using BandedMatrices: rowrange, colrange
+using BandedMatrices: rowrange, colrange, BandedMatrix
 
 @testset "Spaces" begin
     @testset "PointSpace" begin
@@ -364,6 +364,7 @@ using BandedMatrices: rowrange, colrange
             S = @view D[1:10, 1:10]
             @test rowrange(S, 1) == 2:2
             @test colrange(S, 2) == 1:1
+            @test (@inferred BandedMatrix(S)) == (@inferred Matrix(S))
         end
     end
 end

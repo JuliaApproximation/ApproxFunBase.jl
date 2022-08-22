@@ -404,7 +404,7 @@ for TYP in (:Matrix, :BandedMatrix, :RaggedMatrix)
             BA = strictconvert(RT, P.ops[m][krl[m,1]:krl[m,2],krl[m+1,1]:krl[m+1,2]]) * BA
         end
 
-        RT(BA)::RT2
+        RT(BA)
     end
 end
 
