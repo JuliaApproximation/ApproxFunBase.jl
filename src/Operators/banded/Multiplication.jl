@@ -151,9 +151,7 @@ function transformtimes(f::Fun,g::Fun, n = ncoefficients(f) + ncoefficients(g) -
     iszero(ncoefficients(f)) && return f
     iszero(ncoefficients(g)) && return g
     f2,g2 = pad(f,n), pad(g,n)
-    v = values(f2)
-    v .*= values(g2)
-    hc = transform(sp, v)
+    hc = transform(sp, values(f2) .* values(g2))
     chop!(Fun(sp,hc),10eps(eltype(hc)))
 end
 

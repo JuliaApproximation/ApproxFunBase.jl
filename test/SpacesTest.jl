@@ -322,6 +322,12 @@ using BandedMatrices: rowrange, colrange, BandedMatrix
             @test values(f2) ≈ values(f3)
         end
 
+        @testset "multiplication of Funs" begin
+            f = Fun(Chebyshev(), Float64[1:101;])
+            g = Fun(Chebyshev(), Float64[1:101;]*im)
+            @test f(0.5)*g(0.5) ≈ (f*g)(0.5)
+        end
+
         @testset "Multivariate" begin
             @testset for S in Any[Chebyshev(), Legendre()]
                 f = Fun(x->ones(2,2), S)
