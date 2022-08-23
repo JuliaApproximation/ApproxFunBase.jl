@@ -229,13 +229,7 @@ end
 
 function pad(f::AbstractVector, n::Integer)
 	if n > length(f)
-        ret=similar(f, n)
-        ret[1:length(f)]=f
-        z = length(f) > 0 ? zero(f[1]) : zero(eltype(f))
-        for j=length(f)+1:n
-           ret[j] = z
-        end
-        ret
+        pad!(copy(f), n)
 	else
         f[1:n]
 	end

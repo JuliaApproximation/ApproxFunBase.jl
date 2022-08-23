@@ -42,6 +42,15 @@ import ApproxFunBase: ∞
         # check that unknown types don't lead to a stack overflow
         @test_throws MethodError ApproxFunBase.dot(DotTester())
     end
+    @testset "pad" begin
+        f = Fun()
+        zf = zero(f)
+        @test (@inferred pad([f], 3)) == [f, zf, zf]
+        @test (@inferred pad([f, zf], 1)) == [f]
+        v = [f, zf]
+        @test @inferred pad!(v, 1) == [f]
+        @test length(v) == 1
+    end
 
     # TODO: Tensorizer tests
 end
