@@ -221,16 +221,18 @@ function pad!(f::AbstractVector, n::Integer)
 	resize!(f,n)
 	if n > m
         z = m > 0 ? zero(f[1]) : zero(eltype(f))
-		f[m+1:n] .= z
+        for i in m+1:n
+            f[i] = z
+        end
 	end
     f
 end
 
-pad(f::AbstractVector, n::Integer) = pad!(copy(f), n)
+pad(f::AbstractVector, n::Integer) = pad!(Vector(f), n)
 
 function pad(f::AbstractVector{Any},n::Integer)
 	if n > length(f)
-        Any[f...,zeros(n - length(f))...]
+        Any[f; zeros(n - length(f))]
 	else
         f[1:n]
 	end

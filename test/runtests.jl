@@ -45,12 +45,14 @@ using ApproxFunOrthogonalPolynomials
     end
     @testset "pad" begin
         @testset "float" begin
-            a = rand(3)
-            b = @inferred pad(a, 4)
-            @testset length(b) == 4
-            @test @view(b[1:3]) == a
-            @test b[end] == 0
-            @test pad(a, 2) == @view(a[1:2])
+            @testset for T in [Float64, Any]
+                a = T[1,2,3]
+                b = @inferred pad(a, 4)
+                @testset length(b) == 4
+                @test @view(b[1:3]) == a
+                @test b[end] == 0
+                @test pad(a, 2) == @view(a[1:2])
+            end
         end
         @testset "Fun" begin
             f = Fun()
