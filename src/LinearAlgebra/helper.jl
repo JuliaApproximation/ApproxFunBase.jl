@@ -226,14 +226,7 @@ function pad!(f::AbstractVector, n::Integer)
     f
 end
 
-
-function pad(f::AbstractVector, n::Integer)
-	if n > length(f)
-        pad!(copy(f), n)
-	else
-        f[1:n]
-	end
-end
+pad(f::AbstractVector, n::Integer) = pad!(copy(f), n)
 
 function pad(f::AbstractVector{Any},n::Integer)
 	if n > length(f)

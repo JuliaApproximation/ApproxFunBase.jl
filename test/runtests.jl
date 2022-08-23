@@ -1,5 +1,6 @@
 using ApproxFunBase, LinearAlgebra, Random, Test
 import ApproxFunBase: ∞
+using ApproxFunOrthogonalPolynomials
 
 @testset "Helper" begin
     @testset "interlace" begin
@@ -43,13 +44,23 @@ import ApproxFunBase: ∞
         @test_throws MethodError ApproxFunBase.dot(DotTester())
     end
     @testset "pad" begin
-        f = Fun()
-        zf = zero(f)
-        @test (@inferred pad([f], 3)) == [f, zf, zf]
-        @test (@inferred pad([f, zf], 1)) == [f]
-        v = [f, zf]
-        @test @inferred pad!(v, 1) == [f]
-        @test length(v) == 1
+        @testset "float" begin
+            a = rand(3)
+            b = @inferred pad(a, 4)
+            @testset length(b) == 4
+            @test @view(b[1:3]) == a
+            @test b[end] == 0
+            @test pad(a, 2) == @view(a[1:2])
+        end
+        @testset "Fun" begin
+            f = Fun()
+            zf = zero(f)
+            @test (@inferred pad([f], 3)) == [f, zf, zf]
+            @test (@inferred pad([f, zf], 1)) == [f]
+            v = [f, zf]
+            @test @inferred pad!(v, 1) == [f]
+            @test length(v) == 1
+        end
     end
 
     # TODO: Tensorizer tests
