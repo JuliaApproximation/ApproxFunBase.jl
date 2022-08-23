@@ -216,31 +216,23 @@ function unsafe_resize!(W::AbstractMatrix,n::Integer,m::Integer)
 end
 
 
-function pad!(f::AbstractVector{T},n::Integer) where T
-	if n > length(f)
-		append!(f,zeros(T,n - length(f)))
-	else
-		resize!(f,n)
+function pad!(f::AbstractVector, n::Integer)
+    m = length(f)
+	resize!(f,n)
+	if n > m
+        z = m > 0 ? zero(f[1]) : zero(eltype(f))
+        for i in m+1:n
+            f[i] = z
+        end
 	end
+    f
 end
 
-
-function pad(f::AbstractVector{T},n::Integer) where T
-	if n > length(f)
-	   ret=Vector{T}(undef, n)
-	   ret[1:length(f)]=f
-	   for j=length(f)+1:n
-	       ret[j]=zero(T)
-	   end
-       ret
-	else
-        f[1:n]
-	end
-end
+pad(f::AbstractVector, n::Integer) = pad!(Vector(f), n)
 
 function pad(f::AbstractVector{Any},n::Integer)
 	if n > length(f)
-        Any[f...,zeros(n - length(f))...]
+        Any[f; zeros(n - length(f))]
 	else
         f[1:n]
 	end
