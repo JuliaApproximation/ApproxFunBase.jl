@@ -1,5 +1,3 @@
-export basis
-
 struct OneHotVector{T} <: AbstractVector{T}
 	n :: Int
 	len :: Int
