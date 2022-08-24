@@ -1,4 +1,4 @@
-export OneHotVector
+export basis
 
 struct OneHotVector{T} <: AbstractVector{T}
 	n :: Int
@@ -10,3 +10,4 @@ Base.length(v::OneHotVector) = v.len
 function Base.getindex(v::OneHotVector{T}, i::Int) where {T}
 	i == v.n ? one(T) : zero(T)
 end
+basis(sp, k) = Fun(sp, OneHotVector(k))

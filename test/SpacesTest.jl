@@ -325,8 +325,9 @@ using BandedMatrices: rowrange, colrange, BandedMatrix
                 for n in [1, 3, 10_000]
                     f = Fun(Chebyshev(), [zeros(n-1); 1])
                     g = Fun(Chebyshev(), OneHotVector(n))
-                    @test f == g
-                    @test f(0.5) == g(0.5)
+                    h = basis(Chebyshev(), n)
+                    @test f == g == h
+                    @test f(0.5) == g(0.5) == h(0.5)
                 end
             end
         end
