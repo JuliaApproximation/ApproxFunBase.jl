@@ -107,6 +107,7 @@ strictconvert(T::Type, x) = convert(T, x)::T
 
 include("LinearAlgebra/LinearAlgebra.jl")
 include("Fun.jl")
+include("onehotvector.jl")
 include("Domains/Domains.jl")
 include("Multivariate/Multivariate.jl")
 include("Operators/Operator.jl")

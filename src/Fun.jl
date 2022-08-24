@@ -45,7 +45,7 @@ function coefficients(f::Fun,msp::Space)
     #zero can always be converted
     fc = f.coefficients
     if ncoefficients(f) == 0 || (ncoefficients(f) == 1 && fc[1] == 0)
-        fc
+        convert(Vector, fc)
     else
         coefficients(fc, space(f), msp)
     end

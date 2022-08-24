@@ -320,6 +320,15 @@ using BandedMatrices: rowrange, colrange, BandedMatrix
             f3 = Fun(space(f), Float64[1:4;])
             @test newvals(f2) ≈ values(f3)
             @test values(f2) ≈ values(f3)
+
+            @testset "OneHotVector" begin
+                for n in [1, 3, 10_000]
+                    f = Fun(Chebyshev(), [zeros(n-1); 1])
+                    g = ApproxFunBase.basisfunction(Chebyshev(), n)
+                    @test f == g
+                    @test f(0.5) == g(0.5)
+                end
+            end
         end
 
         @testset "multiplication of Funs" begin
