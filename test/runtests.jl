@@ -64,6 +64,26 @@ using ApproxFunOrthogonalPolynomials
             @test length(v) == 1
         end
     end
+    @testset "nocat" begin
+        D = Derivative()
+        for v in Any[
+                ApproxFunBase.@nocat([D; D]),
+                ApproxFunBase.@nocat(vcat(D, D))
+                ]
+            @test size(v) == (2,)
+            @test all(==(D), v)
+        end
+        for v in Any[
+                ApproxFunBase.@nocat([D D]),
+                ApproxFunBase.@nocat(hcat(D, D))
+                ]
+            @test size(v) == (1,2)
+            @test all(==(D), v)
+        end
+        v = ApproxFunBase.@nocat(hvcat((2,2), D, D, D, D))
+        @test size(v) == (2,2)
+        @test all(==(D), v)
+    end
 
     # TODO: Tensorizer tests
 end
