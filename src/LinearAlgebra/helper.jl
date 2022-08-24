@@ -616,15 +616,29 @@ length(A::CachedIterator) = length(A.iterator)
 vnocat(A...) = Base.vect(A...)
 hnocat(A...) = Base.typed_hcat(mapreduce(typeof,promote_type,A),A...)
 hvnocat(rows,A...) = Base.typed_hvcat(mapreduce(typeof,promote_type,A),rows,A...)
-macro nocat(x)
-    ex = expand(x)
-    if ex.args[1] == :vcat
-        ex.args[1] = :(ApproxFunBase.vnocat)
-    elseif ex.args[1] == :hcat
-        ex.args[1] = :(ApproxFunBase.hnocat)
+macro nocat(ex)
+    head = ex.head
+    ex.head = :call
+    if head == :vcat
+        fn = Expr(:., :ApproxFunBase, QuoteNode(:vnocat))
+        insert!(ex.args, 1, fn)
+    elseif head == :call && ex.args[1] == :vcat
+        fn = Expr(:., :ApproxFunBase, QuoteNode(:vnocat))
+        ex.args[1] = fn
+    elseif head == :hcat
+        fn = Expr(:., :ApproxFunBase, QuoteNode(:hnocat))
+        insert!(ex.args, 1, fn)
+    elseif head == :call && ex.args[1] == :hcat
+        fn = Expr(:., :ApproxFunBase, QuoteNode(:hnocat))
+        ex.args[1] = fn
+    elseif head == :hvcat
+        fn = Expr(:., :ApproxFunBase, QuoteNode(:hvnocat))
+        insert!(ex.args, 1, fn)
+    elseif head == :call && ex.args[1] == :hvcat
+        fn = Expr(:., :ApproxFunBase, QuoteNode(:hvnocat))
+        ex.args[1] = fn
     else
-        @assert ex.args[1] == :hvcat
-        ex.args[1] = :(ApproxFunBase.hvnocat)
+        throw(ArgumentError("@nocat can only be used with vcat/hcat/hvcat expressions"))
     end
     esc(ex)
 end
