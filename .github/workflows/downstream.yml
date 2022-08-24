@@ -23,7 +23,6 @@ jobs:
           - {repo: ApproxFunOrthogonalPolynomials.jl, group: JuliaApproximation}
           - {repo: ApproxFunFourier.jl, group: JuliaApproximation}
           - {repo: ApproxFunSingularities.jl, group: JuliaApproximation}
-          - {repo: SingularIntegralEquations.jl, group: JuliaApproximation}
 
     steps:
       - uses: actions/checkout@v2
