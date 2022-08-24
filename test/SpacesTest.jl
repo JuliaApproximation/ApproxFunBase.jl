@@ -324,7 +324,7 @@ using BandedMatrices: rowrange, colrange, BandedMatrix
             @testset "OneHotVector" begin
                 for n in [1, 3, 10_000]
                     f = Fun(Chebyshev(), [zeros(n-1); 1])
-                    g = ApproxFunBase.basis(Chebyshev(), n)
+                    g = ApproxFunBase.basisfunction(Chebyshev(), n)
                     @test f == g
                     @test f(0.5) == g(0.5)
                 end
