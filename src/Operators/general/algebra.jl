@@ -4,26 +4,27 @@ export PlusOperator, TimesOperator, mul_coefficients
 
 
 
-struct PlusOperator{T,BI} <: Operator{T}
+struct PlusOperator{T,BI,SZ} <: Operator{T}
     ops::Vector{Operator{T}}
     bandwidths::BI
-    function PlusOperator{T,BI}(opsin::Vector{Operator{T}},bi::BI) where {T,BI}
-        n,m=size(first(opsin))
-        for k=2:length(opsin)
-            @assert size(opsin[k],1)==n && size(opsin[k],2)==m
-        end
-        new{T,BI}(opsin,bi)
+    sz :: SZ
+    function PlusOperator{T,BI,SZ}(opsin::Vector{Operator{T}},bi::BI,sz::SZ) where {T,BI,SZ}
+        all(x -> size(x)==sz, opsin) || throw("sizes of operators are incompatible")
+        new{T,BI,SZ}(opsin,bi,sz)
     end
 end
 
-_size(::PlusOperator{<:Any, NTuple{2,InfiniteCardinal{0}}}, k) = InfiniteCardinal{0}()
-_size(P, k) = size(first(P.ops),k)
-Base.size(P::PlusOperator,k::Integer) = _size(P, k)
+size(P::PlusOperator) = P.sz
+size(P::PlusOperator, k::Integer) = P.sz[k]
 
 bandwidthsmax(ops) = mapreduce(bandwidths, (t1,t2) -> max.(t1, t2), ops, init = (-720, -720) #= approximate (-∞,-∞) =#)
 
-PlusOperator(opsin::Vector{Operator{T}},bi::Tuple{Any,Any} = bandwidthsmax(opsin)) where {T} =
-    PlusOperator{T,typeof(bi)}(opsin,bi)
+function PlusOperator(opsin::Vector{Operator{T}},
+        bi::Tuple{Any,Any} = bandwidthsmax(opsin),
+        sz::Tuple{Any,Any} = size(first(opsin)),
+        ) where {T}
+    PlusOperator{T,typeof(bi),typeof(sz)}(opsin,bi,sz)
+end
 
 bandwidths(P::PlusOperator) = P.bandwidths
 
@@ -44,15 +45,17 @@ function convert(::Type{Operator{T}},P::PlusOperator) where T
     if T==eltype(P)
         P
     else
-        PlusOperator{T,typeof(P.bandwidths)}(Vector{Operator{T}}(P.ops),P.bandwidths)
+        PlusOperator{T,typeof(P.bandwidths),typeof(P.sz)}(
+            Vector{Operator{T}}(P.ops),P.bandwidths,P.sz)
     end
 end
 
-function promoteplus(opsin::Vector{Operator{T}}) where T
+function promoteplus(opsin::Vector{<:Operator}, sz = size(first(opsin)))
     ops = copy(opsin)
     # prune zero ops
     filter!(!iszeroop, ops)
-    PlusOperator(promotespaces(ops))
+    v = promotespaces(ops)
+    PlusOperator(v, bandwidthsmax(v), sz)
 end
 
 for OP in (:domainspace,:rangespace)
@@ -70,12 +73,12 @@ _extractops(A::PlusOperator, ::typeof(+)) = A.ops
 
 function +(A::Operator,B::Operator)
     v = Operator{_promote_eltypeof(A,B)}[_extractops(A, +); _extractops(B, +)]
-    promoteplus(v)
+    promoteplus(v, size(A))
 end
 # Optimization for 3-term sum
 function +(A::Operator,B::Operator,C::Operator)
     v = Operator{_promote_eltypeof(A,B,C)}[_extractops(A,+); _extractops(B, +); _extractops(C, +)]
-    promoteplus(v)
+    promoteplus(v, size(A))
 end
 
 Base.stride(P::PlusOperator)=mapreduce(stride,gcd,P.ops)
@@ -205,11 +208,12 @@ BLAS.axpy!(α,S::SubOperator{T,OP},A::AbstractMatrix) where {T,OP<:ConstantTimes
 
 
 
-struct TimesOperator{T,BI} <: Operator{T}
+struct TimesOperator{T,BI,SZ} <: Operator{T}
     ops::Vector{Operator{T}}
     bandwidths::BI
+    sz::SZ
 
-    function TimesOperator{T,BI}(ops::Vector{Operator{T}},bi::BI) where {T,BI}
+    function TimesOperator{T,BI,SZ}(ops::Vector{Operator{T}},bi::BI,sz::SZ) where {T,BI,SZ}
         # check compatible
         for k=1:length(ops)-1
             size(ops[k],2) == size(ops[k+1],1) || throw(ArgumentError("incompatible operator sizes"))
@@ -227,7 +231,7 @@ struct TimesOperator{T,BI} <: Operator{T}
             newops = ops
         end
 
-        new{T,BI}(newops,bi)
+        new{T,BI,SZ}(newops,bi,sz)
     end
 end
 
@@ -239,18 +243,24 @@ __bandwidthssum(A::NTuple{2,InfiniteCardinal{0}}, B) = A
 __bandwidthssum(A, B::NTuple{2,InfiniteCardinal{0}}) = B
 __bandwidthssum(A, B) = reduce((t1, t2) -> t1 .+ t2, (A, B), init = (0,0))
 
-TimesOperator(ops::Vector{Operator{T}},bi::Tuple{N1,N2}) where {T,N1,N2} =
-    TimesOperator{T,typeof(bi)}(ops,bi)
+_timessize(ops) = (size(first(ops),1), size(last(ops),2))
+function TimesOperator(ops::Vector{Operator{T}},
+        bi::Tuple{Any,Any} = bandwidthssum(ops),
+        sz::Tuple{Any,Any} = _timessize(ops)) where {T}
+    TimesOperator{T,typeof(bi),typeof(sz)}(ops,bi,sz)
+end
 
-TimesOperator(ops::Vector{Operator{T}}) where {T} = TimesOperator(ops,bandwidthssum(ops))
-TimesOperator(ops::Vector{OT}) where {OT<:Operator} =
-    TimesOperator(strictconvert(Vector{Operator{eltype(OT)}},ops),bandwidthssum(ops))
+function TimesOperator(ops::Vector{OT}) where {OT<:Operator}
+    TimesOperator(strictconvert(
+        Vector{Operator{eltype(OT)}},ops),
+        bandwidthssum(ops), _timessize(ops))
+end
 
 _extractops(A::TimesOperator, ::typeof(*)) = A.ops
 
 function TimesOperator(A::Operator,B::Operator)
     v = Operator{_promote_eltypeof(A,B)}[_extractops(A, *); _extractops(B, *)]
-    TimesOperator(v, _bandwidthssum(A, B))
+    TimesOperator(v, _bandwidthssum(A, B), _timessize((A,B)))
 end
 
 
@@ -260,13 +270,14 @@ function convert(::Type{Operator{T}},P::TimesOperator) where T
     if T==eltype(P)
         P
     else
-        TimesOperator(Operator{T}[P.ops;])
+        TimesOperator(strictconvert(Vector{Operator{T}}, P.ops), bandwidths(P), size(P))
     end
 end
 
 
 
-function promotetimes(opsin::Vector{<:Operator}, dsp = domainspace(last(opsin)))
+function promotetimes(opsin::Vector{<:Operator}, dsp = domainspace(last(opsin)),
+        sz = _timessize(opsin))
 
     @assert length(opsin) > 1 "need at least 2 operators"
     ops=Vector{Operator{_promote_eltypeof(opsin)}}(undef,0)
@@ -283,7 +294,7 @@ function promotetimes(opsin::Vector{<:Operator}, dsp = domainspace(last(opsin)))
             end
         end
     end
-    TimesOperator(reverse!(ops))
+    TimesOperator(reverse!(ops), bandwidthssum(ops), sz)
 end
 
 domainspace(P::TimesOperator)=domainspace(last(P.ops))
@@ -291,6 +302,8 @@ rangespace(P::TimesOperator)=rangespace(first(P.ops))
 
 domain(P::TimesOperator)=commondomain(P.ops)
 
+size(P::TimesOperator, k::Integer) = P.sz[k]
+size(P::TimesOperator) = P.sz
 
 bandwidths(P::TimesOperator) = P.bandwidths
 
@@ -470,7 +483,7 @@ end
 for OP in (:(adjoint),:(transpose))
     @eval $OP(A::TimesOperator) = TimesOperator(
         strictconvert(Vector{Operator{eltype(A)}}, reverse!(map($OP,A.ops))),
-        reverse(bandwidths(A)))
+        reverse(bandwidths(A)), reverse(size(A)))
 end
 
 function *(A::Operator,B::Operator)
@@ -480,7 +493,7 @@ function *(A::Operator,B::Operator)
         promotedomainspace(strictconvert(Number,B)*A,domainspace(B))
     else
         promotetimes([_extractops(A, *); _extractops(B, *)],
-            domainspace(B))
+            domainspace(B), _timessize((A,B)))
     end
 end
 
@@ -503,7 +516,7 @@ end
 *(A::Conversion,B::Operator) =
     isconstop(B) ? promotedomainspace(strictconvert(Number,B)*A,domainspace(B)) : TimesOperator(A,B)
 
-^(A::Operator, p::Integer) = Base.power_by_squaring(A, p)
+^(A::Operator, p::Integer) = foldr(*, fill(A, p))
 
 
 +(A::Operator) = A

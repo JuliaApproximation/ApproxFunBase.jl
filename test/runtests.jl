@@ -203,6 +203,9 @@ end
             @test T * M == M * T == M * M * M
             @test TT == T * T == M * M * M * M
             @test (@inferred adjoint(T)) == adjoint(M) * adjoint(M)
+
+            M = Multiplication(f, sp)
+            @test M^2 == M * M == (T : sp)
         end
         @testset "plus operator" begin
             c = [1,2,3]
