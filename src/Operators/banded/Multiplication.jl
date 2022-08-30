@@ -23,7 +23,7 @@ function ConcreteMultiplication(f::Fun{D,T},sp::Space) where {D,T}
         error("Domain mismatch: cannot multiply function on $(domain(f)) to function on $(domain(sp))")
     end
     V = promote_type(T,rangetype(sp))
-    ConcreteMultiplication{D,typeof(sp),V}(strictconvert(Fun{D,V},chop(f,40*eps(cfstype(f)))),sp)
+    ConcreteMultiplication(V,f,sp)
 end
 
 ==(A::ConcreteMultiplication, B::ConcreteMultiplication) = (A.f == B.f) && (A.space == B.space)
