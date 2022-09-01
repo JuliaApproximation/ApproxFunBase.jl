@@ -15,6 +15,7 @@ import AbstractFFTs: Plan, fft, ifft
 import FFTW: plan_r2r!, fftwNumber, REDFT10, REDFT01, REDFT00, RODFT00, R2HC, HC2R,
                 r2r!, r2r,  plan_fft, plan_ifft, plan_ifft!, plan_fft!
 
+import Combinatorics: multiexponents
 
 import Base: values, convert, getindex, setindex!, *, +, -, ==, <, <=, >, |, !, !=, eltype, iterate,
                 >=, /, ^, \, ∪, transpose, size, tail, broadcast, broadcast!, copyto!, copy, to_index, (:),

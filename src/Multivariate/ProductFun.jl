@@ -5,6 +5,14 @@
 
 export ProductFun
 
+## TODO:
+## In a newer version, an abstract type of ProducFun is needed, where different implementations are possible
+## however, refactoring this is a lot of effort...
+struct TensorFun{S<:UnivariateSpace, d, SS<:TensorSpace{NTuple{d, S}}, T<:Number} <: MultivariateFun{T, d}
+    space::SS
+    tensor::AbstractArray{T, d}
+end
+
 struct ProductFun{S<:UnivariateSpace,V<:UnivariateSpace,SS<:AbstractProductSpace,T} <: BivariateFun{T}
     coefficients::Vector{VFun{S,T}}     # coefficients are in x
     space::SS
@@ -33,6 +41,15 @@ function ProductFun(cfs::AbstractMatrix{T},sp::AbstractProductSpace{Tuple{S,V},D
         ret=VFun{S,T}[Fun(columnspace(sp,k),cfs[:,k]) for k=1:size(cfs,2)]
         ProductFun{S,V,typeof(sp),T}(ret,sp)
     end
+end
+
+## TODO: This Product Fun actually does not return a productfun, dirty but was easiest to implement. Probably an abstract type of ProductFuns
+# is needed in the future.
+function ProductFun(cfs::AbstractArray{T, d},sp::AbstractProductSpace{NTuple{d, S},DD}) where {S<:UnivariateSpace,T<:Number,d,DD}
+
+    @assert d>2 # for d==2, use function above
+
+    TensorFun{S, d, typeof(sp), T}(sp, cfs) # This is not a ProductFun
 end
 
 ## Construction in a ProductSpace via a Vector of Funs
@@ -174,7 +191,8 @@ function coefficients(f::ProductFun,ox::Space,oy::Space)
 end
 
 (f::ProductFun)(x,y) = evaluate(f,x,y)
-(f::ProductFun)(x,y,z) = evaluate(f,x,y,z)
+
+(f::TensorFun)(x...) = evaluate(f, x...)
 
 coefficients(f::ProductFun,ox::TensorSpace) = coefficients(f,ox[1],ox[2])
 
@@ -209,7 +227,6 @@ canonicalevaluate(f::ProductFun,xx::AbstractVector,yy::AbstractVector) =
 
 
 evaluate(f::ProductFun,x,y) = canonicalevaluate(f,tocanonical(f,x,y)...)
-evaluate(f::ProductFun,x,y,z) = canonicalevaluate(f,tocanonical(f,x,y,z)...)
 
 # TensorSpace does not use map
 evaluate(f::ProductFun{S,V,SS,T},x::Number,::Colon) where {S<:UnivariateSpace,V<:UnivariateSpace,SS<:TensorSpace,T} =
@@ -217,6 +234,29 @@ evaluate(f::ProductFun{S,V,SS,T},x::Number,::Colon) where {S<:UnivariateSpace,V<
 
 evaluate(f::ProductFun{S,V,SS,T},x::Number,y::Number) where {S<:UnivariateSpace,V<:UnivariateSpace,SS<:TensorSpace,T} =
     evaluate(f,x,:)(y)
+
+
+# higher dimensional TensorSpace evaluation
+function evaluate(f::TensorFun{S, d, SS, T},x...) where {S<:UnivariateSpace, d, SS, T}
+    highest_order = max(size(f.tensor)...)
+
+    # this could be lazy evaluated for the sparse case
+    A = [Fun(f.space.spaces[i], [zeros(k);1])(x[i]) for k=0:highest_order, i=1:d]
+    result::T = 0
+    @inbounds @simd for i in CartesianIndices(f.tensor)
+        tmp = f.tensor[i]
+        if tmp != 0
+            tmp_res = 1
+            for k=1:d
+                tmp_res *= A[i[k], k]
+            end
+            result += tmp * tmp_res
+        else
+            # do nothing
+        end
+    end
+    return result
+end
 
 
 evaluate(f::ProductFun,x) = evaluate(f,x...)
