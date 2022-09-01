@@ -381,5 +381,14 @@ using BandedMatrices: rowrange, colrange, BandedMatrix
             @test colrange(S, 2) == 1:1
             @test (@inferred BandedMatrix(S)) == (@inferred Matrix(S))
         end
+
+        @testset "inplace ldiv" begin
+            @testset for T in [Float32, Float64, ComplexF32, ComplexF64]
+                v = rand(T, 4)
+                v2 = copy(v)
+                ApproxFunBase.ldiv_coefficients!(Conversion(Chebyshev(), Ultraspherical(1)), v)
+                @test ApproxFunBase.ldiv_coefficients(Conversion(Chebyshev(), Ultraspherical(1)), v2) ≈ v
+            end
+        end
     end
 end
