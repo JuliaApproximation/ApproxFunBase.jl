@@ -384,6 +384,7 @@ using BandedMatrices: rowrange, colrange, BandedMatrix
 
         @testset "istriu/istril" begin
             for D in Any[Derivative(Chebyshev()),
+                    Conversion(Chebyshev(), Legendre()),
                     Multiplication(Fun(Chebyshev()), Chebyshev())]
                 D2 = D[1:3, 1:3]
                 for f in Any[istriu, istril]
