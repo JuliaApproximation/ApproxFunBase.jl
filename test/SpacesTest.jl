@@ -381,5 +381,16 @@ using BandedMatrices: rowrange, colrange, BandedMatrix
             @test colrange(S, 2) == 1:1
             @test (@inferred BandedMatrix(S)) == (@inferred Matrix(S))
         end
+
+        @testset "istriu/istril" begin
+            for D in Any[Derivative(Chebyshev()),
+                    Multiplication(Fun(Chebyshev()), Chebyshev())]
+                D2 = D[1:3, 1:3]
+                for f in Any[istriu, istril]
+                    @test f(D) == f(D2)
+                    @test f(D') == f(D2')
+                end
+            end
+        end
     end
 end
