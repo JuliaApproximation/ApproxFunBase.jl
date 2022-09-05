@@ -403,5 +403,26 @@ using LinearAlgebra
                 @test C[row, col] == D[row, col]
             end
         end
+
+        @testset "PartialInverseOperator" begin
+            @testset "sanity check" begin
+                A = UpperTriangular(rand(10, 10))
+                B = inv(A)
+                for I in CartesianIndices(B)
+                    @test B[I] ≈ ApproxFunBase._getindexinv(A, Tuple(I)..., UpperTriangular)
+                end
+            end
+            C = Conversion(Chebyshev(), Ultraspherical(1))
+            P = PartialInverseOperator(C, (0, 6))
+            Iapprox = (P * C)[1:10, 1:10]
+            @test all(isone, diag(Iapprox))
+            for k in axes(Iapprox,1), j in k + 1:min(k + bandwidths(P,2), size(Iapprox, 2))
+                @test Iapprox[k,j] ≈ 0 atol=eps(eltype(Iapprox))
+            end
+            B = AbstractMatrix(P[1:10, 1:10])
+            @testset for I in CartesianIndices(B)
+                @test B[I] ≈ P[Tuple(I)...] rtol=1e-8 atol=eps(eltype(B))
+            end
+        end
     end
 end
