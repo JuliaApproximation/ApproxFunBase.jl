@@ -1,10 +1,4 @@
-
-
 export cache
-
-
-
-
 
 ## CachedOperator
 
@@ -85,7 +79,7 @@ function Base.getindex(B::CachedOperator,k::AbstractRange,j::AbstractRange)
         resizedata!(B,maximum(k),maximum(j))
         B.data[k,j]
     else
-        Matrix{eltype(B)}(length(k),length(j))
+        Matrix{eltype(B)}(undef, length(k),length(j))
     end
 end
 
@@ -114,17 +108,21 @@ end
     end
  end
 
-
-
-
-
-
 resizedata!(B::CachedOperator,::Colon,m::Integer) = resizedata!(B,size(B,1),m)
 resizedata!(B::CachedOperator,n::Integer,::Colon) = resizedata!(B,n,size(B,2))
-
 
 function mul_coefficients(B::CachedOperator,v::AbstractVector{T}) where T<:Number
     resizedata!(B,:,length(v))
 
     B.data*pad(v,size(B.data,2))
+end
+
+function promotedomainspace(C::CachedOperator,sp::Space)
+    C2 = promotedomainspace(C.op, sp)
+    cache(C2)
+end
+
+function promoterangespace(C::CachedOperator,sp::Space)
+    C2 = promoterangespace(C.op, sp)
+    cache(C2)
 end

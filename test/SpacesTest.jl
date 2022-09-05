@@ -3,6 +3,7 @@ import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, V
 using ApproxFunOrthogonalPolynomials
 using StaticArrays
 using BandedMatrices: rowrange, colrange, BandedMatrix
+using LinearAlgebra
 
 @testset "Spaces" begin
     @testset "PointSpace" begin
@@ -124,6 +125,16 @@ using BandedMatrices: rowrange, colrange, BandedMatrix
             @test f(0) == 0
             @test f(1) == 1
             @test f(4) == 0
+        end
+
+        @testset "CachedOperator" begin
+            s = PointSpace(1:3)
+            Mop = Multiplication(Fun(s, 1:3))
+            C = cache(Mop) : s → s
+            @test C isa ApproxFunBase.CachedOperator
+            CM = AbstractMatrix(C[:, :])
+            @test CM == Diagonal(1:3)
+            @test size(C[1:0, 1:0]) == (0, 0)
         end
     end
 
@@ -380,6 +391,17 @@ using BandedMatrices: rowrange, colrange, BandedMatrix
             @test rowrange(S, 1) == 2:2
             @test colrange(S, 2) == 1:1
             @test (@inferred BandedMatrix(S)) == (@inferred Matrix(S))
+        end
+
+        @testset "CachedOperator" begin
+            C = cache(Derivative())
+            C = C : Chebyshev() → Ultraspherical(2)
+            D = Derivative() : Chebyshev() → Ultraspherical(2)
+            @test C[1:2, 1:0] == D[1:2, 1:0]
+            @test C[1:10, 1:10] == D[1:10, 1:10]
+            for col in 1:5, row in 1:5
+                @test C[row, col] == D[row, col]
+            end
         end
     end
 end
