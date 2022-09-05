@@ -8,9 +8,11 @@ export ProductFun
 ## TODO:
 ## In a newer version, an abstract type of ProducFun is needed, where different implementations are possible
 ## however, refactoring this is a lot of effort...
-struct TensorFun{S<:UnivariateSpace, d, SS<:TensorSpace{NTuple{d, S}}, T<:Number} <: MultivariateFun{T, d}
+struct TensorIteratorFun{S<:UnivariateSpace, d, SS<:TensorSpace{NTuple{d, S}}, T<:Number} <: MultivariateFun{T, d}
     space::SS
-    tensor::AbstractArray{T, d}
+    coefficients::AbstractVector{T} 
+    iterator::TrivialTensorizer{d}
+    orders::Block
 end
 
 struct ProductFun{S<:UnivariateSpace,V<:UnivariateSpace,SS<:AbstractProductSpace,T} <: BivariateFun{T}
@@ -45,11 +47,11 @@ end
 
 ## TODO: This Product Fun actually does not return a productfun, dirty but was easiest to implement. Probably an abstract type of ProductFuns
 # is needed in the future.
-function ProductFun(cfs::AbstractArray{T, d},sp::AbstractProductSpace{NTuple{d, S},DD}) where {S<:UnivariateSpace,T<:Number,d,DD}
+function ProductFun(iter::TrivialTensorizer{d},cfs::Vector{T},blk::Block, sp::AbstractProductSpace{NTuple{d, S},DD}) where {S<:UnivariateSpace,T<:Number,d,DD}
 
-    @assert d>2 # for d==2, use function above
+    @assert d>2
 
-    TensorFun{S, d, typeof(sp), T}(sp, cfs) # This is not a ProductFun
+    TensorIteratorFun{S, d, typeof(sp), T}(sp, cfs, iter, blk) # This is not a ProductFun
 end
 
 ## Construction in a ProductSpace via a Vector of Funs
@@ -192,7 +194,7 @@ end
 
 (f::ProductFun)(x,y) = evaluate(f,x,y)
 
-(f::TensorFun)(x...) = evaluate(f, x...)
+(f::TensorIteratorFun)(x...) = evaluate(f, x...)
 
 coefficients(f::ProductFun,ox::TensorSpace) = coefficients(f,ox[1],ox[2])
 
@@ -236,23 +238,27 @@ evaluate(f::ProductFun{S,V,SS,T},x::Number,y::Number) where {S<:UnivariateSpace,
     evaluate(f,x,:)(y)
 
 
-# higher dimensional TensorSpace evaluation
-function evaluate(f::TensorFun{S, d, SS, T},x...) where {S<:UnivariateSpace, d, SS, T}
-    highest_order = max(size(f.tensor)...)
+# TensorSpace evaluation
+function evaluate(f::TensorIteratorFun{S, d, SS, T},x...) where {S<:UnivariateSpace, d, SS, T}
+    highest_order = f.orders.n[1]
+    n = length(f.coefficients)
 
     # this could be lazy evaluated for the sparse case
     A = [Fun(f.space.spaces[i], [zeros(k);1])(x[i]) for k=0:highest_order, i=1:d]
     result::T = 0
-    @inbounds @simd for i in CartesianIndices(f.tensor)
-        tmp = f.tensor[i]
+    coef_counter::Int = 1
+    for i in f.iterator
+        tmp = f.coefficients[coef_counter]
         if tmp != 0
             tmp_res = 1
-            for k=1:d
+            @inbounds @simd for k=1:d
                 tmp_res *= A[i[k], k]
             end
             result += tmp * tmp_res
-        else
-            # do nothing
+        end
+        coef_counter += 1
+        if coef_counter > n
+            break
         end
     end
     return result

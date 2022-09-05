@@ -489,6 +489,8 @@ end
 
 fromtensor(S::Space,M::AbstractMatrix) = fromtensor(tensorizer(S),M)
 totensor(S::Space,M::AbstractVector) = totensor(tensorizer(S),M)
+totensor(SS::TensorSpace{NTuple{d, S}},M::AbstractVector) where {d, S<:UnivariateSpace} = 
+        if d>2; totensoriterator(tensorizer(SS),M) else totensor(tensorizer(SS),M) end
 
 # we only copy upper triangular of coefficients
 function fromtensor(it::Tensorizer,M::AbstractMatrix)
@@ -526,6 +528,11 @@ function totensor(it::Tensorizer,M::AbstractVector)
     ret
 end
 
+@inline function totensoriterator(it::TrivialTensorizer{d},M::AbstractVector) where {d}
+    B=block(it,length(M))
+    return it, M, B
+end
+
 for OP in (:block,:blockstart,:blockstop)
     @eval begin
         $OP(s::TensorSpace, ::PosInfinity) = ℵ₀
@@ -559,7 +566,14 @@ end
 
 itransform(sp::TensorSpace,cfs) = vec(itransform!(sp,coefficientmatrix(Fun(sp,cfs))))
 
-evaluate(f::AbstractVector,S::AbstractProductSpace,x) = ProductFun(totensor(S,f),S)(x...)
+function evaluate(f::AbstractVector,S::AbstractProductSpace,x)
+    t = totensor(S,f)
+    if typeof(t) <: Tuple
+        return ProductFun(t..., S)(x...)
+    else
+        return ProductFun(t, S)(x...)
+    end
+end
 evaluate(f::AbstractVector,S::AbstractProductSpace,x,y) = ProductFun(totensor(S,f),S)(x,y)
 
 
