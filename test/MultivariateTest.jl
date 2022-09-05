@@ -26,10 +26,14 @@ using ApproxFunOrthogonalPolynomials
             f2_2 = Fun(Chebyshev()^2, c_2)
             @test coefficients(f2_1+f2_2) == added_coef
 
+            @test (f2_1+f2_2)(0.3, 0.5)≈f2_1(0.3, 0.5)+f2_2(0.3, 0.5)
+
             # 3D
             f3_1 = Fun(Chebyshev()^3, c_1)
             f3_2 = Fun(Chebyshev()^3, c_2)
-            @test coefficients(f2_1+f2_2) == added_coef 
+            @test coefficients(f3_1+f3_2) == added_coef
+
+            @test (f3_1+f3_2)(0.3, 0.5, 0.6)≈f3_1(0.3, 0.5, 0.6)+f3_2(0.3, 0.5, 0.6)
         end
 
         @testset "Multiplication" begin
