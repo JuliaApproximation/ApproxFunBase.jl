@@ -321,6 +321,11 @@ using BandedMatrices: rowrange, colrange, BandedMatrix
             @test newvals(f2) ≈ values(f3)
             @test values(f2) ≈ values(f3)
 
+            # Ensure no trailing zeros
+            f = Fun(Ultraspherical(0.5, 0..1))
+            cf = coefficients(f)
+            @test findlast(!iszero, cf) == length(cf)
+
             @testset "OneHotVector" begin
                 for n in [1, 3, 10_000]
                     f = Fun(Chebyshev(), [zeros(n-1); 1])
@@ -382,6 +387,7 @@ using BandedMatrices: rowrange, colrange, BandedMatrix
             @test (@inferred BandedMatrix(S)) == (@inferred Matrix(S))
         end
 
+
         @testset "istriu/istril" begin
             for D in Any[Derivative(Chebyshev()),
                     Conversion(Chebyshev(), Legendre()),
@@ -391,6 +397,15 @@ using BandedMatrices: rowrange, colrange, BandedMatrix
                     @test f(D) == f(D2)
                     @test f(D') == f(D2')
                 end
+            end
+        end
+
+        @testset "inplace ldiv" begin
+            @testset for T in [Float32, Float64, ComplexF32, ComplexF64]
+                v = rand(T, 4)
+                v2 = copy(v)
+                ApproxFunBase.ldiv_coefficients!(Conversion(Chebyshev(), Ultraspherical(1)), v)
+                @test ApproxFunBase.ldiv_coefficients(Conversion(Chebyshev(), Ultraspherical(1)), v2) ≈ v
             end
         end
     end
