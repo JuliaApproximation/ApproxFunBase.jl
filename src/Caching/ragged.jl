@@ -273,7 +273,8 @@ function mulpars(Ac::Adjoint{T,<:QROperatorQ{QROperator{RR,RaggedMatrix{T},T},T}
         LinearAlgebra.axpy!(-2*dt,wp,yp)
         k+=1
     end
-    resize!(Y,k)  # chop off zeros
+    nz = findlast(!iszero, Y)
+    resize!(Y,nz === nothing ? k : min(k, nz))  # chop off zeros
 end
 
 
@@ -329,5 +330,6 @@ function mulpars(Ac::Adjoint{T,<:QROperatorQ{QROperator{RR,RaggedMatrix{T},T},T}
         BLAS.axpy!(M,-2*dt,wp,1,yp,1)
         k+=1
     end
-    resize!(Y,k)  # chop off zeros
+    nz = findlast(!iszero, Y)
+    resize!(Y, nz === nothing ? k : min(k, nz))  # chop off zeros
 end
