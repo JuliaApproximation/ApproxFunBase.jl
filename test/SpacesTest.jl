@@ -332,6 +332,11 @@ using LinearAlgebra
             @test newvals(f2) ≈ values(f3)
             @test values(f2) ≈ values(f3)
 
+            # Ensure no trailing zeros
+            f = Fun(Ultraspherical(0.5, 0..1))
+            cf = coefficients(f)
+            @test findlast(!iszero, cf) == length(cf)
+
             @testset "OneHotVector" begin
                 for n in [1, 3, 10_000]
                     f = Fun(Chebyshev(), [zeros(n-1); 1])
@@ -393,6 +398,7 @@ using LinearAlgebra
             @test (@inferred BandedMatrix(S)) == (@inferred Matrix(S))
         end
 
+
         @testset "CachedOperator" begin
             C = cache(Derivative())
             C = C : Chebyshev() → Ultraspherical(2)
@@ -422,6 +428,15 @@ using LinearAlgebra
             B = AbstractMatrix(P[1:10, 1:10])
             @testset for I in CartesianIndices(B)
                 @test B[I] ≈ P[Tuple(I)...] rtol=1e-8 atol=eps(eltype(B))
+            end
+        end
+
+        @testset "inplace ldiv" begin
+            @testset for T in [Float32, Float64, ComplexF32, ComplexF64]
+                v = rand(T, 4)
+                v2 = copy(v)
+                ApproxFunBase.ldiv_coefficients!(Conversion(Chebyshev(), Ultraspherical(1)), v)
+                @test ApproxFunBase.ldiv_coefficients(Conversion(Chebyshev(), Ultraspherical(1)), v2) ≈ v
             end
         end
     end
