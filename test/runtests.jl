@@ -270,6 +270,51 @@ end
     end
 end
 
+@testset "RowVector" begin
+    @testset "constructors" begin
+        for s in [(2,), (1,2)], sz in [s, (s,)]
+            b = fill!(ApproxFunBase.RowVector{Int}(sz...), 2)
+            @test size(b) == (1,2)
+            @test all(==(2), b)
+        end
+    end
+    # for a vector of numbers, RowVector should be identical to transpose
+    a = Float64.(1:4)
+    at = transpose(a)
+    b = ApproxFunBase.RowVector(a)
+    @test b == at
+    for inds in [eachindex(b), CartesianIndices(b)]
+        for i in inds
+            @test b[i] == at[i]
+        end
+    end
+    M = Float64.(reshape(1:16, 4, 4))
+    @test b * M == at * M
+    @test b * a == at * a
+    @test b * Float32.(a) == at * Float32.(a)
+    @test a * b == a * at
+    @test map(x->x^2, b) == map(x->x^2, at)
+    @test b.^2 == at.^2
+    @test hcat(b, b) == hcat(at, at)
+    @test vcat(b, b) == vcat(at, at)
+    @test hcat(b, 1) == hcat(at, 1)
+    c = Float32[b 1]
+    @test eltype(c) == Float32
+    @test c == [b 1]
+    c = Float32[b b]
+    @test eltype(c) == Float32
+    @test c == Float32[at at]
+
+    # setindex
+    b[2] = 30
+    @test b[2] == b[1,2] == 30
+    @test a[2] == 30
+
+    a = rand(1)
+    b = ApproxFunBase.RowVector(a)
+    @test b[] == b[CartesianIndex()] == b[CartesianIndex(1)] == a[]
+end
+
 @testset "misc" begin
     a = @inferred ApproxFunBase.specialfunctionnormalizationpoint(exp,real,Fun())
     @test a[1] == 1
