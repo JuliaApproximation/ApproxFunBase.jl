@@ -282,7 +282,7 @@ function chop!(f::Fun,tol...)
     f
 end
 
-chop(f::Fun,tol...) = chop!(Fun(f.space,convert(Vector, f.coefficients)),tol...)
+chop(f::Fun,tol...) = chop!(Fun(f.space,Vector(f.coefficients)),tol...)
 
 copy(f::Fun) = Fun(space(f),copy(f.coefficients))
 
