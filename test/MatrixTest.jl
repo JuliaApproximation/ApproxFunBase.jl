@@ -17,4 +17,13 @@ using ApproxFunBase, Test
     @test Matrix(B) == Matrix(ApproxFunBase.RaggedMatrix(B))
     @test ApproxFunBase.RaggedMatrix(B) == ApproxFunBase.RaggedMatrix{Float64}(B)
     @test ApproxFunBase.RaggedMatrix(ApproxFunBase.BandedMatrix{ComplexF64}(B)) == ApproxFunBase.RaggedMatrix{ComplexF64}(B)
+
+    @testset "similar" begin
+        B = ApproxFunBase.brand(10,10,2,3)
+        R = ApproxFunBase.RaggedMatrix(B)
+        S = similar(R, ComplexF64)
+        @test S isa ApproxFunBase.RaggedMatrix
+        @test eltype(S) == ComplexF64
+        @test size(S) == size(R)
+    end
 end

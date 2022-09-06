@@ -409,6 +409,18 @@ using LinearAlgebra
             end
         end
 
+        @testset "istriu/istril" begin
+            for D in Any[Derivative(Chebyshev()),
+                    Conversion(Chebyshev(), Legendre()),
+                    Multiplication(Fun(Chebyshev()), Chebyshev())]
+                D2 = D[1:3, 1:3]
+                for f in Any[istriu, istril]
+                    @test f(D) == f(D2)
+                    @test f(D') == f(D2')
+                end
+            end
+        end
+
         @testset "inplace ldiv" begin
             @testset for T in [Float32, Float64, ComplexF32, ComplexF64]
                 v = rand(T, 4)
