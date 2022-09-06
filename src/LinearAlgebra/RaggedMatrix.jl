@@ -104,7 +104,7 @@ convert(::Type{RaggedMatrix}, B::AbstractMatrix) = RaggedMatrix{eltype(B)}(B)
 RaggedMatrix(B::AbstractMatrix) = strictconvert(RaggedMatrix, B)
 RaggedMatrix{T}(B::AbstractMatrix) where T = strictconvert(RaggedMatrix{T}, B)
 
-Base.similar(B::RaggedMatrix,::Type{T}) where {T} = RaggedMatrix(Vector{T}(length(B.data)),copy(B.cols),B.m)
+Base.similar(B::RaggedMatrix,::Type{T}) where {T} = RaggedMatrix(similar(B.data, T),copy(B.cols),B.m)
 
 for (op,bop) in ((:(Base.rand), :rrand),)
     @eval begin

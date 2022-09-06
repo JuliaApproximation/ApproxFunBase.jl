@@ -398,7 +398,6 @@ using LinearAlgebra
             @test (@inferred BandedMatrix(S)) == (@inferred Matrix(S))
         end
 
-
         @testset "CachedOperator" begin
             C = cache(Derivative())
             C = C : Chebyshev() → Ultraspherical(2)
@@ -428,6 +427,18 @@ using LinearAlgebra
             B = AbstractMatrix(P[1:10, 1:10])
             @testset for I in CartesianIndices(B)
                 @test B[I] ≈ P[Tuple(I)...] rtol=1e-8 atol=eps(eltype(B))
+            end
+        end
+
+        @testset "istriu/istril" begin
+            for D in Any[Derivative(Chebyshev()),
+                    Conversion(Chebyshev(), Legendre()),
+                    Multiplication(Fun(Chebyshev()), Chebyshev())]
+                D2 = D[1:3, 1:3]
+                for f in Any[istriu, istril]
+                    @test f(D) == f(D2)
+                    @test f(D') == f(D2')
+                end
             end
         end
 
