@@ -138,7 +138,6 @@ end
 # use standard +, -
 *(A::ArrayFun,f::ArrayFun) = Fun(Array(A)*Array(f))
 
-norm(A::VectorFun) = norm(A, 2)
 norm(A::VectorFun, p::Real) = norm(norm.(Array(A)),p)
 
 
