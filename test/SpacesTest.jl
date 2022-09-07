@@ -22,6 +22,11 @@ using LinearAlgebra
         f2 = @inferred Fun(space(f), view(Float64[1:3;], :))
         @test coefficients(f2) == coefficients(f)
 
+        f = Fun(PointSpace(1:4), [1:4;])
+        for spfn in Any[sin, cos, exp]
+            @test values(spfn(f)) ≈ spfn.(points(f))
+        end
+
         @testset "conversions" begin
             @testset for S in Any[typeof(space(f)), Any]
                 T = Fun{S, Any, Any}
@@ -368,6 +373,15 @@ using LinearAlgebra
             f = Fun(Chebyshev(), SA[1,2,3])
             g = Fun(Chebyshev(), [1,2,3])
             @test coefficients(f^2) == coefficients(g^2)
+        end
+
+        @testset "special functions" begin
+            for f in Any[Fun(), Fun(-0.5..1), Fun(Segment(1.0+im,2.0+2im))]
+                for spfn in Any[sin, cos, exp]
+                    p = leftendpoint(domain(f))
+                    @test spfn(f)(p) ≈ spfn(p) atol=1e-14
+                end
+            end
         end
 
         @testset "Derivative" begin
