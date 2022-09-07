@@ -252,7 +252,7 @@ using LinearAlgebra
 
     @testset "ApproxFunOrthogonalPolynomials" begin
         @test (@inferred Fun()) == Fun(x->x, Chebyshev())
-        @test (@inferred norm(Fun())) ≈ √(2/3) # √∫x^2 dx over -1..1
+        @test (@inferred norm(Fun())) ≈ norm(Fun(), 2) ≈ √(2/3) # √∫x^2 dx over -1..1
 
         v = rand(4)
         v2 = transform(NormalizedChebyshev(), v)
