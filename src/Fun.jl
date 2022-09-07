@@ -412,7 +412,7 @@ lineinnerproduct(g::Fun,c::Number)=linebilinearform(conj(g),c)
 
 for (OP,SUM) in ((:(norm),:(sum)),(:linenorm,:linesum))
     @eval begin
-        $OP(f::Fun) = $OP(f,2)
+        $OP(f::Fun) = sqrt($SUM(abs2(f)))
 
         function $OP(f::Fun{<:Space{<:Any,<:Number}}, p::Real)
             if p < 1
@@ -428,7 +428,7 @@ for (OP,SUM) in ((:(norm),:(sum)),(:linenorm,:linesum))
             if 1 ≤ p < Inf
                 return iseven(p) ? abs($SUM(abs2(f)^(p÷2)))^(1/p) : abs($SUM(abs2(f)^(p/2)))^(1/p)
             else
-                return error("p should be 1 ≤ p ≤ ∞")
+                error("p should be 1 ≤ p ≤ ∞")
             end
         end
     end
