@@ -412,7 +412,7 @@ lineinnerproduct(g::Fun,c::Number)=linebilinearform(conj(g),c)
 
 for (OP,SUM) in ((:(norm),:(sum)),(:linenorm,:linesum))
     @eval begin
-        $OP(f::Fun) = sqrt($SUM(abs2(f)))
+        $OP(f::Fun) = sqrt(abs($SUM(abs2(f))))
 
         function $OP(f::Fun{<:Space{<:Any,<:Number}}, p::Real)
             if p < 1
