@@ -23,7 +23,7 @@ using LinearAlgebra
         @test coefficients(f2) == coefficients(f)
 
         f = Fun(PointSpace(1:4), [1:4;])
-        for spfn in [sin, cos, exp]
+        for spfn in Any[sin, cos, exp]
             @test values(spfn(f)) ≈ spfn.(points(f))
         end
 
@@ -376,9 +376,11 @@ using LinearAlgebra
         end
 
         @testset "special functions" begin
-            f = Fun()
-            for spfn in [sin, cos, exp]
-                @test spfn(f)(0.1) ≈ spfn(0.1)
+            for f in Any[Fun(), Fun(-0.5..1), Fun(Segment(1.0+im,2.0+2im))]
+                for spfn in Any[sin, cos, exp]
+                    p = leftendpoint(domain(f))
+                    @test spfn(f)(p) ≈ spfn(p) atol=1e-14
+                end
             end
         end
 
