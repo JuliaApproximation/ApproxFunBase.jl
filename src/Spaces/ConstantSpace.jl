@@ -133,7 +133,7 @@ coefficients(f::AbstractVector,sp::ConstantSpace{Segment{Vec{2,TT}}},
              ts::TensorSpace{SV,DD}) where {TT,SV,DD<:EuclideanDomain{2}} =
     f[1]*ones(ts).coefficients
 coefficients(f::AbstractVector,sp::ConstantSpace{<:Domain{<:Number}},
-             ts::TensorSpace{SV,DD}) where {TT,SV,DD<:EuclideanDomain{2}} =
+             ts::TensorSpace{SV,DD}) where {SV,DD<:EuclideanDomain{2}} =
     f[1]*ones(ts).coefficients
 coefficients(f::AbstractVector, sp::ConstantSpace{<:Domain{<:Number}}, ts::Space) =
     f[1]*ones(ts).coefficients
