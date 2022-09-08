@@ -4,7 +4,7 @@ using ApproxFunOrthogonalPolynomials
 using Aqua
 
 @testset "Project quality" begin
-    Aqua.test_all(ApproxFunBase, ambiguities=false, unbound_args=false)
+    Aqua.test_all(ApproxFunBase, ambiguities=false)
 end
 
 @testset "Helper" begin
