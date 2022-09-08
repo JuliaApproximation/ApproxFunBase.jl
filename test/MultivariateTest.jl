@@ -1,7 +1,30 @@
-using ApproxFunBase, Test
+using ApproxFunBase: tensorizer
+using Test
 using ApproxFunOrthogonalPolynomials
 
 @testset "Multivariate Tests" begin
+
+    @testset "iterator order" begin
+        S = Chebyshev()^2
+        it = tensorizer(S)
+        expected_order = [(1, 1)
+                        (1,2)
+                        (2,1)
+                        (1,3)
+                        (2,2)
+                        (3,1)
+                        (1,4)
+                        (2,3)]
+        k = 0
+        for i in it
+            k = k + 1
+            if k>length(expected_order)
+                break
+            end
+            @test i == expected_order[k]
+        end
+    end
+
     @testset "Evaluation" begin
         
         # 2D

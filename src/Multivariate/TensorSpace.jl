@@ -67,6 +67,7 @@ function next(a::TrivialTensorizer{d}, ((block, (j, iterator, iter_state)), subb
     end
 
     ret = ntuple(i->subblock[i]+shift[i], d)
+    ret = reverse(ret)
 
     # check if reached end of current block (subblock == numblock)
     if numblock == subblock  # end of block
