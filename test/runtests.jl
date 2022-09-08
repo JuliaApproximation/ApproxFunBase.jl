@@ -1,6 +1,11 @@
 using ApproxFunBase, LinearAlgebra, Random, Test
 import ApproxFunBase: ∞
 using ApproxFunOrthogonalPolynomials
+using Aqua
+
+@testset "Project quality" begin
+    Aqua.test_all(ApproxFunBase, ambiguities=false, unbound_args=false)
+end
 
 @testset "Helper" begin
     @testset "interlace" begin

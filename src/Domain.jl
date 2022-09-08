@@ -1,5 +1,5 @@
 export Domain, SegmentDomain, tocanonical, fromcanonical, fromcanonicalD, ∂
-export chebyshevpoints, fourierpoints, isambiguous, arclength
+export isambiguous, arclength
 export components, component, ncomponents
 
 

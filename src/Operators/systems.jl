@@ -26,20 +26,11 @@ end
 
 
 ## Construction
-if VERSION < v"1.3-"
-  function diagm_container(kv::Pair{<:Integer,<:AbstractVector{O}}...) where O<:Operator
-      T = mapreduce(x -> mapreduce(eltype,promote_type,x.second),
+function diagm_container(size, kv::Pair{<:Integer,<:AbstractVector{<:Operator}}...)
+    T = mapreduce(x -> mapreduce(eltype,promote_type,x.second),
                     promote_type, kv)
-      n = mapreduce(x -> length(x.second) + abs(x.first), max, kv)
-      zeros(Operator{T}, n, n)
-  end
-else
-    function diagm_container(size, kv::Pair{<:Integer,<:AbstractVector{O}}...) where O<:Operator
-        T = mapreduce(x -> mapreduce(eltype,promote_type,x.second),
-                      promote_type, kv)
-        n = mapreduce(x -> length(x.second) + abs(x.first), max, kv)
-        zeros(Operator{T}, n, n)
-    end
+    n = mapreduce(x -> length(x.second) + abs(x.first), max, kv)
+    zeros(Operator{T}, n, n)
 end
 
 ##TODO: unify with other blockdiag
