@@ -27,7 +27,7 @@ end
 const TrivialTensorizer{d} = Tensorizer{NTuple{d,Ones{Int,1,Tuple{OneToInf{Int}}}}}
 
 Base.eltype(a::Tensorizer) = NTuple{length(a.blocks),Int}
-Base.eltype(::Tensorizer{NTuple{d,T}}) where {d,T} = NTuple{d,Int}
+Base.eltype(::Tensorizer{<:NTuple{d}}) where {d} = NTuple{d,Int}
 dimensions(a::Tensorizer) = map(sum,a.blocks)
 Base.length(a::Tensorizer) = mapreduce(sum,*,a.blocks)
 

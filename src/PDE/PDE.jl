@@ -1,4 +1,4 @@
-export discretize,timedirichlet
+export timedirichlet
 
 include("KroneckerOperator.jl")
 

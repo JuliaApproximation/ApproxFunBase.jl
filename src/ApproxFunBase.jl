@@ -90,8 +90,8 @@ import IntervalSets: (..), endpoints
 const Vec{d,T} = SVector{d,T}
 
 export pad!, pad, chop!, sample,
-       complexroots, roots, svfft, isvfft,
-       reverseorientation, jumplocations
+       complexroots, roots,
+       reverseorientation
 
 export .., Interval, ChebyshevInterval, leftendpoint, rightendpoint, endpoints, cache
 

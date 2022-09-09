@@ -1,8 +1,7 @@
 export Operator
 export bandwidths, bandrange, \, periodic
-export neumann
 export ldirichlet,rdirichlet,lneumann,rneumann
-export ldiffbc,rdiffbc,diffbcs
+export ldiffbc,rdiffbc
 export domainspace,rangespace
 
 const VectorIndices = Union{AbstractRange, Colon}

@@ -1,6 +1,10 @@
 using ApproxFunBase, LinearAlgebra, Random, Test
-import ApproxFunBase: ∞
-using ApproxFunOrthogonalPolynomials
+using ApproxFunBase: ∞
+using Aqua
+
+@testset "Project quality" begin
+    Aqua.test_all(ApproxFunBase, ambiguities=false)
+end
 
 @testset "Helper" begin
     @testset "interlace" begin
@@ -53,15 +57,6 @@ using ApproxFunOrthogonalPolynomials
                 @test b[end] == 0
                 @test pad(a, 2) == @view(a[1:2])
             end
-        end
-        @testset "Fun" begin
-            f = Fun()
-            zf = zero(f)
-            @test (@inferred pad([f], 3)) == [f, zf, zf]
-            @test (@inferred pad([f, zf], 1)) == [f]
-            v = [f, zf]
-            @test @inferred pad!(v, 1) == [f]
-            @test length(v) == 1
         end
     end
     @testset "nocat" begin
@@ -313,12 +308,6 @@ end
     a = rand(1)
     b = ApproxFunBase.RowVector(a)
     @test b[] == b[CartesianIndex()] == b[CartesianIndex(1)] == a[]
-end
-
-@testset "misc" begin
-    a = @inferred ApproxFunBase.specialfunctionnormalizationpoint(exp,real,Fun())
-    @test a[1] == 1
-    @test a[2] ≈ exp(1)
 end
 
 @testset "BLAS/LAPACK" begin
