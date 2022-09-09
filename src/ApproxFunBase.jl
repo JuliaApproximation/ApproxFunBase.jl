@@ -91,10 +91,7 @@ const Vec{d,T} = SVector{d,T}
 
 export pad!, pad, chop!, sample,
        complexroots, roots,
-       reverseorientation, jumplocations
-
-# This is to be extended downstream
-function jumplocations end
+       reverseorientation
 
 export .., Interval, ChebyshevInterval, leftendpoint, rightendpoint, endpoints, cache
 
