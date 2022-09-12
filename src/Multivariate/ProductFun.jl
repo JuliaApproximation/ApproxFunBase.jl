@@ -10,7 +10,7 @@ export ProductFun
 ## however, refactoring this is a lot of effort...
 struct TensorIteratorFun{S<:UnivariateSpace, d, SS<:TensorSpace{NTuple{d, S}}, T<:Number} <: MultivariateFun{T, d}
     space::SS
-    coefficients::AbstractVector{T} 
+    coefficients::Vector{T} 
     iterator::TrivialTensorizer{d}
     orders::Block
 end
@@ -251,7 +251,7 @@ function evaluate(f::TensorIteratorFun{S, d, SS, T},x...) where {S<:UnivariateSp
         tmp = f.coefficients[coef_counter]
         if tmp != 0
             tmp_res = 1
-            @inbounds @simd for k=1:d
+            for k=1:d
                 tmp_res *= A[i[k], k]
             end
             result += tmp * tmp_res
