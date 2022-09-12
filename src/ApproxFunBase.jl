@@ -105,6 +105,8 @@ end
 # assert that the conversion succeeds. This helps with inference as well as sanity
 strictconvert(T::Type, x) = convert(T, x)::T
 
+uniontypedvec(A, B) = Union{typeof(A), typeof(B)}[A, B]
+
 include("LinearAlgebra/LinearAlgebra.jl")
 include("Fun.jl")
 include("onehotvector.jl")
