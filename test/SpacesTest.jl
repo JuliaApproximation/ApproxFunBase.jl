@@ -140,6 +140,15 @@ using LinearAlgebra
             @test CM == Diagonal(1:3)
             @test size(C[1:0, 1:0]) == (0, 0)
         end
+
+        @testset "broadcast" begin
+            f = Fun(PointSpace(1:3), 1:3)
+            g = f^2
+            h = f.^2
+            for i in 1:3
+                @test g(i) == h(i)
+            end
+        end
     end
 
     @testset "DiracSpace" begin
