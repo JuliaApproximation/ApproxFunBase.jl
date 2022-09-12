@@ -61,11 +61,13 @@ struct PiecewiseSpace{SV,D<:UnionDomain,R} <: DirectSumSpace{SV,D,R}
         new{SV,D,R}(sp)
 end
 
-function PiecewiseSpace(spin::Tuple)
-    sp=tuple(union(spin)...)  # remove duplicates
-
+function _PiecewiseSpace(sp)
     PiecewiseSpace{typeof(sp),typeof(UnionDomain(map(domain,sp))),
                    mapreduce(rangetype,promote_type,sp)}(sp)
+end
+function PiecewiseSpace(spin::Tuple)
+    sp=tuple(union(spin)...)  # remove duplicates
+    _PiecewiseSpace(sp)
 end
 
 PiecewiseSpace(spin::Set) = PiecewiseSpace(collect(spin))
