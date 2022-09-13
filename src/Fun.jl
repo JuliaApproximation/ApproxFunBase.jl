@@ -596,7 +596,7 @@ broadcastdomain(b::Broadcasted) = mapreduce(broadcastdomain, ∪, b.args)
 broadcasteval(f::Function, x) = f(x)
 broadcasteval(c, x) = c
 broadcasteval(c::Ref, x) = c.x
-broadcasteval(b::Broadcasted, x) = b.f(broadcasteval.(b.args, x)...)
+broadcasteval(b::Broadcasted, x) = b.f(broadcasteval.(b.args, Ref(x))...)
 
 # TODO: use generated function to improve the following
 function copy(bc::Broadcasted{FunStyle})
