@@ -196,6 +196,8 @@ for (op, ODE, RHS, growth) in ((:(exp),    "D-f'",           "0",        :(real)
     end
 end
 
+Base.:(^)(::Irrational{:ℯ}, f::Fun) = exp(f)
+
 function specialfunctionnormalizationpoint2(op, growth, f, T = cfstype(f))
     xmin, xmax, opfxmin, opfxmax, opmax = _specialfunctionnormalizationpoint(op,growth,f)
     while opmax≤10eps(T) || abs(f(xmin)-f(xmax))≤10eps(T)

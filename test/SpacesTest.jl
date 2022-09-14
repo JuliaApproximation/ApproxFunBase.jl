@@ -149,6 +149,12 @@ using LinearAlgebra
                 @test g(i) == h(i)
             end
         end
+
+        @testset "euler and exp" begin
+            f = Fun(PointSpace(1:3), 1:3)
+            @test ℯ^f == exp(f)
+            @test values(ℯ^f) == exp.(values(f))
+        end
     end
 
     @testset "DiracSpace" begin
