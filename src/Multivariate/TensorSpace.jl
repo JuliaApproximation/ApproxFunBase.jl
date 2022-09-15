@@ -254,7 +254,11 @@ setdomain(sp::TensorSpace, d::ProductDomain) = TensorSpace(setdomain.(factors(sp
 *(A::Space, B::Space) = A⊗B
 function ^(A::Space, p::Integer)
     p >= 1 || throw(ArgumentError("exponent must be >= 1, received $p"))
-    p == 1 ? A : foldl(*, ntuple(_ -> A, p))
+    # Enumerate common cases to help with constant propagation
+    p == 1 ? A :
+    p == 2 ? A * A :
+    p == 3 ? A * A * A :
+    foldl(*, ntuple(_ -> A, p))
 end
 
 
