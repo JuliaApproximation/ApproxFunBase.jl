@@ -68,7 +68,7 @@ using ApproxFunOrthogonalPolynomials
             f2_1 = Fun(Chebyshev()^2, c_1)
             f2_2 = Fun(Chebyshev()^2, c_2)
 
-            # @test (f2_1 * f2_2)(0.4, 0.5) ≈ f2_1(0.4, 0.5) * f2_2(0.4, 0.5) broken=true
+            @test (f2_1 * f2_2)(0.4, 0.5) ≈ f2_1(0.4, 0.5) * f2_2(0.4, 0.5)
 
             # 3D: not implemented in code yet
             #f3_1 = Fun(Chebyshev()^3, c_1)
