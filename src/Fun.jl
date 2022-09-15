@@ -305,7 +305,7 @@ for op in (:+,:-)
             end
         end
         $op(f::Fun{S,T},c::T) where {S,T<:Number} = c==0 ? f : $op(f,Fun(c))
-        $op(f::Fun,c::Number) = $op(f,Fun(c))
+        $op(f::Fun,c::Number) = $op(f,Fun(c, space(f)))
         $op(f::Fun,c::UniformScaling) = $op(f,c.λ)
         $op(c::UniformScaling,f::Fun) = $op(c.λ,f)
     end
@@ -356,11 +356,11 @@ end
 
 function intpow(f::Fun,k::Integer)
     if k == 0
-        ones(space(f))
+        ones(cfstype(f), space(f))
     elseif k==1
         f
     else
-        t = reduce(*, fill(f, abs(k)))
+        t = foldl(*, fill(f, abs(k)))
         if k > 0
             return t
         else
@@ -370,12 +370,6 @@ function intpow(f::Fun,k::Integer)
 end
 
 ^(f::Fun, k::Integer) = intpow(f,k)
-# some common cases
-Base.literal_pow(::typeof(^), x::Fun, ::Val{0}) = ones(cfstype(x), space(x))
-Base.literal_pow(::typeof(^), x::Fun, ::Val{1}) = x
-Base.literal_pow(::typeof(^), x::Fun, ::Val{2}) = x * x
-Base.literal_pow(::typeof(^), x::Fun, ::Val{3}) = x * x * x
-Base.literal_pow(::typeof(^), x::Fun, ::Val{4}) = x * x * x * x
 
 inv(f::Fun) = 1/f
 
