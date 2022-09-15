@@ -96,7 +96,7 @@ function next(a::TrivialTensorizer{d}, ((block, (j, iterator, iter_state)), subb
 end
 
 
-done(a::TrivialTensorizer{d}, ((block, (j, iterator, iter_state)), sub, shift, numblock, (i,tot))) where {d, AA} = i ≥ tot
+done(a::TrivialTensorizer{d}, ((block, (j, iterator, iter_state)), sub, shift, numblock, (i,tot))) where {d} = i ≥ tot
 
 
 # (blockrow,blockcol), (subrow,subcol), (rowshift,colshift), (numblockrows,numblockcols), (itemssofar, length)
