@@ -104,6 +104,11 @@ end
     @test Segment(1,2) .^ 2 ≡ Segment(1,4)
     @test sqrt.(Segment(1,2)) ≡ Segment(1,sqrt(2))
 
+    @testset "ChebyshevInterval" begin
+        @test @inferred ApproxFunBase.domainscompatible(ChebyshevInterval{Float64}(), ChebyshevInterval{Float32}())
+        @test @inferred ApproxFunBase.domainscompatible(ChebyshevInterval{Float64}(), ChebyshevInterval{BigFloat}())
+    end
+
     @testset "union" begin
         a = ApproxFunBase.EmptyDomain()
         b = ApproxFunBase.AnyDomain()
