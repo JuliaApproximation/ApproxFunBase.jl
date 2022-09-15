@@ -305,7 +305,7 @@ for op in (:+,:-)
             end
         end
         $op(f::Fun{S,T},c::T) where {S,T<:Number} = c==0 ? f : $op(f,Fun(c))
-        $op(f::Fun,c::Number) = $op(f,Fun(c, space(f)))
+        $op(f::Fun,c::Number) = $op(f,Fun(c))
         $op(f::Fun,c::UniformScaling) = $op(f,c.λ)
         $op(c::UniformScaling,f::Fun) = $op(c.λ,f)
     end
