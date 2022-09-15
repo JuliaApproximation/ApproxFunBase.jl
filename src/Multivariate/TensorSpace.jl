@@ -252,7 +252,10 @@ Space(sp::ProductDomain) = TensorSpace(sp)
 setdomain(sp::TensorSpace, d::ProductDomain) = TensorSpace(setdomain.(factors(sp), factors(d)))
 
 *(A::Space, B::Space) = A⊗B
-^(A::Space, p::Integer) = p == 1 ? A : A*A^(p-1)
+function ^(A::Space, p::Integer)
+    p >= 1 || throw(ArgumentError("exponent must be >= 1, received $p"))
+    p == 1 ? A : foldl(*, ntuple(_ -> A, p))
+end
 
 
 ## TODO: generalize
