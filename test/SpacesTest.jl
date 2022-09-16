@@ -62,11 +62,19 @@ using LinearAlgebra
             end
         end
         @testset "intpow" begin
+            sp = PointSpace(1:3)
+            f = Fun(sp, Float64[1:3;])
             @test ApproxFunBase.intpow(f, 0) == f^0 == Fun(space(f), ones(ncoefficients(f)))
             for n in 1:3
                 @test ApproxFunBase.intpow(f, n) == f^n == reduce(*, fill(f, n))
             end
             @test ApproxFunBase.intpow(f,-2) == f^-2 == 1/(f*f)
+
+            @test sp^1 == sp
+            @test sp^2 == sp * sp
+            @test sp^3 == sp * sp * sp
+            @test sp^4 == sp * sp * sp * sp
+            @test sp^5 == sp * sp * sp * sp * sp
         end
 
         @testset "Fun accepts callables" begin
