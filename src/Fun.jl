@@ -359,10 +359,14 @@ function intpow(f::Fun,k::Integer)
         ones(cfstype(f), space(f))
     elseif k==1
         f
-    elseif 2 <= k <= 10 # inference works for small tuples
-        foldl(*, ntuple(_->f, abs(k)))
+    elseif k==2
+        f * f
+    elseif k==3
+        f * f * f
+    elseif k==4
+        f * f * f * f
     else
-        t = foldl(*, fill(f, abs(k)))
+        t = foldl(*, fill(f, abs(k)-1), init=f)
         if k > 0
             return t
         else
