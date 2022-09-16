@@ -146,7 +146,7 @@ end
 
 coefficienttimes(f::Fun,g::Fun) = Multiplication(f,space(g))*g
 
-function transformtimes(f::Fun,g::Fun, n = ncoefficients(f) + ncoefficients(g) - 1, sp = space(f))
+@inline function transformtimes(f::Fun,g::Fun, n = ncoefficients(f) + ncoefficients(g) - 1, sp = space(f))
     @assert pointscompatible(sp,space(g))::Bool
     iszero(ncoefficients(f)) && return f
     iszero(ncoefficients(g)) && return g
