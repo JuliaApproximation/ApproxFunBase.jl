@@ -234,8 +234,8 @@ Fun(M::UniformScaling,sp::MatrixSpace) = Fun(M.λ*Matrix(I,size(sp)...),sp)
 
 
 
-ones(::Type{T},A::ArraySpace) where {T<:Number} = Fun(ones.(T,spaces(A)))
-ones(A::ArraySpace) = Fun(ones.(spaces(A)))
+ones(::Type{T},A::ArraySpace) where {T<:Number} = Fun(ones.(T,A.spaces))
+ones(A::ArraySpace) = ones(Float64, A)
 
 
 ## EuclideanSpace
