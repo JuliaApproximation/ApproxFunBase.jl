@@ -376,6 +376,17 @@ function intpow(f::Fun,k::Integer)
 end
 
 ^(f::Fun, k::Integer) = intpow(f,k)
+# Ideally, constant propagation in intpow would handle literal exponentiation,
+# but currently inference doesn't succeed for f * f for arbitrary domains.
+# We specialize literal exponentiation here,
+# letting downstream users specialize f * f for custom domains
+# With f * f type-inferred, the type of f^2 would also be inferred.
+# This is a stopgap measure that might not be necessary in the future.
+Base.literal_pow(::typeof(^), f::Fun, ::Val{0}) = ones(cfstype(f), space(f))
+Base.literal_pow(::typeof(^), f::Fun, ::Val{1}) = f
+Base.literal_pow(::typeof(^), f::Fun, ::Val{2}) = f * f
+Base.literal_pow(::typeof(^), f::Fun, ::Val{3}) = f * f * f
+Base.literal_pow(::typeof(^), f::Fun, ::Val{4}) = f * f * f * f
 
 inv(f::Fun) = 1/f
 
