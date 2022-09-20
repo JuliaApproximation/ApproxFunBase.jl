@@ -10,8 +10,8 @@ lap(f::Fun) = Laplacian()*f
 
 
 function Laplacian(d::BivariateSpace,k::Integer)
-    Dx2=Derivative(d,[2,0])
-    Dy2=Derivative(d,[0,2])
+    Dx2=Derivative(d, Vec{2}(2,0))
+    Dy2=Derivative(d, Vec{2}(0,2))
     if k==1
         LaplacianWrapper(Dx2+Dy2,k)
     else
