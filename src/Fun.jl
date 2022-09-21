@@ -12,7 +12,10 @@ struct Fun{S,T,VT} <: Function
     space::S
     coefficients::VT
     function Fun{S,T,VT}(sp::S,coeff::VT) where {S,T,VT}
-        @assert length(coeff) ≤ dimension(sp)
+        nc = length(coeff)
+        dimsp = dimension(sp)
+        nc ≤ dimsp ||
+                throw(ArgumentError("length(coeff) = $(length(coeff)) exceeds dimension(space) = $(dimension(sp))"))
         new{S,T,VT}(sp,coeff)
     end
 end
@@ -293,9 +296,10 @@ for op in (:+,:-)
         function $op(f::Fun,g::Fun)
             if spacescompatible(f,g)
                 n = max(ncoefficients(f),ncoefficients(g))
-                f2 = pad(f,n); g2 = pad(g,n)
+                f2 = pad(f,n);
+                g2 = pad(g,n);
 
-                Fun(isambiguous(domain(f)) ? g.space : f.space,($op)(f2.coefficients,g2.coefficients))
+                Fun(isambiguous(domain(f)) ? g.space : f.space, ($op)(f2.coefficients,g2.coefficients))
             else
                 m=union(f.space,g.space)
                 if isa(m,NoSpace)
@@ -305,7 +309,12 @@ for op in (:+,:-)
             end
         end
         $op(f::Fun{S,T},c::T) where {S,T<:Number} = c==0 ? f : $op(f,Fun(c))
-        $op(f::Fun,c::Number) = $op(f,Fun(c))
+        function $op(f::Fun, c::Number)
+            T = promote_type(typeof(c), cfstype(f))
+            g = cfstype(f) == T ? f : Fun(space(f), T.(coefficients(f)))
+            d = convert(T, c)
+            $op(g,Fun(d))
+        end
         $op(f::Fun,c::UniformScaling) = $op(f,c.λ)
         $op(c::UniformScaling,f::Fun) = $op(c.λ,f)
     end
