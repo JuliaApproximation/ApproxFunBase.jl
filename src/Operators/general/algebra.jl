@@ -443,7 +443,7 @@ for TYP in (:BlockBandedMatrix, :BandedBlockBandedMatrix)
 
         # find optimal truncations for each operator
         # by finding the non-zero entries
-        KRlin = Matrix{Union{Block,InfiniteCardinal{0}}}(undef,length(P.ops),2)
+        KRlin = Matrix{Union{Block{1,Int},InfiniteCardinal{0}}}(undef,length(P.ops),2)
 
         KRlin[1,1],KRlin[1,2] = first(KR),last(KR)
         for m=1:length(P.ops)-1
@@ -458,7 +458,7 @@ for TYP in (:BlockBandedMatrix, :BandedBlockBandedMatrix)
         end
 
 
-        KRl = Matrix{Block{1}}(KRlin)
+        KRl = Matrix{Block{1,Int}}(KRlin)
 
         # Check if any range is invalid, in which case return zero
         for m=1:length(P.ops)
