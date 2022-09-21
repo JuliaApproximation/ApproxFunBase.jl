@@ -147,19 +147,23 @@ end
 
 ## Times Operator
 
-struct ConstantTimesOperator{B,T} <: Operator{T}
+struct ConstantTimesOperator{T<:Number, B<:Operator{T}} <: Operator{T}
     λ::T
     op::B
-    ConstantTimesOperator{B,T}(c,op) where {B,T} = new{B,T}(c,op)
-end
-function ConstantTimesOperator(c::Number,op::Operator{TT}) where TT<:Number
-    T=promote_type(typeof(c),eltype(op))
-    B=strictconvert(Operator{T},op)
-    ConstantTimesOperator{typeof(B),T}(T(c),B)
+    ConstantTimesOperator{T,B}(c::T, op::B) where {T,B<:Operator{T}} = new{T,B}(c,op)
 end
 
-ConstantTimesOperator(c::Number,op::ConstantTimesOperator) =
-    ConstantTimesOperator(c*op.λ,op.op)
+ConstantTimesOperator(c::T, op::Operator{T}) where T<:Number =
+    ConstantTimesOperator{T, typeof(op)}(c, op)
+
+function ConstantTimesOperator(c::Number, op::Operator{<:Number})
+    T=promote_type(typeof(c),eltype(op))
+    B=strictconvert(Operator{T},op)
+    ConstantTimesOperator(T(c)::T, B)
+end
+
+ConstantTimesOperator(c::Number, op::ConstantTimesOperator) =
+    ConstantTimesOperator(c*op.λ, op.op)
 
 @wrapperstructure ConstantTimesOperator
 @wrapperspaces ConstantTimesOperator
@@ -179,7 +183,7 @@ function convert(::Type{Operator{T}},C::ConstantTimesOperator) where T
         C
     else
         op=strictconvert(Operator{T},C.op)
-        ConstantTimesOperator{typeof(op),T}(T(C.λ),op)
+        ConstantTimesOperator(T(C.λ)::T, op)::Operator{T}
     end
 end
 
