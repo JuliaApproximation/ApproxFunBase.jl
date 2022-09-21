@@ -4,13 +4,13 @@ export PlusOperator, TimesOperator, mul_coefficients
 
 
 
-struct PlusOperator{T,BI,SZ} <: Operator{T}
-    ops::Vector{Operator{T}}
+struct PlusOperator{T,O<:Operator{T},BI,SZ} <: Operator{T}
+    ops::Vector{O}
     bandwidths::BI
     sz :: SZ
-    function PlusOperator{T,BI,SZ}(opsin::Vector{Operator{T}},bi::BI,sz::SZ) where {T,BI,SZ}
+    function PlusOperator{T,O,BI,SZ}(opsin::Vector{O},bi::BI,sz::SZ) where {T,O<:Operator{T},BI,SZ}
         all(x -> size(x)==sz, opsin) || throw("sizes of operators are incompatible")
-        new{T,BI,SZ}(opsin,bi,sz)
+        new{T,O,BI,SZ}(opsin,bi,sz)
     end
 end
 
@@ -19,11 +19,11 @@ size(P::PlusOperator, k::Integer) = P.sz[k]
 
 bandwidthsmax(ops) = mapreduce(bandwidths, (t1,t2) -> max.(t1, t2), ops, init = (-720, -720) #= approximate (-∞,-∞) =#)
 
-function PlusOperator(opsin::Vector{Operator{T}},
+function PlusOperator(opsin::Vector{O},
         bi::Tuple{Any,Any} = bandwidthsmax(opsin),
         sz::Tuple{Any,Any} = size(first(opsin)),
-        ) where {T}
-    PlusOperator{T,typeof(bi),typeof(sz)}(opsin,bi,sz)
+        ) where {O<:Operator}
+    PlusOperator{eltype(O),O,typeof(bi),typeof(sz)}(opsin,bi,sz)
 end
 
 bandwidths(P::PlusOperator) = P.bandwidths
@@ -41,12 +41,13 @@ for (OP,mn) in ((:colstart,:min),(:colstop,:max),(:rowstart,:min),(:rowstop,:max
     end
 end
 
-function convert(::Type{Operator{T}},P::PlusOperator) where T
+function convert(::Type{Operator{T}}, P::PlusOperator) where T
     if T==eltype(P)
         P
     else
-        PlusOperator{T,typeof(P.bandwidths),typeof(P.sz)}(
-            Vector{Operator{T}}(P.ops),P.bandwidths,P.sz)
+        ops = P.ops
+        PlusOperator(ops isa AbstractVector{<:Operator{T}} ? ops : map(x -> convert(Operator{T}, x), ops),
+            P.bandwidths,P.sz)::Operator{T}
     end
 end
 
@@ -72,12 +73,12 @@ _extractops(A, ::Any) = [A]
 _extractops(A::PlusOperator, ::typeof(+)) = A.ops
 
 function +(A::Operator,B::Operator)
-    v = Operator{_promote_eltypeof(A,B)}[_extractops(A, +); _extractops(B, +)]
+    v = [_extractops(A, +); _extractops(B, +)]
     promoteplus(v, size(A))
 end
 # Optimization for 3-term sum
 function +(A::Operator,B::Operator,C::Operator)
-    v = Operator{_promote_eltypeof(A,B,C)}[_extractops(A,+); _extractops(B, +); _extractops(C, +)]
+    v = [_extractops(A,+); _extractops(B, +); _extractops(C, +)]
     promoteplus(v, size(A))
 end
 
