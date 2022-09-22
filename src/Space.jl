@@ -164,7 +164,13 @@ for FUNC in (:conversion_type,:maxspace)
 end
 
 
-# gives a space c that has a banded conversion operator TO a and b
+"""
+    conversion_type(a::Space, b::Space)
+
+Return a space that has a banded conversion operator TO `a` and `b`
+
+See also [`maxspace`](@ref)
+"""
 function conversion_type(a,b)
     if spacescompatible(a,b)
         a
@@ -181,8 +187,13 @@ end
 
 
 
+"""
+    maxspace(a::Space, b::Space)
 
-# gives a space c that has a banded conversion operator FROM a and b
+Return a space that has a banded conversion operator FROM `a` and `b`
+
+See also [`conversion_type`](@ref)
+"""
 maxspace(a,b) = NoSpace()  # TODO: this fixes weird bug with Nothing
 function maxspace(a::Space, b::Space)
     if spacescompatible(a,b)
@@ -278,11 +289,19 @@ end
 
 union(a::Space, bs::Space...) = foldl(union, bs, init = a)
 
-# tests whether a Conversion operator exists
+"""
+    hasconversion(a,b)
+
+Test whether a banded `Conversion` operator exists.
+"""
 hasconversion(a,b) = maxspace(a,b) == b
 
 
-# tests whether a coefficients can be converted to b
+"""
+    isconvertible(a::Space, b::Space)
+
+Test whether coefficients may be converted from `a` to `b` through a banded `Conversion` operator.
+"""
 isconvertible(a,b) = a == b || hasconversion(a,b)
 
 ## Conversion routines
@@ -328,6 +347,7 @@ function defaultcoefficients(f,a,b,inplace = Val(false))
         end
         if spacescompatible(a,csp) || spacescompatible(b,csp)
             # b is csp too, so we are stuck, try Fun constructor
+            # This only works for the out-of-place version as of now
             _coefficients!!(inplace)(default_Fun(_Fun(f,a),b))
         else
             _coefficients!!(inplace)(f,a,csp,b)
@@ -472,7 +492,9 @@ end
 
 
 """
-`ConstantSpace` is the 1-dimensional scalar space.
+    ConstantSpace
+
+The 1-dimensional scalar space.
 """
 struct ConstantSpace{DD,R} <: Space{DD,R}
     domain::DD
@@ -519,7 +541,9 @@ blocklengths(::ConstantSpace) = Vec(1)
 struct SequenceSpace <: Space{PositiveIntegers,Nothing} end
 
 """
-`SequenceSpace` is the space of all sequences, i.e., infinite vectors.
+    SequenceSpace
+
+The space of all sequences, i.e., infinite vectors.
 Also denoted ℓ⁰.
 """
 SequenceSpace()
