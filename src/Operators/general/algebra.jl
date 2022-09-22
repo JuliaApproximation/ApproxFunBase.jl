@@ -258,7 +258,7 @@ end
 _extractops(A::TimesOperator, ::typeof(*)) = A.ops
 
 function TimesOperator(A::Operator,B::Operator)
-    v = Operator{_promote_eltypeof(A,B)}[_extractops(A, *); _extractops(B, *)]
+    v = [_extractops(A, *); _extractops(B, *)]
     TimesOperator(v, _bandwidthssum(A, B), _timessize((A,B)))
 end
 
