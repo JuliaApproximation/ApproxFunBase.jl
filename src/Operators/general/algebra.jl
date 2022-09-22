@@ -634,7 +634,7 @@ function promotedomainspace(P::PlusOperator{T},sp::Space,cursp::Space) where T
         P
     else
         ops = [promotedomainspace(op,sp) for op in P.ops]
-        promoteplus(Vector{Operator{_promote_eltypeof(ops)}}(ops))
+        promoteplus(ops)
     end
 end
 
