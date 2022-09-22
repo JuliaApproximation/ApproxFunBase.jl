@@ -4,13 +4,13 @@ export PlusOperator, TimesOperator, mul_coefficients
 
 
 
-struct PlusOperator{T,O<:Operator{T},BI,SZ} <: Operator{T}
+struct PlusOperator{T,BI,SZ,O<:Operator{T}} <: Operator{T}
     ops::Vector{O}
     bandwidths::BI
     sz :: SZ
-    function PlusOperator{T,O,BI,SZ}(opsin::Vector{O},bi::BI,sz::SZ) where {T,O<:Operator{T},BI,SZ}
+    function PlusOperator{T,BI,SZ,O}(opsin::Vector{O},bi::BI,sz::SZ) where {T,O<:Operator{T},BI,SZ}
         all(x -> size(x)==sz, opsin) || throw("sizes of operators are incompatible")
-        new{T,O,BI,SZ}(opsin,bi,sz)
+        new{T,BI,SZ,O}(opsin,bi,sz)
     end
 end
 
@@ -23,7 +23,7 @@ function PlusOperator(opsin::Vector{O},
         bi::Tuple{Any,Any} = bandwidthsmax(opsin),
         sz::Tuple{Any,Any} = size(first(opsin)),
         ) where {O<:Operator}
-    PlusOperator{eltype(O),O,typeof(bi),typeof(sz)}(opsin,bi,sz)
+    PlusOperator{eltype(O),typeof(bi),typeof(sz),O}(opsin,bi,sz)
 end
 
 bandwidths(P::PlusOperator) = P.bandwidths
@@ -46,7 +46,7 @@ function convert(::Type{Operator{T}}, P::PlusOperator) where T
         P
     else
         ops = P.ops
-        PlusOperator(ops isa AbstractVector{<:Operator{T}} ? ops : map(x -> convert(Operator{T}, x), ops),
+        PlusOperator(ops isa AbstractVector{<:Operator{T}} ? ops : map(x -> strictconvert(Operator{T}, x), ops),
             P.bandwidths,P.sz)::Operator{T}
     end
 end
@@ -213,12 +213,12 @@ BLAS.axpy!(α,S::SubOperator{T,OP},A::AbstractMatrix) where {T,OP<:ConstantTimes
 
 
 
-struct TimesOperator{T,O<:Operator{T},BI,SZ} <: Operator{T}
+struct TimesOperator{T,BI,SZ,O<:Operator{T}} <: Operator{T}
     ops::Vector{O}
     bandwidths::BI
     sz::SZ
 
-    function TimesOperator{T,O,BI,SZ}(ops::Vector{O},bi::BI,sz::SZ) where {T,O<:Operator{T},BI,SZ}
+    function TimesOperator{T,BI,SZ,O}(ops::Vector{O},bi::BI,sz::SZ) where {T,O<:Operator{T},BI,SZ}
         # check compatible
         for k=1:length(ops)-1
             size(ops[k],2) == size(ops[k+1],1) || throw(ArgumentError("incompatible operator sizes"))
@@ -236,7 +236,7 @@ struct TimesOperator{T,O<:Operator{T},BI,SZ} <: Operator{T}
             newops = ops
         end
 
-        new{T,O,BI,SZ}(newops,bi,sz)
+        new{T,BI,SZ,O}(newops,bi,sz)
     end
 end
 
@@ -252,7 +252,7 @@ _timessize(ops) = (size(first(ops),1), size(last(ops),2))
 function TimesOperator(ops::Vector{O},
         bi::Tuple{Any,Any} = bandwidthssum(ops),
         sz::Tuple{Any,Any} = _timessize(ops)) where {T,O<:Operator{T}}
-    TimesOperator{T,O,typeof(bi),typeof(sz)}(ops,bi,sz)
+    TimesOperator{T,typeof(bi),typeof(sz),O}(ops,bi,sz)
 end
 
 _extractops(A::TimesOperator, ::typeof(*)) = A.ops
@@ -515,21 +515,21 @@ end
 
 for OP in (:(adjoint),:(transpose))
     @eval $OP(A::TimesOperator) = TimesOperator(
-        strictconvert(Vector{Operator{eltype(A)}}, reverse!(map($OP,A.ops))),
+        strictconvert(Vector, reverse!(map($OP,A.ops))),
         reverse(bandwidths(A)), reverse(size(A)))
 end
 
-_combineops(A::TimesOperator, B::TimesOperator, ::typeof(*)) = [_extractops(A, *); _extractops(B, *)]
-_combineops(A::TimesOperator, B::Operator, ::typeof(*)) = [_extractops(A, *); _extractops(B, *)]
-_combineops(A::Operator, B::TimesOperator, ::typeof(*)) = [_extractops(A, *); _extractops(B, *)]
-_combineops(A::Operator, B::Operator, ::typeof(*)) = (A, B)
+_collateops(A::TimesOperator, B::TimesOperator, ::typeof(*)) = [_extractops(A, *); _extractops(B, *)]
+_collateops(A::TimesOperator, B::Operator, ::typeof(*)) = [_extractops(A, *); _extractops(B, *)]
+_collateops(A::Operator, B::TimesOperator, ::typeof(*)) = [_extractops(A, *); _extractops(B, *)]
+_collateops(A::Operator, B::Operator, ::typeof(*)) = (A, B)
 function *(A::Operator,B::Operator)
     if isconstop(A)
         promoterangespace(strictconvert(Number,A)*B,rangespace(A))
     elseif isconstop(B)
         promotedomainspace(strictconvert(Number,B)*A,domainspace(B))
     else
-        promotetimes(_combineops(A, B, *),
+        promotetimes(_collateops(A, B, *),
             domainspace(B), _timessize((A,B)), false)
     end
 end
