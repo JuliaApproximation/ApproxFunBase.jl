@@ -276,9 +276,16 @@ function convert(::Type{Operator{T}},P::TimesOperator) where T
 end
 
 
-
-function promotetimes(opsin::Vector{<:Operator}, dsp = domainspace(last(opsin)),
-        sz = _timessize(opsin))
+@static if VERSION > v"1.8"
+    Base.@constprop :aggressive promotetimes(args...) = _promotetimes(args...)
+else
+    promotetimes(args...) = _promotetimes(args...)
+end
+@inline function _promotetimes(opsin::Vector{<:Operator},
+        dsp = domainspace(last(opsin)),
+        sz = _timessize(opsin),
+        anytimesop = true,
+        )
 
     @assert length(opsin) > 1 "need at least 2 operators"
     ops=Vector{Operator{_promote_eltypeof(opsin)}}(undef,0)
@@ -288,7 +295,7 @@ function promotetimes(opsin::Vector{<:Operator}, dsp = domainspace(last(opsin)),
         if !isa(opsin[k],Conversion)
             op=promotedomainspace(opsin[k],dsp)
             dsp=rangespace(op)
-            if isa(op,TimesOperator)
+            if anytimesop && isa(op,TimesOperator)
                 append!(ops, view(op.ops, reverse(axes(op.ops,1))))
             else
                 push!(ops,op)
@@ -494,7 +501,7 @@ function *(A::Operator,B::Operator)
         promotedomainspace(strictconvert(Number,B)*A,domainspace(B))
     else
         promotetimes([_extractops(A, *); _extractops(B, *)],
-            domainspace(B), _timessize((A,B)))
+            domainspace(B), _timessize((A,B)), false)
     end
 end
 
