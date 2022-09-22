@@ -553,8 +553,12 @@ end
 *(A::Conversion,B::Operator) =
     isconstop(B) ? promotedomainspace(strictconvert(Number,B)*A,domainspace(B)) : TimesOperator(A,B)
 
-^(A::Operator, p::Integer) = foldr(*, fill(A, p))
-
+@inline function ^(A::Operator, p::Integer)
+    p < 0 && return ^(inv(A), -p)
+    p == 0 && return ConstantOperator(one(eltype(A)), domainspace(A))
+    p <= 5 && return foldr(*, ntuple(_->A, p-1), init=A)
+    return foldr(*, fill(A, p-2), init=A*A)
+end
 
 +(A::Operator) = A
 -(A::Operator) = ConstantTimesOperator(-1,A)
