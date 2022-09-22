@@ -281,28 +281,53 @@ end
 else
     promotetimes(args...) = _promotetimes(args...)
 end
-@inline function _promotetimes(opsin::Vector{<:Operator},
+@inline function _promotetimes(opsin,
         dsp = domainspace(last(opsin)),
         sz = _timessize(opsin),
         anytimesop = true,
         )
 
     @assert length(opsin) > 1 "need at least 2 operators"
+    ops, bw = __promotetimes(opsin, dsp, anytimesop)
+    TimesOperator(ops, bw, sz)
+end
+@inline function __promotetimes(opsin, dsp, anytimesop)
     ops=Vector{Operator{_promote_eltypeof(opsin)}}(undef,0)
     sizehint!(ops, length(opsin))
 
-    for k=length(opsin):-1:1
-        if !isa(opsin[k],Conversion)
-            op=promotedomainspace(opsin[k],dsp)
-            dsp=rangespace(op)
-            if anytimesop && isa(op,TimesOperator)
-                append!(ops, view(op.ops, reverse(axes(op.ops,1))))
+    for k = length(opsin):-1:1
+        op = opsin[k]
+        if !isa(op, Conversion)
+            op_dsp=promotedomainspace(op, dsp)
+            dsp=rangespace(op_dsp)
+            if anytimesop && isa(op_dsp,TimesOperator)
+                append!(ops, view(op_dsp.ops, reverse(axes(op_dsp.ops,1))))
             else
-                push!(ops,op)
+                push!(ops, op_dsp)
             end
         end
     end
-    TimesOperator(reverse!(ops), bandwidthssum(ops), sz)
+    reverse!(ops), bandwidthssum(ops)
+end
+@inline function __promotetimes(opsin::Tuple{Operator, Operator}, dsp, anytimesop)
+    @assert !any(Base.Fix2(isa, TimesOperator), opsin) "TimesOperator should have been extracted already"
+
+    op1 = first(opsin)
+    op2 = last(opsin)
+
+    if op2 isa Conversion && op1 isa Conversion
+        op = Conversion(domainspace(op2), rangespace(op1))
+        return [op], bandwidths(op)
+    elseif op2 isa Conversion
+        op = op1 → rangespace(op2)
+        return [op], bandwidths(op)
+    elseif op1 isa Conversion
+        op = op2 : domainspace(op1) → rangespace(op2)
+        return [op], bandwidths(op)
+    else
+        op1_dsp = op1:rangespace(op2)
+        return [op1_dsp, op2], bandwidthssum((op1_dsp, op2))
+    end
 end
 
 domainspace(P::TimesOperator)=domainspace(last(P.ops))
@@ -494,13 +519,17 @@ for OP in (:(adjoint),:(transpose))
         reverse(bandwidths(A)), reverse(size(A)))
 end
 
+_combineops(A::TimesOperator, B::TimesOperator, ::typeof(*)) = [_extractops(A, *); _extractops(B, *)]
+_combineops(A::TimesOperator, B::Operator, ::typeof(*)) = [_extractops(A, *); _extractops(B, *)]
+_combineops(A::Operator, B::TimesOperator, ::typeof(*)) = [_extractops(A, *); _extractops(B, *)]
+_combineops(A::Operator, B::Operator, ::typeof(*)) = (A, B)
 function *(A::Operator,B::Operator)
     if isconstop(A)
         promoterangespace(strictconvert(Number,A)*B,rangespace(A))
     elseif isconstop(B)
         promotedomainspace(strictconvert(Number,B)*A,domainspace(B))
     else
-        promotetimes([_extractops(A, *); _extractops(B, *)],
+        promotetimes(_combineops(A, B, *),
             domainspace(B), _timessize((A,B)), false)
     end
 end
