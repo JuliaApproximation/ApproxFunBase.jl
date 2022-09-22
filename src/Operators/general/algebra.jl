@@ -213,12 +213,12 @@ BLAS.axpy!(α,S::SubOperator{T,OP},A::AbstractMatrix) where {T,OP<:ConstantTimes
 
 
 
-struct TimesOperator{T,BI,SZ} <: Operator{T}
-    ops::Vector{Operator{T}}
+struct TimesOperator{T,O<:Operator{T},BI,SZ} <: Operator{T}
+    ops::Vector{O}
     bandwidths::BI
     sz::SZ
 
-    function TimesOperator{T,BI,SZ}(ops::Vector{Operator{T}},bi::BI,sz::SZ) where {T,BI,SZ}
+    function TimesOperator{T,O,BI,SZ}(ops::Vector{O},bi::BI,sz::SZ) where {T,O<:Operator{T},BI,SZ}
         # check compatible
         for k=1:length(ops)-1
             size(ops[k],2) == size(ops[k+1],1) || throw(ArgumentError("incompatible operator sizes"))
@@ -236,7 +236,7 @@ struct TimesOperator{T,BI,SZ} <: Operator{T}
             newops = ops
         end
 
-        new{T,BI,SZ}(newops,bi,sz)
+        new{T,O,BI,SZ}(newops,bi,sz)
     end
 end
 
@@ -249,16 +249,10 @@ __bandwidthssum(A, B::NTuple{2,InfiniteCardinal{0}}) = B
 __bandwidthssum(A, B) = reduce((t1, t2) -> t1 .+ t2, (A, B), init = (0,0))
 
 _timessize(ops) = (size(first(ops),1), size(last(ops),2))
-function TimesOperator(ops::Vector{Operator{T}},
+function TimesOperator(ops::Vector{O},
         bi::Tuple{Any,Any} = bandwidthssum(ops),
-        sz::Tuple{Any,Any} = _timessize(ops)) where {T}
-    TimesOperator{T,typeof(bi),typeof(sz)}(ops,bi,sz)
-end
-
-function TimesOperator(ops::Vector{OT}) where {OT<:Operator}
-    TimesOperator(strictconvert(
-        Vector{Operator{eltype(OT)}},ops),
-        bandwidthssum(ops), _timessize(ops))
+        sz::Tuple{Any,Any} = _timessize(ops)) where {T,O<:Operator{T}}
+    TimesOperator{T,O,typeof(bi),typeof(sz)}(ops,bi,sz)
 end
 
 _extractops(A::TimesOperator, ::typeof(*)) = A.ops
@@ -275,7 +269,9 @@ function convert(::Type{Operator{T}},P::TimesOperator) where T
     if T==eltype(P)
         P
     else
-        TimesOperator(strictconvert(Vector{Operator{T}}, P.ops), bandwidths(P), size(P))
+        ops = P.ops
+        TimesOperator(ops isa AbstractVector{<:Operator{T}} ? ops : map(x -> strictconvert(Operator{T}, x), ops) ,
+            bandwidths(P), size(P))
     end
 end
 
