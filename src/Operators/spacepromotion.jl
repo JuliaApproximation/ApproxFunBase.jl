@@ -47,11 +47,11 @@ rangespace(S::SpaceOperator) = S.rangespace
 
 
 ##TODO: Do we need both max and min?
-function findmindomainspace(ops::AbstractVector)
+function findmindomainspace(ops)
     mapreduce(domainspace, union, ops, init = UnsetSpace())
 end
 
-function findmaxrangespace(ops::AbstractVector)
+function findmaxrangespace(ops)
     mapreduce(rangespace, maxspace, ops, init = UnsetSpace())
 end
 
@@ -77,21 +77,21 @@ promotedomainspace(P::Operator,sp::Space,cursp::Space) =
 
 
 
-function promoterangespace(ops::AbstractVector{O}) where O<:Operator
+function promoterangespace(ops::Union{AbstractVector{O}, NTuple{<:Any,O}}) where O<:Operator
     isempty(ops) && return strictconvert(Vector{Operator{eltype(O)}}, ops)
     k=findmaxrangespace(ops)
     #TODO: T might be incorrect
     T=mapreduce(eltype,promote_type,ops)
     Operator{T}[promoterangespace(op,k) for op in ops]
 end
-function promotedomainspace(ops::AbstractVector{O}) where O<:Operator
+function promotedomainspace(ops::Union{AbstractVector{O}, NTuple{<:Any,O}}) where O<:Operator
     isempty(ops) && return strictconvert(Vector{Operator{eltype(O)}}, ops)
     k=findmindomainspace(ops)
     #TODO: T might be incorrect
     T=mapreduce(eltype,promote_type,ops)
     Operator{T}[promotedomainspace(op,k) for op in ops]
 end
-function promotedomainspace(ops::AbstractVector{O},S::Space) where O<:Operator
+function promotedomainspace(ops::Union{AbstractVector{O}, NTuple{<:Any,O}},S::Space) where O<:Operator
     isempty(ops) && return strictconvert(Vector{Operator{eltype(O)}}, ops)
     k=conversion_type(findmindomainspace(ops),S)
     #TODO: T might be incorrect
