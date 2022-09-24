@@ -88,26 +88,31 @@ promotedomainspace(P::Operator,sp::Space,cursp::Space) =
 
 const VectorOrTupleOfOp{O<:Operator} = Union{AbstractVector{O}, Tuple{O, Vararg{O}}}
 
+__maybetypedmap(f, k, ops) = map(op->f(op,k), ops)
+_maybetypedmap(f, k, O, ops::AbstractVector) =
+    convert(AbstractArray{O}, __maybetypedmap(f, k, ops))
+_maybetypedmap(f, k, O, ops) = __maybetypedmap(f, k, ops)
+
 function promoterangespace(ops::VectorOrTupleOfOp{O}) where O<:Operator
     isempty(ops) && return strictconvert(Vector{Operator{eltype(O)}}, ops)
     k=findmaxrangespace(ops)
     #TODO: T might be incorrect
     T=mapreduce(eltype,promote_type,ops)
-    Operator{T}[promoterangespace(op,k) for op in ops]
+    _maybetypedmap(promoterangespace, k, Operator{T}, ops)
 end
 function promotedomainspace(ops::VectorOrTupleOfOp{O}) where O<:Operator
     isempty(ops) && return strictconvert(Vector{Operator{eltype(O)}}, ops)
     k=findmindomainspace(ops)
     #TODO: T might be incorrect
     T=mapreduce(eltype,promote_type,ops)
-    Operator{T}[promotedomainspace(op,k) for op in ops]
+    _maybetypedmap(promotedomainspace, k, Operator{T}, ops)
 end
 function promotedomainspace(ops::VectorOrTupleOfOp{O}, S::Space) where O<:Operator
     isempty(ops) && return strictconvert(Vector{Operator{eltype(O)}}, ops)
     k=conversion_type(findmindomainspace(ops),S)
     #TODO: T might be incorrect
     T=promote_type(mapreduce(eltype,promote_type,ops),prectype(S))
-    Operator{T}[promotedomainspace(op,k) for op in ops]
+    _maybetypedmap(promotedomainspace, k, Operator{T}, ops)
 end
 
 
