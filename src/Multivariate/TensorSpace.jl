@@ -331,24 +331,72 @@ Base.transpose(d::TensorSpace) = TensorSpace(d.spaces[2],d.spaces[1])
 
 
 ## Transforms
-
+function nDtransform_inner!(A, tempv, Rpre, Rpost, dim, plan!)
+    for indpost in Rpost, indpre in Rpre
+        v = view(A, indpre, :, indpost)
+        tempv .= v
+        v .= plan! * tempv
+    end
+    A
+end
 for (plan, plan!, Typ) in ((:plan_transform, :plan_transform!, :TransformPlan),
                            (:plan_itransform, :plan_itransform!, :ITransformPlan))
-    @eval begin
-        $plan!(S::TensorSpace, M::AbstractMatrix) = $Typ(S,(($plan(S.spaces[1],size(M,1)),size(M,1)),
-                                                             ($plan(S.spaces[2],size(M,2)),size(M,2))),
-                                                             Val{true})
 
-        function *(T::$Typ{<:Any,<:TensorSpace,true}, M::AbstractMatrix)
-            n=size(M,1)
-
-            for k=1:size(M,2)
-                M[:,k]=T.plan[1][1]*M[:,k]
+    for (f, ip) in [(plan, false), (plan!, true)]
+        @eval function $f(S::TensorSpace{<:NTuple{N,Space}}, A::AbstractArray{<:Any,N}) where {N}
+            spaces = S.spaces
+            tempv = similar(A, size(A,1))
+            sizehint!(tempv, maximum(size(A), init=0))
+            plans = ntuple(N) do dim
+                szdim = size(A,dim)
+                resize!(tempv, szdim)
+                ($f(spaces[dim], tempv), szdim)
             end
-            for k=1:n
-                M[k,:]=T.plan[2][1]*M[k,:]
+            $Typ(S, plans, Val{$ip})
+        end
+    end
+
+    @eval begin
+        function *(T::$Typ{<:Any,<:TensorSpace{<:NTuple{2,Space}},true}, M::AbstractMatrix)
+            Base.require_one_based_indexing(M)
+            all(dim -> T.plan[dim][2] == size(M,dim), 1:2) ||
+                throw(ArgumentError("size of matrix is incompatible with transform plan"))
+
+            tempv = similar(M, size(M,1))
+            for k in axes(M,2)
+                tempv .= @view M[:, k]
+                M[:,k]=T.plan[1][1]*tempv
+            end
+            resize!(tempv, size(M,2))
+            for k in axes(M,1)
+                tempv .= @view M[k,:]
+                M[k,:]=T.plan[2][1]*tempv
             end
             M
+        end
+
+        function *(T::$Typ{<:Any,<:TensorSpace{<:NTuple{N,Space}},true}, A::AbstractArray{<:Any,N}) where {N}
+            Base.require_one_based_indexing(A)
+            all(dim -> T.plan[dim][2] == size(A,dim), 1:N) ||
+                throw(ArgumentError("size of array is incompatible with transform plan"))
+
+            tempv = similar(A, size(A,1))
+            sizehint!(tempv, maximum(size(A), init=0))
+            for dim in 1:N
+                Rpre = CartesianIndices(axes(A)[1:dim-1])
+                Rpost = CartesianIndices(axes(A)[dim+1:end])
+                resize!(tempv, size(A, dim))
+                nDtransform_inner!(A, tempv, Rpre, Rpost, dim, T.plan[dim][1])
+            end
+            A
+        end
+
+        function *(T::$Typ{<:Any,<:TensorSpace{<:NTuple{N,Space}},false},
+                A::AbstractArray{<:Any,N}) where {N}
+            # TODO: we assume that the transform has the same number of coefficients
+            # as the number of points in A
+            # This may not always be the case, so we may need to fix this
+            $Typ(T.space, T.plan, Val{true}) * copy(A)
         end
 
         function *(T::$Typ{TT,SS,false},v::AbstractVector) where {SS<:TensorSpace,TT}
@@ -489,7 +537,7 @@ function points(sp::TensorSpace,n)
 end
 
 
-itransform(sp::TensorSpace,cfs) = vec(itransform!(sp,coefficientmatrix(Fun(sp,cfs))))
+itransform(sp::TensorSpace,cfs::AbstractVector) = vec(itransform!(sp,coefficientmatrix(Fun(sp,cfs))))
 
 evaluate(f::AbstractVector,S::AbstractProductSpace,x) = ProductFun(totensor(S,f),S)(x...)
 evaluate(f::AbstractVector,S::AbstractProductSpace,x,y) = ProductFun(totensor(S,f),S)(x,y)
