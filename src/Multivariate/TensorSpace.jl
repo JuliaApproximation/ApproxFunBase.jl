@@ -346,7 +346,7 @@ for (plan, plan!, Typ) in ((:plan_transform, :plan_transform!, :TransformPlan),
         @eval function $f(S::TensorSpace{<:NTuple{N,Space}}, A::AbstractArray{<:Any,N}) where {N}
             spaces = S.spaces
             tempv = similar(A, size(A,1))
-            sizehint!(tempv, maximum(size(A), init=0))
+            sizehint!(tempv, reduce(max, size(A), init=0))
             plans = ntuple(N) do dim
                 szdim = size(A,dim)
                 resize!(tempv, szdim)
@@ -381,7 +381,7 @@ for (plan, plan!, Typ) in ((:plan_transform, :plan_transform!, :TransformPlan),
                 throw(ArgumentError("size of array is incompatible with transform plan"))
 
             tempv = similar(A, size(A,1))
-            sizehint!(tempv, maximum(size(A), init=0))
+            sizehint!(tempv, reduce(max, size(A), init=0))
             for dim in 1:N
                 Rpre = CartesianIndices(axes(A)[1:dim-1])
                 Rpost = CartesianIndices(axes(A)[dim+1:end])
