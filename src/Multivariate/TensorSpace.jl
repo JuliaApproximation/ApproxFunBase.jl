@@ -537,7 +537,7 @@ function points(sp::TensorSpace,n)
 end
 
 
-itransform(sp::TensorSpace,cfs) = vec(itransform!(sp,coefficientmatrix(Fun(sp,cfs))))
+itransform(sp::TensorSpace,cfs::AbstractVector) = vec(itransform!(sp,coefficientmatrix(Fun(sp,cfs))))
 
 evaluate(f::AbstractVector,S::AbstractProductSpace,x) = ProductFun(totensor(S,f),S)(x...)
 evaluate(f::AbstractVector,S::AbstractProductSpace,x,y) = ProductFun(totensor(S,f),S)(x,y)
