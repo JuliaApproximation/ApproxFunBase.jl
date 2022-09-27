@@ -245,7 +245,8 @@ extrapolate(f::Fun,x,y,z...) = extrapolate(f.coefficients,f.space,Vec(x,y,z...))
 
 values(f::Fun,dat...) = _values(f.space, f.coefficients, dat...)
 _values(sp, v, dat...) = itransform(sp, v, dat...)
-_values(sp, v::Vector{T}, dat...) where {T} = itransform(sp, v, dat...)::Vector{float(T)}
+_values(sp::UnivariateSpace, v::Vector{T}, dat...) where {T<:Number} =
+    itransform(sp, v, dat...)::Vector{float(T)}
 points(f::Fun) = points(f.space,ncoefficients(f))
 ncoefficients(f::Fun)::Int = length(f.coefficients)
 blocksize(f::Fun) = (block(space(f),ncoefficients(f)).n[1],)
