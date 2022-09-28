@@ -307,14 +307,16 @@ struct ProductSpace{S<:Space,V<:Space,D,R} <: AbstractProductSpace{Tuple{S,V},D,
     spacey::V
 end
 
-ProductSpace(spacesx::Vector,spacey) =
-    ProductSpace{eltype(spacesx),typeof(spacey),typeof(mapreduce(domain,×,sp)),
-                mapreduce(s->eltype(domain(s)),promote_type,sp)}(spacesx,spacey)
+function ProductSpace(spacesx::AbstractVector, spacey)
+    ProductSpace{eltype(spacesx),typeof(spacey),typeof(mapreduce(domain, ×, spacesx)),
+                mapreduce(s->eltype(domain(s)),promote_type,spacesx)}(spacesx,spacey)
+end
 
 # TODO: This is a weird definition
-⊗(A::Vector{S},B::Space) where {S<:Space} = ProductSpace(A,B)
-domain(f::ProductSpace) = domain(f.spacesx[1])×domain(f.spacesy)
+⊗(A::AbstractVector{S},B::Space) where {S<:Space} = ProductSpace(A,B)
+domain(f::ProductSpace) = domain(f.spacesx[1]) × domain(f.spacey)
 
+factors(d::ProductSpace) = (d.spacesx, d.spacey)
 
 nfactors(d::AbstractProductSpace) = length(d.spaces)
 factors(d::AbstractProductSpace) = d.spaces
