@@ -37,9 +37,9 @@ end
 
 ## Construction in a ProductSpace via a Vector of Funs
 
-function ProductFun(M::Vector{VFun{S,T}},dy::V) where {S<:UnivariateSpace,V<:UnivariateSpace,T<:Number}
-    funs=VFun{S,T}[Mk for Mk in M]
-    ProductFun{S,V,ProductSpace{S,V},T}(funs,ProductSpace(S[space(fun) for fun in funs],dy))
+function ProductFun(M::AbstractVector{VFun{S,T}},dy::V) where {S<:UnivariateSpace,V<:UnivariateSpace,T<:Number}
+    prodsp = ProductSpace(map(space, M), dy)
+    ProductFun{S,V,typeof(prodsp),T}(copy(M), prodsp)
 end
 
 ## Adaptive construction

@@ -25,7 +25,7 @@ function show(io::IO,L::LowRankFun)
 end
 
 function show(io::IO,P::ProductFun)
-    print(io,"ProductFun on ",space(P),".")
+    print(io,"ProductFun on ",space(P))
 end
 
 ## Operator
