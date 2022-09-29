@@ -67,10 +67,12 @@ function PartialInverseOperator(CO::CachedOperator{T},bandwidths) where T<:Numbe
     return PartialInverseOperator{T,typeof(CO),typeof(bandwidths)}(CO,bandwidths)
 end
 
-PartialInverseOperator(B::Operator, bandwidths) = PartialInverseOperator(cache(B), bandwidths)
-PartialInverseOperator(B::Operator) = PartialInverseOperator(B, bandwidths(B))
+function PartialInverseOperator(B::Operator, bandwidths = bandwidths(B))
+    PartialInverseOperator(cache(B), bandwidths)
+end
 
-convert(::Type{Operator{T}},A::PartialInverseOperator) where {T}=PartialInverseOperator(strictconvert(Operator{T},A.cache), A.bandwidths)
+convert(::Type{Operator{T}},A::PartialInverseOperator) where {T} =
+    PartialInverseOperator(strictconvert(Operator{T},A.cache), A.bandwidths)
 
 domainspace(P::PartialInverseOperator)=rangespace(P.cache)
 rangespace(P::PartialInverseOperator)=domainspace(P.cache)
