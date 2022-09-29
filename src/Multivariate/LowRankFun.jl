@@ -424,3 +424,6 @@ sum(g::LowRankFun,n::Integer)=(n==1) ? dotu(g.B,map(sum,g.A)) : dotu(g.A,map(sum
 cumsum(g::LowRankFun,n::Integer)=(n==1) ? LowRankFun(map(cumsum,g.A),copy(g.B)) : LowRankFun(copy(g.A),map(cumsum,g.B))
 differentiate(g::LowRankFun,n::Integer)=(n==1) ? LowRankFun(map(differentiate,g.A),copy(g.B)) : LowRankFun(copy(g.A),map(differentiate,g.B))
 integrate(g::LowRankFun,n::Integer)=(n==1) ? LowRankFun(map(integrate,g.A),copy(g.B)) : LowRankFun(copy(g.A),map(integrate,g.B))
+
+zero(L::LowRankFun) = LowRankFun((x...)->zero(cfstype(L)), space(L))
+one(L::LowRankFun) = LowRankFun((x...)->one(cfstype(L)), space(L))
