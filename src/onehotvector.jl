@@ -8,4 +8,5 @@ Base.length(v::OneHotVector) = v.len
 function Base.getindex(v::OneHotVector{T}, i::Int) where {T}
 	i == v.n ? one(T) : zero(T)
 end
-basisfunction(sp, k) = Fun(sp, OneHotVector(k))
+# assume that the basis label starts at zero
+basisfunction(sp, k) = Fun(sp, OneHotVector(k+1))
