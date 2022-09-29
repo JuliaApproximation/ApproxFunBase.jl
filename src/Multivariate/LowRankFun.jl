@@ -5,7 +5,19 @@
 export LowRankFun
 
 """
-`LowRankFun` gives an approximation to a bivariate function in low rank form.
+    LowRankFun
+
+Return an approximation to a bivariate function in low rank form.
+
+# Examples
+```jldoctest
+julia> f = (x,y) -> x^2 * y^3;
+
+julia> L = LowRankFun(f, Chebyshev() ⊗ Chebyshev());
+
+julia> L(0.1, 0.2) ≈ f(0.1, 0.2)
+true
+```
 """
 mutable struct LowRankFun{S<:Space,M<:Space,SS<:AbstractProductSpace,T<:Number} <: BivariateFun{T}
     A::Vector{VFun{S,T}}
@@ -30,6 +42,7 @@ LowRankFun(A::Vector{VFun{S,T}},B::Vector{VFun{M,V}}) where {S,M,T,V} =
     LowRankFun(strictconvert(Vector{VFun{S,promote_type(T,V)}},A),
                strictconvert(Vector{VFun{M,promote_type(T,V)}},B),
                space(first(A))⊗space(first(B)))
+
 rank(f::LowRankFun) = length(f.A)
 size(f::LowRankFun,k::Integer) = k==1 ? mapreduce(length,max,f.A) : mapreduce(length,max,f.B)
 size(f::LowRankFun) = size(f,1),size(f,2)

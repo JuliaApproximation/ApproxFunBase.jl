@@ -163,6 +163,13 @@ using LinearAlgebra
             @test ℯ^f == exp(f)
             @test values(ℯ^f) == exp.(values(f))
         end
+
+        # trivial sanity tests for PartialInverseOperator
+        @testset "PartialInverseOperator" begin
+            C = Conversion(PointSpace(1:3), PointSpace(1:3))
+            P = PartialInverseOperator(C)
+            @test AbstractMatrix(P * C) == I(size(C,1))
+        end
     end
 
     @testset "DiracSpace" begin
