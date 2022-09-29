@@ -17,5 +17,5 @@ end
 # assume that the basis label starts at zero
 function basisfunction(sp, k)
 	k >= 0 || throw(ArgumentError("basis label must be non-negative, received $k"))
-	Fun(sp, OneHotVector(k+1))
+	Fun(sp, OneHotVector(k))
 end
