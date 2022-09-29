@@ -51,13 +51,10 @@ coefficients(f::BivariateFun,sp::TensorSpace)=coefficients(f,sp[1],sp[2])
 points(f::BivariateFun,k...)=points(space(f),size(f,1),size(f,2),k...)
 
 
-function *(vx::LowRankFun,u0::ProductFun)
-    ret=zero(space(u0))
-    for k=1:length(vx.A)
-        a,b=vx.A[k],vx.B[k]
-        ret+=transpose(b*(transpose(a*u0)))
+function *(vx::LowRankFun, u0::ProductFun)
+    sum(zip(vx.A, vx.B)) do (a,b)
+        transpose(b*(transpose(a*u0)))
     end
-    ret
 end
 
 *(a::ProductFun,b::LowRankFun)=b*a
