@@ -1,7 +1,63 @@
 export PartialInverseOperator
 
+"""
+    PartialInverseOperator(O::Operator[, bandwidths = bandwidths(O)])
 
-struct PartialInverseOperator{T<:Number,CO<:CachedOperator,BI} <: Operator{T}
+Return an approximate estimate for `inv(O)`, such that `PartialInverseOperator(O) * O` is banded, and
+is approximately `I` up to a bandwidth that is one less than the sum of the bandwidths
+of `O` and `PartialInverseOperator(O)`.
+
+!!! note
+    Only upper triangular operators are supported as of now.
+
+# Examples
+
+```jldoctest
+julia> C = Conversion(Chebyshev(), Ultraspherical(1));
+
+julia> bandwidths(C)
+(0, 2)
+
+julia> P = PartialInverseOperator(C);
+
+julia> bandwidths(P)
+(0, 2)
+
+julia> P * C
+TimesOperator : Chebyshev() → Chebyshev()
+ 1.0  0.0  0.0  0.0  -0.5    ⋅     ⋅     ⋅     ⋅     ⋅   ⋅
+  ⋅   1.0  0.0  0.0   0.0  -1.0    ⋅     ⋅     ⋅     ⋅   ⋅
+  ⋅    ⋅   1.0  0.0   0.0   0.0  -1.0    ⋅     ⋅     ⋅   ⋅
+  ⋅    ⋅    ⋅   1.0   0.0   0.0   0.0  -1.0    ⋅     ⋅   ⋅
+  ⋅    ⋅    ⋅    ⋅    1.0   0.0   0.0   0.0  -1.0    ⋅   ⋅
+  ⋅    ⋅    ⋅    ⋅     ⋅    1.0   0.0   0.0   0.0  -1.0  ⋅
+  ⋅    ⋅    ⋅    ⋅     ⋅     ⋅    1.0   0.0   0.0   0.0  ⋱
+  ⋅    ⋅    ⋅    ⋅     ⋅     ⋅     ⋅    1.0   0.0   0.0  ⋱
+  ⋅    ⋅    ⋅    ⋅     ⋅     ⋅     ⋅     ⋅    1.0   0.0  ⋱
+  ⋅    ⋅    ⋅    ⋅     ⋅     ⋅     ⋅     ⋅     ⋅    1.0  ⋱
+  ⋅    ⋅    ⋅    ⋅     ⋅     ⋅     ⋅     ⋅     ⋅     ⋅   ⋱
+
+julia> P = PartialInverseOperator(C, (0, 4));
+
+julia> bandwidths(P)
+(0, 4)
+
+julia> P * C
+TimesOperator : Chebyshev() → Chebyshev()
+ 1.0  0.0  0.0  0.0  0.0  0.0  -0.5    ⋅     ⋅     ⋅   ⋅
+  ⋅   1.0  0.0  0.0  0.0  0.0   0.0  -1.0    ⋅     ⋅   ⋅
+  ⋅    ⋅   1.0  0.0  0.0  0.0   0.0   0.0  -1.0    ⋅   ⋅
+  ⋅    ⋅    ⋅   1.0  0.0  0.0   0.0   0.0   0.0  -1.0  ⋅
+  ⋅    ⋅    ⋅    ⋅   1.0  0.0   0.0   0.0   0.0   0.0  ⋱
+  ⋅    ⋅    ⋅    ⋅    ⋅   1.0   0.0   0.0   0.0   0.0  ⋱
+  ⋅    ⋅    ⋅    ⋅    ⋅    ⋅    1.0   0.0   0.0   0.0  ⋱
+  ⋅    ⋅    ⋅    ⋅    ⋅    ⋅     ⋅    1.0   0.0   0.0  ⋱
+  ⋅    ⋅    ⋅    ⋅    ⋅    ⋅     ⋅     ⋅    1.0   0.0  ⋱
+  ⋅    ⋅    ⋅    ⋅    ⋅    ⋅     ⋅     ⋅     ⋅    1.0  ⋱
+  ⋅    ⋅    ⋅    ⋅    ⋅    ⋅     ⋅     ⋅     ⋅     ⋅   ⋱
+```
+"""
+struct PartialInverseOperator{T<:Number,CO<:CachedOperator,BI<:Tuple{Any,Any}} <: Operator{T}
     cache::CO
     bandwidths::BI
 end
@@ -60,7 +116,7 @@ end
 
 ## These are both hacks that apparently work
 
-function BandedMatrix(S::SubOperator{T,PP,Tuple{UnitRange{Int},UnitRange{Int}}}) where {T,PP<:PartialInverseOperator}
+function BandedMatrix(S::SubOperator{T,<:PartialInverseOperator,Tuple{UnitRange{Int},UnitRange{Int}}}) where {T}
     kr,jr = parentindices(S)
     P = parent(S)
     #ret = BandedMatrix{eltype(S)}(undef, size(S), bandwidths(S))
