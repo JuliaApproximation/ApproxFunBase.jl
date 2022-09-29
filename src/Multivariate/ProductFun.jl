@@ -344,3 +344,6 @@ end
 for op in (:tocanonical,:fromcanonical)
     @eval $op(f::ProductFun,x...) = $op(space(f),x...)
 end
+
+zero(P::ProductFun) = ProductFun((x...)->zero(cfstype(P)), space(P))
+one(P::ProductFun) = ProductFun((x...)->one(cfstype(P)), space(P))

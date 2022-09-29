@@ -60,6 +60,14 @@ end
 *(a::ProductFun,b::LowRankFun)=b*a
 *(a::MultivariateFun,b::MultivariateFun)=LowRankFun(a)*ProductFun(b)
 
+@inline function ^(a::MultivariateFun, n::Integer)
+    n < 0 && return ^(inv(a), -n)
+    n == 0 && return one(a)
+    n == 1 && return a
+    n == 2 && return a * a
+    return foldr(*, fill(a, n-2), init=a*a)
+end
+
 for OP in (:+,:-,:*,:/)
     @eval begin
         $OP(f::Fun,g::MultivariateFun)=$OP(ProductFun(f),g)
