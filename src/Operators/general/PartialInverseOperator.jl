@@ -1,5 +1,53 @@
 export PartialInverseOperator
 
+"""
+    PartialInverseOperator(O::Operator[, bandwidths = bandwidths(O)])
+
+Return an approximate estimate for `inv(O)`, such that `PartialInverseOperator(O) * O` is banded, and
+is approximately `I` up to a bandwidth that is one less than the sum of the bandwidths
+of `O` and `PartialInverseOperator(O)`.
+
+!!! note
+    Only upper triangular operators are supported as of now.
+
+# Examples
+
+```jldoctest
+julia> C = Conversion(Chebyshev(), Ultraspherical(1));
+
+julia> P = PartialInverseOperator(C); # default bandwidth = (0,2)
+
+julia> P * C
+TimesOperator : Chebyshev() → Chebyshev()
+ 1.0  0.0  0.0  0.0  -0.5    ⋅     ⋅     ⋅     ⋅     ⋅   ⋅
+  ⋅   1.0  0.0  0.0   0.0  -1.0    ⋅     ⋅     ⋅     ⋅   ⋅
+  ⋅    ⋅   1.0  0.0   0.0   0.0  -1.0    ⋅     ⋅     ⋅   ⋅
+  ⋅    ⋅    ⋅   1.0   0.0   0.0   0.0  -1.0    ⋅     ⋅   ⋅
+  ⋅    ⋅    ⋅    ⋅    1.0   0.0   0.0   0.0  -1.0    ⋅   ⋅
+  ⋅    ⋅    ⋅    ⋅     ⋅    1.0   0.0   0.0   0.0  -1.0  ⋅
+  ⋅    ⋅    ⋅    ⋅     ⋅     ⋅    1.0   0.0   0.0   0.0  ⋱
+  ⋅    ⋅    ⋅    ⋅     ⋅     ⋅     ⋅    1.0   0.0   0.0  ⋱
+  ⋅    ⋅    ⋅    ⋅     ⋅     ⋅     ⋅     ⋅    1.0   0.0  ⋱
+  ⋅    ⋅    ⋅    ⋅     ⋅     ⋅     ⋅     ⋅     ⋅    1.0  ⋱
+  ⋅    ⋅    ⋅    ⋅     ⋅     ⋅     ⋅     ⋅     ⋅     ⋅   ⋱
+
+julia> P = PartialInverseOperator(C, (0, 4)); # increase the upper bandwidth
+
+julia> P * C
+TimesOperator : Chebyshev() → Chebyshev()
+ 1.0  0.0  0.0  0.0  0.0  0.0  -0.5    ⋅     ⋅     ⋅   ⋅
+  ⋅   1.0  0.0  0.0  0.0  0.0   0.0  -1.0    ⋅     ⋅   ⋅
+  ⋅    ⋅   1.0  0.0  0.0  0.0   0.0   0.0  -1.0    ⋅   ⋅
+  ⋅    ⋅    ⋅   1.0  0.0  0.0   0.0   0.0   0.0  -1.0  ⋅
+  ⋅    ⋅    ⋅    ⋅   1.0  0.0   0.0   0.0   0.0   0.0  ⋱
+  ⋅    ⋅    ⋅    ⋅    ⋅   1.0   0.0   0.0   0.0   0.0  ⋱
+  ⋅    ⋅    ⋅    ⋅    ⋅    ⋅    1.0   0.0   0.0   0.0  ⋱
+  ⋅    ⋅    ⋅    ⋅    ⋅    ⋅     ⋅    1.0   0.0   0.0  ⋱
+  ⋅    ⋅    ⋅    ⋅    ⋅    ⋅     ⋅     ⋅    1.0   0.0  ⋱
+  ⋅    ⋅    ⋅    ⋅    ⋅    ⋅     ⋅     ⋅     ⋅    1.0  ⋱
+  ⋅    ⋅    ⋅    ⋅    ⋅    ⋅     ⋅     ⋅     ⋅     ⋅   ⋱
+```
+"""
 struct PartialInverseOperator{T<:Number,CO<:CachedOperator,BI<:Tuple{Any,Any}} <: Operator{T}
     cache::CO
     bandwidths::BI

@@ -4,6 +4,21 @@
 
 export LowRankFun
 
+"""
+    LowRankFun(f, space::TensorSpace)
+
+Return an approximation to a bivariate function in low rank form.
+
+# Examples
+```jldoctest
+julia> f = (x,y) -> x^2 * y^3;
+
+julia> L = LowRankFun(f, Chebyshev() ⊗ Chebyshev());
+
+julia> L(0.1, 0.2) ≈ f(0.1, 0.2)
+true
+```
+"""
 mutable struct LowRankFun{S<:Space,M<:Space,SS<:AbstractProductSpace,T<:Number} <: BivariateFun{T}
     A::Vector{VFun{S,T}}
     B::Vector{VFun{M,T}}
