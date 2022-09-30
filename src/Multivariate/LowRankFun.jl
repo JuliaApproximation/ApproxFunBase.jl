@@ -5,7 +5,7 @@
 export LowRankFun
 
 """
-    LowRankFun
+    LowRankFun(f, space::TensorSpace)
 
 Return an approximation to a bivariate function in low rank form.
 

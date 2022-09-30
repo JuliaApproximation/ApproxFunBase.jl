@@ -15,13 +15,7 @@ of `O` and `PartialInverseOperator(O)`.
 ```jldoctest
 julia> C = Conversion(Chebyshev(), Ultraspherical(1));
 
-julia> bandwidths(C)
-(0, 2)
-
-julia> P = PartialInverseOperator(C);
-
-julia> bandwidths(P)
-(0, 2)
+julia> P = PartialInverseOperator(C); # default bandwidth = (0,2)
 
 julia> P * C
 TimesOperator : Chebyshev() → Chebyshev()
@@ -37,10 +31,7 @@ TimesOperator : Chebyshev() → Chebyshev()
   ⋅    ⋅    ⋅    ⋅     ⋅     ⋅     ⋅     ⋅     ⋅    1.0  ⋱
   ⋅    ⋅    ⋅    ⋅     ⋅     ⋅     ⋅     ⋅     ⋅     ⋅   ⋱
 
-julia> P = PartialInverseOperator(C, (0, 4));
-
-julia> bandwidths(P)
-(0, 4)
+julia> P = PartialInverseOperator(C, (0, 4)); # increase the upper bandwidth
 
 julia> P * C
 TimesOperator : Chebyshev() → Chebyshev()
