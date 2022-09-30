@@ -64,7 +64,18 @@ end
 →(A::UniformScaling,b::Space) = Operator(A,b)
 
 
+"""
+    promoterangespace(S::Operator,sp::Space)
+
+Return the operator `S` acting on the same space, but now return
+functions in the specified range space `sp`
+"""
 promoterangespace(P::Operator,sp::Space) = promoterangespace(P,sp,rangespace(P))
+"""
+    promotedomainspace(S::Operator,sp::Space)
+
+Return the operator `S` but acting on the space `sp`.
+"""
 promotedomainspace(P::Operator,sp::Space) = promotedomainspace(P,sp,domainspace(P))
 
 
@@ -113,6 +124,12 @@ function default_choosedomainspace(A::Operator,sp::Space)
     isambiguous(sp2) ? sp : sp2
 end
 
+"""
+    choosedomainspace(S::Operator,rangespace::Space)
+
+Return a space `ret` so that `promotedomainspace(S,ret)` has the
+specified range space.
+"""
 choosedomainspace(A::Operator,sp::Space) = default_choosedomainspace(A,sp)
 
 choosedomainspace(A::Operator,f::Fun) = choosedomainspace(A,space(f))

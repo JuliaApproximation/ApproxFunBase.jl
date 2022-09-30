@@ -7,6 +7,11 @@ export domainspace,rangespace
 const VectorIndices = Union{AbstractRange, Colon}
 const IntOrVectorIndices = Union{Integer, VectorIndices}
 
+"""
+    Operator{T}
+
+Abstract type to represent linear operators between spaces.
+"""
 abstract type Operator{T} end #T is the entry type, Float64 or Complex{Float64}
 
 eltype(::Operator{T}) where {T} = T
@@ -29,7 +34,20 @@ BroadcastStyle(::Type{<:Operator}) = DefaultArrayStyle{2}()
 broadcastable(A::Operator) = A
 
 ## We assume operators are T->T
+"""
+    rangespace(op::Operator)
+
+Return the range space of `op`.  That is, `op*f` will return a `Fun` in the
+space `rangespace(op)`, provided `f` can be converted to a `Fun` in
+`domainspace(op)`.
+"""
 rangespace(A::Operator) = error("Override rangespace for $(typeof(A))")
+"""
+    domainspace(op::Operator)
+
+Return the domain space of `op`.  That is, `op*f` will first convert `f` to
+a `Fun` in the space `domainspace(op)` before applying the operator.
+"""
 domainspace(A::Operator) = error("Override domainspace for $(typeof(A))")
 spaces(A::Operator) = (rangespace(A), domainspace(A)) # order is consistent with size(::Matrix)
 domain(A::Operator) = domain(domainspace(A))
@@ -171,6 +189,12 @@ subblockbandwidth(K::Operator,k::Integer) = subblockbandwidths(K)[k]
 
 bandwidth(A::Operator, k::Integer) = bandwidths(A)[k]
 # we are always banded by the size
+"""
+    bandwidths(op::Operator)
+
+Return the bandwidth of `op` in the form `(l,u)`, where `l ≥ 0` represents
+the number of subdiagonals and `u ≥ 0` represents the number of superdiagonals.
+"""
 bandwidths(A::Operator) = (size(A,1)-1,size(A,2)-1)
 bandwidths(A::Operator, k::Integer) = bandwidths(A)[k]
 
@@ -205,7 +229,11 @@ include("SubOperator.jl")
 ## geteindex
 
 
+"""
+    (op::Operator)[k,j]
 
+Return the `k`th coefficient of `op*Fun([zeros(j-1);1],domainspace(op))`.
+"""
 getindex(B::Operator,k,j) = defaultgetindex(B,k,j)
 getindex(B::Operator,k) = defaultgetindex(B,k)
 getindex(B::Operator,k::Block{2}) = B[Block.(k.n)...]
@@ -419,7 +447,30 @@ defaultgetindex(A::Operator,kr,::Type{FiniteRange}) =
 
 
 ## Composition with a Fun, LowRankFun, and ProductFun
+"""
+    (op::Operator)[f::Fun]
 
+Construct the operator `op * Multiplication(f)`, that is, it multiplies on the right
+by `f` first.  Note that `op * f` is different: it applies `op` to `f`.
+
+# Examples
+```jldoctest
+julia> x = Fun()
+Fun(Chebyshev(), [0.0, 1.0])
+
+julia> D = Derivative()
+ConcreteDerivative : ApproxFunBase.UnsetSpace() → ApproxFunBase.UnsetSpace()
+
+julia> Dx = D[x] # construct the operator y -> d/dx * (x * y)
+TimesOperator : ApproxFunBase.UnsetSpace() → ApproxFunBase.UnsetSpace()
+
+julia> twox = Dx * x # Evaluate d/dx * (x * x)
+Fun(Ultraspherical(1), [0.0, 1.0])
+
+julia> twox(0.1) ≈ 2 * 0.1
+true
+```
+"""
 getindex(B::Operator,f::Fun) = B*Multiplication(domainspace(B),f)
 getindex(B::Operator,f::LowRankFun{S,M,SS,T}) where {S,M,SS,T} = mapreduce(i->f.A[i]*B[f.B[i]],+,1:rank(f))
 getindex(B::Operator{BT},f::ProductFun{S,V,SS,T}) where {BT,S,V,SS,T} =
