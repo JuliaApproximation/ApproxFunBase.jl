@@ -38,14 +38,14 @@ end
 
 # default_Fun is the default constructor, based on evaluation and transforms
 # last argument is whether to splat or not
-default_Fun(T::Type,f,d::Space,pts::AbstractArray,::Type{Val{true}}) =
+default_Fun(T::Type,f,d::Space,pts::AbstractArray, shouldsplat::Val{true}) =
     Fun(d,transform(d,T[f(x...) for x in pts]))
 
-default_Fun(T::Type,f,d::Space,pts::AbstractArray,::Type{Val{false}}) =
+default_Fun(T::Type,f,d::Space,pts::AbstractArray, shouldsplat::Val{false}) =
     Fun(d,transform(d,broadcast!(f, similar(pts, T), pts)))
 
 
-function default_Fun(f,d::Space,n::Integer,::Type{Val{false}})
+function default_Fun(f,d::Space,n::Integer, shouldsplat::Val{false})
     pts=points(d, n)
     f1=f(pts[1])
     if isa(f1,AbstractArray) && size(d) ≠ size(f1)
@@ -54,10 +54,10 @@ function default_Fun(f,d::Space,n::Integer,::Type{Val{false}})
 
     # we need 3 eltype calls for the case Interval(Point([1.,1.]))
     Tprom=choosefuncfstype(typeof(f1),prectype(domain(d)))
-    default_Fun(Tprom,f,d,pts,Val{false})
+    default_Fun(Tprom,f,d,pts,Val(false))
 end
 
-function default_Fun(f,d::Space,n::Integer,::Type{Val{true}})
+function default_Fun(f,d::Space,n::Integer, shouldsplat::Val{true})
     pts=points(d, n)
     f1=f(pts[1]...)
     if isa(f1,AbstractArray) && size(d) ≠ size(f1)
@@ -66,10 +66,10 @@ function default_Fun(f,d::Space,n::Integer,::Type{Val{true}})
 
     # we need 3 eltype calls for the case Interval(Point([1.,1.]))
     Tprom=choosefuncfstype(typeof(f1),prectype(domain(d)))
-    default_Fun(Tprom,f,d,pts,Val{true})
+    default_Fun(Tprom,f,d,pts,Val(true))
 end
 
-default_Fun(f,d::Space,n::Integer) = default_Fun(f,d,n,Val{!hasnumargs(f,1)})
+default_Fun(f,d::Space,n::Integer) = default_Fun(f,d,n,Val(!hasnumargs(f,1)))
 
 Fun(f,d::Space,n::Integer) = default_Fun(dynamic(f),d,n)
 
@@ -117,10 +117,10 @@ function _default_Fun(f, d::Space)
 
     for logn = 4:20
         #cf = Fun(f, d, 2^logn + 1)
-        cf = default_Fun(f, d, 2^logn)
+        cf = default_Fun(f, d, 2^logn, Val(false))
         maxabsc = maximum(abs,cf.coefficients)
         if maxabsc == 0 && maxabsfr == 0
-            return(zeros(d))
+            return zeros(d)
         end
 
         b = block(d,length(cf.coefficients))
