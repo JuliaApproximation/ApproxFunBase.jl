@@ -22,9 +22,57 @@ end
 
 const VFun{S,T} = Fun{S,T,Vector{T}}
 
+"""
+    Fun(s::Space, coefficients::AbstractVector)
+
+Return a `Fun` with the specified `coefficients` in the space `s`
+
+# Examples
+```jldoctest
+julia> f = Fun(Fourier(), [1,1]);
+
+julia> f(0.1) == 1 + sin(0.1)
+true
+
+julia> f = Fun(Chebyshev(), [1,1]);
+
+julia> f(0.1) == 1 + 0.1
+true
+```
+"""
 Fun(sp::Space,coeff::AbstractVector) = Fun{typeof(sp),eltype(coeff),typeof(coeff)}(sp,coeff)
+
+"""
+    Fun()
+
+Return `Fun(identity, Chebyshev())`, which represents the identity function in `-1..1`.
+
+# Examples
+```jldoctest
+julia> f = Fun(Chebyshev())
+Fun(Chebyshev(), [0.0, 1.0])
+
+julia> f(0.1)
+0.1
+```
+"""
 Fun() = Fun(identity, ChebyshevInterval())
 Fun(d::Domain) = Fun(identity,d)
+
+"""
+    Fun(s::Space)
+
+Return `Fun(identity, s)`
+
+# Examples
+```jldoctest
+julia> x = Fun(Chebyshev())
+Fun(Chebyshev(), [0.0, 1.0])
+
+julia> x(0.1)
+0.1
+```
+"""
 Fun(d::Space) = Fun(identity,d)
 
 
@@ -44,6 +92,20 @@ hasnumargs(f::Fun,k) = k == 1 || domaindimension(f) == k  # all funs take a sing
 ##Coefficient routines
 #TODO: domainscompatible?
 
+"""
+    coefficients(f::Fun, s::Space) -> Vector
+
+Return the coefficients of `f` in the space `s`, which
+may not be the same as `space(f)`.
+
+# Examples
+```jldoctest
+julia> f = Fun(x->(3x^2-1)/2);
+
+julia> coefficients(f, Legendre()) ≈ [0, 0, 1]
+true
+```
+"""
 function coefficients(f::Fun,msp::Space)
     #zero can always be converted
     fc = f.coefficients
@@ -54,6 +116,24 @@ function coefficients(f::Fun,msp::Space)
     end
 end
 coefficients(f::Fun,::Type{T}) where {T<:Space} = coefficients(f,T(domain(f)))
+
+"""
+    coefficients(f::Fun) -> Vector
+
+Return the coefficients of `f`, corresponding to the space `space(f)`.
+
+# Examples
+```jldoctest
+julia> f = Fun(x->x^2)
+Fun(Chebyshev(), [0.5, 0.0, 0.5])
+
+julia> coefficients(f)
+3-element Vector{Float64}:
+ 0.5
+ 0.0
+ 0.5
+```
+"""
 coefficients(f::Fun) = f.coefficients
 coefficients(c::Number,sp::Space) = Fun(c,sp).coefficients
 
@@ -178,11 +258,45 @@ setspace(f::Fun,s::Space) = Fun(s,f.coefficients)
 
 ## General routines
 
+"""
+    domain(f::Fun)
 
+Return the domain that `f` is defined on.
+
+# Examples
+```jldoctest
+julia> f = Fun(x->x^2);
+
+julia> domain(f)
+-1.0..1.0 (Chebyshev)
+
+julia> f = Fun(x->x^2, 0..1);
+
+julia> domain(f)
+0..1
+```
+"""
 domain(f::Fun) = domain(f.space)
 domain(v::AbstractMatrix{T}) where {T<:Fun} = map(domain,v)
 domaindimension(f::Fun) = domaindimension(f.space)
 
+"""
+    setdomain(f::Fun, d::Domain)
+
+Return `f` projected onto `domain`.
+
+!!! note
+    The new function may differ from the original one, as the coefficients are left unchanged.
+
+# Examples
+```jldoctest
+julia> f = Fun(x->x^2)
+Fun(Chebyshev(), [0.5, 0.0, 0.5])
+
+julia> setdomain(f, 0..1)
+Fun(Chebyshev(0..1), [0.5, 0.0, 0.5])
+```
+"""
 setdomain(f::Fun,d::Domain) = Fun(setdomain(space(f),d),f.coefficients)
 
 for op in (:tocanonical,:tocanonicalD,:fromcanonical,:fromcanonicalD,:invfromcanonicalD)
@@ -197,6 +311,20 @@ for op in (:fromcanonical,:fromcanonicalD,:invfromcanonicalD)
 end
 
 
+"""
+    space(f::Fun)
+
+Return the space of `f`.
+
+# Examples
+```jldoctest
+julia> f = Fun(x->x^2)
+Fun(Chebyshev(), [0.5, 0.0, 0.5])
+
+julia> space(f)
+Chebyshev()
+```
+"""
 space(f::Fun) = f.space
 spacescompatible(f::Fun,g::Fun) = spacescompatible(space(f),space(g))
 pointscompatible(f::Fun,g::Fun) = pointscompatible(space(f),space(g))
@@ -206,6 +334,14 @@ canonicaldomain(f::Fun) = canonicaldomain(space(f))
 
 ##Evaluation
 
+"""
+    evaluate(coefficients::AbstractVector, sp::Space, x)
+
+Evaluate the expansion at a point `x` that lies in `domain(sp)`.
+If `x` is not in the domain, the returned value will depend on the space,
+and should not be relied upon. See [`extrapolate`](@ref) to evaluate a function
+at a value outside the domain.
+"""
 function evaluate(f::AbstractVector,S::Space,x...)
     csp=canonicalspace(S)
     if spacescompatible(csp,S)
@@ -236,21 +372,94 @@ end
 extrapolate(f::AbstractVector,S::Space,x...) = evaluate(f,S,x...)
 
 # Do not override these
+"""
+    extrapolate(f::Fun,x)
+
+Return an extrapolation of `f` from its domain to `x`.
+
+# Examples
+```jldoctest
+julia> f = Fun(x->x^2)
+Fun(Chebyshev(), [0.5, 0.0, 0.5])
+
+julia> domain(f)
+-1.0..1.0 (Chebyshev)
+
+julia> extrapolate(f, 2)
+4.0
+```
+"""
 extrapolate(f::Fun,x) = extrapolate(f.coefficients,f.space,x)
 extrapolate(f::Fun,x,y,z...) = extrapolate(f.coefficients,f.space,Vec(x,y,z...))
 
 
 ##Data routines
 
+"""
+    values(f::Fun)
 
+Return `f` evaluated at `points(f)`.
+
+# Examples
+```jldoctest
+julia> f = Fun(x->x^2)
+Fun(Chebyshev(), [0.5, 0.0, 0.5])
+
+julia> values(f)
+3-element Vector{Float64}:
+ 0.75
+ 0.0
+ 0.75
+
+julia> map(x->x^2, points(f)) ≈ values(f)
+true
+```
+"""
 values(f::Fun,dat...) = _values(f.space, f.coefficients, dat...)
 _values(sp, v, dat...) = itransform(sp, v, dat...)
 _values(sp::UnivariateSpace, v::Vector{T}, dat...) where {T<:Number} =
     itransform(sp, v, dat...)::Vector{float(T)}
+"""
+    points(f::Fun)
+
+Return a grid of points that `f` can be transformed into values
+and back.
+
+# Examples
+```jldoctest
+julia> f = Fun(x->x^2);
+
+julia> chebypts(n) = [cos((2i+1)pi/2n) for i in 0:n-1];
+
+julia> points(f) ≈ chebypts(ncoefficients(f))
+true
+```
+"""
 points(f::Fun) = points(f.space,ncoefficients(f))
+
+"""
+    ncoefficients(f::Fun) -> Integer
+
+Return the number of coefficients of a fun
+
+# Examples
+```jldoctest
+julia> f = Fun(x->x^2)
+Fun(Chebyshev(), [0.5, 0.0, 0.5])
+
+julia> ncoefficients(f)
+3
+```
+"""
 ncoefficients(f::Fun)::Int = length(f.coefficients)
+
 blocksize(f::Fun) = (block(space(f),ncoefficients(f)).n[1],)
 
+"""
+    stride(f::Fun)
+
+Return the stride of the coefficients, checked numerically
+"""
 function stride(f::Fun)
     # Check only for stride 2 at the moment
     # as higher stride is very rare anyways
@@ -286,6 +495,20 @@ function chop!(f::Fun,tol...)
     f
 end
 
+"""
+    chop(f::Fun[, tol = 10eps()]) -> Fun
+
+Reduce the number of coefficients by dropping the tail that is below the specified tolerance.
+
+# Examples
+```jldoctest
+julia> f = Fun(Chebyshev(), [1,2,3,0,0,0])
+Fun(Chebyshev(), [1, 2, 3, 0, 0, 0])
+
+julia> chop(f)
+Fun(Chebyshev(), [1, 2, 3])
+```
+"""
 chop(f::Fun,tol...) = chop!(Fun(f.space,Vector(f.coefficients)),tol...)
 
 copy(f::Fun) = Fun(space(f),copy(f.coefficients))
@@ -548,7 +771,11 @@ iszero(f::Fun)    = all(iszero,f.coefficients)
 
 # sum, integrate, and idfferentiate are in CalculusOperator
 
+"""
+    reverseorientation(f::Fun)
 
+Return `f` on a reversed orientated contour.
+"""
 function reverseorientation(f::Fun)
     csp=canonicalspace(f)
     if spacescompatible(csp,space(f))

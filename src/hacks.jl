@@ -15,6 +15,20 @@ end
 ## Constructors that involve MultivariateFun
 Fun(f::Fun) = f # Fun of Fun should be like a conversion
 
+"""
+    Fun(f)
+
+Return `Fun(f, Chebyshev())`
+
+# Examples
+```jldoctest
+julia> f = Fun(x->x^2)
+Fun(Chebyshev(), [0.5, 0.0, 0.5])
+
+julia> f(0.1) == (0.1)^2
+true
+```
+"""
 function Fun(fin::Function)
     f = dynamic(fin)
 

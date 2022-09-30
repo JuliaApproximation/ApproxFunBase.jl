@@ -143,10 +143,32 @@ Fun(f::Type, d::Space) = error("Not implemented")
 
 
 # special case constructors
+"""
+    zeros(d::Space)
+
+Return the `Fun` that represents the function one on the specified space.
+
+# Examples
+```jldoctest
+julia> zeros(Chebyshev())
+Fun(Chebyshev(), [0.0])
+```
+"""
 zeros(S::Space) = zeros(Float64, S)
 zeros(::Type{T}, S::Space) where {T<:Number} = Fun(S,zeros(T,1))
 
 # catch all
+"""
+    ones(d::Space)
+
+Return the `Fun` that represents the function one on the specified space.
+
+# Examples
+```jldoctest
+julia> ones(Chebyshev())
+Fun(Chebyshev(), [1.0])
+```
+"""
 ones(S::Space) = ones(Float64, S)
 ones(::Type{T}, S::Space) where {T<:Number} = Fun(x->one(T),S)
 
@@ -169,10 +191,40 @@ Fun(f::typeof(zero), d::Space) = zeros(eltype(domain(d)),d)
 Fun(f::typeof(one), d::Space) = ones(eltype(domain(d)),d)
 
 # Fun(f::Type, d::Domain) = Fun(f,Space(d))
+"""
+    Fun(f, d::Domain)
+
+Return `Fun(f, Space(d))`, that is, it uses the default space for the specified
+domain.
+
+# Examples
+```jldoctest
+julia> f = Fun(x->x^2, 0..1);
+
+julia> f(0.1) ≈ (0.1)^2
+true
+```
+"""
 Fun(f, d::Domain) = Fun(f,Space(d))
 
 
 # this is the main constructor
+"""
+    Fun(f, s::Space)
+
+Return a `Fun` representing the function, number, or vector `f` in the
+space `s`.  If `f` is vector-valued, it Return a vector-valued analogue
+of `s`.
+
+# Examples
+```jldoctest
+julia> f = Fun(x->x^2, Chebyshev())
+Fun(Chebyshev(), [0.5, 0.0, 0.5])
+
+julia> f(0.1) == (0.1)^2
+true
+```
+"""
 Fun(f, d::Space) = default_Fun(dynamic(f), d)
 
 # this supports expanding a Fun to a larger or smaller domain.
