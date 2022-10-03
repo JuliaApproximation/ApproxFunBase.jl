@@ -15,10 +15,11 @@
 			@test contains(repr(c), repr(domain(c)))
 		end
 		@testset "TensorSpace" begin
-			S = Chebyshev() ⊗ Chebyshev()
+			S1 = PointSpace(1:3)
+			S = S1 ⊗ S1
 			v = strip.(split(repr(S), '⊗'))
 			@test length(v) == 2
-			@test all(==("Chebyshev()"), v)
+			@test all(==(repr(S1)), v)
 		end
 	end
 	@testset "Fun" begin
