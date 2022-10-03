@@ -24,7 +24,7 @@ CachedOperator(op::Operator,data::AbstractMatrix,sz::Tuple{Int,Int},pd=false) =
 CachedOperator(op::Operator,data::AbstractMatrix,padding=false) = CachedOperator(op,data,size(data),padding)
 
 
-if VERSION >= v"1.8"
+@static if VERSION >= v"1.8"
     Base.@constprop :aggressive function default_CachedOperator(op::Operator;padding::Bool=false)
         _default_CachedOperator(op, padding)
     end
