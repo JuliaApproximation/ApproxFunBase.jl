@@ -50,7 +50,7 @@ SubOperator(A,inds,dims::Tuple{Bool,Bool},lu) = SubOperator(A,inds,Int.(dims),lu
 
 function SubOperator(A,inds::NTuple{2,Block},lu)
     checkbounds(A,inds...)
-    _SubOperator(A, inds, lu, dsp, rsp)
+    _SubOperator(A, inds, lu, domainspace(A), rangespace(A))
 end
 function _SubOperator(A, inds, lu, dsp, rsp)
     SubOperator(A,inds,(blocklengths(rsp)[inds[1].n[1]],
