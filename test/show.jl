@@ -14,6 +14,13 @@
 			@test contains(repr(c), "ConstantSpace")
 			@test contains(repr(c), repr(domain(c)))
 		end
+		@testset "TensorSpace" begin
+			S1 = PointSpace(1:3)
+			S = S1 ⊗ S1
+			v = strip.(split(repr(S), '⊗'))
+			@test length(v) == 2
+			@test all(==(repr(S1)), v)
+		end
 	end
 	@testset "Fun" begin
 		f = Fun(PointSpace(1:3), [1,2,3])
