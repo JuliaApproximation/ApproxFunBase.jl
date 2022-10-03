@@ -50,14 +50,21 @@ SubOperator(A,inds,dims::Tuple{Bool,Bool},lu) = SubOperator(A,inds,Int.(dims),lu
 
 function SubOperator(A,inds::NTuple{2,Block},lu)
     checkbounds(A,inds...)
-    SubOperator(A,inds,(blocklengths(rangespace(A))[inds[1].n[1]],blocklengths(domainspace(A))[inds[2].n[1]]),lu)
+    _SubOperator(A, inds, lu, dsp, rsp)
+end
+function _SubOperator(A, inds, lu, dsp, rsp)
+    SubOperator(A,inds,(blocklengths(rsp)[inds[1].n[1]],
+                        blocklengths(dsp)[inds[2].n[1]]),lu)
 end
 
 SubOperator(A, inds::NTuple{2,Block}) = SubOperator(A,inds,subblockbandwidths(A))
 function SubOperator(A, inds::Tuple{BlockRange{1,R},BlockRange{1,R}}) where R
     checkbounds(A,inds...)
-    dims = (sum(blocklengths(rangespace(A))[inds[1].indices[1]]),
-            sum(blocklengths(domainspace(A))[inds[2].indices[1]]))
+    _SubOperator(A, inds, domainspace(A), rangespace(A))
+end
+function _SubOperator(A, inds, dsp, rsp)
+    dims = (sum(blocklengths(rsp)[inds[1].indices[1]]),
+            sum(blocklengths(dsp)[inds[2].indices[1]]))
     SubOperator(A,inds,dims,(dims[1]-1,dims[2]-1))
 end
 
