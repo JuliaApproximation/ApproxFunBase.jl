@@ -472,10 +472,9 @@ end
 fromtensor(S::Space,M::AbstractMatrix) = fromtensor(tensorizer(S),M)
 totensor(S::Space,M::AbstractVector) = totensor(tensorizer(S),M)
 
-# we only copy upper triangular of coefficients
 function fromtensor(it::Tensorizer,M::AbstractMatrix)
     n,m=size(M)
-    ret=zeros(eltype(M),blockstop(it,max(n,m)))
+    ret=zeros(eltype(M),blockstop(it,max(n,m)+1))
     k = 1
     for (K,J) in it
         if k > length(ret)
