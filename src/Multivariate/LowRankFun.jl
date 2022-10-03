@@ -107,8 +107,13 @@ function standardLowRankFun(f::Function,dx::Space,dy::Space;tolerance::Union{Sym
     ptsx,ptsy=points(dx,gridx),points(dy,gridy)
     X = zeros(T,gridx,gridy)
     maxabsf,r=findapproxmax!(f,X,ptsx,ptsy,gridx,gridy)
-    if maxabsf < eps(zero(T))/eps(T) return LowRankFun([Fun(dx,[zero(T)])],[Fun(dy,[zero(T)])]),maxabsf end
-    a,b=Fun(x->f(x,r[2]),dx),Fun(y->f(r[1],y),dy)
+    if maxabsf < eps(zero(T))/eps(T)
+        return LowRankFun([Fun(dx,[zero(T)])],[Fun(dy,[zero(T)])]), maxabsf
+    end
+
+    a,b=let r1=r[1], r2=r[2] # avoid boxing r
+        Fun(x->f(x,r2),dx),Fun(y->f(r1,y),dy)
+    end
 
     # If necessary, we resize the grid to be at least as large as the
     # lengths of the first row and column Funs and we recompute the values of X.
@@ -117,7 +122,9 @@ function standardLowRankFun(f::Function,dx::Space,dy::Space;tolerance::Union{Sym
         ptsx,ptsy=points(dx,gridx),points(dy,gridy)
         X = zeros(T,gridx,gridy)
         maxabsf,r=findapproxmax!(f,X,ptsx,ptsy,gridx,gridy)
-        a,b=Fun(x->f(x,r[2]),dx),Fun(y->f(r[1],y),dy)
+        a,b=let r1=r[1], r2=r[2]
+            Fun(x->f(x,r2),dx),Fun(y->f(r1,y),dy)
+        end
     end
 
     A,B=typeof(a)[],typeof(b)[]
@@ -161,8 +168,12 @@ function CholeskyLowRankFun(f::Function,dx::Space;tolerance::Union{Symbol,Tuple{
     pts=points(dx,grid)
     X = zeros(T,grid)
     maxabsf,r=findcholeskyapproxmax!(f,X,pts,grid)
-    if maxabsf < eps(zero(T))/eps(T) return LowRankFun([Fun(dx,[zero(T)])],[Fun(dx,[zero(T)])]),maxabsf end
-    a=Fun(x->f(x,r),dx)
+    if maxabsf < eps(zero(T))/eps(T)
+        return LowRankFun([Fun(dx,[zero(T)])],[Fun(dx,[zero(T)])]), maxabsf
+    end
+    a=let r=r # avoid boxing r
+        Fun(x->f(x,r),dx)
+    end
 
     # If necessary, we resize the grid to be at least as large as the
     # ncoefficients of the first row/column Fun and we recompute the values of X.
@@ -171,7 +182,9 @@ function CholeskyLowRankFun(f::Function,dx::Space;tolerance::Union{Symbol,Tuple{
         pts=points(dx,grid)
         X = zeros(T,grid)
         maxabsf,r=findcholeskyapproxmax!(f,X,pts,grid)
-        a=Fun(x->f(x,r),dx)
+        a=let r=r
+            Fun(x->f(x,r),dx)
+        end
     end
 
     A,B=typeof(a)[],typeof(a)[]
