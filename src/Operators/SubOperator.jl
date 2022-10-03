@@ -1,30 +1,34 @@
 Vcheckbounds(A::Operator,kr::Colon) = nothing
 
-checkbounds(A::Operator,kr) =
-    (maximum(kr) > length(A) || minimum(kr) < 1) && throw(BoundsError(A,kr))
+@inline function checkbounds(A, inds...)
+    _checkbounds(A, inds...)::Bool || throw(BoundsError(A,inds))
+    nothing
+end
+
+_checkbounds(A::Operator,kr)::Bool =
+    !(maximum(kr) > length(A) || minimum(kr) < 1)
 
 
-checkbounds(A::Operator,kr::Union{Colon,InfRanges},jr::Union{Colon,InfRanges}) = nothing
+_checkbounds(A::Operator,kr::Union{Colon,InfRanges},jr::Union{Colon,InfRanges})::Bool = true
 
-checkbounds(A::Operator,kr::Union{Colon,InfRanges},jr) =
-    (maximum(jr) > size(A,2) || minimum(jr) < 1) && throw(BoundsError(A,(kr,jr)))
+_checkbounds(A::Operator,kr::Union{Colon,InfRanges},jr)::Bool =
+    !(maximum(jr) > size(A,2) || minimum(jr) < 1)
 
-checkbounds(A::Operator,kr,jr::Union{Colon,InfRanges}) =
-    (maximum(kr) > size(A,1)  || minimum(kr) < 1 ) && throw(BoundsError(A,(kr,jr)))
+_checkbounds(A::Operator,kr,jr::Union{Colon,InfRanges})::Bool =
+    !(maximum(kr) > size(A,1)  || minimum(kr) < 1 )
 
-checkbounds(A::Operator,kr,jr) =
-    (!isempty(kr) && (maximum(kr) > size(A,1) || minimum(kr) < 1)) ||
-    (!isempty(jr) && (maximum(jr) > size(A,2) || minimum(jr) < 1)) &&
-    throw(BoundsError(A,(kr,jr)))
+_checkbounds(A::Operator,kr,jr)::Bool =
+    !(!isempty(kr) && (maximum(kr) > size(A,1) || minimum(kr) < 1)) ||
+    (!isempty(jr) && (maximum(jr) > size(A,2) || minimum(jr) < 1))
 
 
-checkbounds(A::Operator,K::Block,J::Block) =
+_checkbounds(A::Operator,K::Block,J::Block)::Bool =
      1 ≤ first(K.n[1]) ≤ length(blocklengths(rangespace(A))) &&
      1 ≤ first(J.n[1]) ≤ length(blocklengths(domainspace(A)))
 
-checkbounds(A::Operator,K::BlockRange{1},J::BlockRange{1}) =
+_checkbounds(A::Operator,K::BlockRange{1},J::BlockRange{1})::Bool =
     isempty(K) || isempty(J) ||
-        checkbounds(A, Block(maximum(K.indices[1])), Block(maximum(J.indices[1])))
+        _checkbounds(A, Block(maximum(K.indices[1])), Block(maximum(J.indices[1])))
 
 
 
