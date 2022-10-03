@@ -171,7 +171,7 @@ function show(io::IO,s::TensorSpace)
     d = length(s.spaces)
     for i=1:d-1
         show(io,s.spaces[i])
-        print(io,"⊗ ")
+        print(io," ⊗ ")
     end
     show(io,s.spaces[d])
 end
