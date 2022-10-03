@@ -24,22 +24,30 @@ CachedOperator(op::Operator,data::AbstractMatrix,sz::Tuple{Int,Int},pd=false) =
 CachedOperator(op::Operator,data::AbstractMatrix,padding=false) = CachedOperator(op,data,size(data),padding)
 
 
-
-function default_CachedOperator(op::Operator;padding::Bool=false)
+@static if VERSION >= v"1.8"
+    Base.@constprop :aggressive function default_CachedOperator(op::Operator;padding::Bool=false)
+        _default_CachedOperator(op, padding)
+    end
+else
+    function default_CachedOperator(op::Operator;padding::Bool=false)
+        _default_CachedOperator(op, padding)
+    end
+end
+@inline function _default_CachedOperator(op::Operator, padding)
     if isbanded(op)
-        CachedOperator(BandedMatrix,op;padding=padding)
+        CachedOperator(BandedMatrix, op; padding=padding)
     elseif isbandedblockbanded(op) && !padding
-        CachedOperator(BandedBlockBandedMatrix,op)
+        CachedOperator(BandedBlockBandedMatrix, op)
     elseif isblockbanded(op)
-        CachedOperator(BlockBandedMatrix,op;padding=padding)
+        CachedOperator(BlockBandedMatrix, op; padding=padding)
     elseif israggedbelow(op)
-        CachedOperator(RaggedMatrix,op;padding=padding)
+        CachedOperator(RaggedMatrix, op; padding=padding)
     else
-        CachedOperator(Matrix,op;padding=padding)
+        CachedOperator(Matrix, op; padding=padding)
     end
 end
 
-CachedOperator(op::Operator;padding::Bool=false) = default_CachedOperator(op;padding=padding)
+CachedOperator(op::Operator; kw...) = default_CachedOperator(op; kw...)
 
 """
     cache(op::Operator)
