@@ -472,7 +472,7 @@ true
 ```
 """
 getindex(B::Operator,f::Fun) = B*Multiplication(domainspace(B),f)
-getindex(B::Operator,f::LowRankFun) = mapreduce(i->f.A[i]*B[f.B[i]],+,1:rank(f))
+getindex(B::Operator,f::LowRankFun) = mapreduce(((fAi,fBi),) -> A * B[fBi], +, zip(f.A, f.B))
 function getindex(B::Operator{BT}, f::ProductFun{S,V,SS,T}) where {BT,S,V,SS,T}
     TBF = promote_type(BT,T)
     sp2 = factors(f.space)[2]

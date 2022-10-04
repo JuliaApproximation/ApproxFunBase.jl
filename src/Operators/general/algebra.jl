@@ -619,8 +619,6 @@ function *(A::Operator, b)
     end
 end
 
-(*)(O::Operator, M::MultivariateFun) = O * Fun(M)
-
 mul_coefficients(A::PlusOperator,b::Fun) =
     mapreduce(x->mul_coefficients(x,b),+,A.ops)
 
