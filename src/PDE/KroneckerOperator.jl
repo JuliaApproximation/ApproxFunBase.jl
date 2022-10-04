@@ -353,9 +353,9 @@ function BandedBlockBandedMatrix(S::SubOperator{T,KroneckerOperator{SS,V,DS,RS,
     A,B = KO.ops
 
 
-    AA = strictconvert(BandedMatrix, view(A, Block(1):last(KR),Block(1):last(JR)))::BandedMatrix{eltype(S)}
+    AA = strictconvert(BandedMatrix, view(A, Block(1):last(KR),Block(1):last(JR)))
     Al,Au = bandwidths(AA)
-    BB = strictconvert(BandedMatrix, view(B, Block(1):last(KR),Block(1):last(JR)))::BandedMatrix{eltype(S)}
+    BB = strictconvert(BandedMatrix, view(B, Block(1):last(KR),Block(1):last(JR)))
     Bl,Bu = bandwidths(BB)
     λ,μ = subblockbandwidths(ret)
 
@@ -364,7 +364,7 @@ function BandedBlockBandedMatrix(S::SubOperator{T,KroneckerOperator{SS,V,DS,RS,
         Bs = view(ret, K, J)
         l = min(Al,Bu+n-m,λ)
         u = min(Au,Bl+m-n,μ)
-        @inbounds for j=1:m, k=max(1,j-u):min(n,j+l)
+        for j=1:m, k=max(1,j-u):min(n,j+l)
             a = AA[k,j]
             b = BB[n-k+1,m-j+1]
             c = a*b
@@ -421,4 +421,26 @@ function mul_coefficients(A::SubOperator{T,KKO,Tuple{UnitRange{Int},UnitRange{In
     KR,JR = Block(1):block(rt,last(kr)),Block(1):block(dt,last(jr))
     M = P[KR,JR]
     M*pad(b, size(M,2))
+end
+
+Base.getindex(A::KroneckerOperator, B::MultivariateFun) = A[Fun(B)]
+function Base.getindex(K::KroneckerOperator, f::LowRankFun)
+    op1, op2 = K.ops
+    mapreduce(((A,B),)-> op1[A] ⊗ op2[B], +, zip(f.A, f.B))
+end
+function Base.getindex(K::KroneckerOperator, B::ProductFun)
+    op1, op2 = K.ops
+    S2 = factors(B.space)[2]
+    T = cfstype(B)
+    mapreduce(((ind, fi),)-> op1[fi] ⊗ op2[Fun(S2, [zeros(T, ind-1); one(T)])], +,
+        enumerate(B.coefficients))
+end
+for F in [:LowRankFun, :ProductFun, :MultivariateFun]
+    for O in [:DerivativeWrapper, :DefiniteIntegralWrapper]
+        @eval Base.getindex(K::$O{<:KroneckerOperator}, f::$F) = K.op[f]
+        @eval (*)(A::KroneckerOperator, B::$F) = A * Fun(B)
+        @eval (*)(A::$O{<:KroneckerOperator}, B::$F) = A.op * B
+        @eval (*)(A::$F, B::KroneckerOperator) = Fun(A) * B
+        @eval (*)(A::$F, B::$O{<:KroneckerOperator}) = Fun(A) * B.op
+    end
 end

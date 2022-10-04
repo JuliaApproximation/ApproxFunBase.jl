@@ -472,12 +472,13 @@ true
 ```
 """
 getindex(B::Operator,f::Fun) = B*Multiplication(domainspace(B),f)
-getindex(B::Operator,f::LowRankFun{S,M,SS,T}) where {S,M,SS,T} = mapreduce(i->f.A[i]*B[f.B[i]],+,1:rank(f))
-getindex(B::Operator{BT},f::ProductFun{S,V,SS,T}) where {BT,S,V,SS,T} =
-    mapreduce(i->f.coefficients[i]*B[Fun(f.space[2],[zeros(promote_type(BT,T),i-1);
-                                            one(promote_type(BT,T))])],
-                +,1:length(f.coefficients))
-
+getindex(B::Operator,f::LowRankFun) = mapreduce(i->f.A[i]*B[f.B[i]],+,1:rank(f))
+function getindex(B::Operator{BT}, f::ProductFun{S,V,SS,T}) where {BT,S,V,SS,T}
+    TBF = promote_type(BT,T)
+    sp2 = factors(f.space)[2]
+    mapreduce(((ind, fi),)-> fi * B[Fun(sp2, [zeros(TBF,i-1); one(TBF)])], +,
+                enumerate(f.coefficients))
+end
 
 
 # Convenience for wrapper ops
