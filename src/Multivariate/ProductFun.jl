@@ -5,6 +5,29 @@
 
 export ProductFun
 
+"""
+    ProductFun(f, space::TensorSpace; [tol=eps()])
+
+Represent a bivariate function `f(x,y)` as a univariate expansion over the second space,
+with the coefficients being functions in the first space.
+```math
+f\\left(x,y\\right)=\\sum_{i}f_{i}\\left(x\\right)b_{i}\\left(y\\right),
+```
+where ``b_{i}\\left(y\\right)`` represents the ``i``-th basis function in the space over ``y``.
+
+# Examples
+```jldoctest
+julia> P = ProductFun((x,y)->x*y, Chebyshev() ⊗ Chebyshev());
+
+julia> P(0.1, 0.2) ≈ 0.1 * 0.2
+true
+
+julia> coefficients(P) # power only at the (1,1) Chebyshev mode
+2×2 Matrix{Float64}:
+ 0.0  0.0
+ 0.0  1.0
+```
+"""
 struct ProductFun{S<:UnivariateSpace,V<:UnivariateSpace,SS<:AbstractProductSpace,T} <: BivariateFun{T}
     coefficients::Vector{VFun{S,T}}     # coefficients are in x
     space::SS
@@ -22,6 +45,22 @@ Base.size(f::ProductFun) = (size(f,1),size(f,2))
 
 ## Construction in an AbstractProductSpace via a Matrix of coefficients
 
+"""
+    ProductFun(coeffs::AbstractMatrix{T}, sp::AbstractProductSpace; [tol=100eps(T)], [chopping=false]) where {T<:Number}
+
+Represent a bivariate function `f` in terms of the coefficient matrix `coeffs`,
+where the coefficients are obtained using a bivariate
+transform of the function `f` in the basis `sp`.
+
+# Examples
+```jldoctest
+julia> P = ProductFun([0 0; 0 1], Chebyshev() ⊗ Chebyshev()) # corresponds to (x,y) -> x*y
+ProductFun on Chebyshev() ⊗ Chebyshev()
+
+julia> P(0.1, 0.2) ≈ 0.1 * 0.2
+true
+```
+"""
 function ProductFun(cfs::AbstractMatrix{T},sp::AbstractProductSpace{Tuple{S,V},DD};
   tol::Real=100eps(T),chopping::Bool=false) where {S<:UnivariateSpace,V<:UnivariateSpace,T<:Number,DD}
     if chopping
@@ -36,8 +75,25 @@ function ProductFun(cfs::AbstractMatrix{T},sp::AbstractProductSpace{Tuple{S,V},D
 end
 
 ## Construction in a ProductSpace via a Vector of Funs
+"""
+    ProductFun(M::AbstractVector{<:Fun{<:UnivariateSpace}}, sp::UnivariateSpace)
 
-function ProductFun(M::AbstractVector{VFun{S,T}},dy::V) where {S<:UnivariateSpace,V<:UnivariateSpace,T<:Number}
+Represent a bivariate function `f(x,y)` in terms of the univariate coefficient functions from `M`.
+The function `f` may be reconstructed as
+```math
+f\\left(x,y\\right)=\\sum_{i}M_{i}\\left(x\\right)b_{i}\\left(y\\right),
+```
+where ``b_{i}\\left(y\\right)`` represents the ``i``-th basis function for the space `sp`.
+
+# Examples
+```jldoctest
+julia> P = ProductFun([zeros(Chebyshev()), Fun(Chebyshev())], Chebyshev()); # corresponds to (x,y)->x*y
+
+julia> P(0.1, 0.2) ≈ 0.1 * 0.2
+true
+```
+"""
+function ProductFun(M::AbstractVector{VFun{S,T}}, dy::V) where {S<:UnivariateSpace,V<:UnivariateSpace,T<:Number}
     prodsp = ProductSpace(map(space, M), dy)
     ProductFun{S,V,typeof(prodsp),T}(copy(M), prodsp)
 end
