@@ -403,7 +403,7 @@ for (plan, plan!, Typ) in ((:plan_transform, :plan_transform!, :TransformPlan),
 
         function *(T::$Typ{TT,SS,false},v::AbstractVector) where {SS<:TensorSpace,TT}
             P = $Typ(T.space,T.plan,Val{true})
-            P*AbstractVector{rangetype(SS)}(v)
+            P * copy(v)
         end
     end
 end
