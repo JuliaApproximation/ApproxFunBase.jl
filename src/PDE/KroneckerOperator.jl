@@ -438,9 +438,9 @@ end
 for F in [:LowRankFun, :ProductFun, :MultivariateFun]
     for O in [:DerivativeWrapper, :DefiniteIntegralWrapper]
         @eval Base.getindex(K::$O{<:KroneckerOperator}, f::$F) = K.op[f]
-        @eval (*)(A::KroneckerOperator, B::$F) = A * Fun(B)
         @eval (*)(A::$O{<:KroneckerOperator}, B::$F) = A.op * B
-        @eval (*)(A::$F, B::KroneckerOperator) = Fun(A) * B
         @eval (*)(A::$F, B::$O{<:KroneckerOperator}) = Fun(A) * B.op
     end
+    @eval (*)(A::KroneckerOperator, B::$F) = A * Fun(B)
+    @eval (*)(A::$F, B::KroneckerOperator) = Fun(A) * B
 end
