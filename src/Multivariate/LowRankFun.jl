@@ -25,7 +25,7 @@ julia> L(0.1, 0.2) ≈ f(0.1, 0.2)
 true
 ```
 """
-mutable struct LowRankFun{S<:Space,M<:Space,SS<:AbstractProductSpace,T<:Number} <: BivariateFun{T}
+struct LowRankFun{S<:Space,M<:Space,SS<:AbstractProductSpace,T<:Number} <: BivariateFun{T}
     A::Vector{VFun{S,T}}
     B::Vector{VFun{M,T}}
     space::SS
