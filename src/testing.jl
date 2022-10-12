@@ -1,19 +1,24 @@
 module ApproxFunBaseTest
 
 using ApproxFunBase
-using ApproxFunBase: plan_transform, plan_itransform, israggedbelow
-using BandedMatrices
-using BandedMatrices: rowstart, rowstop, colstart, colstop
+using ApproxFunBase: plan_transform, plan_itransform, israggedbelow, RaggedMatrix, isbandedbelow, isbanded,
+    blockstart, blockstop, resizedata!
+using BandedMatrices: rowstart, rowstop, colstart, colstop, BandedMatrix, bandwidth
 using BlockArrays
 using BlockBandedMatrices
 using DomainSets: dimension
+using InfiniteArrays
 using LinearAlgebra
 using Test
 
 # These routines are for the unit tests
 
 export testspace, testfunctional, testraggedbelowoperator, testbandedblockbandedoperator,
-    testbandedoperator, testtransforms, testcalculus, testmultiplication, testinfoperator
+    testbandedoperator, testtransforms, testcalculus, testmultiplication, testinfoperator,
+    testblockbandedoperator, testbandedbelowoperator
+
+# assert type in convert
+strictconvert(::Type{T}, x) where {T} = convert(T, x)::T
 
 ## Spaces Tests
 
