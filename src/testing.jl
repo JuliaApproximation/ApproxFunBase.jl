@@ -13,7 +13,7 @@ using Test
 # These routines are for the unit tests
 
 export testspace, testfunctional, testraggedbelowoperator, testbandedblockbandedoperator,
-    testbandedoperator
+    testbandedoperator, testtransforms, testcalculus, testmultiplication, testinfoperator
 
 ## Spaces Tests
 
