@@ -1,5 +1,5 @@
 module ApproxFunBase
-    using Base: AnyDict
+using Base: AnyDict
 using Base, BlockArrays, BandedMatrices, BlockBandedMatrices, DomainSets, IntervalSets,
             SpecialFunctions, AbstractFFTs, FFTW, SpecialFunctions, DSP, DualNumbers,
             LinearAlgebra, SparseArrays, LowRankApprox, FillArrays, InfiniteArrays, InfiniteLinearAlgebra #, Arpack
