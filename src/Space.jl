@@ -34,6 +34,11 @@ rangetype(::Type{Space{D,R}}) where {D,R} = R
 rangetype(::Type{FT}) where {FT<:Space} = rangetype(supertype(FT))
 
 domaindimension(sp::Space) = dimension(domain(sp))
+"""
+    dimension(s::Space)
+
+Return the dimension of `s`, which is the maximum number of coefficients.
+"""
 dimension(::Space) = ℵ₀  # We assume infinite-dimensional spaces
 
 
@@ -83,6 +88,7 @@ end
 # end
 
 setcanonicaldomain(s) = setdomain(s,canonicaldomain(s))
+
 reverseorientation(S::Space) = setdomain(S,reverseorientation(domain(S)))
 
 
@@ -101,20 +107,52 @@ isambiguous(sp::Space) = isambiguous(rangetype(sp))
 
 
 #TODO: should it default to canonicalspace?
+"""
+    points(s::Space,n::Integer)
+
+Return a grid of approximately `n` points, for which a transform exists
+from values at the grid to coefficients in the space `s`.
+
+# Examples
+```jldoctest
+julia> chebypts(n) = [cos((2i+1)pi/2n) for i in 0:n-1];
+
+julia> points(Chebyshev(), 4) ≈ chebypts(4)
+true
+```
+"""
 points(d::Space,n) = points(domain(d),n)
 points(d::Space) = points(d, dimension(d))
 
+"""
+    canonicalspace(s::Space)
 
+Return a space that is used as a default to implement missing functionality,
+e.g., evaluation.
+Implement a [`Conversion`](@ref) operator or override [`coefficients`](@ref) to support this.
 
+# Examples
+```jldoctest
+julia> f = Fun(x->x^2, NormalizedLegendre());
+
+julia> ApproxFunBase.canonicalspace(f)
+Legendre()
+```
+"""
 canonicalspace(T) = T
-canonicaldomain(S::Space) = canonicaldomain(domain(S))
 
+canonicaldomain(S::Space) = canonicaldomain(domain(S))
 
 # Check whether spaces are the same, override when you need to check parameters
 # This is used in place of == to support AnyDomain
 spacescompatible(f::D,g::D) where D<:Space = error("Override spacescompatible for "*string(D))
 spacescompatible(::UnsetSpace,::UnsetSpace) = true
 spacescompatible(::NoSpace,::NoSpace) = true
+"""
+    spacescompatible(A::Space, B::Space)
+
+Specifies equality of spaces while also supporting `AnyDomain`.
+"""
 spacescompatible(f,g) = false
 ==(A::Space,B::Space) = spacescompatible(A,B) && domain(A) == domain(B)
 spacesequal(A::Space,B::Space) = A==B
@@ -164,7 +202,14 @@ for FUNC in (:conversion_type,:maxspace)
 end
 
 
-# gives a space c that has a banded conversion operator TO a and b
+"""
+    conversion_type(a::Space, b::Space)
+
+Return a `Space` that has a banded [`Conversion`](@ref) operator to both `a` and `b`.
+Override `ApproxFun.conversion_rule` when adding new `Conversion` operators.
+
+See also [`maxspace`](@ref)
+"""
 function conversion_type(a,b)
     if spacescompatible(a,b)
         a
@@ -181,8 +226,13 @@ end
 
 
 
+"""
+    maxspace(a::Space, b::Space)
 
-# gives a space c that has a banded conversion operator FROM a and b
+Return a space that has a banded conversion operator FROM `a` and `b`
+
+See also [`conversion_type`](@ref)
+"""
 maxspace(a,b) = NoSpace()  # TODO: this fixes weird bug with Nothing
 function maxspace(a::Space, b::Space)
     if spacescompatible(a,b)
@@ -278,11 +328,19 @@ end
 
 union(a::Space, bs::Space...) = foldl(union, bs, init = a)
 
-# tests whether a Conversion operator exists
+"""
+    hasconversion(a,b)
+
+Test whether a banded `Conversion` operator exists.
+"""
 hasconversion(a,b) = maxspace(a,b) == b
 
 
-# tests whether a coefficients can be converted to b
+"""
+    isconvertible(a::Space, b::Space)
+
+Test whether coefficients may be converted from `a` to `b` through a banded `Conversion` operator.
+"""
 isconvertible(a,b) = a == b || hasconversion(a,b)
 
 ## Conversion routines
@@ -328,6 +386,7 @@ function defaultcoefficients(f,a,b,inplace = Val(false))
         end
         if spacescompatible(a,csp) || spacescompatible(b,csp)
             # b is csp too, so we are stuck, try Fun constructor
+            # This only works for the out-of-place version as of now
             _coefficients!!(inplace)(default_Fun(_Fun(f,a),b))
         else
             _coefficients!!(inplace)(f,a,csp,b)
@@ -336,6 +395,24 @@ function defaultcoefficients(f,a,b,inplace = Val(false))
     _maybeconvert(inplace, f, x)
 end
 
+"""
+    coefficients(cfs::AbstractVector, fromspace::Space, tospace::Space) -> Vector
+
+Convert coefficients in `fromspace` to coefficients in `tospace`
+
+# Examples
+```jldoctest
+julia> f = Fun(x->(3x^2-1)/2);
+
+julia> coefficients(f, Chebyshev(), Legendre()) ≈ [0,0,1]
+true
+
+julia> g = Fun(x->(3x^2-1)/2, Legendre());
+
+julia> coefficients(f, Chebyshev(), Legendre()) ≈ coefficients(g)
+true
+```
+"""
 coefficients(f,a,b) = defaultcoefficients(f,a,b)
 coefficients!(f,a,b) = defaultcoefficients(f,a,b,Val(true))
 
@@ -416,8 +493,58 @@ plan_itransform!(sp::Space,v) = ICanonicalTransformPlan(sp, v, Val(true))
 # transform converts from values at points(S,n) to coefficients
 # itransform converts from coefficients to values at points(S,n)
 
-transform(S::Space,vals) = plan_transform(S,vals)*vals
-itransform(S::Space,cfs) = plan_itransform(S,cfs)*cfs
+"""
+    transform(s::Space, vals)
+
+Transform values on the grid specified by `points(s,length(vals))` to coefficients in the space `s`.
+Defaults to `coefficients(transform(canonicalspace(space),values),canonicalspace(space),space)`
+
+# Examples
+```jldoctest
+julia> F = Fun(x -> x^2, Chebyshev());
+
+julia> coefficients(F)
+3-element Vector{Float64}:
+ 0.5
+ 0.0
+ 0.5
+
+julia> transform(Chebyshev(), values(F)) ≈ coefficients(F)
+true
+
+julia> v = map(F, points(Chebyshev(), 4)); # custom grid
+
+julia> transform(Chebyshev(), v)
+4-element Vector{Float64}:
+ 0.5
+ 0.0
+ 0.5
+ 0.0
+```
+"""
+transform(S::Space, vals) = plan_transform(S,vals)*vals
+
+"""
+    itransform(s::Space,coefficients::AbstractVector)
+
+Transform coefficients back to values.  Defaults to using `canonicalspace` as in `transform`.
+
+# Examples
+```jldoctest
+julia> F = Fun(x->x^2, Chebyshev())
+Fun(Chebyshev(), [0.5, 0.0, 0.5])
+
+julia> itransform(Chebyshev(), coefficients(F)) ≈ values(F)
+true
+
+julia> itransform(Chebyshev(), [0.5, 0, 0.5])
+3-element Vector{Float64}:
+ 0.75
+ 0.0
+ 0.75
+```
+"""
+itransform(S::Space, cfs) = plan_itransform(S,cfs)*cfs
 
 itransform!(S::Space,cfs) = plan_itransform!(S,cfs)*cfs
 transform!(S::Space,cfs) = plan_transform!(S,cfs)*cfs
@@ -472,7 +599,9 @@ end
 
 
 """
-`ConstantSpace` is the 1-dimensional scalar space.
+    ConstantSpace
+
+The 1-dimensional scalar space.
 """
 struct ConstantSpace{DD,R} <: Space{DD,R}
     domain::DD
@@ -519,7 +648,9 @@ blocklengths(::ConstantSpace) = Vec(1)
 struct SequenceSpace <: Space{PositiveIntegers,Nothing} end
 
 """
-`SequenceSpace` is the space of all sequences, i.e., infinite vectors.
+    SequenceSpace
+
+The space of all sequences, i.e., infinite vectors.
 Also denoted ℓ⁰.
 """
 SequenceSpace()

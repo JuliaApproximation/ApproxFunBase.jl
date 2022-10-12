@@ -213,14 +213,22 @@ function ldiv_coefficients(QR::QROperator, b::AbstractVector{<:Number}; kwds...)
 end
 
 function ldiv_coefficients(QR::QROperator{<:Any,<:Any,<:Real}, b::AbstractVector{<:Complex}; kwds...)
-    a=ldiv_coefficients(QR,real(b);kwds...)
-    b=im*ldiv_coefficients(QR,imag(b);kwds...)
+    T = promote_type(eltype(QR), eltype(real(b)))
+    reimparts = T.(real.(b))
+    QR2 = convert(Operator{T}, QR)
+    a=ldiv_coefficients(QR2, reimparts; kwds...)
+    reimparts .= T.(imag.(b))
+    b=ldiv_coefficients(QR2, reimparts;kwds...)
     n=max(length(a),length(b))
-    pad!(a,n)+pad!(b,n)
+    pad!(a,n) + im * pad!(b,n)
 end
 ldiv_coefficients(QR::QROperator{<:Any,<:Any,<:Complex}, b::AbstractVector{<:Real}; kwds...) =
     ldiv_coefficients(QR, Vector{eltype(QR)}(b);kwds...)
 
+# fallback methods that may not be very efficient
+function ldiv_coefficients!(QR::QROperator{<:Any,<:Any,<:Real}, b::AbstractVector{<:Number}; kwds...)
+    ldiv_coefficients!(convert(Operator{eltype(b)}, QR), b)
+end
 
 \(A::QROperator,b::Fun;kwds...) =
     Fun(domainspace(A),ldiv_coefficients(A,coefficients(b,rangespace(A));kwds...))

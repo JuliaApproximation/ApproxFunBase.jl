@@ -23,7 +23,7 @@ function ConcreteMultiplication(f::Fun{D,T},sp::Space) where {D,T}
         error("Domain mismatch: cannot multiply function on $(domain(f)) to function on $(domain(sp))")
     end
     V = promote_type(T,rangetype(sp))
-    ConcreteMultiplication{D,typeof(sp),V}(strictconvert(Fun{D,V},chop(f,40*eps(cfstype(f)))),sp)
+    ConcreteMultiplication(V,f,sp)
 end
 
 ==(A::ConcreteMultiplication, B::ConcreteMultiplication) = (A.f == B.f) && (A.space == B.space)
@@ -146,7 +146,7 @@ end
 
 coefficienttimes(f::Fun,g::Fun) = Multiplication(f,space(g))*g
 
-function transformtimes(f::Fun,g::Fun, n = ncoefficients(f) + ncoefficients(g) - 1, sp = space(f))
+@inline function transformtimes(f::Fun,g::Fun, n = ncoefficients(f) + ncoefficients(g) - 1, sp = space(f))
     @assert pointscompatible(sp,space(g))::Bool
     iszero(ncoefficients(f)) && return f
     iszero(ncoefficients(g)) && return g

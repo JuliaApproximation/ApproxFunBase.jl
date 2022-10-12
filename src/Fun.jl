@@ -12,16 +12,67 @@ struct Fun{S,T,VT} <: Function
     space::S
     coefficients::VT
     function Fun{S,T,VT}(sp::S,coeff::VT) where {S,T,VT}
-        @assert length(coeff) ≤ dimension(sp)
+        nc = length(coeff)
+        dimsp = dimension(sp)
+        nc ≤ dimsp ||
+                throw(ArgumentError("length(coeff) = $(length(coeff)) exceeds dimension(space) = $(dimension(sp))"))
         new{S,T,VT}(sp,coeff)
     end
 end
 
 const VFun{S,T} = Fun{S,T,Vector{T}}
 
+"""
+    Fun(s::Space, coefficients::AbstractVector)
+
+Return a `Fun` with the specified `coefficients` in the space `s`
+
+# Examples
+```jldoctest
+julia> f = Fun(Fourier(), [1,1]);
+
+julia> f(0.1) == 1 + sin(0.1)
+true
+
+julia> f = Fun(Chebyshev(), [1,1]);
+
+julia> f(0.1) == 1 + 0.1
+true
+```
+"""
 Fun(sp::Space,coeff::AbstractVector) = Fun{typeof(sp),eltype(coeff),typeof(coeff)}(sp,coeff)
+
+"""
+    Fun()
+
+Return `Fun(identity, Chebyshev())`, which represents the identity function in `-1..1`.
+
+# Examples
+```jldoctest
+julia> f = Fun(Chebyshev())
+Fun(Chebyshev(), [0.0, 1.0])
+
+julia> f(0.1)
+0.1
+```
+"""
 Fun() = Fun(identity, ChebyshevInterval())
 Fun(d::Domain) = Fun(identity,d)
+
+"""
+    Fun(s::Space)
+
+Return `Fun(identity, s)`
+
+# Examples
+```jldoctest
+julia> x = Fun(Chebyshev())
+Fun(Chebyshev(), [0.0, 1.0])
+
+julia> x(0.1)
+0.1
+```
+"""
 Fun(d::Space) = Fun(identity,d)
 
 
@@ -41,6 +92,20 @@ hasnumargs(f::Fun,k) = k == 1 || domaindimension(f) == k  # all funs take a sing
 ##Coefficient routines
 #TODO: domainscompatible?
 
+"""
+    coefficients(f::Fun, s::Space) -> Vector
+
+Return the coefficients of `f` in the space `s`, which
+may not be the same as `space(f)`.
+
+# Examples
+```jldoctest
+julia> f = Fun(x->(3x^2-1)/2);
+
+julia> coefficients(f, Legendre()) ≈ [0, 0, 1]
+true
+```
+"""
 function coefficients(f::Fun,msp::Space)
     #zero can always be converted
     fc = f.coefficients
@@ -51,6 +116,24 @@ function coefficients(f::Fun,msp::Space)
     end
 end
 coefficients(f::Fun,::Type{T}) where {T<:Space} = coefficients(f,T(domain(f)))
+
+"""
+    coefficients(f::Fun) -> Vector
+
+Return the coefficients of `f`, corresponding to the space `space(f)`.
+
+# Examples
+```jldoctest
+julia> f = Fun(x->x^2)
+Fun(Chebyshev(), [0.5, 0.0, 0.5])
+
+julia> coefficients(f)
+3-element Vector{Float64}:
+ 0.5
+ 0.0
+ 0.5
+```
+"""
 coefficients(f::Fun) = f.coefficients
 coefficients(c::Number,sp::Space) = Fun(c,sp).coefficients
 
@@ -175,11 +258,45 @@ setspace(f::Fun,s::Space) = Fun(s,f.coefficients)
 
 ## General routines
 
+"""
+    domain(f::Fun)
 
+Return the domain that `f` is defined on.
+
+# Examples
+```jldoctest
+julia> f = Fun(x->x^2);
+
+julia> domain(f)
+-1.0..1.0 (Chebyshev)
+
+julia> f = Fun(x->x^2, 0..1);
+
+julia> domain(f)
+0..1
+```
+"""
 domain(f::Fun) = domain(f.space)
 domain(v::AbstractMatrix{T}) where {T<:Fun} = map(domain,v)
 domaindimension(f::Fun) = domaindimension(f.space)
 
+"""
+    setdomain(f::Fun, d::Domain)
+
+Return `f` projected onto `domain`.
+
+!!! note
+    The new function may differ from the original one, as the coefficients are left unchanged.
+
+# Examples
+```jldoctest
+julia> f = Fun(x->x^2)
+Fun(Chebyshev(), [0.5, 0.0, 0.5])
+
+julia> setdomain(f, 0..1)
+Fun(Chebyshev(0..1), [0.5, 0.0, 0.5])
+```
+"""
 setdomain(f::Fun,d::Domain) = Fun(setdomain(space(f),d),f.coefficients)
 
 for op in (:tocanonical,:tocanonicalD,:fromcanonical,:fromcanonicalD,:invfromcanonicalD)
@@ -194,6 +311,20 @@ for op in (:fromcanonical,:fromcanonicalD,:invfromcanonicalD)
 end
 
 
+"""
+    space(f::Fun)
+
+Return the space of `f`.
+
+# Examples
+```jldoctest
+julia> f = Fun(x->x^2)
+Fun(Chebyshev(), [0.5, 0.0, 0.5])
+
+julia> space(f)
+Chebyshev()
+```
+"""
 space(f::Fun) = f.space
 spacescompatible(f::Fun,g::Fun) = spacescompatible(space(f),space(g))
 pointscompatible(f::Fun,g::Fun) = pointscompatible(space(f),space(g))
@@ -203,6 +334,14 @@ canonicaldomain(f::Fun) = canonicaldomain(space(f))
 
 ##Evaluation
 
+"""
+    evaluate(coefficients::AbstractVector, sp::Space, x)
+
+Evaluate the expansion at a point `x` that lies in `domain(sp)`.
+If `x` is not in the domain, the returned value will depend on the space,
+and should not be relied upon. See [`extrapolate`](@ref) to evaluate a function
+at a value outside the domain.
+"""
 function evaluate(f::AbstractVector,S::Space,x...)
     csp=canonicalspace(S)
     if spacescompatible(csp,S)
@@ -233,20 +372,94 @@ end
 extrapolate(f::AbstractVector,S::Space,x...) = evaluate(f,S,x...)
 
 # Do not override these
+"""
+    extrapolate(f::Fun,x)
+
+Return an extrapolation of `f` from its domain to `x`.
+
+# Examples
+```jldoctest
+julia> f = Fun(x->x^2)
+Fun(Chebyshev(), [0.5, 0.0, 0.5])
+
+julia> domain(f)
+-1.0..1.0 (Chebyshev)
+
+julia> extrapolate(f, 2)
+4.0
+```
+"""
 extrapolate(f::Fun,x) = extrapolate(f.coefficients,f.space,x)
 extrapolate(f::Fun,x,y,z...) = extrapolate(f.coefficients,f.space,Vec(x,y,z...))
 
 
 ##Data routines
 
+"""
+    values(f::Fun)
 
+Return `f` evaluated at `points(f)`.
+
+# Examples
+```jldoctest
+julia> f = Fun(x->x^2)
+Fun(Chebyshev(), [0.5, 0.0, 0.5])
+
+julia> values(f)
+3-element Vector{Float64}:
+ 0.75
+ 0.0
+ 0.75
+
+julia> map(x->x^2, points(f)) ≈ values(f)
+true
+```
+"""
 values(f::Fun,dat...) = _values(f.space, f.coefficients, dat...)
 _values(sp, v, dat...) = itransform(sp, v, dat...)
-_values(sp, v::Vector{T}, dat...) where {T} = itransform(sp, v, dat...)::Vector{float(T)}
+_values(sp::UnivariateSpace, v::Vector{T}, dat...) where {T<:Number} =
+    itransform(sp, v, dat...)::Vector{float(T)}
+"""
+    points(f::Fun)
+
+Return a grid of points that `f` can be transformed into values
+and back.
+
+# Examples
+```jldoctest
+julia> f = Fun(x->x^2);
+
+julia> chebypts(n) = [cos((2i+1)pi/2n) for i in 0:n-1];
+
+julia> points(f) ≈ chebypts(ncoefficients(f))
+true
+```
+"""
 points(f::Fun) = points(f.space,ncoefficients(f))
+
+"""
+    ncoefficients(f::Fun) -> Integer
+
+Return the number of coefficients of a fun
+
+# Examples
+```jldoctest
+julia> f = Fun(x->x^2)
+Fun(Chebyshev(), [0.5, 0.0, 0.5])
+
+julia> ncoefficients(f)
+3
+```
+"""
 ncoefficients(f::Fun)::Int = length(f.coefficients)
+
 blocksize(f::Fun) = (block(space(f),ncoefficients(f)).n[1],)
 
+"""
+    stride(f::Fun)
+
+Return the stride of the coefficients, checked numerically
+"""
 function stride(f::Fun)
     # Check only for stride 2 at the moment
     # as higher stride is very rare anyways
@@ -282,7 +495,21 @@ function chop!(f::Fun,tol...)
     f
 end
 
-chop(f::Fun,tol...) = chop!(Fun(f.space,convert(Vector, f.coefficients)),tol...)
+"""
+    chop(f::Fun[, tol = 10eps()]) -> Fun
+
+Reduce the number of coefficients by dropping the tail that is below the specified tolerance.
+
+# Examples
+```jldoctest
+julia> f = Fun(Chebyshev(), [1,2,3,0,0,0])
+Fun(Chebyshev(), [1, 2, 3, 0, 0, 0])
+
+julia> chop(f)
+Fun(Chebyshev(), [1, 2, 3])
+```
+"""
+chop(f::Fun,tol...) = chop!(Fun(f.space,Vector(f.coefficients)),tol...)
 
 copy(f::Fun) = Fun(space(f),copy(f.coefficients))
 
@@ -293,9 +520,10 @@ for op in (:+,:-)
         function $op(f::Fun,g::Fun)
             if spacescompatible(f,g)
                 n = max(ncoefficients(f),ncoefficients(g))
-                f2 = pad(f,n); g2 = pad(g,n)
+                f2 = pad(f,n);
+                g2 = pad(g,n);
 
-                Fun(isambiguous(domain(f)) ? g.space : f.space,($op)(f2.coefficients,g2.coefficients))
+                Fun(isambiguous(domain(f)) ? g.space : f.space, ($op)(f2.coefficients,g2.coefficients))
             else
                 m=union(f.space,g.space)
                 if isa(m,NoSpace)
@@ -305,7 +533,12 @@ for op in (:+,:-)
             end
         end
         $op(f::Fun{S,T},c::T) where {S,T<:Number} = c==0 ? f : $op(f,Fun(c))
-        $op(f::Fun,c::Number) = $op(f,Fun(c))
+        function $op(f::Fun, c::Number)
+            T = promote_type(typeof(c), cfstype(f))
+            g = cfstype(f) == T ? f : Fun(space(f), T.(coefficients(f)))
+            d = convert(T, c)
+            $op(g,Fun(d))
+        end
         $op(f::Fun,c::UniformScaling) = $op(f,c.λ)
         $op(c::UniformScaling,f::Fun) = $op(c.λ,f)
     end
@@ -353,14 +586,24 @@ end
 
 \(c::Number, f::Fun) = Fun(f.space, c \ f.coefficients)
 
-
-function intpow(f::Fun,k::Integer)
+@static if VERSION >= v"1.8"
+    Base.@constprop :aggressive intpow(f::Fun, k::Integer) = _intpow(f, k)
+else
+    intpow(f::Fun, k::Integer) = _intpow(f, k)
+end
+@inline function _intpow(f, k)
     if k == 0
-        ones(space(f))
+        ones(cfstype(f), space(f))
     elseif k==1
         f
+    elseif k==2
+        f * f
+    elseif k==3
+        f * f * f
+    elseif k==4
+        f * f * f * f
     else
-        t = reduce(*, fill(f, abs(k)))
+        t = foldl(*, fill(f, abs(k)-1), init=f)
         if k > 0
             return t
         else
@@ -370,12 +613,17 @@ function intpow(f::Fun,k::Integer)
 end
 
 ^(f::Fun, k::Integer) = intpow(f,k)
-# some common cases
-Base.literal_pow(::typeof(^), x::Fun, ::Val{0}) = ones(cfstype(x), space(x))
-Base.literal_pow(::typeof(^), x::Fun, ::Val{1}) = x
-Base.literal_pow(::typeof(^), x::Fun, ::Val{2}) = x * x
-Base.literal_pow(::typeof(^), x::Fun, ::Val{3}) = x * x * x
-Base.literal_pow(::typeof(^), x::Fun, ::Val{4}) = x * x * x * x
+# Ideally, constant propagation in intpow would handle literal exponentiation,
+# but currently inference doesn't succeed for f * f for arbitrary domains.
+# We specialize literal exponentiation here,
+# letting downstream users specialize f * f for custom domains
+# With f * f type-inferred, the type of f^2 would also be inferred.
+# This is a stopgap measure that might not be necessary in the future.
+Base.literal_pow(::typeof(^), f::Fun, ::Val{0}) = ones(cfstype(f), space(f))
+Base.literal_pow(::typeof(^), f::Fun, ::Val{1}) = f
+Base.literal_pow(::typeof(^), f::Fun, ::Val{2}) = f * f
+Base.literal_pow(::typeof(^), f::Fun, ::Val{3}) = f * f * f
+Base.literal_pow(::typeof(^), f::Fun, ::Val{4}) = f * f * f * f
 
 inv(f::Fun) = 1/f
 
@@ -414,7 +662,10 @@ for (OP,SUM) in ((:(norm),:(sum)),(:linenorm,:linesum))
     @eval begin
         $OP(f::Fun) = $OP(f,2)
 
-        function $OP(f::Fun{<:Space{<:Any,<:Number}}, p::Real)
+        # Specializing norm(::ScalarFun) helps with inference
+        $OP(f::ScalarFun) = sqrt(abs($SUM(abs2(f))))
+
+        function $OP(f::ScalarFun, p::Real)
             if p < 1
                 return error("p should be 1 ≤ p ≤ ∞")
             elseif 1 ≤ p < Inf
@@ -424,11 +675,12 @@ for (OP,SUM) in ((:(norm),:(sum)),(:linenorm,:linesum))
             end
         end
 
-        function $OP(f::Fun{<:Space{<:Any,<:Number}}, p::Int)
+        function $OP(f::ScalarFun, p::Int)
             if 1 ≤ p < Inf
+                p == 2 && return $OP(f)
                 return iseven(p) ? abs($SUM(abs2(f)^(p÷2)))^(1/p) : abs($SUM(abs2(f)^(p/2)))^(1/p)
             else
-                return error("p should be 1 ≤ p ≤ ∞")
+                error("p should be 1 ≤ p ≤ ∞")
             end
         end
     end
@@ -519,7 +771,11 @@ iszero(f::Fun)    = all(iszero,f.coefficients)
 
 # sum, integrate, and idfferentiate are in CalculusOperator
 
+"""
+    reverseorientation(f::Fun)
 
+Return `f` on a reversed orientated contour.
+"""
 function reverseorientation(f::Fun)
     csp=canonicalspace(f)
     if spacescompatible(csp,space(f))
@@ -592,7 +848,7 @@ broadcastdomain(b::Broadcasted) = mapreduce(broadcastdomain, ∪, b.args)
 broadcasteval(f::Function, x) = f(x)
 broadcasteval(c, x) = c
 broadcasteval(c::Ref, x) = c.x
-broadcasteval(b::Broadcasted, x) = b.f(broadcasteval.(b.args, x)...)
+broadcasteval(b::Broadcasted, x) = b.f(broadcasteval.(b.args, Ref(x))...)
 
 # TODO: use generated function to improve the following
 function copy(bc::Broadcasted{FunStyle})

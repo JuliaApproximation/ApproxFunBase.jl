@@ -1,5 +1,5 @@
 export Domain, SegmentDomain, tocanonical, fromcanonical, fromcanonicalD, ∂
-export chebyshevpoints, fourierpoints, isambiguous, arclength
+export isambiguous, arclength
 export components, component, ncomponents
 
 
@@ -64,6 +64,8 @@ canonicaldomain(d::IntervalOrSegmentDomain) = ChebyshevInterval{real(prectype(d)
 domainscompatible(a,b) = domainscompatible(domain(a),domain(b))
 domainscompatible(a::Domain,b::Domain) = isambiguous(a) || isambiguous(b) ||
                     isapprox(a,b)
+
+domainscompatible(::ChebyshevInterval, ::ChebyshevInterval) = true
 
 ##TODO: Should fromcanonical be fromcanonical!?
 

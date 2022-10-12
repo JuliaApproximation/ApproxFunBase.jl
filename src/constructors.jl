@@ -38,14 +38,14 @@ end
 
 # default_Fun is the default constructor, based on evaluation and transforms
 # last argument is whether to splat or not
-default_Fun(T::Type,f,d::Space,pts::AbstractArray,::Type{Val{true}}) =
+default_Fun(T::Type,f,d::Space,pts::AbstractArray, shouldsplat::Val{true}) =
     Fun(d,transform(d,T[f(x...) for x in pts]))
 
-default_Fun(T::Type,f,d::Space,pts::AbstractArray,::Type{Val{false}}) =
+default_Fun(T::Type,f,d::Space,pts::AbstractArray, shouldsplat::Val{false}) =
     Fun(d,transform(d,broadcast!(f, similar(pts, T), pts)))
 
 
-function default_Fun(f,d::Space,n::Integer,::Type{Val{false}})
+function default_Fun(f,d::Space,n::Integer, shouldsplat::Val{false})
     pts=points(d, n)
     f1=f(pts[1])
     if isa(f1,AbstractArray) && size(d) ≠ size(f1)
@@ -54,10 +54,10 @@ function default_Fun(f,d::Space,n::Integer,::Type{Val{false}})
 
     # we need 3 eltype calls for the case Interval(Point([1.,1.]))
     Tprom=choosefuncfstype(typeof(f1),prectype(domain(d)))
-    default_Fun(Tprom,f,d,pts,Val{false})
+    default_Fun(Tprom,f,d,pts,Val(false))
 end
 
-function default_Fun(f,d::Space,n::Integer,::Type{Val{true}})
+function default_Fun(f,d::Space,n::Integer, shouldsplat::Val{true})
     pts=points(d, n)
     f1=f(pts[1]...)
     if isa(f1,AbstractArray) && size(d) ≠ size(f1)
@@ -66,10 +66,10 @@ function default_Fun(f,d::Space,n::Integer,::Type{Val{true}})
 
     # we need 3 eltype calls for the case Interval(Point([1.,1.]))
     Tprom=choosefuncfstype(typeof(f1),prectype(domain(d)))
-    default_Fun(Tprom,f,d,pts,Val{true})
+    default_Fun(Tprom,f,d,pts,Val(true))
 end
 
-default_Fun(f,d::Space,n::Integer) = default_Fun(f,d,n,Val{!hasnumargs(f,1)})
+default_Fun(f,d::Space,n::Integer) = default_Fun(f,d,n,Val(!hasnumargs(f,1)))
 
 Fun(f,d::Space,n::Integer) = default_Fun(dynamic(f),d,n)
 
@@ -117,10 +117,10 @@ function _default_Fun(f, d::Space)
 
     for logn = 4:20
         #cf = Fun(f, d, 2^logn + 1)
-        cf = default_Fun(f, d, 2^logn)
+        cf = default_Fun(f, d, 2^logn, Val(false))
         maxabsc = maximum(abs,cf.coefficients)
         if maxabsc == 0 && maxabsfr == 0
-            return(zeros(d))
+            return zeros(d)
         end
 
         b = block(d,length(cf.coefficients))
@@ -143,10 +143,32 @@ Fun(f::Type, d::Space) = error("Not implemented")
 
 
 # special case constructors
+"""
+    zeros(d::Space)
+
+Return the `Fun` that represents the function one on the specified space.
+
+# Examples
+```jldoctest
+julia> zeros(Chebyshev())
+Fun(Chebyshev(), [0.0])
+```
+"""
 zeros(S::Space) = zeros(Float64, S)
 zeros(::Type{T}, S::Space) where {T<:Number} = Fun(S,zeros(T,1))
 
 # catch all
+"""
+    ones(d::Space)
+
+Return the `Fun` that represents the function one on the specified space.
+
+# Examples
+```jldoctest
+julia> ones(Chebyshev())
+Fun(Chebyshev(), [1.0])
+```
+"""
 ones(S::Space) = ones(Float64, S)
 ones(::Type{T}, S::Space) where {T<:Number} = Fun(x->one(T),S)
 
@@ -169,10 +191,40 @@ Fun(f::typeof(zero), d::Space) = zeros(eltype(domain(d)),d)
 Fun(f::typeof(one), d::Space) = ones(eltype(domain(d)),d)
 
 # Fun(f::Type, d::Domain) = Fun(f,Space(d))
+"""
+    Fun(f, d::Domain)
+
+Return `Fun(f, Space(d))`, that is, it uses the default space for the specified
+domain.
+
+# Examples
+```jldoctest
+julia> f = Fun(x->x^2, 0..1);
+
+julia> f(0.1) ≈ (0.1)^2
+true
+```
+"""
 Fun(f, d::Domain) = Fun(f,Space(d))
 
 
 # this is the main constructor
+"""
+    Fun(f, s::Space)
+
+Return a `Fun` representing the function, number, or vector `f` in the
+space `s`.  If `f` is vector-valued, it Return a vector-valued analogue
+of `s`.
+
+# Examples
+```jldoctest
+julia> f = Fun(x->x^2, Chebyshev())
+Fun(Chebyshev(), [0.5, 0.0, 0.5])
+
+julia> f(0.1) == (0.1)^2
+true
+```
+"""
 Fun(f, d::Space) = default_Fun(dynamic(f), d)
 
 # this supports expanding a Fun to a larger or smaller domain.

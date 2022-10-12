@@ -140,10 +140,7 @@ cos(f::Fun{S,T}) where {S<:RealSpace,T<:Real} = real(exp(im*f))
 
 atan(f::Fun)=cumsum(f'/(1+f^2))+atan(first(f))
 
-
-# this is used to find a point in which to impose a boundary
-# condition in calculating secial functions
-function specialfunctionnormalizationpoint(op,growth,f)
+function _specialfunctionnormalizationpoint(op,growth,f)
     g=chop(growth(f),eps(cfstype(f)))
     d = domain(g)
     T = eltype(d)
@@ -151,6 +148,13 @@ function specialfunctionnormalizationpoint(op,growth,f)
     xmax = isempty(g.coefficients) ? rightendpoint(d) : T(argmax(g))::T
     opfxmin,opfxmax = op(f(xmin)),op(f(xmax))
     opmax = maximum(abs,(opfxmin,opfxmax))
+    xmin, xmax, opfxmin, opfxmax, opmax
+end
+
+# this is used to find a point in which to impose a boundary
+# condition in calculating secial functions
+function specialfunctionnormalizationpoint(op,growth,f)
+    xmin, xmax, opfxmin, opfxmax, opmax = _specialfunctionnormalizationpoint(op,growth,f)
     if abs(opfxmin) == opmax
         xmax,opfxmax = xmin,opfxmin
     end
@@ -192,7 +196,17 @@ for (op, ODE, RHS, growth) in ((:(exp),    "D-f'",           "0",        :(real)
     end
 end
 
+Base.:(^)(::Irrational{:ℯ}, f::Fun) = exp(f)
 
+function specialfunctionnormalizationpoint2(op, growth, f, T = cfstype(f))
+    xmin, xmax, opfxmin, opfxmax, opmax = _specialfunctionnormalizationpoint(op,growth,f)
+    while opmax≤10eps(T) || abs(f(xmin)-f(xmax))≤10eps(T)
+        xmin,xmax = rand(domain(f)),rand(domain(f))
+        opfxmin,opfxmax = op(f(xmin)),op(f(xmax))
+        opmax = maximum(abs,(opfxmin,opfxmax))
+    end
+    xmin, xmax, opfxmin, opfxmax, opmax
+end
 
 for (op,ODE,RHS,growth) in ((:(erf),"f'*D^2+(2f*f'^2-f'')*D","0",:(imag)),
                             (:(erfi),"f'*D^2-(2f*f'^2+f'')*D","0",:(real)),
@@ -207,22 +221,13 @@ for (op,ODE,RHS,growth) in ((:(erf),"f'*D^2+(2f*f'^2-f'')*D","0",:(imag)),
     L,R = Meta.parse(ODE),Meta.parse(RHS)
     @eval begin
         function $op(fin::Fun)
-            f=setcanonicaldomain(fin)
-
             T = cfstype(fin)
-            g=chop($growth(f),eps(T))
-            xmin = isempty(g.coefficients) ? leftendpoint(domain(g)) : argmin(g)
-            xmax = isempty(g.coefficients) ? rightendpoint(domain(g)) : argmax(g)
-            opfxmin,opfxmax = $op(f(xmin)),$op(f(xmax))
-            opmax = maximum(abs,(opfxmin,opfxmax))
-            while opmax≤10eps(T) || abs(f(xmin)-f(xmax))≤10eps(T)
-                xmin,xmax = rand(domain(f)),rand(domain(f))
-                opfxmin,opfxmax = $op(f(xmin)),$op(f(xmax))
-                opmax = maximum(abs,(opfxmin,opfxmax))
-            end
-            D=Derivative(space(f))
-            B=[Evaluation(space(f),xmin),Evaluation(space(f),xmax)]
-            u=\([B;eval($L)],[opfxmin;opfxmax;eval($R)];tolerance=10eps(T)*opmax)
+            f=setcanonicaldomain(fin)
+            xmin, xmax, opfxmin, opfxmax, opmax = specialfunctionnormalizationpoint2($op, $growth, f, T)
+            S = space(f)
+            B=[Evaluation(S,xmin), Evaluation(S,xmax)]
+            D=Derivative(S)
+            u=\([B;$L], [opfxmin;opfxmax;$R]; tolerance=10eps(T)*opmax)
 
             setdomain(u,domain(fin))
         end

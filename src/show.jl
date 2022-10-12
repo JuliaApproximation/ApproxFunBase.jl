@@ -25,7 +25,7 @@ function show(io::IO,L::LowRankFun)
 end
 
 function show(io::IO,P::ProductFun)
-    print(io,"ProductFun on ",space(P),".")
+    print(io,"ProductFun on ",space(P))
 end
 
 ## Operator
@@ -171,7 +171,7 @@ function show(io::IO,s::TensorSpace)
     d = length(s.spaces)
     for i=1:d-1
         show(io,s.spaces[i])
-        print(io,"⊗")
+        print(io," ⊗ ")
     end
     show(io,s.spaces[d])
 end

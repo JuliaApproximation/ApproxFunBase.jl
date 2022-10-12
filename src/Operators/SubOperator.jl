@@ -1,30 +1,34 @@
 Vcheckbounds(A::Operator,kr::Colon) = nothing
 
-checkbounds(A::Operator,kr) =
-    (maximum(kr) > length(A) || minimum(kr) < 1) && throw(BoundsError(A,kr))
+@inline function checkbounds(A, inds...)
+    _checkbounds(A, inds...)::Bool || throw(BoundsError(A,inds))
+    nothing
+end
+
+_checkbounds(A::Operator,kr)::Bool =
+    !(maximum(kr) > length(A) || minimum(kr) < 1)
 
 
-checkbounds(A::Operator,kr::Union{Colon,InfRanges},jr::Union{Colon,InfRanges}) = nothing
+_checkbounds(A::Operator,kr::Union{Colon,InfRanges},jr::Union{Colon,InfRanges})::Bool = true
 
-checkbounds(A::Operator,kr::Union{Colon,InfRanges},jr) =
-    (maximum(jr) > size(A,2) || minimum(jr) < 1) && throw(BoundsError(A,(kr,jr)))
+_checkbounds(A::Operator,kr::Union{Colon,InfRanges},jr)::Bool =
+    !(maximum(jr) > size(A,2) || minimum(jr) < 1)
 
-checkbounds(A::Operator,kr,jr::Union{Colon,InfRanges}) =
-    (maximum(kr) > size(A,1)  || minimum(kr) < 1 ) && throw(BoundsError(A,(kr,jr)))
+_checkbounds(A::Operator,kr,jr::Union{Colon,InfRanges})::Bool =
+    !(maximum(kr) > size(A,1)  || minimum(kr) < 1 )
 
-checkbounds(A::Operator,kr,jr) =
-    (!isempty(kr) && (maximum(kr) > size(A,1) || minimum(kr) < 1)) ||
-    (!isempty(jr) && (maximum(jr) > size(A,2) || minimum(jr) < 1)) &&
-    throw(BoundsError(A,(kr,jr)))
+_checkbounds(A::Operator,kr,jr)::Bool =
+    !(!isempty(kr) && (maximum(kr) > size(A,1) || minimum(kr) < 1)) ||
+    (!isempty(jr) && (maximum(jr) > size(A,2) || minimum(jr) < 1))
 
 
-checkbounds(A::Operator,K::Block,J::Block) =
+_checkbounds(A::Operator,K::Block,J::Block)::Bool =
      1 ≤ first(K.n[1]) ≤ length(blocklengths(rangespace(A))) &&
      1 ≤ first(J.n[1]) ≤ length(blocklengths(domainspace(A)))
 
-checkbounds(A::Operator,K::BlockRange{1},J::BlockRange{1}) =
+_checkbounds(A::Operator,K::BlockRange{1},J::BlockRange{1})::Bool =
     isempty(K) || isempty(J) ||
-        checkbounds(A, Block(maximum(K.indices[1])), Block(maximum(J.indices[1])))
+        _checkbounds(A, Block(maximum(K.indices[1])), Block(maximum(J.indices[1])))
 
 
 
@@ -50,14 +54,21 @@ SubOperator(A,inds,dims::Tuple{Bool,Bool},lu) = SubOperator(A,inds,Int.(dims),lu
 
 function SubOperator(A,inds::NTuple{2,Block},lu)
     checkbounds(A,inds...)
-    SubOperator(A,inds,(blocklengths(rangespace(A))[inds[1].n[1]],blocklengths(domainspace(A))[inds[2].n[1]]),lu)
+    _SubOperator(A, inds, lu, domainspace(A), rangespace(A))
+end
+function _SubOperator(A, inds, lu, dsp, rsp)
+    SubOperator(A,inds,(blocklengths(rsp)[inds[1].n[1]],
+                        blocklengths(dsp)[inds[2].n[1]]),lu)
 end
 
 SubOperator(A, inds::NTuple{2,Block}) = SubOperator(A,inds,subblockbandwidths(A))
 function SubOperator(A, inds::Tuple{BlockRange{1,R},BlockRange{1,R}}) where R
     checkbounds(A,inds...)
-    dims = (sum(blocklengths(rangespace(A))[inds[1].indices[1]]),
-            sum(blocklengths(domainspace(A))[inds[2].indices[1]]))
+    _SubOperator(A, inds, domainspace(A), rangespace(A))
+end
+function _SubOperator(A, inds, dsp, rsp)
+    dims = (sum(blocklengths(rsp)[inds[1].indices[1]]),
+            sum(blocklengths(dsp)[inds[2].indices[1]]))
     SubOperator(A,inds,dims,(dims[1]-1,dims[2]-1))
 end
 
@@ -126,12 +137,7 @@ defaultgetindex(B::Operator,k::InfRanges, j::InfRanges) = view(B, k, j)
 defaultgetindex(B::Operator,k::AbstractRange, j::InfRanges) = view(B, k, j)
 defaultgetindex(B::Operator,k::InfRanges, j::AbstractRange) = view(B, k, j)
 
-
-if VERSION < v"1.2-"
-    reindex(V, idxs, subidxs) = Base.reindex(V, idxs, subidxs)
-else
-    reindex(V, idxs, subidxs) = Base.reindex(idxs, subidxs)
-end
+reindex(V, idxs, subidxs) = Base.reindex(idxs, subidxs)
 
 reindex(A::Operator, B::Tuple{Block,Any}, kj::Tuple{Any,Any}) =
     (reindex(rangespace(A),(B[1],), (kj[1],))[1], reindex(domainspace(A),tail(B), tail(kj))[1])

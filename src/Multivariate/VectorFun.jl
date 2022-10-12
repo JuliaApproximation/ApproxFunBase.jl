@@ -143,7 +143,6 @@ norm(A::VectorFun, p::Real) = norm(norm.(Array(A)),p)
 
 
 
-
 ## Vector of fun routines
 
 function coefficientmatrix(::Type{N},f::AbstractVector{F},o...) where {N,F}

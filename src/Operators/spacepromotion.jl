@@ -47,11 +47,11 @@ rangespace(S::SpaceOperator) = S.rangespace
 
 
 ##TODO: Do we need both max and min?
-function findmindomainspace(ops::AbstractVector)
+function findmindomainspace(ops)
     mapreduce(domainspace, union, ops, init = UnsetSpace())
 end
 
-function findmaxrangespace(ops::AbstractVector)
+function findmaxrangespace(ops)
     mapreduce(rangespace, maxspace, ops, init = UnsetSpace())
 end
 
@@ -64,7 +64,18 @@ end
 →(A::UniformScaling,b::Space) = Operator(A,b)
 
 
+"""
+    promoterangespace(S::Operator,sp::Space)
+
+Return the operator `S` acting on the same space, but now return
+functions in the specified range space `sp`
+"""
 promoterangespace(P::Operator,sp::Space) = promoterangespace(P,sp,rangespace(P))
+"""
+    promotedomainspace(S::Operator,sp::Space)
+
+Return the operator `S` but acting on the space `sp`.
+"""
 promotedomainspace(P::Operator,sp::Space) = promotedomainspace(P,sp,domainspace(P))
 
 
@@ -77,21 +88,21 @@ promotedomainspace(P::Operator,sp::Space,cursp::Space) =
 
 
 
-function promoterangespace(ops::AbstractVector{O}) where O<:Operator
+function promoterangespace(ops::Union{AbstractVector{O}, Tuple{O,Vararg{O}}}) where O<:Operator
     isempty(ops) && return strictconvert(Vector{Operator{eltype(O)}}, ops)
     k=findmaxrangespace(ops)
     #TODO: T might be incorrect
     T=mapreduce(eltype,promote_type,ops)
     Operator{T}[promoterangespace(op,k) for op in ops]
 end
-function promotedomainspace(ops::AbstractVector{O}) where O<:Operator
+function promotedomainspace(ops::Union{AbstractVector{O}, Tuple{O,Vararg{O}}}) where O<:Operator
     isempty(ops) && return strictconvert(Vector{Operator{eltype(O)}}, ops)
     k=findmindomainspace(ops)
     #TODO: T might be incorrect
     T=mapreduce(eltype,promote_type,ops)
     Operator{T}[promotedomainspace(op,k) for op in ops]
 end
-function promotedomainspace(ops::AbstractVector{O},S::Space) where O<:Operator
+function promotedomainspace(ops::Union{AbstractVector{O}, Tuple{O,Vararg{O}}},S::Space) where O<:Operator
     isempty(ops) && return strictconvert(Vector{Operator{eltype(O)}}, ops)
     k=conversion_type(findmindomainspace(ops),S)
     #TODO: T might be incorrect
@@ -113,6 +124,12 @@ function default_choosedomainspace(A::Operator,sp::Space)
     isambiguous(sp2) ? sp : sp2
 end
 
+"""
+    choosedomainspace(S::Operator,rangespace::Space)
+
+Return a space `ret` so that `promotedomainspace(S,ret)` has the
+specified range space.
+"""
 choosedomainspace(A::Operator,sp::Space) = default_choosedomainspace(A,sp)
 
 choosedomainspace(A::Operator,f::Fun) = choosedomainspace(A,space(f))
@@ -156,7 +173,7 @@ function promotespaces(A::Operator,B::Operator)
     if spacescompatible(A,B)
         A,B
     else
-        tuple(promotespaces([A,B])...)
+        tuple(Vec{2}(promotespaces(uniontypedvec(A,B)))...)
     end
 end
 

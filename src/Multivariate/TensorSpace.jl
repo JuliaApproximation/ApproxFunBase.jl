@@ -27,7 +27,7 @@ end
 const TrivialTensorizer{d} = Tensorizer{NTuple{d,Ones{Int,1,Tuple{OneToInf{Int}}}}}
 
 Base.eltype(a::Tensorizer) = NTuple{length(a.blocks),Int}
-Base.eltype(::Tensorizer{NTuple{d,T}}) where {d,T} = NTuple{d,Int}
+Base.eltype(::Tensorizer{<:NTuple{d}}) where {d} = NTuple{d,Int}
 dimensions(a::Tensorizer) = map(sum,a.blocks)
 Base.length(a::Tensorizer) = mapreduce(sum,*,a.blocks)
 
@@ -328,7 +328,14 @@ Space(sp::ProductDomain) = TensorSpace(sp)
 setdomain(sp::TensorSpace, d::ProductDomain) = TensorSpace(setdomain.(factors(sp), factors(d)))
 
 *(A::Space, B::Space) = A⊗B
-^(A::Space, p::Integer) = p == 1 ? A : A*A^(p-1)
+function ^(A::Space, p::Integer)
+    p >= 1 || throw(ArgumentError("exponent must be >= 1, received $p"))
+    # Enumerate common cases to help with constant propagation
+    p == 1 ? A :
+    p == 2 ? A * A :
+    p == 3 ? A * A * A :
+    foldl(*, ntuple(_ -> A, p))
+end
 
 
 ## TODO: generalize
@@ -376,14 +383,16 @@ struct ProductSpace{S<:Space,V<:Space,D,R} <: AbstractProductSpace{Tuple{S,V},D,
     spacey::V
 end
 
-ProductSpace(spacesx::Vector,spacey) =
-    ProductSpace{eltype(spacesx),typeof(spacey),typeof(mapreduce(domain,×,sp)),
-                mapreduce(s->eltype(domain(s)),promote_type,sp)}(spacesx,spacey)
+function ProductSpace(spacesx::AbstractVector, spacey)
+    ProductSpace{eltype(spacesx),typeof(spacey),typeof(mapreduce(domain, ×, spacesx)),
+                mapreduce(s->eltype(domain(s)),promote_type,spacesx)}(spacesx,spacey)
+end
 
 # TODO: This is a weird definition
-⊗(A::Vector{S},B::Space) where {S<:Space} = ProductSpace(A,B)
-domain(f::ProductSpace) = domain(f.spacesx[1])×domain(f.spacesy)
+⊗(A::AbstractVector{S},B::Space) where {S<:Space} = ProductSpace(A,B)
+domain(f::ProductSpace) = domain(f.spacesx[1]) × domain(f.spacey)
 
+factors(d::ProductSpace) = (d.spacesx, d.spacey)
 
 nfactors(d::AbstractProductSpace) = length(d.spaces)
 factors(d::AbstractProductSpace) = d.spaces
@@ -400,29 +409,77 @@ Base.transpose(d::TensorSpace) = TensorSpace(d.spaces[2],d.spaces[1])
 
 
 ## Transforms
-
+function nDtransform_inner!(A, tempv, Rpre, Rpost, dim, plan!)
+    for indpost in Rpost, indpre in Rpre
+        v = view(A, indpre, :, indpost)
+        tempv .= v
+        v .= plan! * tempv
+    end
+    A
+end
 for (plan, plan!, Typ) in ((:plan_transform, :plan_transform!, :TransformPlan),
                            (:plan_itransform, :plan_itransform!, :ITransformPlan))
-    @eval begin
-        $plan!(S::TensorSpace, M::AbstractMatrix) = $Typ(S,(($plan(S.spaces[1],size(M,1)),size(M,1)),
-                                                             ($plan(S.spaces[2],size(M,2)),size(M,2))),
-                                                             Val{true})
 
-        function *(T::$Typ{<:Any,<:TensorSpace,true}, M::AbstractMatrix)
-            n=size(M,1)
-
-            for k=1:size(M,2)
-                M[:,k]=T.plan[1][1]*M[:,k]
+    for (f, ip) in [(plan, false), (plan!, true)]
+        @eval function $f(S::TensorSpace{<:NTuple{N,Space}}, A::AbstractArray{<:Any,N}) where {N}
+            spaces = S.spaces
+            tempv = similar(A, size(A,1))
+            sizehint!(tempv, reduce(max, size(A), init=0))
+            plans = ntuple(N) do dim
+                szdim = size(A,dim)
+                resize!(tempv, szdim)
+                ($f(spaces[dim], tempv), szdim)
             end
-            for k=1:n
-                M[k,:]=T.plan[2][1]*M[k,:]
+            $Typ(S, plans, Val{$ip})
+        end
+    end
+
+    @eval begin
+        function *(T::$Typ{<:Any,<:TensorSpace{<:NTuple{2,Space}},true}, M::AbstractMatrix)
+            Base.require_one_based_indexing(M)
+            all(dim -> T.plan[dim][2] == size(M,dim), 1:2) ||
+                throw(ArgumentError("size of matrix is incompatible with transform plan"))
+
+            tempv = similar(M, size(M,1))
+            for k in axes(M,2)
+                tempv .= @view M[:, k]
+                M[:,k]=T.plan[1][1]*tempv
+            end
+            resize!(tempv, size(M,2))
+            for k in axes(M,1)
+                tempv .= @view M[k,:]
+                M[k,:]=T.plan[2][1]*tempv
             end
             M
         end
 
+        function *(T::$Typ{<:Any,<:TensorSpace{<:NTuple{N,Space}},true}, A::AbstractArray{<:Any,N}) where {N}
+            Base.require_one_based_indexing(A)
+            all(dim -> T.plan[dim][2] == size(A,dim), 1:N) ||
+                throw(ArgumentError("size of array is incompatible with transform plan"))
+
+            tempv = similar(A, size(A,1))
+            sizehint!(tempv, reduce(max, size(A), init=0))
+            for dim in 1:N
+                Rpre = CartesianIndices(axes(A)[1:dim-1])
+                Rpost = CartesianIndices(axes(A)[dim+1:end])
+                resize!(tempv, size(A, dim))
+                nDtransform_inner!(A, tempv, Rpre, Rpost, dim, T.plan[dim][1])
+            end
+            A
+        end
+
+        function *(T::$Typ{<:Any,<:TensorSpace{<:NTuple{N,Space}},false},
+                A::AbstractArray{<:Any,N}) where {N}
+            # TODO: we assume that the transform has the same number of coefficients
+            # as the number of points in A
+            # This may not always be the case, so we may need to fix this
+            $Typ(T.space, T.plan, Val{true}) * copy(A)
+        end
+
         function *(T::$Typ{TT,SS,false},v::AbstractVector) where {SS<:TensorSpace,TT}
             P = $Typ(T.space,T.plan,Val{true})
-            P*AbstractVector{rangetype(SS)}(v)
+            P * copy(v)
         end
     end
 end
@@ -490,13 +547,12 @@ end
 
 fromtensor(S::Space,M::AbstractMatrix) = fromtensor(tensorizer(S),M)
 totensor(S::Space,M::AbstractVector) = totensor(tensorizer(S),M)
-totensor(SS::TensorSpace{NTuple{d, S}},M::AbstractVector) where {d, S<:UnivariateSpace} = 
+totensor(SS::TensorSpace{NTuple{d, S}},M::AbstractVector) where {d<:Integer, S<:UnivariateSpace} = 
         if d>2; totensoriterator(tensorizer(SS),M) else totensor(tensorizer(SS),M) end
 
-# we only copy upper triangular of coefficients
 function fromtensor(it::Tensorizer,M::AbstractMatrix)
     n,m=size(M)
-    ret=zeros(eltype(M),blockstop(it,max(n,m)))
+    ret=zeros(eltype(M),blockstop(it,max(n,m)+1))
     k = 1
     for (K,J) in it
         if k > length(ret)
@@ -565,7 +621,7 @@ function points(sp::TensorSpace,n)
 end
 
 
-itransform(sp::TensorSpace,cfs) = vec(itransform!(sp,coefficientmatrix(Fun(sp,cfs))))
+itransform(sp::TensorSpace,cfs::AbstractVector) = vec(itransform!(sp,coefficientmatrix(Fun(sp,cfs))))
 
 function evaluate(f::AbstractVector,S::AbstractProductSpace,x)
     t = totensor(S,f)

@@ -5,9 +5,27 @@
 export LowRankFun
 
 """
-`LowRankFun` gives an approximation to a bivariate function in low rank form.
+    LowRankFun(f, space::TensorSpace)
+
+Return an approximation to a bivariate function in a low-rank form
+```math
+f(x,y) = \\sum_i \\sigma_i \\phi_i(x) \\psi_i(y)
+```
+where ``\\sigma_i`` represent the highest singular values,
+and ``\\phi_i(x)`` and ``\\psi_i(y)`` are orthogonal bases. The summation is truncated
+after an acceptable tolerance is reached.
+
+# Examples
+```jldoctest
+julia> f = (x,y) -> x^2 * y^3;
+
+julia> L = LowRankFun(f, Chebyshev() ⊗ Chebyshev());
+
+julia> L(0.1, 0.2) ≈ f(0.1, 0.2)
+true
+```
 """
-mutable struct LowRankFun{S<:Space,M<:Space,SS<:AbstractProductSpace,T<:Number} <: BivariateFun{T}
+struct LowRankFun{S<:Space,M<:Space,SS<:AbstractProductSpace,T<:Number} <: BivariateFun{T}
     A::Vector{VFun{S,T}}
     B::Vector{VFun{M,T}}
     space::SS
@@ -30,6 +48,7 @@ LowRankFun(A::Vector{VFun{S,T}},B::Vector{VFun{M,V}}) where {S,M,T,V} =
     LowRankFun(strictconvert(Vector{VFun{S,promote_type(T,V)}},A),
                strictconvert(Vector{VFun{M,promote_type(T,V)}},B),
                space(first(A))⊗space(first(B)))
+
 rank(f::LowRankFun) = length(f.A)
 size(f::LowRankFun,k::Integer) = k==1 ? mapreduce(length,max,f.A) : mapreduce(length,max,f.B)
 size(f::LowRankFun) = size(f,1),size(f,2)
@@ -94,8 +113,13 @@ function standardLowRankFun(f::Function,dx::Space,dy::Space;tolerance::Union{Sym
     ptsx,ptsy=points(dx,gridx),points(dy,gridy)
     X = zeros(T,gridx,gridy)
     maxabsf,r=findapproxmax!(f,X,ptsx,ptsy,gridx,gridy)
-    if maxabsf < eps(zero(T))/eps(T) return LowRankFun([Fun(dx,[zero(T)])],[Fun(dy,[zero(T)])]),maxabsf end
-    a,b=Fun(x->f(x,r[2]),dx),Fun(y->f(r[1],y),dy)
+    if maxabsf < eps(zero(T))/eps(T)
+        return LowRankFun([Fun(dx,[zero(T)])],[Fun(dy,[zero(T)])]), maxabsf
+    end
+
+    a,b=let r1=r[1], r2=r[2] # avoid boxing r
+        Fun(x->f(x,r2),dx),Fun(y->f(r1,y),dy)
+    end
 
     # If necessary, we resize the grid to be at least as large as the
     # lengths of the first row and column Funs and we recompute the values of X.
@@ -104,7 +128,9 @@ function standardLowRankFun(f::Function,dx::Space,dy::Space;tolerance::Union{Sym
         ptsx,ptsy=points(dx,gridx),points(dy,gridy)
         X = zeros(T,gridx,gridy)
         maxabsf,r=findapproxmax!(f,X,ptsx,ptsy,gridx,gridy)
-        a,b=Fun(x->f(x,r[2]),dx),Fun(y->f(r[1],y),dy)
+        a,b=let r1=r[1], r2=r[2]
+            Fun(x->f(x,r2),dx),Fun(y->f(r1,y),dy)
+        end
     end
 
     A,B=typeof(a)[],typeof(b)[]
@@ -148,8 +174,12 @@ function CholeskyLowRankFun(f::Function,dx::Space;tolerance::Union{Symbol,Tuple{
     pts=points(dx,grid)
     X = zeros(T,grid)
     maxabsf,r=findcholeskyapproxmax!(f,X,pts,grid)
-    if maxabsf < eps(zero(T))/eps(T) return LowRankFun([Fun(dx,[zero(T)])],[Fun(dx,[zero(T)])]),maxabsf end
-    a=Fun(x->f(x,r),dx)
+    if maxabsf < eps(zero(T))/eps(T)
+        return LowRankFun([Fun(dx,[zero(T)])],[Fun(dx,[zero(T)])]), maxabsf
+    end
+    a=let r=r # avoid boxing r
+        Fun(x->f(x,r),dx)
+    end
 
     # If necessary, we resize the grid to be at least as large as the
     # ncoefficients of the first row/column Fun and we recompute the values of X.
@@ -158,7 +188,9 @@ function CholeskyLowRankFun(f::Function,dx::Space;tolerance::Union{Symbol,Tuple{
         pts=points(dx,grid)
         X = zeros(T,grid)
         maxabsf,r=findcholeskyapproxmax!(f,X,pts,grid)
-        a=Fun(x->f(x,r),dx)
+        a=let r=r
+            Fun(x->f(x,r),dx)
+        end
     end
 
     A,B=typeof(a)[],typeof(a)[]
@@ -424,3 +456,6 @@ sum(g::LowRankFun,n::Integer)=(n==1) ? dotu(g.B,map(sum,g.A)) : dotu(g.A,map(sum
 cumsum(g::LowRankFun,n::Integer)=(n==1) ? LowRankFun(map(cumsum,g.A),copy(g.B)) : LowRankFun(copy(g.A),map(cumsum,g.B))
 differentiate(g::LowRankFun,n::Integer)=(n==1) ? LowRankFun(map(differentiate,g.A),copy(g.B)) : LowRankFun(copy(g.A),map(differentiate,g.B))
 integrate(g::LowRankFun,n::Integer)=(n==1) ? LowRankFun(map(integrate,g.A),copy(g.B)) : LowRankFun(copy(g.A),map(integrate,g.B))
+
+zero(L::LowRankFun) = LowRankFun((x...)->zero(cfstype(L)), space(L))
+one(L::LowRankFun) = LowRankFun((x...)->one(cfstype(L)), space(L))

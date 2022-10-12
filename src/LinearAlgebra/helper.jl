@@ -200,7 +200,7 @@ function unsafe_resize!(W::AbstractMatrix,n::Integer,::Colon)
         W[1:n,:]
     else
         m=size(W,2)
-        ret=Matrix{eltype(W)}(n,m)
+        ret=Matrix{eltype(W)}(undef, n,m)
         ret[1:N,:] = W
         ret
     end

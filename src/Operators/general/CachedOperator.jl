@@ -1,10 +1,4 @@
-
-
 export cache
-
-
-
-
 
 ## CachedOperator
 
@@ -30,22 +24,30 @@ CachedOperator(op::Operator,data::AbstractMatrix,sz::Tuple{Int,Int},pd=false) =
 CachedOperator(op::Operator,data::AbstractMatrix,padding=false) = CachedOperator(op,data,size(data),padding)
 
 
-
-function default_CachedOperator(op::Operator;padding::Bool=false)
+@static if VERSION >= v"1.8"
+    Base.@constprop :aggressive function default_CachedOperator(op::Operator;padding::Bool=false)
+        _default_CachedOperator(op, padding)
+    end
+else
+    function default_CachedOperator(op::Operator;padding::Bool=false)
+        _default_CachedOperator(op, padding)
+    end
+end
+@inline function _default_CachedOperator(op::Operator, padding)
     if isbanded(op)
-        CachedOperator(BandedMatrix,op;padding=padding)
+        CachedOperator(BandedMatrix, op; padding=padding)
     elseif isbandedblockbanded(op) && !padding
-        CachedOperator(BandedBlockBandedMatrix,op)
+        CachedOperator(BandedBlockBandedMatrix, op)
     elseif isblockbanded(op)
-        CachedOperator(BlockBandedMatrix,op;padding=padding)
+        CachedOperator(BlockBandedMatrix, op; padding=padding)
     elseif israggedbelow(op)
-        CachedOperator(RaggedMatrix,op;padding=padding)
+        CachedOperator(RaggedMatrix, op; padding=padding)
     else
-        CachedOperator(Matrix,op;padding=padding)
+        CachedOperator(Matrix, op; padding=padding)
     end
 end
 
-CachedOperator(op::Operator;padding::Bool=false) = default_CachedOperator(op;padding=padding)
+CachedOperator(op::Operator; kw...) = default_CachedOperator(op; kw...)
 
 """
     cache(op::Operator)
@@ -85,7 +87,7 @@ function Base.getindex(B::CachedOperator,k::AbstractRange,j::AbstractRange)
         resizedata!(B,maximum(k),maximum(j))
         B.data[k,j]
     else
-        Matrix{eltype(B)}(length(k),length(j))
+        Matrix{eltype(B)}(undef, length(k),length(j))
     end
 end
 
@@ -114,17 +116,21 @@ end
     end
  end
 
-
-
-
-
-
 resizedata!(B::CachedOperator,::Colon,m::Integer) = resizedata!(B,size(B,1),m)
 resizedata!(B::CachedOperator,n::Integer,::Colon) = resizedata!(B,n,size(B,2))
-
 
 function mul_coefficients(B::CachedOperator,v::AbstractVector{T}) where T<:Number
     resizedata!(B,:,length(v))
 
     B.data*pad(v,size(B.data,2))
+end
+
+function promotedomainspace(C::CachedOperator,sp::Space)
+    C2 = promotedomainspace(C.op, sp)
+    cache(C2)
+end
+
+function promoterangespace(C::CachedOperator,sp::Space)
+    C2 = promoterangespace(C.op, sp)
+    cache(C2)
 end

@@ -1,5 +1,5 @@
 module ApproxFunBase
-    using Base: AnyDict
+using Base: AnyDict
 using Base, BlockArrays, BandedMatrices, BlockBandedMatrices, DomainSets, IntervalSets,
             SpecialFunctions, AbstractFFTs, FFTW, SpecialFunctions, DSP, DualNumbers,
             LinearAlgebra, SparseArrays, LowRankApprox, FillArrays, InfiniteArrays, InfiniteLinearAlgebra #, Arpack
@@ -91,8 +91,8 @@ import IntervalSets: (..), endpoints
 const Vec{d,T} = SVector{d,T}
 
 export pad!, pad, chop!, sample,
-       complexroots, roots, svfft, isvfft,
-       reverseorientation, jumplocations
+       complexroots, roots,
+       reverseorientation
 
 export .., Interval, ChebyshevInterval, leftendpoint, rightendpoint, endpoints, cache
 
@@ -105,6 +105,8 @@ end
 
 # assert that the conversion succeeds. This helps with inference as well as sanity
 strictconvert(T::Type, x) = convert(T, x)::T
+
+uniontypedvec(A, B) = Union{typeof(A), typeof(B)}[A, B]
 
 include("LinearAlgebra/LinearAlgebra.jl")
 include("Fun.jl")
