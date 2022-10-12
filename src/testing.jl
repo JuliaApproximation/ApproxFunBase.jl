@@ -1,14 +1,26 @@
-## Testing
+module ApproxFunBaseTest
+
+using ApproxFunBase
+using ApproxFunBase: plan_transform, plan_itransform, israggedbelow
+using BandedMatrices
+using BandedMatrices: rowstart, rowstop, colstart, colstop
+using BlockArrays
+using BlockBandedMatrices
+using DomainSets: dimension
+using LinearAlgebra
+using Test
+
 # These routines are for the unit tests
 
-using Test
+export testspace, testfunctional, testraggedbelowoperator, testbandedblockbandedoperator,
+    testbandedoperator
 
 ## Spaces Tests
 
 
 function testtransforms(S::Space;minpoints=1,invertibletransform=true)
     # transform tests
-    v = rand(max(minpoints,min(100,ApproxFunBase.dimension(S))))
+    v = rand(max(minpoints,min(100,dimension(S))))
     plan = plan_transform(S,v)
     @test transform(S,v)  == plan*v
 
@@ -227,3 +239,7 @@ function testbandedblockbandedoperator(A)
 
     @test isa(A[Block.(1:4),Block.(1:4)], BandedBlockBandedMatrix)
 end
+
+end
+
+using .ApproxFunBaseTest
