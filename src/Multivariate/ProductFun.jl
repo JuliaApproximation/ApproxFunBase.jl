@@ -8,7 +8,7 @@ export ProductFun
 ## TODO:
 ## In a newer version, an abstract type of ProducFun is needed, where different implementations are possible
 ## however, refactoring this is a lot of effort...
-struct TensorIteratorFun{S<:UnivariateSpace, d<:Integer, SS<:TensorSpace{NTuple{d, S}}, T<:Number} <: MultivariateFun{T, d}
+struct TensorIteratorFun{d<:Integer, SS<:TensorSpace{NTuple{d, <:UnivariateSpace}}, T<:Number} <: MultivariateFun{T, d}
     space::SS
     coefficients::Vector{T} 
     iterator::TrivialTensorizer{d}
@@ -86,11 +86,11 @@ end
 
 ## TODO: This Product Fun actually does not return a productfun, dirty but was easiest to implement. Probably an abstract type of ProductFuns
 # is needed in the future.
-function ProductFun(iter::TrivialTensorizer{d},cfs::Vector{T},blk::Block, sp::AbstractProductSpace{NTuple{d, S},DD}) where {S<:UnivariateSpace,T<:Number,d<:Integer,DD}
+function ProductFun(iter::TrivialTensorizer{d},cfs::Vector{T},blk::Block, sp::AbstractProductSpace{NTuple{d, <:UnivariateSpace}}) where {T<:Number,d<:Integer}
 
     @assert d>2
 
-    TensorIteratorFun{S, d, typeof(sp), T}(sp, cfs, iter, blk) # This is not a ProductFun
+    TensorIteratorFun{d, typeof(sp), T}(sp, cfs, iter, blk) # This is not a ProductFun
 end
 
 ## Construction in a ProductSpace via a Vector of Funs
@@ -295,7 +295,7 @@ evaluate(f::ProductFun{S,V,SS,T},x::Number,y::Number) where {S<:UnivariateSpace,
 
 
 # TensorSpace evaluation
-function evaluate(f::TensorIteratorFun{S, d, SS, T},x...) where {S<:UnivariateSpace, d, SS, T}
+function evaluate(f::TensorIteratorFun{d, SS, T},x...) where {d, SS, T}
     highest_order = f.orders.n[1]
     n = length(f.coefficients)
 
