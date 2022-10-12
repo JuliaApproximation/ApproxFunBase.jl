@@ -5,7 +5,9 @@ using ApproxFunBase: plan_transform, plan_itransform, israggedbelow, RaggedMatri
     blockstart, blockstop, resizedata!
 using BandedMatrices: rowstart, rowstop, colstart, colstop, BandedMatrix, bandwidth
 using BlockArrays
+using BlockArrays: blockrowstop, blockcolstop
 using BlockBandedMatrices
+using BlockBandedMatrices: isbandedblockbanded
 using DomainSets: dimension
 using InfiniteArrays
 using LinearAlgebra
