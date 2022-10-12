@@ -86,7 +86,7 @@ end
 
 ## TODO: This Product Fun actually does not return a productfun, dirty but was easiest to implement. Probably an abstract type of ProductFuns
 # is needed in the future.
-function ProductFun(iter::TrivialTensorizer{d},cfs::Vector{T},blk::Block, sp::AbstractProductSpace{NTuple{d, <:UnivariateSpace}}) where {T<:Number,d<:Integer}
+function ProductFun(iter::TrivialTensorizer{d},cfs::Vector{T},blk::Block, sp::AbstractProductSpace{NTuple{d, <:UnivariateSpace}}) where {T<:Number,d}
 
     @assert d>2
 

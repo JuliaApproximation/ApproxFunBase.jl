@@ -547,7 +547,7 @@ end
 
 fromtensor(S::Space,M::AbstractMatrix) = fromtensor(tensorizer(S),M)
 totensor(S::Space,M::AbstractVector) = totensor(tensorizer(S),M)
-totensor(SS::TensorSpace{NTuple{d}},M::AbstractVector) where {d<:Integer} = 
+totensor(SS::TensorSpace{NTuple{d}},M::AbstractVector) where {d} = 
         if d>2; totensoriterator(tensorizer(SS),M) else totensor(tensorizer(SS),M) end
 
 function fromtensor(it::Tensorizer,M::AbstractMatrix)
