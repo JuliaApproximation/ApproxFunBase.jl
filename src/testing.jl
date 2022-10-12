@@ -250,3 +250,4 @@ end
 end
 
 using .ApproxFunBaseTest
+export ApproxFunBaseTest
