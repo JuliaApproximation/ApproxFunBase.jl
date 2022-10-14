@@ -167,17 +167,4 @@ import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, V
             @test union(b, b) == b
         end
     end
-<<<<<<< HEAD
-=======
-
-    @testset "ApproxFunOrthogonalPolynomials" begin
-        v = rand(4)
-        v2 = transform(NormalizedChebyshev(), v)
-        @test itransform(NormalizedChebyshev(), v2) ≈ v
-
-        f = Fun(x->x^2, Chebyshev())
-        v = coefficients(f, Chebyshev(), Legendre())
-        @test v ≈ coefficients(Fun(x->x^2, Legendre()))
-    end
->>>>>>> 51b9aa0 (coefficient conversion bugfix (#146))
 end
