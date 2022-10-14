@@ -6,7 +6,7 @@ using Test
 ## Supports @test_approx_eq
 
 
-Test.approx_full(f::Fun) = f
+# Test.approx_full(f::Fun) = f
 
 
 

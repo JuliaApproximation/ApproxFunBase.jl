@@ -38,14 +38,14 @@ end
 
 # default_Fun is the default constructor, based on evaluation and transforms
 # last argument is whether to splat or not
-default_Fun(::Type{T},f,d::Space{ReComp},pts::AbstractArray,::Type{Val{true}}) where {T,ReComp} =
+default_Fun(T::Type,f,d::Space,pts::AbstractArray,::Type{Val{true}}) =
     Fun(d,transform(d,T[f(x...) for x in pts]))
 
-default_Fun(::Type{T},f,d::Space{ReComp},pts::AbstractArray,::Type{Val{false}}) where {T,ReComp} =
+default_Fun(T::Type,f,d::Space,pts::AbstractArray,::Type{Val{false}}) =
     Fun(d,transform(d,broadcast!(f, similar(pts, T), pts)))
 
 
-function default_Fun(f,d::Space{ReComp},n::Integer,::Type{Val{false}}) where ReComp
+function default_Fun(f,d::Space,n::Integer,::Type{Val{false}})
     pts=points(d, n)
     f1=f(pts[1])
     if isa(f1,AbstractArray) && size(d) ≠ size(f1)
@@ -57,7 +57,7 @@ function default_Fun(f,d::Space{ReComp},n::Integer,::Type{Val{false}}) where ReC
     default_Fun(Tprom,f,d,pts,Val{false})
 end
 
-function default_Fun(f,d::Space{ReComp},n::Integer,::Type{Val{true}}) where ReComp
+function default_Fun(f,d::Space,n::Integer,::Type{Val{true}})
     pts=points(d, n)
     f1=f(pts[1]...)
     if isa(f1,AbstractArray) && size(d) ≠ size(f1)
@@ -69,9 +69,9 @@ function default_Fun(f,d::Space{ReComp},n::Integer,::Type{Val{true}}) where ReCo
     default_Fun(Tprom,f,d,pts,Val{true})
 end
 
-default_Fun(f,d::Space{ReComp},n::Integer) where {ReComp} = default_Fun(f,d,n,Val{!hasnumargs(f,1)})
+default_Fun(f,d::Space,n::Integer) = default_Fun(f,d,n,Val{!hasnumargs(f,1)})
 
-Fun(f,d::Space{ReComp},n::Integer) where {ReComp} = default_Fun(dynamic(f),d,n)
+Fun(f,d::Space,n::Integer) = default_Fun(dynamic(f),d,n)
 
 # the following is to avoid ambiguity
 # Fun(f::Fun,d) should be equivalent to Fun(x->f(x),d)
@@ -169,7 +169,7 @@ Fun(::typeof(identity), S::Space) = Fun(identity,domain(S))
 Fun(f::typeof(zero), d::Space) = zeros(eltype(domain(d)),d)
 Fun(f::typeof(one), d::Space) = ones(eltype(domain(d)),d)
 
-Fun(f::Type, d::Domain) = Fun(f,Space(d))
+# Fun(f::Type, d::Domain) = Fun(f,Space(d))
 Fun(f, d::Domain) = Fun(f,Space(d))
 
 

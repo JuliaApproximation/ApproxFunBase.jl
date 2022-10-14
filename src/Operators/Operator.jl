@@ -371,7 +371,7 @@ end
 
 
 for OP in (:colstart,:colstop,:rowstart,:rowstop)
-    defOP = Meta.parse("default_"*string(OP))
+    defOP = Symbol(:default_, OP)
     @eval begin
         $OP(A::Operator, i::Integer) = $defOP(A,i)
         $OP(A::Operator, i::PosInfinity) = ℵ₀
