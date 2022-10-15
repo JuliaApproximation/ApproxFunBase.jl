@@ -1,4 +1,9 @@
 name: CI
+
+concurrency:
+  group: build-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 on:
   create:
     tags:
@@ -25,7 +30,6 @@ jobs:
         version:
           - '1.5'
           - '1'
-          - '^1.8.0-0'
         os:
           - ubuntu-latest
           - macOS-latest

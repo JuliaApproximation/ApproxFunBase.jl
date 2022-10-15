@@ -66,6 +66,21 @@ end
     @test Segment(1,-1) .^ 2 ≡ Segment(1,0)
     @test Segment(1,2) .^ 2 ≡ Segment(1,4)
     @test sqrt.(Segment(1,2)) ≡ Segment(1,sqrt(2))
+
+    @testset "union" begin
+        a = ApproxFunBase.EmptyDomain()
+        b = ApproxFunBase.AnyDomain()
+
+        @test union(a, a) == a
+        @test union(a, b) == a
+        @test union(b, a) == a
+        @test union(b, b) == b
+
+        @testset for d in Any[a, b]
+            @test union(d, 1..2) == 1..2
+            @test union(1..2, d) == 1..2
+        end
+    end
 end
 
 @time include("MatrixTest.jl")
@@ -198,6 +213,55 @@ end
     @testset "conversion to a matrix" begin
         M = Multiplication(Fun(identity, PointSpace(1:3)))
         @test_throws ErrorException Matrix(M)
+    end
+end
+
+@testset "BLAS/LAPACK" begin
+    @testset "gemv" begin
+        # test for the pointer versions, and assert that libblastrampoline works
+        @testset for T in [Float32, Float64, ComplexF32, ComplexF64]
+            a = zeros(T, 4)
+            b = zeros(T, 4)
+            A = Matrix{T}(I,4,4)
+            x = T[1:4;]
+            α, β = T(1.0), T(0.0)
+            ApproxFunBase.gemv!('N', α, A, x, β, a)
+            LinearAlgebra.BLAS.gemv!('N', α, A, x, β, b)
+            @test a == b == x
+            β = T(1.0)
+            ApproxFunBase.gemv!('N', α, A, x, β, a)
+            LinearAlgebra.BLAS.gemv!('N', α, A, x, β, b)
+            @test a == b == 2x
+        end
+    end
+
+    @testset "gemm" begin
+        # test for the pointer versions, and assert that libblastrampoline works
+        @testset for T in [Float32, Float64, ComplexF32, ComplexF64]
+            C1 = zeros(T, 4, 4)
+            C2 = zeros(T, 4, 4)
+            A = Matrix{T}(I,4,4)
+            B = reshape(T[1:16;], 4, 4)
+            α, β = T(1.0), T(0.0)
+            ApproxFunBase.gemm!('N', 'N', α, A, B, β, C1)
+            LinearAlgebra.BLAS.gemm!('N', 'N', α, A, B, β, C2)
+            @test C1 == C2 == B
+            β = T(1.0)
+            ApproxFunBase.gemm!('N', 'N', α, A, B, β, C1)
+            LinearAlgebra.BLAS.gemm!('N', 'N', α, A, B, β, C2)
+            @test C1 == C2 == 2B
+        end
+    end
+
+    @testset "hesseneigs" begin
+        A = Float64[1 4 2 3; 1 4 1 7; 0 2 3 4; 0 0 1 3]
+        λ1 = sort(ApproxFunBase.hesseneigvals(A), by = x->(real(x), imag(x)))
+        λ2 = eigvals(A)
+        @test λ1 ≈ λ2
+        B = ComplexF64.(A)
+        λ1 = sort(ApproxFunBase.hesseneigvals(B), by = x->(real(x), imag(x)))
+        λ2 = eigvals(B)
+        @test λ1 ≈ λ2
     end
 end
 

@@ -20,7 +20,7 @@ end
 const VFun{S,T} = Fun{S,T,Vector{T}}
 
 Fun(sp::Space,coeff::AbstractVector) = Fun{typeof(sp),eltype(coeff),typeof(coeff)}(sp,coeff)
-Fun() = Fun(identity)
+Fun() = Fun(identity, ChebyshevInterval())
 Fun(d::Domain) = Fun(identity,d)
 Fun(d::Space) = Fun(identity,d)
 
@@ -166,10 +166,6 @@ isempty(x::ScalarFun) = false
 iterate(A::ArrayFun, i=1) = (@_inline_meta; (i % UInt) - 1 < length(A) ? (@inbounds A[i], i + 1) : nothing)
 
 in(x::ScalarFun, y::ScalarFun) = x == y
-
-
-
-
 
 setspace(v::AbstractVector,s::Space) = Fun(s,v)
 setspace(f::Fun,s::Space) = Fun(s,f.coefficients)
@@ -341,7 +337,7 @@ function axpy!(a,xcfs::AbstractVector,Y::Fun)
 end
 
 
-
++(a::Fun) = copy(a)
 -(f::Fun) = Fun(f.space,-f.coefficients)
 -(c::Number,f::Fun) = -(f-c)
 

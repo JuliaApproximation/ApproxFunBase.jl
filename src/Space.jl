@@ -1,7 +1,5 @@
-
-
 export Space, domainspace, rangespace, maxspace,Space,conversion_type, transform,
-            itransform, SequenceSpace, ConstantSpace
+            itransform, transform!, itransform!, SequenceSpace, ConstantSpace
 
 
 
@@ -145,22 +143,14 @@ for op in (:tocanonical,:fromcanonical,:tocanonicalD,:fromcanonicalD,:invfromcan
     @eval ($op)(sp::Space,x...)=$op(domain(sp),x...)
 end
 
-mappoint(a::Space,b::Space,x)=mappoint(domain(a),domain(b),x)
-mappoint(a::Space,b::Domain,x)=mappoint(domain(a),b,x)
-mappoint(a::Domain,b::Space,x)=mappoint(a,domain(b),x)
+_domain(s::Space) = domain(s)
+_domain(s) = s
+mappoint(a, b, x) = mappoint(map(_domain, (a, b, x))...)
 
-
+_conversion_rule(a, b) = spacescompatible(a, b) ? a : NoSpace()
 
 for FUNC in (:conversion_rule,:maxspace_rule,:union_rule)
-    @eval begin
-        function $FUNC(a,b)::Any
-            if spacescompatible(a,b)
-                a
-            else
-                NoSpace()
-            end
-        end
-    end
+    @eval $FUNC(a, b) = _conversion_rule(a, b)
 end
 
 
@@ -175,7 +165,7 @@ end
 
 
 # gives a space c that has a banded conversion operator TO a and b
-function conversion_type(a,b)::Any
+function conversion_type(a,b)
     if spacescompatible(a,b)
         a
     elseif !domainscompatible(a,b)
@@ -194,7 +184,7 @@ end
 
 # gives a space c that has a banded conversion operator FROM a and b
 maxspace(a,b) = NoSpace()  # TODO: this fixes weird bug with Nothing
-function maxspace(a::Space, b::Space)::Any
+function maxspace(a::Space, b::Space)
     if spacescompatible(a,b)
         return a
     elseif !domainscompatible(a,b)
@@ -250,11 +240,11 @@ end
 # this is used primarily for addition of two funs
 # that may be incompatible
 union(a::AmbiguousSpace, b::AmbiguousSpace) = b
-union(a::AmbiguousSpace, b::Space) = b
-union(a::Space, b::AmbiguousSpace) = a
+union_by_union_rule(a::AmbiguousSpace, b::Space) = b
+union_by_union_rule(a::Space, b::AmbiguousSpace) = a
 
 
-function union_by_union_rule(a::Space,b::Space)::Any
+function union_by_union_rule(a::Space,b::Space)
     if spacescompatible(a,b)
         if isambiguous(domain(a))
             return b
@@ -269,7 +259,7 @@ function union_by_union_rule(a::Space,b::Space)::Any
     union_rule(b,a)
 end
 
-function union(a::Space, b::Space)::Any
+function union(a::Space, b::Space)
     cr = union_by_union_rule(a,b)
     cr isa NoSpace || return cr
 
@@ -287,12 +277,7 @@ function union(a::Space, b::Space)::Any
     a ⊕ b
 end
 
-union(a::Space) = a
-
-union(a::Space,b::Space,c::Space) = union(union(a,b),c)
-union(a::Space,b::Space,c::Space,d::Space...) =
-    union(union(a,b),c,d...)
-
+union(a::Space, bs::Space...) = foldl(union, bs, init = a)
 
 # tests whether a Conversion operator exists
 hasconversion(a,b) = maxspace(a,b) == b
@@ -319,6 +304,8 @@ coefficients(f::AbstractVector,sp1::Space,::Type{T2}) where {T2<:Space} = coeffi
 ## coefficients defaults to calling Conversion, otherwise it tries to pipe through Chebyshev
 
 
+_Fun(v::AbstractVector, sp) = Fun(sp, v)
+_Fun(v, sp) = Fun(v, sp)
 function defaultcoefficients(f,a,b)
     ct=conversion_type(a,b) # gives a space that has a banded conversion to both a and b
 
@@ -336,7 +323,7 @@ function defaultcoefficients(f,a,b)
         end
         if spacescompatible(a,csp) || spacescompatible(b,csp)
             # b is csp too, so we are stuck, try Fun constructor
-            coefficients(default_Fun(Fun(a,f),b))
+            coefficients(default_Fun(_Fun(f,a),b))
         else
             coefficients(f,a,csp,b)
         end
