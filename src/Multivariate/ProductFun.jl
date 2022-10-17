@@ -8,7 +8,7 @@ export ProductFun
 ## TODO:
 ## In a newer version, an abstract type of ProducFun is needed, where different implementations are possible
 ## however, refactoring this is a lot of effort...
-struct TensorIteratorFun{d<:Integer, SS<:TensorSpace{NTuple{d, <:UnivariateSpace}}, T<:Number} <: MultivariateFun{T, d}
+struct TensorIteratorFun{d, SS<:TensorSpace{<:NTuple{d, <:UnivariateSpace}}, T<:Number} <: MultivariateFun{T, d}
     space::SS
     coefficients::Vector{T} 
     iterator::TrivialTensorizer{d}
@@ -86,11 +86,11 @@ end
 
 ## TODO: This Product Fun actually does not return a productfun, dirty but was easiest to implement. Probably an abstract type of ProductFuns
 # is needed in the future.
-function ProductFun(iter::TrivialTensorizer{d},cfs::Vector{T},blk::Block, sp::AbstractProductSpace{NTuple{d, <:UnivariateSpace}}) where {T<:Number,d}
+function ProductFun(iter::TrivialTensorizer{d},cfs::Vector{T},blk::Block, sp::AbstractProductSpace{<:NTuple{d, <:UnivariateSpace}}) where {T<:Number,d}
 
     @assert d>2
 
-    TensorIteratorFun{d, typeof(sp), T}(sp, cfs, iter, blk) # This is not a ProductFun
+    TensorIteratorFun(sp, cfs, iter, blk) # This is not a ProductFun
 end
 
 ## Construction in a ProductSpace via a Vector of Funs
