@@ -247,6 +247,4 @@ function testbandedblockbandedoperator(A)
     @test isa(A[Block.(1:4),Block.(1:4)], BandedBlockBandedMatrix)
 end
 
-end
-
-using .ApproxFunBaseTest
+end # module
