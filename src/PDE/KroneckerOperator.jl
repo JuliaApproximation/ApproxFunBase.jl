@@ -435,10 +435,12 @@ function Base.getindex(K::KroneckerOperator, B::ProductFun)
     mapreduce(((ind, fi),)-> op1[fi] ⊗ op2[Fun(S2, [zeros(T, ind-1); one(T)])], +,
         enumerate(B.coefficients))
 end
-for O in [:DerivativeWrapper, :DefiniteIntegralWrapper]
-    @eval Base.getindex(K::$O{<:KroneckerOperator}, f::MultivariateFun) = K.op[f]
-    @eval (*)(A::$O{<:KroneckerOperator}, B::MultivariateFun) = A.op * B
-    @eval (*)(A::MultivariateFun, B::$O{<:KroneckerOperator}) = Fun(A) * B.op
+for F in [:MultivariateFun, :ProductFun, :LowRankFun]
+    for O in [:DerivativeWrapper, :DefiniteIntegralWrapper]
+        @eval Base.getindex(K::$O{<:KroneckerOperator}, f::$F) = K.op[f]
+        @eval (*)(A::$O{<:KroneckerOperator}, B::$F) = A.op * B
+        @eval (*)(A::$F, B::$O{<:KroneckerOperator}) = A * B.op
+    end
 end
 (*)(A::KroneckerOperator, B::MultivariateFun) = A * Fun(B)
 (*)(A::MultivariateFun, B::KroneckerOperator) = Fun(A) * B
@@ -465,3 +467,6 @@ function (*)(lrf::LowRankFun, ko::KroneckerOperator)
         (f1*O1) ⊗ (f2*O2)
     end
 end
+
+_mulop(P::PlusOperator, ::BivariateSpace, B::ProductFun) = P * LowRankFun(B)
+(*)(P::PlusOperator, lrf::LowRankFun) = sum(op -> op*lrf, P.ops)
