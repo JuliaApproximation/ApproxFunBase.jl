@@ -44,7 +44,7 @@ Fun(f::MultivariateFun,sp::Space) = Fun(Fun(f),sp)
 
 Fun(f,d1::Domain,d2::Domain) = Fun(f,d1*d2)
 
-coefficients(f::BivariateFun,sp::TensorSpace)=coefficients(f,sp[1],sp[2])
+coefficients(f::BivariateFun,sp::TensorSpace)=coefficients(f, factors(sp)...)
 
 
 
