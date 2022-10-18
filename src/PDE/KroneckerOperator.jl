@@ -426,14 +426,17 @@ end
 Base.getindex(A::KroneckerOperator, B::MultivariateFun) = A[Fun(B)]
 function Base.getindex(K::KroneckerOperator, f::LowRankFun)
     op1, op2 = K.ops
-    mapreduce(((A,B),)-> op1[A] ⊗ op2[B], +, zip(f.A, f.B))
+    sum(zip(f.A, f.B)) do (A,B)
+        op1[A] ⊗ op2[B]
+    end
 end
 function Base.getindex(K::KroneckerOperator, B::ProductFun)
     op1, op2 = K.ops
     S2 = factors(B.space)[2]
     T = cfstype(B)
-    mapreduce(((ind, fi),)-> op1[fi] ⊗ op2[Fun(S2, [zeros(T, ind-1); one(T)])], +,
-        enumerate(B.coefficients))
+    sum(enumerate(B.coefficients)) do (ind, fi)
+        op1[fi] ⊗ op2[Fun(S2, [zeros(T, ind-1); one(T)])]
+    end
 end
 for F in [:MultivariateFun, :ProductFun, :LowRankFun]
     for O in [:DerivativeWrapper, :DefiniteIntegralWrapper]
@@ -446,27 +449,28 @@ end
 (*)(A::MultivariateFun, B::KroneckerOperator) = Fun(A) * B
 
 (*)(ko::KroneckerOperator, pf::ProductFun) = ko * LowRankFun(pf)
-Base.getindex(ko::KroneckerOperator, pf::ProductFun) = ko[LowRankFun(pf)]
 (*)(pf::ProductFun, ko::KroneckerOperator) = LowRankFun(pf) * ko
+
+# if the second operator is a constant, we may scale the first operator,
+# and apply it on the coefficients
+function (*)(ko::KroneckerOperator{<:Operator, <:ConstantOperator}, pf::ProductFun)
+    O1, O2 = ko.ops
+    O12 = O2.λ * O1
+    ProductFun(map(x -> O12*x, pf.coefficients), pf.space)
+end
 
 function (*)(ko::KroneckerOperator, lrf::LowRankFun)
     O1, O2 = ko.ops
-    mapreduce(+, lrf.A, lrf.B) do f1, f2
+    sum(zip(lrf.A, lrf.B)) do (f1, f2)
         (O1*f1) ⊗ (O2*f2)
-    end
-end
-function Base.getindex(ko::KroneckerOperator, lrf::LowRankFun)
-    O1, O2 = ko.ops
-    mapreduce(+, lrf.A, lrf.B) do f1, f2
-        (O1[f1]) ⊗ (O2[f2])
     end
 end
 function (*)(lrf::LowRankFun, ko::KroneckerOperator)
     O1, O2 = ko.ops
-    mapreduce(+, lrf.A, lrf.B) do f1, f2
+    sum(zip(lrf.A, lrf.B)) do (f1, f2)
         (f1*O1) ⊗ (f2*O2)
     end
 end
 
-_mulop(P::PlusOperator, ::BivariateSpace, B::ProductFun) = P * LowRankFun(B)
+_mulop(P::Operator, ::BivariateSpace, B::ProductFun) = P * LowRankFun(B)
 (*)(P::PlusOperator, lrf::LowRankFun) = sum(op -> op*lrf, P.ops)

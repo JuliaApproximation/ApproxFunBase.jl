@@ -53,7 +53,6 @@ end
 # consistent with treating it as an expansion in the second space
 # We re-route through _mulop to distinguish between operators on UnivariateSpace and
 # those on BivariateSpace
-_mulop(O::Operator, ::Space, ::ProductFun) = error("define $(typeof(O)) * ProductFun")
 function _mulop(B::Operator, ::UnivariateSpace, f::ProductFun)
     if isafunctional(B)
         Fun(factor(space(f),2),map(c->Number(B*c),f.coefficients))
