@@ -66,11 +66,18 @@ function ProductFun(cfs::AbstractMatrix{T},sp::AbstractProductSpace{Tuple{S,V},D
     if chopping
         ncfs, kend = norm(cfs,Inf), size(cfs,2)
         if kend > 1
-            while isempty(chop(@view(cfs[:,kend]), ncfs*tol))
+            while kend > 0
+                if all(iszero, @view(cfs[:, kend]))
+                    kend -= 1
+                    continue
+                end
+                if !isempty(chop(@view(cfs[:,kend]), ncfs*tol))
+                    break
+                end
                 kend-=1
             end
         end
-        ret=VFun{S,T}[Fun(columnspace(sp,k),chop(cfs[:,k],ncfs*tol)) for k=1:max(kend,1)]
+        ret=VFun{S,T}[Fun(columnspace(sp,k),chop(@view(cfs[:,k]), ncfs*tol)) for k=1:max(kend,1)]
         ProductFun{S,V,typeof(sp),T}(ret,sp)
     else
         ret=VFun{S,T}[Fun(columnspace(sp,k),cfs[:,k]) for k=1:size(cfs,2)]
