@@ -435,12 +435,33 @@ function Base.getindex(K::KroneckerOperator, B::ProductFun)
     mapreduce(((ind, fi),)-> op1[fi] ⊗ op2[Fun(S2, [zeros(T, ind-1); one(T)])], +,
         enumerate(B.coefficients))
 end
-for F in [:LowRankFun, :ProductFun, :MultivariateFun]
-    for O in [:DerivativeWrapper, :DefiniteIntegralWrapper]
-        @eval Base.getindex(K::$O{<:KroneckerOperator}, f::$F) = K.op[f]
-        @eval (*)(A::$O{<:KroneckerOperator}, B::$F) = A.op * B
-        @eval (*)(A::$F, B::$O{<:KroneckerOperator}) = Fun(A) * B.op
+for O in [:DerivativeWrapper, :DefiniteIntegralWrapper]
+    @eval Base.getindex(K::$O{<:KroneckerOperator}, f::MultivariateFun) = K.op[f]
+    @eval (*)(A::$O{<:KroneckerOperator}, B::MultivariateFun) = A.op * B
+    @eval (*)(A::MultivariateFun, B::$O{<:KroneckerOperator}) = Fun(A) * B.op
+end
+(*)(A::KroneckerOperator, B::MultivariateFun) = A * Fun(B)
+(*)(A::MultivariateFun, B::KroneckerOperator) = Fun(A) * B
+
+(*)(ko::KroneckerOperator, pf::ProductFun) = ko * LowRankFun(pf)
+Base.getindex(ko::KroneckerOperator, pf::ProductFun) = ko[LowRankFun(pf)]
+(*)(pf::ProductFun, ko::KroneckerOperator) = LowRankFun(pf) * ko
+
+function (*)(ko::KroneckerOperator, lrf::LowRankFun)
+    O1, O2 = ko.ops
+    mapreduce(+, lrf.A, lrf.B) do f1, f2
+        (O1*f1) ⊗ (O2*f2)
     end
-    @eval (*)(A::KroneckerOperator, B::$F) = A * Fun(B)
-    @eval (*)(A::$F, B::KroneckerOperator) = Fun(A) * B
+end
+function Base.getindex(ko::KroneckerOperator, lrf::LowRankFun)
+    O1, O2 = ko.ops
+    mapreduce(+, lrf.A, lrf.B) do f1, f2
+        (O1[f1]) ⊗ (O2[f2])
+    end
+end
+function (*)(lrf::LowRankFun, ko::KroneckerOperator)
+    O1, O2 = ko.ops
+    mapreduce(+, lrf.A, lrf.B) do f1, f2
+        (f1*O1) ⊗ (f2*O2)
+    end
 end
