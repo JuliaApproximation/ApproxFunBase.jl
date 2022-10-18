@@ -430,14 +430,8 @@ function Base.getindex(K::KroneckerOperator, f::LowRankFun)
         op1[A] ⊗ op2[B]
     end
 end
-function Base.getindex(K::KroneckerOperator, B::ProductFun)
-    op1, op2 = K.ops
-    S2 = factors(B.space)[2]
-    T = cfstype(B)
-    sum(enumerate(B.coefficients)) do (ind, fi)
-        op1[fi] ⊗ op2[Fun(S2, [zeros(T, ind-1); one(T)])]
-    end
-end
+Base.getindex(K::KroneckerOperator, B::ProductFun) = K[LowRankFun(B)]
+
 for F in [:MultivariateFun, :ProductFun, :LowRankFun]
     for O in [:DerivativeWrapper, :DefiniteIntegralWrapper]
         @eval Base.getindex(K::$O{<:KroneckerOperator}, f::$F) = K.op[f]
