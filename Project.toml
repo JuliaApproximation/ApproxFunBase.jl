@@ -49,8 +49,9 @@ StaticArrays = "0.12, 1.0"
 julia = "1.6"
 
 [extras]
+ApproxFunOrthogonalPolynomials = "b70543e2-c0d9-56b8-a290-0d4d6d4de211"
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [targets]
-test = ["Aqua", "Random"]
+test = ["Aqua", "Random", "ApproxFunOrthogonalPolynomials"]
