@@ -623,7 +623,8 @@ mul_coefficients(A::PlusOperator,b::Fun) =
     mapreduce(x->mul_coefficients(x,b),+,A.ops)
 
 *(A::Operator, b::AbstractMatrix{<:Fun}) = A*Fun(b)
-*(A::Vector{<:Operator}, b::Fun) = map(a->a*b,strictconvert(Array{Any,1},A))
+*(A::AbstractVector{<:Operator}, b::Fun) = map(a->a*b, A)
+*(A::AbstractVector{<:Operator}, b::ScalarFun) = map(a->a*b, A)
 
 
 
