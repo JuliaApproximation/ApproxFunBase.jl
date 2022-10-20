@@ -1,5 +1,6 @@
-using ApproxFunBase, Test
-    import ApproxFunBase: Block
+using ApproxFunBase
+using Test
+using ApproxFunBase: Block
 
 
 @testset "RaggedMatrix" begin
