@@ -450,7 +450,7 @@ end
 function (*)(ko::KroneckerOperator{<:Operator, <:ConstantOperator}, pf::ProductFun)
     O1, O2 = ko.ops
     O12 = O2.λ * O1
-    ProductFun(map(x -> O12*x, pf.coefficients), factors(pf.space)[2])
+    ProductFun(map(x -> O12*x, pf.coefficients), factor(pf.space, 2))
 end
 
 function (*)(ko::KroneckerOperator, lrf::LowRankFun)
