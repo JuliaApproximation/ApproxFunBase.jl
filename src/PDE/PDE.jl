@@ -13,7 +13,7 @@ function Laplacian(d::BivariateSpace,k::Integer)
     Dx2=Derivative(d, Vec{2}(2,0))
     Dy2=Derivative(d, Vec{2}(0,2))
     if k==1
-        LaplacianWrapper(Dx2+Dy2,k)
+        LaplacianWrapper(Dx2+Dy2,d,k)
     else
         @assert k > 0
         Δ=Laplacian(d,1)
