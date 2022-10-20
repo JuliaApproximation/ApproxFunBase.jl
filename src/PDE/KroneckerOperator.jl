@@ -271,7 +271,7 @@ function Derivative(S::TensorSpace{SV,DD}, order) where {SV,DD<:EuclideanDomain{
         T=promote_type(eltype(Dx),eltype(Dy))
     end
     # try to work around type inference
-    DerivativeWrapper{typeof(K),typeof(domainspace(K)),Vector{Int},T}(K,order)
+    DerivativeWrapper{typeof(K),typeof(S),Vector{Int},T}(K,order)
 end
 
 
