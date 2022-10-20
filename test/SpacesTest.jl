@@ -1,5 +1,6 @@
-using ApproxFunBase, Test
-import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, Vec, checkpoints
+using ApproxFunBase
+using Test
+using ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, Vec, checkpoints
 using StaticArrays
 using BandedMatrices: rowrange, colrange, BandedMatrix
 using LinearAlgebra
