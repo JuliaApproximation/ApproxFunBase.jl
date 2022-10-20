@@ -28,7 +28,7 @@ function grad(d::BivariateSpace)
     @assert n == 2 "grad for n>2 is not implemented"
     Vec{2}(Derivative(d, Vec{2}(1,0)), Derivative(d, Vec{2}(0,1)))
 end
-grad(f::Fun{<:BivariateSpace}) = Fun(grad(space(f)) * f)
+grad(f::Fun{<:BivariateSpace}) = grad(space(f)) * f
 
 function tensor_Dirichlet(d::Union{ProductDomain,TensorSpace},k)
     @assert nfactors(d)==2
