@@ -69,4 +69,5 @@ function _mulop(B::Operator, ::UnivariateSpace, f::ProductFun)
 end
 *(B::Operator,f::ProductFun) = _mulop(B, domainspace(B), f)
 
-*(f::ProductFun,B::Operator) = transpose(B*(transpose(f)))
+_mulop(f::ProductFun, ::UnivariateSpace, B::Operator) = transpose(B*(transpose(f)))
+*(f::ProductFun,B::Operator) = _mulop(f, domainspace(B), B)
