@@ -23,7 +23,7 @@ import Base: values, convert, getindex, setindex!, *, +, -, ==, <, <=, >, |, !, 
                 isless, union, angle, join, isnan, isapprox, isempty, sort, merge, promote_rule,
                 minimum, maximum, extrema, argmax, argmin, findmax, findmin, isfinite,
                 zeros, zero, one, promote_rule, repeat, length, resize!, isinf,
-                getproperty, findfirst, unsafe_getindex, fld, cld, div, imag,
+                getproperty, findfirst, unsafe_getindex, fld, cld, div,
                 @_inline_meta, eachindex, firstindex, lastindex, keys, isreal, OneTo,
                 Array, Vector, Matrix, view, ones, @propagate_inbounds, print_array,
                 split, iszero, permutedims, rad2deg, deg2rad
