@@ -171,6 +171,14 @@ using LinearAlgebra
             P = PartialInverseOperator(C)
             @test AbstractMatrix(P * C) == I(size(C,1))
         end
+
+        @testset "ConcreteOperatorFunction" begin
+            A = 2I : PointSpace(1:4)
+            Ainv = inv(A)
+            B = convert(Operator{ComplexF64}, Ainv)
+            @test B isa Operator{ComplexF64}
+            @test ComplexF64.(Ainv[1:4, 1:4]) == B[1:4, 1:4]
+        end
     end
 
     @testset "DiracSpace" begin
