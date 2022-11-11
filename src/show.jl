@@ -30,7 +30,7 @@ end
 
 ## Operator
 
-summarystr(B::Operator) = string(typeof(B).name.name, " : ", domainspace(B), " → ", rangespace(B))
+summarystr(B::Operator) = string(nameof(typeof(B)), " : ", domainspace(B), " → ", rangespace(B))
 summary(io::IO, B::Operator) = print(io, summarystr(B))
 
 struct PrintShow
