@@ -268,6 +268,19 @@ end
         M = Multiplication(Fun(identity, PointSpace(1:3)))
         @test_throws ErrorException Matrix(M)
     end
+    @testset "real-imag" begin
+        A = (3 + 2im)*I : PointSpace(1:4)
+        Ar = ApproxFunBase.real(A)
+        Ai = imag(A)
+        @test Ar[1:4, 1:4] == diagm(0=>fill(3, 4))
+        @test Ai[1:4, 1:4] == diagm(0=>fill(2, 4))
+
+        A = (3 - 2im)*I : PointSpace(1:4)
+        Ar = ApproxFunBase.real(A)
+        Ai = imag(A)
+        @test Ar[1:4, 1:4] == diagm(0=>fill(3, 4))
+        @test Ai[1:4, 1:4] == diagm(0=>fill(-2, 4))
+    end
 end
 
 @testset "RowVector" begin
