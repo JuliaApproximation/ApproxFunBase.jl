@@ -8,8 +8,10 @@ struct ConcreteOperatorFunction{BT<:Operator,FF,T} <: OperatorFunction{BT,FF,T}
     f::FF
 end
 
-ConcreteOperatorFunction(op::Operator,f::Function) =
-    ConcreteOperatorFunction{typeof(op),typeof(f),float(eltype(op))}(op,f)
+function ConcreteOperatorFunction(op::Operator,f::Function)
+    T = typeof(f(oneunit(eltype(op))))
+    ConcreteOperatorFunction{typeof(op),typeof(f),T}(op,f)
+end
 OperatorFunction(op::Operator,f::Function) = ConcreteOperatorFunction(op,f)
 
 for op in (:domainspace,:rangespace,:domain,:bandwidths)
