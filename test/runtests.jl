@@ -274,6 +274,12 @@ end
         Ai = imag(A)
         @test Ar[1:4, 1:4] == diagm(0=>fill(3, 4))
         @test Ai[1:4, 1:4] == diagm(0=>fill(2, 4))
+        B = conj(A)
+        Bi = imag(B)
+        @test Bi[1:4, 1:4] == diagm(0=>fill(-2, 4))
+        C = convert(Operator{ComplexF64}, A)
+        @test C isa Operator{ComplexF64}
+        @test imag(C)[1:4, 1:4] == diagm(0=>fill(2, 4))
 
         A = (3 - 2im)*I : PointSpace(1:4)
         Ar = ApproxFunBase.real(A)
