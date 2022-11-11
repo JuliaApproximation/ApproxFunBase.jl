@@ -9,7 +9,7 @@ struct ConcreteOperatorFunction{BT<:Operator,FF,T} <: OperatorFunction{BT,FF,T}
 end
 
 ConcreteOperatorFunction(op::Operator,f::Function) =
-    ConcreteOperatorFunction{typeof(op),typeof(f),eltype(op)}(op,f)
+    ConcreteOperatorFunction{typeof(op),typeof(f),float(eltype(op))}(op,f)
 OperatorFunction(op::Operator,f::Function) = ConcreteOperatorFunction(op,f)
 
 for op in (:domainspace,:rangespace,:domain,:bandwidths)
@@ -31,7 +31,8 @@ function convert(::Type{Operator{T}},D::ConcreteOperatorFunction) where T
     if T==eltype(D)
         D
     else
-        ConcreteOperatorFunction{typeof(D.op),T}(D.op,D.f)
+        DopT = strictconvert(Operator{T}, D.op)
+        ConcreteOperatorFunction(DopT, D.f)::Operator{T}
     end
 end
 
