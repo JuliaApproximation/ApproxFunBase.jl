@@ -51,5 +51,10 @@
 			s = String(take!(io))
 			@test startswith(s, "ConstantSpace(0..1) /")
 		end
+		@testset "ConstantOperator" begin
+			A = I : PointSpace(1:4)
+			s = summary(A)
+			@test startswith(s, "ConstantOperator")
+		end
 	end
 end
