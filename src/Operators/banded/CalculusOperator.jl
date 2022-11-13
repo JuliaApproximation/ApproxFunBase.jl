@@ -166,7 +166,13 @@ function linesum(f::Fun)
     end
 end
 
+∫(f::Fun)=integrate(f)
 
+⨜(f::Fun)=cumsum(f)
+
+for OP in (:Σ,:∮,:⨍,:⨎)
+    @eval $OP(f::Fun)=sum(f)
+end
 
 
 # Multivariate
@@ -371,3 +377,7 @@ Return the laplacian operator on an unset space.
 Spaces will be inferred when applying or manipulating the operator.
 """
 Laplacian()
+
+
+const 𝒟 = Derivative()
+const Δ = Laplacian()
