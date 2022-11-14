@@ -31,7 +31,7 @@ function spacescompatible(A::AbstractMatrix{T}) where T<:Operator
     true
 end
 
-spacescompatible(A::AbstractVector{T}) where {T<:Operator} = spacescompatible(map(domainspace,A))
+spacescompatible(A::VectorOrTupleOfOp) = spacescompatible(map(domainspace,A))
 
 function domainspace(A::AbstractMatrix{T}) where T<:Operator
     if !spacescompatible(A)
@@ -42,12 +42,11 @@ function domainspace(A::AbstractMatrix{T}) where T<:Operator
     Space(spl)
 end
 
-function rangespace(A::AbstractVector{T}) where T<:Operator
+function rangespace(A::VectorOrTupleOfOp)
     if !spacescompatible(A)
         error("Cannot construct rangespace for $A as domain spaces are not compatible")
     end
-
-    spl=map(rangespace,A)
+    spl=map(rangespace, _convertVector(A))
     Space(spl)
 end
 
@@ -110,7 +109,8 @@ function InterlaceOperator(ops::AbstractMatrix{<:Operator},ds::Space,rs::Space)
         l,u = (1-dimension(rs),dimension(ds)-1)  # not banded
     end
 
-    opsm = convert(Matrix{Operator{mapreduce(eltype, promote_type, ops)}}, ops)
+    MT = Matrix{Operator{mapreduce(eltype, promote_type, ops)}}
+    opsm = strictconvert(MT, ops)
     InterlaceOperator(opsm,ds,rs,
                         cache(dsi),
                         cache(rsi),
@@ -118,7 +118,7 @@ function InterlaceOperator(ops::AbstractMatrix{<:Operator},ds::Space,rs::Space)
 end
 
 
-function InterlaceOperator(ops::Vector{<:Operator},ds::Space,rs::Space)
+function InterlaceOperator(ops::VectorOrTupleOfOp, ds::Space, rs::Space)
     # calculate bandwidths
     p=size(ops,1)
     if all(isbanded,ops)
@@ -134,7 +134,8 @@ function InterlaceOperator(ops::Vector{<:Operator},ds::Space,rs::Space)
         l,u = (1-dimension(rs),dimension(ds)-1)  # not banded
     end
 
-    opsv = convert(Vector{Operator{mapreduce(eltype, promote_type, ops)}}, ops)
+    VT = Vector{Operator{mapreduce(eltype, promote_type, ops)}}
+    opsv = strictconvert(VT, _convertVector(ops))
     InterlaceOperator(opsv,ds,rs,
                         cache(BlockInterlacer(tuple(blocklengths(ds)))),
                         cache(interlacer(rs)),
@@ -180,14 +181,12 @@ _convertVector(v::AbstractVector) = convert(Vector, v)
 _convertVector(t::Tuple) = [t...]
 
 function InterlaceOperator(opsin::AbstractVector{<:Operator})
-    ops = promotedomainspace(opsin)
-    opsv = _convertVector(ops)
-    InterlaceOperator(opsv, domainspace(first(ops)), rangespace(opsv))
+    ops = _convertVector(promotedomainspace(opsin))
+    InterlaceOperator(ops, domainspace(first(ops)), rangespace(ops))
 end
 function InterlaceOperator(opsin::Tuple{Operator, Vararg{Operator}})
     ops = promotedomainspace(opsin)
-    opsv = _convertVector(ops)
-    InterlaceOperator(opsv, domainspace(first(ops)), rangespace(opsv))
+    InterlaceOperator(ops, domainspace(first(ops)), rangespace(ops))
 end
 
 InterlaceOperator(ops::AbstractArray) =
