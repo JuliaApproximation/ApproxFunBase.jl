@@ -65,7 +65,7 @@ Evaluation(S::SumSpace,x,order) =
         InterlaceOperator(RowVector(vnocat(map(s->Evaluation(s,x,order),components(S))...)),SumSpace))
 
 
-ToeplitzOperator(G::Fun{MatrixSpace{S,DD,RR},V}) where {S,RR,V,DD} = interlace(map(ToeplitzOperator,Array(G)))
+ToeplitzOperator(G::Fun{<:MatrixSpace}) = interlace(map(ToeplitzOperator,Array(G)))
 
 ## Sum Space
 
@@ -253,10 +253,14 @@ choosedomainspace(M::CalculusOperator{UnsetSpace},sp::SumSpace)=mapreduce(s->cho
 
 ## Multiplcation for Array*Vector
 
-function Multiplication(f::Fun{MatrixSpace{S,DD,RR}},sp::VectorSpace{S2,DD2,RR2}) where {S,DD,RR,S2,DD2,RR2}
+function Multiplication(f::Fun{<:MatrixSpace}, sp::VectorSpace)
     @assert size(space(f),2)==length(sp)
     m=Array(f)
-    MultiplicationWrapper(f,interlace(Operator{promote_type(cfstype(f),prectype(sp))}[Multiplication(m[k,j],sp[j]) for k=1:size(m,1),j=1:size(m,2)]))
+    MultiplicationWrapper(f, interlace(
+            Operator{promote_type(cfstype(f),prectype(sp))}[
+                Multiplication(m[k,j],sp[j]) for k=1:size(m,1),j=1:size(m,2)]
+        )
+    )
 end
 
 
