@@ -87,11 +87,7 @@ const VectorInterlaceOperator = InterlaceOperator{T,1,DS,RS} where {T,DS,RS<:Spa
 const MatrixInterlaceOperator = InterlaceOperator{T,2,DS,RS} where {T,DS,RS<:Space{D,R}} where {D,R<:AbstractVector}
 
 
-InterlaceOperator(ops::Array{T,p},ds,rs,di,ri,bi) where {T,p} =
-    InterlaceOperator{T,p,typeof(ds),typeof(rs),
-                        typeof(di),typeof(ri),typeof(bi)}(ops,ds,rs,di,ri,bi)
-
-function InterlaceOperator(ops::AbstractMatrix{Operator{T}},ds::Space,rs::Space) where T
+function InterlaceOperator(ops::AbstractMatrix{<:Operator},ds::Space,rs::Space)
     # calculate bandwidths TODO: generalize
     p=size(ops,1)
     dsi = interlacer(ds)
@@ -122,7 +118,7 @@ function InterlaceOperator(ops::AbstractMatrix{Operator{T}},ds::Space,rs::Space)
 end
 
 
-function InterlaceOperator(ops::Vector{Operator{T}},ds::Space,rs::Space) where T
+function InterlaceOperator(ops::Vector{<:Operator},ds::Space,rs::Space)
     # calculate bandwidths
     p=size(ops,1)
     if all(isbanded,ops)
@@ -145,27 +141,27 @@ function InterlaceOperator(ops::Vector{Operator{T}},ds::Space,rs::Space) where T
                         (l,u))
 end
 
-function InterlaceOperator(opsin::AbstractMatrix{Operator{T}}) where {T}
+function InterlaceOperator(opsin::AbstractMatrix{<:Operator})
     isempty(opsin) && throw(ArgumentError("Cannot create InterlaceOperator from empty Matrix"))
     ops=promotespaces(opsin)
     InterlaceOperator(ops,domainspace(ops),rangespace(ops[:,1]))
 end
 
-function InterlaceOperator(opsin::AbstractMatrix{Operator{T}},::Type{DS},::Type{RS}) where {T,DS<:Space,RS<:Space}
+function InterlaceOperator(opsin::AbstractMatrix{<:Operator},::Type{DS},::Type{RS}) where {DS<:Space,RS<:Space}
     isempty(opsin) && throw(ArgumentError("Cannot create InterlaceOperator from empty Matrix"))
     ops=promotespaces(opsin)
     InterlaceOperator(ops,DS(components(domainspace(ops))),RS(rangespace(ops[:,1]).spaces))
 end
 
 
-function InterlaceOperator(opsin::RowVector{Operator{T}}) where {T}
+function InterlaceOperator(opsin::RowVector{<:Operator})
     isempty(opsin) && throw(ArgumentError("Cannot create InterlaceOperator from empty Matrix"))
 
     ops=promotespaces(opsin)
     InterlaceOperator(ops,domainspace(ops),rangespace(ops[1]))
 end
 
-function InterlaceOperator(opsin::RowVector{Operator{T}},::Type{DS},::Type{RS}) where {T,DS<:Space,RS<:Space}
+function InterlaceOperator(opsin::RowVector{<:Operator},::Type{DS},::Type{RS}) where {DS<:Space,RS<:Space}
     isempty(opsin) && throw(ArgumentError("Cannot create InterlaceOperator from empty Matrix"))
     ops=promotespaces(opsin)
     InterlaceOperator(ops,DS(components(domainspace(ops))),rangespace(ops[1]))
@@ -174,13 +170,13 @@ end
 
 
 
-InterlaceOperator(opsin::AbstractMatrix{Operator{T}},::Type{DS}) where {T,DS<:Space} =
+InterlaceOperator(opsin::AbstractMatrix{<:Operator},::Type{DS}) where {DS<:Space} =
     InterlaceOperator(opsin,DS,DS)
 
 InterlaceOperator(opsin::AbstractMatrix,S...) =
     InterlaceOperator(Matrix{Operator{mapreduce(eltype,promote_type,opsin)}}(promotespaces(opsin)),S...)
 
-function InterlaceOperator(opsin::Vector{Operator{T}}) where T
+function InterlaceOperator(opsin::Union{Vector{<:Operator}, Tuple{Operator, Vararg{Operator}}})
     ops=promotedomainspace(opsin)
     InterlaceOperator(ops,domainspace(first(ops)),rangespace(ops))
 end
@@ -223,7 +219,7 @@ end
 
 
 
-function colstop(M::InterlaceOperator{T},j::Integer) where T
+function colstop(M::InterlaceOperator, j::Integer)
 #    b=bandwidth(M,1)
     if isbandedbelow(M)
         min(j+bandwidth(M,1)::Int,size(M,1))::Int
@@ -260,7 +256,7 @@ function getindex(op::InterlaceOperator{T,1},k::Integer,j::Integer) where T
     op.ops[N][K,j]::T
 end
 
-function getindex(op::InterlaceOperator{T},k::Integer) where T
+function getindex(op::InterlaceOperator, k::Integer)
     if size(op,1) == 1
         op[1,k]
     elseif size(op,2) == 1
@@ -439,7 +435,7 @@ promotedomainspace(A::InterlaceOperator{T,1},sp::Space) where {T} =
     InterlaceOperator(map(op->promotedomainspace(op,sp),A.ops))
 
 
-interlace(A::AbstractArray{T}) where {T<:Operator} = InterlaceOperator(A)
+interlace(A::AbstractArray{<:Operator}) = InterlaceOperator(A)
 
 const OperatorTypes = Union{Operator,Fun,Number,UniformScaling}
 
@@ -495,7 +491,7 @@ Base.hvcat(rows::Tuple{Vararg{Int}}, D::Union{Fun,Number,UniformScaling}, C::Uni
 
 ## Convert Matrix operator to operators
 
-Operator(M::AbstractArray{OO}) where {OO<:Operator} = InterlaceOperator(M)
+Operator(M::AbstractArray{<:Operator}) = InterlaceOperator(M)
 
 
 
