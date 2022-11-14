@@ -90,7 +90,7 @@ const VectorOrTupleOfOp{O<:Operator} = Union{AbstractVector{O}, Tuple{O, Vararg{
 
 __maybetypedmap(f, k, ops) = map(op->f(op,k), ops)
 _maybetypedmap(f, k, O, ops::AbstractVector) =
-    convert(AbstractArray{O}, __maybetypedmap(f, k, ops))
+    strictconvert(Vector{O}, __maybetypedmap(f, k, ops))
 _maybetypedmap(f, k, O, ops) = __maybetypedmap(f, k, ops)
 
 function promoterangespace(ops::VectorOrTupleOfOp{O}) where O<:Operator
@@ -118,7 +118,7 @@ end
 
 
 ####
-# choosedomainspace returns a potental domainspace
+# choosedomainspace returns a potential domainspace
 # where the second argument is a target rangespace
 # it defaults to the true domainspace, but if this is ambiguous
 # it tries to decide a space.
