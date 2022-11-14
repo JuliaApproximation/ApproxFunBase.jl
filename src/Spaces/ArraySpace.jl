@@ -14,8 +14,8 @@ struct ArraySpace{S,n,DD,RR,A<:AbstractArray{S,n}} <: DirectSumSpace{NTuple{n,S}
      spaces::A
 end
 
-const VectorSpace{S,DD,RR} = ArraySpace{S,1,DD,RR}
-const MatrixSpace{S,DD,RR} = ArraySpace{S,2,DD,RR}
+const VectorSpace{S,DD,RR,A<:AbstractVector{S}} = ArraySpace{S,1,DD,RR,A}
+const MatrixSpace{S,DD,RR,A<:AbstractMatrix{S}} = ArraySpace{S,2,DD,RR,A}
 
 #TODO: Think through domain/domaindominsion
 ArraySpace(sp::AbstractArray{SS,N}, f = first(sp)) where {SS<:Space,N} =
@@ -121,7 +121,7 @@ Base.getindex(f::Fun{DSS},kj::CartesianIndex{1}) where {DSS<:ArraySpace} = f[kj[
 Base.getindex(f::Fun{DSS},kj::CartesianIndex{2}) where {DSS<:ArraySpace} = f[kj[1],kj[2]]
 
 
-function Fun(A::AbstractArray{Fun{<:VectorSpace{S},V,VV},2}) where {S,V,VV}
+function Fun(A::AbstractMatrix{<:Fun{<:VectorSpace{S},V,VV}}) where {S,V,VV}
     @assert size(A,1)==1
 
     M = Matrix{Fun{S,V,VV}}(undef, length(space(A[1])),size(A,2))
