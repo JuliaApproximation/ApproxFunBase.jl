@@ -189,10 +189,7 @@ function convert(::Type{Operator{T}},S::InterlaceOperator) where T
     if T == eltype(S)
         S
     else
-        ops=Array{Operator{T}}(undef, size(S.ops)...)
-        for j=1:size(S.ops,2),k=1:size(S.ops,1)
-            ops[k,j]=S.ops[k,j]
-        end
+        ops = convert(AbstractArray{Operator{T}}, S.ops)
         InterlaceOperator(ops,domainspace(S),rangespace(S),
                             S.domaininterlacer,S.rangeinterlacer,S.bandwidths)
     end
