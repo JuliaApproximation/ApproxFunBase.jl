@@ -51,9 +51,9 @@ function rangespace(A::AbstractVector{T}) where T<:Operator
     Space(spl)
 end
 
-promotespaces(A::AbstractMatrix{T}) where {T<:Operator} = promotespaces(Matrix(A))
+promotespaces(A::AbstractMatrix{<:Operator}) = promotespaces(Matrix(A))
 
-function promotespaces(A::Matrix{T}) where T<:Operator
+function promotespaces(A::Matrix{<:Operator})
     isempty(A) && return A
     ret = similar(A) #TODO: promote might have different Array type
     for j=1:size(A,2)
