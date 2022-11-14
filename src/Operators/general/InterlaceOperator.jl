@@ -451,15 +451,12 @@ operators(A::Operator) = [A]
 
 Base.vcat(A::MatrixInterlaceOperator...) =
     InterlaceOperator(vcat(map(operators,A)...))
+
+__vcat(a::VectorInterlaceOperator, b::OperatorTypes...) = (a.ops..., __vcat(b...)...)
+__vcat(a::OperatorTypes, b::OperatorTypes...) = (a, __vcat(b...)...)
+__vcat() = ()
 function _vcat(A::OperatorTypes...)
-    Av = Vector{Operator{mapreduce(eltype,promote_type,A)}}()
-    for a in A
-        if a isa VectorInterlaceOperator
-            append!(Av,a.ops)
-        else
-            push!(Av,a)
-        end
-    end
+    Av = __vcat(A...)
     InterlaceOperator(vnocat(Av...))
 end
 
