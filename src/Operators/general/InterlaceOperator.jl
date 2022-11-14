@@ -110,8 +110,8 @@ function InterlaceOperator(ops::AbstractMatrix{<:Operator},ds::Space,rs::Space)
         l,u = (1-dimension(rs),dimension(ds)-1)  # not banded
     end
 
-
-    InterlaceOperator(ops,ds,rs,
+    opsm = convert(Matrix{Operator{mapreduce(eltype, promote_type, ops)}}, ops)
+    InterlaceOperator(opsm,ds,rs,
                         cache(dsi),
                         cache(rsi),
                         (l,u))
@@ -134,8 +134,8 @@ function InterlaceOperator(ops::Vector{<:Operator},ds::Space,rs::Space)
         l,u = (1-dimension(rs),dimension(ds)-1)  # not banded
     end
 
-
-    InterlaceOperator(ops,ds,rs,
+    opsv = convert(Vector{Operator{mapreduce(eltype, promote_type, ops)}}, ops)
+    InterlaceOperator(opsv,ds,rs,
                         cache(BlockInterlacer(tuple(blocklengths(ds)))),
                         cache(interlacer(rs)),
                         (l,u))
@@ -176,13 +176,22 @@ InterlaceOperator(opsin::AbstractMatrix{<:Operator},::Type{DS}) where {DS<:Space
 InterlaceOperator(opsin::AbstractMatrix,S...) =
     InterlaceOperator(Matrix{Operator{mapreduce(eltype,promote_type,opsin)}}(promotespaces(opsin)),S...)
 
-function InterlaceOperator(opsin::Union{Vector{<:Operator}, Tuple{Operator, Vararg{Operator}}})
-    ops=promotedomainspace(opsin)
-    InterlaceOperator(ops,domainspace(first(ops)),rangespace(ops))
+_convertVector(v::AbstractVector) = convert(Vector, v)
+_convertVector(t::Tuple) = [t...]
+
+function InterlaceOperator(opsin::AbstractVector{<:Operator})
+    ops = promotedomainspace(opsin)
+    opsv = _convertVector(ops)
+    InterlaceOperator(opsv, domainspace(first(ops)), rangespace(opsv))
+end
+function InterlaceOperator(opsin::Tuple{Operator, Vararg{Operator}})
+    ops = promotedomainspace(opsin)
+    opsv = _convertVector(ops)
+    InterlaceOperator(opsv, domainspace(first(ops)), rangespace(opsv))
 end
 
-InterlaceOperator(ops::AbstractArray{T,p}) where {T,p} =
-    InterlaceOperator(Array{Operator{mapreduce(eltype,promote_type,ops)},p}(ops))
+InterlaceOperator(ops::AbstractArray) =
+    InterlaceOperator(Array{Operator{mapreduce(eltype,promote_type,ops)}, ndims(ops)}(ops))
 
 
 function convert(::Type{Operator{T}},S::InterlaceOperator) where T
@@ -450,7 +459,7 @@ __vcat(a::OperatorTypes, b::OperatorTypes...) = (a, __vcat(b...)...)
 __vcat() = ()
 function _vcat(A::OperatorTypes...)
     Av = __vcat(A...)
-    InterlaceOperator(vnocat(Av...))
+    InterlaceOperator(map(x -> convert(Operator, x), Av))
 end
 
 
