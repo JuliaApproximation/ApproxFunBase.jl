@@ -46,8 +46,8 @@ function rangespace(A::VectorOrTupleOfOp)
     if !spacescompatible(A)
         error("Cannot construct rangespace for $A as domain spaces are not compatible")
     end
-    spl=map(rangespace, _convertVector(A))
-    Space(spl)
+    spl=map(rangespace, A)
+    ArraySpace(_convert_vector_or_svector(spl), first(spl))
 end
 
 promotespaces(A::AbstractMatrix{<:Operator}) = promotespaces(Matrix(A))
@@ -135,7 +135,7 @@ function InterlaceOperator(ops::VectorOrTupleOfOp, ds::Space, rs::Space)
     end
 
     VT = Vector{Operator{mapreduce(eltype, promote_type, ops)}}
-    opsv = strictconvert(VT, _convertVector(ops))
+    opsv = strictconvert(VT, _convert_vector(ops))
     InterlaceOperator(opsv,ds,rs,
                         cache(BlockInterlacer(tuple(blocklengths(ds)))),
                         cache(interlacer(rs)),
@@ -177,11 +177,13 @@ InterlaceOperator(opsin::AbstractMatrix{<:Operator},::Type{DS}) where {DS<:Space
 InterlaceOperator(opsin::AbstractMatrix,S...) =
     InterlaceOperator(Matrix{Operator{mapreduce(eltype,promote_type,opsin)}}(promotespaces(opsin)),S...)
 
-_convertVector(v::AbstractVector) = convert(Vector, v)
-_convertVector(t::Tuple) = [t...]
+_convert_vector(v::AbstractVector) = convert(Vector, v)
+_convert_vector_or_svector(v::AbstractVector) = _convert_vector(v)
+_convert_vector(t::Tuple) = [t...]
+_convert_vector_or_svector(t::Tuple) = SVector{length(t), mapreduce(typeof, typejoin, t)}(t)
 
 function InterlaceOperator(opsin::AbstractVector{<:Operator})
-    ops = _convertVector(promotedomainspace(opsin))
+    ops = _convert_vector(promotedomainspace(opsin))
     InterlaceOperator(ops, domainspace(first(ops)), rangespace(ops))
 end
 function InterlaceOperator(opsin::Tuple{Operator, Vararg{Operator}})
