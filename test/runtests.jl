@@ -287,6 +287,12 @@ end
         @test Ar[1:4, 1:4] == diagm(0=>fill(3, 4))
         @test Ai[1:4, 1:4] == diagm(0=>fill(-2, 4))
     end
+    @testset "tuples in promotespaces" begin
+        M = Multiplication(Fun(PointSpace(1:4)), PointSpace(1:4))
+        A = ApproxFunBase.promotespaces([M, M])
+        B = ApproxFunBase.promotespaces((M, M))
+        @test all(((x,y),) -> x == y, zip(A, B))
+    end
 end
 
 @testset "RowVector" begin
