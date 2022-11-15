@@ -86,8 +86,6 @@ promotedomainspace(P::Operator,sp::Space,cursp::Space) =
 
 
 
-const VectorOrTupleOfOp{O<:Operator} = Union{AbstractVector{O}, Tuple{O, Vararg{O}}}
-
 __maybetypedmap(f, k, ops) = map(op->f(op,k), ops)
 _maybetypedmap(f, k, O, ops::AbstractVector) =
     strictconvert(Vector{O}, __maybetypedmap(f, k, ops))

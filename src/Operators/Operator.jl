@@ -14,6 +14,8 @@ Abstract type to represent linear operators between spaces.
 """
 abstract type Operator{T} end #T is the entry type, Float64 or Complex{Float64}
 
+const VectorOrTupleOfOp{O<:Operator} = Union{AbstractVector{O}, Tuple{O, Vararg{O}}}
+
 eltype(::Operator{T}) where {T} = T
 eltype(::Type{<:Operator{T}}) where {T} = T
 eltype(::Type{OT}) where {OT<:Operator} = eltype(supertype(OT))
