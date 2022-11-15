@@ -186,9 +186,18 @@ function InterlaceOperator(opsin::AbstractVector{<:Operator})
     ops = _convert_vector(promotedomainspace(opsin))
     InterlaceOperator(ops, domainspace(first(ops)), rangespace(ops))
 end
-function InterlaceOperator(opsin::Tuple{Operator, Vararg{Operator}})
-    ops = promotedomainspace(opsin)
+@inline function _InterlaceOperator(opsin, promotedomain)
+    ops = promotedomain ? promotedomainspace(opsin) : opsin
     InterlaceOperator(ops, domainspace(first(ops)), rangespace(ops))
+end
+@static if VERSION >= v"1.8"
+    Base.@constprop :aggressive function InterlaceOperator(opsin::Tuple{Operator, Vararg{Operator}}, promotedomain = true)
+        _InterlaceOperator(opsin, promotedomain)
+    end
+else
+    function InterlaceOperator(opsin::Tuple{Operator, Vararg{Operator}}, promotedomain = true)
+        _InterlaceOperator(opsin, promotedomain)
+    end
 end
 
 InterlaceOperator(ops::AbstractArray) =
