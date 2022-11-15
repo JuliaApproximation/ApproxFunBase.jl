@@ -182,7 +182,8 @@ convert(::Type{Operator{T}},B::DirichletWrapper) where {T} =
     DirichletWrapper(Operator{T}(B.op),B.order)::Operator{T}
 
 # Default is to use diffbca
-default_Dirichlet(sp::Space,λ) = DirichletWrapper([ldiffbc(sp,λ);rdiffbc(sp,λ)],λ)
+default_Dirichlet(sp::Space,λ) =
+    DirichletWrapper(InterlaceOperator((ldiffbc(sp,λ), rdiffbc(sp,λ)), false), λ)
 Dirichlet(sp::Space,λ) = default_Dirichlet(sp,λ)
 Dirichlet(sp::Space) = Dirichlet(sp,0)
 Dirichlet() = Dirichlet(UnsetSpace())
