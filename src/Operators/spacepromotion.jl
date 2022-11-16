@@ -86,34 +86,37 @@ promotedomainspace(P::Operator,sp::Space,cursp::Space) =
 
 
 
+__maybetypedmap(f, k, ops) = map(op->f(op,k), ops)
+_maybetypedmap(f, k, O, ops::AbstractVector) =
+    strictconvert(Vector{O}, __maybetypedmap(f, k, ops))
+_maybetypedmap(f, k, O, ops) = __maybetypedmap(f, k, ops)
 
-
-function promoterangespace(ops::Union{AbstractVector{O}, Tuple{O,Vararg{O}}}) where O<:Operator
+function promoterangespace(ops::VectorOrTupleOfOp{O}) where O<:Operator
     isempty(ops) && return strictconvert(Vector{Operator{eltype(O)}}, ops)
     k=findmaxrangespace(ops)
     #TODO: T might be incorrect
     T=mapreduce(eltype,promote_type,ops)
-    Operator{T}[promoterangespace(op,k) for op in ops]
+    _maybetypedmap(promoterangespace, k, Operator{T}, ops)
 end
-function promotedomainspace(ops::Union{AbstractVector{O}, Tuple{O,Vararg{O}}}) where O<:Operator
+function promotedomainspace(ops::VectorOrTupleOfOp{O}) where O<:Operator
     isempty(ops) && return strictconvert(Vector{Operator{eltype(O)}}, ops)
     k=findmindomainspace(ops)
     #TODO: T might be incorrect
     T=mapreduce(eltype,promote_type,ops)
-    Operator{T}[promotedomainspace(op,k) for op in ops]
+    _maybetypedmap(promotedomainspace, k, Operator{T}, ops)
 end
-function promotedomainspace(ops::Union{AbstractVector{O}, Tuple{O,Vararg{O}}},S::Space) where O<:Operator
+function promotedomainspace(ops::VectorOrTupleOfOp{O}, S::Space) where O<:Operator
     isempty(ops) && return strictconvert(Vector{Operator{eltype(O)}}, ops)
     k=conversion_type(findmindomainspace(ops),S)
     #TODO: T might be incorrect
     T=promote_type(mapreduce(eltype,promote_type,ops),prectype(S))
-    Operator{T}[promotedomainspace(op,k) for op in ops]
+    _maybetypedmap(promotedomainspace, k, Operator{T}, ops)
 end
 
 
 
 ####
-# choosedomainspace returns a potental domainspace
+# choosedomainspace returns a potential domainspace
 # where the second argument is a target rangespace
 # it defaults to the true domainspace, but if this is ambiguous
 # it tries to decide a space.
@@ -158,8 +161,8 @@ spacescompatible(A::Operator,B::Operator) =
 
 
 #It's important that domain space is promoted first as it might impact range space
-promotespaces(ops::AbstractVector) = promoterangespace(promotedomainspace(ops))
-function promotespaces(ops::AbstractVector,b::Fun)
+promotespaces(ops::VectorOrTupleOfOp{<:Operator}) = promoterangespace(promotedomainspace(ops))
+function promotespaces(ops::VectorOrTupleOfOp{<:Operator}, b::Fun)
     A=promotespaces(ops)
     if isa(rangespace(A),AmbiguousSpace)
         # try setting the domain space

@@ -13,7 +13,7 @@ function Laplacian(d::BivariateSpace,k::Integer)
     Dx2=Derivative(d, Vec{2}(2,0))
     Dy2=Derivative(d, Vec{2}(0,2))
     if k==1
-        LaplacianWrapper(Dx2+Dy2,k)
+        LaplacianWrapper(Dx2+Dy2,d,k)
     else
         @assert k > 0
         Δ=Laplacian(d,1)
@@ -22,8 +22,13 @@ function Laplacian(d::BivariateSpace,k::Integer)
 end
 
 Laplacian(d::EuclideanDomain{2}, k::Integer) = Laplacian(Space(d),k)
-grad(d::ProductDomain) = [Derivative(d,[1,0]),Derivative(d,[0,1])]
-
+grad(d::ProductDomain) = grad(Space(d))
+function grad(d::BivariateSpace)
+    n = length(factors(d))
+    @assert n == 2 "grad for n>2 is not implemented"
+    Vec{2}(Derivative(d, Vec{2}(1,0)), Derivative(d, Vec{2}(0,1)))
+end
+grad(f::Fun{<:BivariateSpace}) = grad(space(f)) * f
 
 function tensor_Dirichlet(d::Union{ProductDomain,TensorSpace},k)
     @assert nfactors(d)==2
@@ -49,13 +54,20 @@ function timedirichlet(d::Union{ProductDomain,TensorSpace})
 end
 
 
-
-function *(B::Operator,f::ProductFun)
+# Operators on a univariate space act on the coefficient Funs when multiplied from the left,
+# and on the basis of the second space when multiplied from the right.
+# Note that the latter produces a function, and not an operator. To obtain an operator,
+# right multiply by a kronecker product of operators
+# We re-route through _mulop to distinguish between operators on UnivariateSpace and
+# those on BivariateSpace
+function _mulop(B::Operator, ::UnivariateSpace, f::ProductFun)
     if isafunctional(B)
         Fun(factor(space(f),2),map(c->Number(B*c),f.coefficients))
     else
-        ProductFun(space(f),map(c->B*c,f.coefficients))
+        ProductFun(map(c->B*c,f.coefficients), space(f))
     end
 end
+*(B::Operator,f::ProductFun) = _mulop(B, domainspace(B), f)
 
-*(f::ProductFun,B::Operator) = transpose(B*(transpose(f)))
+_mulop(f::ProductFun, ::UnivariateSpace, B::Operator) = transpose(B*(transpose(f)))
+*(f::ProductFun,B::Operator) = _mulop(f, domainspace(B), B)

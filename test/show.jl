@@ -21,6 +21,13 @@
 			@test length(v) == 2
 			@test all(==(repr(S1)), v)
 		end
+		@testset "SumSpace" begin
+			S1 = PointSpace(1:3)
+			S = S1 ⊕ S1
+			v = strip.(split(repr(S), '⊕'))
+			@test length(v) == 2
+			@test all(==(repr(S1)), v)
+		end
 	end
 	@testset "Fun" begin
 		f = Fun(PointSpace(1:3), [1,2,3])
@@ -43,6 +50,11 @@
 			show(io, MIME"text/plain"(), Q)
 			s = String(take!(io))
 			@test startswith(s, "ConstantSpace(0..1) /")
+		end
+		@testset "ConstantOperator" begin
+			A = I : PointSpace(1:4)
+			s = summary(A)
+			@test startswith(s, "ConstantOperator")
 		end
 	end
 end

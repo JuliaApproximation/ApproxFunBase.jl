@@ -552,9 +552,9 @@ transform!(S::Space,cfs) = plan_transform!(S,cfs)*cfs
 
 _coefficients!!(::Val{true}) = coefficients!
 _coefficients!!(::Val{false}) = coefficients
-_mul(P::CanonicalTransformPlan, ip, vals) = _coefficients!!(ip)(P.plan * vals, P.canonicalspace, P.space)
-_mul(P::ICanonicalTransformPlan, ip, cfs) = P.plan * _coefficients!!(ip)(cfs, P.space, P.canonicalspace)
-*(P::Union{CanonicalTransformPlan, ICanonicalTransformPlan}, vals::AbstractVector) = _mul(P, Val(inplace(P)), vals)
+_multransform(P::CanonicalTransformPlan, ip, vals) = _coefficients!!(ip)(P.plan * vals, P.canonicalspace, P.space)
+_multransform(P::ICanonicalTransformPlan, ip, cfs) = P.plan * _coefficients!!(ip)(cfs, P.space, P.canonicalspace)
+*(P::Union{CanonicalTransformPlan, ICanonicalTransformPlan}, vals::AbstractVector) = _multransform(P, Val(inplace(P)), vals)
 
 
 for OP in (:plan_transform,:plan_itransform,:plan_transform!,:plan_itransform!)

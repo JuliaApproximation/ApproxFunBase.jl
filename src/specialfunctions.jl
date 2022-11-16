@@ -433,7 +433,8 @@ end
 
 for OP in (:<,:(Base.isless),:(<=))
     @eval begin
-        $OP(a::Fun{<:ConstantSpace},b::Fun{<:ConstantSpace}) = $OP(strictconvert(Number,a),Number(b))
+        $OP(a::Fun{<:ConstantSpace},b::Fun{<:ConstantSpace}) =
+            $OP(strictconvert(Number,a), strictconvert(Number, b))
         $OP(a::Fun{<:ConstantSpace},b::Number) = $OP(strictconvert(Number,a),b)
         $OP(a::Number,b::Fun{<:ConstantSpace}) = $OP(a,strictconvert(Number,b))
     end
@@ -479,8 +480,8 @@ for op in (:(argmax),:(argmin))
             pts = extremal_args(f)
             # the extra real avoids issues with complex round-off
             v = map(real∘f, pts)::Vector
-            x = pts[strictconvert(Int, $op(v))::Int]
-            strictconvert(T, x)::T
+            x = pts[strictconvert(Int, $op(v))]
+            strictconvert(T, x)
         end
 
         function $op(f::Fun)
@@ -493,7 +494,7 @@ for op in (:(argmax),:(argmin))
             fp = map(f, pts)
             @assert norm(imag(fp))<100eps()
             v = real(fp)::Vector
-            x = pts[strictconvert(Int, $op(v))::Int]
+            x = pts[strictconvert(Int, $op(v))]
             strictconvert(T, x)
         end
     end

@@ -30,7 +30,7 @@ end
 
 ## Operator
 
-summarystr(B::Operator) = string(typeof(B).name.name, " : ", domainspace(B), " → ", rangespace(B))
+summarystr(B::Operator) = string(nameof(typeof(B)), " : ", domainspace(B), " → ", rangespace(B))
 summary(io::IO, B::Operator) = print(io, summarystr(B))
 
 struct PrintShow
@@ -145,7 +145,7 @@ function show(io::IO,ss::SumSpace)
     s = components(ss)
     show(io,s[1])
     for sp in s[2:end]
-        print(io,"⊕")
+        print(io," ⊕ ")
         show(io,sp)
     end
 end

@@ -36,7 +36,8 @@ KroneckerOperator(A::Fun,B::UniformScaling) = KroneckerOperator(Multiplication(A
 KroneckerOperator(A,B::Fun) = KroneckerOperator(A,Multiplication(B))
 KroneckerOperator(A::Fun,B) = KroneckerOperator(Multiplication(A),B)
 
-
+KroneckerOperator(K::KroneckerOperator) = K
+KroneckerOperator(T::TimesOperator) = mapfoldr(op -> KroneckerOperator(op), *, T.ops)
 
 function promotedomainspace(K::KroneckerOperator,ds::TensorSpace)
     A=promotedomainspace(K.ops[1],ds.spaces[1])
@@ -143,10 +144,9 @@ function subblockbandwidths(K::KroneckerOperator)
     end
 end
 
-
-const Wrappers = Union{ConversionWrapper,MultiplicationWrapper,DerivativeWrapper,LaplacianWrapper,
-                       SpaceOperator,ConstantTimesOperator}
-
+const WrapperList = (ConversionWrapper,MultiplicationWrapper,DerivativeWrapper,LaplacianWrapper,
+                       SpaceOperator,ConstantTimesOperator)
+const Wrappers = Union{WrapperList...}
 
 
 isbandedblockbanded(P::Union{PlusOperator,TimesOperator}) = all(isbandedblockbanded,P.ops)
@@ -172,6 +172,7 @@ for FUNC in (:blockbandwidths, :subblockbandwidths, :isbandedblockbanded,:domain
     @eval $FUNC(K::Wrappers) = $FUNC(K.op)
 end
 
+KroneckerOperator(A::Wrappers) = KroneckerOperator(A.op)
 
 domainspace(K::KroneckerOperator) = K.domainspace
 rangespace(K::KroneckerOperator) = K.rangespace
@@ -271,7 +272,7 @@ function Derivative(S::TensorSpace{SV,DD}, order) where {SV,DD<:EuclideanDomain{
         T=promote_type(eltype(Dx),eltype(Dy))
     end
     # try to work around type inference
-    DerivativeWrapper{typeof(K),typeof(domainspace(K)),Vector{Int},T}(K,order)
+    DerivativeWrapper{typeof(K),typeof(S),Vector{Int},T}(K,order)
 end
 
 
@@ -426,21 +427,49 @@ end
 Base.getindex(A::KroneckerOperator, B::MultivariateFun) = A[Fun(B)]
 function Base.getindex(K::KroneckerOperator, f::LowRankFun)
     op1, op2 = K.ops
-    mapreduce(((A,B),)-> op1[A] ⊗ op2[B], +, zip(f.A, f.B))
+    sum(zip(f.A, f.B)) do (A,B)
+        op1[A] ⊗ op2[B]
+    end
 end
-function Base.getindex(K::KroneckerOperator, B::ProductFun)
-    op1, op2 = K.ops
-    S2 = factors(B.space)[2]
-    T = cfstype(B)
-    mapreduce(((ind, fi),)-> op1[fi] ⊗ op2[Fun(S2, [zeros(T, ind-1); one(T)])], +,
-        enumerate(B.coefficients))
-end
-for F in [:LowRankFun, :ProductFun, :MultivariateFun]
-    for O in [:DerivativeWrapper, :DefiniteIntegralWrapper]
+Base.getindex(K::KroneckerOperator, B::ProductFun) = K[LowRankFun(B)]
+
+for F in [:MultivariateFun, :ProductFun, :LowRankFun]
+    for O in WrapperList
         @eval Base.getindex(K::$O{<:KroneckerOperator}, f::$F) = K.op[f]
         @eval (*)(A::$O{<:KroneckerOperator}, B::$F) = A.op * B
-        @eval (*)(A::$F, B::$O{<:KroneckerOperator}) = Fun(A) * B.op
+        @eval (*)(A::$F, B::$O{<:KroneckerOperator}) = A * B.op
     end
-    @eval (*)(A::KroneckerOperator, B::$F) = A * Fun(B)
-    @eval (*)(A::$F, B::KroneckerOperator) = Fun(A) * B
 end
+(*)(A::KroneckerOperator, B::MultivariateFun) = A * Fun(B)
+(*)(A::MultivariateFun, B::KroneckerOperator) = Fun(A) * B
+
+(*)(ko::KroneckerOperator, pf::ProductFun) = ko * LowRankFun(pf)
+(*)(pf::ProductFun, ko::KroneckerOperator) = LowRankFun(pf) * ko
+
+# if the second operator is a constant, we may scale the first operator,
+# and apply it on the coefficients
+function (*)(ko::KroneckerOperator{<:Operator, <:ConstantOperator}, pf::ProductFun)
+    O1, O2 = ko.ops
+    O12 = O2.λ * O1
+    ProductFun(map(x -> O12*x, pf.coefficients), factor(pf.space, 2))
+end
+
+function (*)(ko::KroneckerOperator, lrf::LowRankFun)
+    O1, O2 = ko.ops
+    sum(zip(lrf.A, lrf.B)) do (f1, f2)
+        (O1*f1) ⊗ (O2*f2)
+    end
+end
+function (*)(lrf::LowRankFun, ko::KroneckerOperator)
+    O1, O2 = ko.ops
+    sum(zip(lrf.A, lrf.B)) do (f1, f2)
+        (f1*O1) ⊗ (f2*O2)
+    end
+end
+
+_mulop(pf::ProductFun, ::BivariateSpace, O::Operator) = LowRankFun(pf) * O
+_mulop(O::Operator, ::BivariateSpace, pf::ProductFun) = O * LowRankFun(pf)
+(*)(P::PlusOperator, lrf::LowRankFun) = sum(op -> op*lrf, P.ops)
+(*)(lrf::LowRankFun, P::PlusOperator) = sum(op -> lrf*op, P.ops)
+(*)(lrf::LowRankFun, T::TimesOperator) = (lrf * T.ops[1]) * foldr(*, T.ops[2:end])
+(*)(T::TimesOperator, lrf::LowRankFun) = foldr(*, T.ops[1:end-1]) * (T.ops[end] * lrf)

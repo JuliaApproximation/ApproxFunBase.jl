@@ -1,5 +1,6 @@
-using ApproxFunBase, Test
-import ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, Vec, checkpoints
+using ApproxFunBase
+using Test
+using ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, Vec, checkpoints
 using StaticArrays
 using BandedMatrices: rowrange, colrange, BandedMatrix
 using LinearAlgebra
@@ -169,6 +170,14 @@ using LinearAlgebra
             C = Conversion(PointSpace(1:3), PointSpace(1:3))
             P = PartialInverseOperator(C)
             @test AbstractMatrix(P * C) == I(size(C,1))
+        end
+
+        @testset "ConcreteOperatorFunction" begin
+            A = 2I : PointSpace(1:4)
+            Ainv = inv(A)
+            B = convert(Operator{ComplexF64}, Ainv)
+            @test B isa Operator{ComplexF64}
+            @test ComplexF64.(Ainv[1:4, 1:4]) == B[1:4, 1:4]
         end
     end
 
