@@ -253,6 +253,12 @@ using LinearAlgebra
         @test dimension(a^3) == dimension(a)^3
         @test @inferred(domain(a^3)) == domain(a)^3
         @test_broken @inferred(points(a^3)) == vec(Vec.(points(a), points(a)', reshape(points(a), 1,1,4)))
+
+        p = PointSpace(1:4)
+        d = domain(p)
+        @test domain(TensorSpace(p)) == d
+        @test components(domain(TensorSpace(p, p))) == (d, d)
+        @test components(domain(TensorSpace(p, p, p))) == (d, d, d)
     end
 
     @testset "ConstantSpace" begin

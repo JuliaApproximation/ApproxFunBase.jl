@@ -222,11 +222,13 @@ tensor_eval_type(::Type{Vector{Any}},::Type{Vector{Any}}) = Vector{Any}
 tensor_eval_type(::Type{Vector{Any}},_) = Vector{Any}
 tensor_eval_type(_,::Type{Vector{Any}}) = Vector{Any}
 
-
+# Specialize some common cases to avoid mapreduce, which has inference issues
+_typeofproddomain(sp::Tuple{Any}) = typeof(domain(sp[1]))
+_typeofproddomain(sp::Tuple{Any,Any}) = typeof(domain(sp[1]) × domain(sp[2]))
+_typeofproddomain(sp) = typeof(mapreduce(domain,×,sp))
 TensorSpace(sp::Tuple) =
-    TensorSpace{typeof(sp),typeof(mapreduce(domain,×,sp)),
-                mapreduce(rangetype,(a,b)->tensor_eval_type(a,b),sp)}(sp)
-
+    TensorSpace{typeof(sp), _typeofproddomain(sp),
+                mapreduce(rangetype,tensor_eval_type,sp)}(sp)
 
 dimension(sp::TensorSpace) = mapreduce(dimension,*,sp.spaces)
 
