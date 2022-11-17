@@ -75,7 +75,7 @@ hasconstblocks(A::Operator) = hasconstblocks(domainspace(A)) && hasconstblocks(r
 macro functional(FF)
     quote
         Base.size(A::$FF,k::Integer) = k==1 ? 1 : dimension(domainspace(A))
-        ApproxFunBase.rangespace(F::$FF) = ConstantSpace(eltype(F))
+        ApproxFunBase.rangespace(F::$FF) = ApproxFunBase.ConstantSpace(eltype(F))
         ApproxFunBase.isafunctional(::$FF) = true
         ApproxFunBase.blockbandwidths(A::$FF) = 0,hastrivialblocks(domainspace(A)) ? bandwidth(A,2) : ℵ₀
         function ApproxFunBase.defaultgetindex(f::$FF,k::Integer,j::Integer)
@@ -494,7 +494,7 @@ haswrapperstructure(_) = false
 #  Ex: c*op or real(op)
 macro wrapperstructure(Wrap)
     ret = quote
-        haswrapperstructure(::$Wrap) = true
+        ApproxFunBase.haswrapperstructure(::$Wrap) = true
     end
 
     for func in (:(ApproxFunBase.bandwidths),:(LinearAlgebra.stride),

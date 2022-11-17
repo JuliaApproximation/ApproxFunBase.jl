@@ -23,7 +23,7 @@ macro calculus_operator(Op)
             order::OT
         end
 
-        @wrapper $WrappOp
+        ApproxFunBase.@wrapper $WrappOp
 
 
         ## Constructors
