@@ -402,10 +402,12 @@ Conversion(a::TensorSpace,b::TensorSpace) = ConversionWrapper(promote_type(prect
 
 
 
-function Multiplication(f::Fun{TS},S::TensorSpace) where {TS<:TensorSpace}
-    lr=LowRankFun(f)
-    ops=map(kron,map(a->Multiplication(a,S.spaces[1]),lr.A),map(a->Multiplication(a,S.spaces[2]),lr.B))
-    MultiplicationWrapper(f,+(ops...))
+function Multiplication(f::Fun{<:TensorSpace}, S::TensorSpace)
+    lr = LowRankFun(f)
+    MAs = map(a->Multiplication(a,S.spaces[1]), lr.A)
+    MBs = map(a->Multiplication(a,S.spaces[2]), lr.B)
+    ops = map(kron, MAs, MBs)
+    MultiplicationWrapper(f, PlusOperator(ops))
 end
 
 ## Functionals
