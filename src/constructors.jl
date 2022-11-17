@@ -15,7 +15,7 @@ valsdomain_type_promote(::Type{T},::Type{V}) where {T,V}=promote_type(T,V),promo
 
 
 function choosefuncfstype(ftype,Td)
-    if !( ftype<: Number || ( ((ftype <: AbstractArray) || (ftype <: Vec)) &&
+    if !( ftype<: Number || ( ((ftype <: AbstractArray) || (ftype <: SVector)) &&
                               (eltype(ftype) <: Number) ) )
         @warn "Function outputs type $(ftype), which is not a Number"
     end

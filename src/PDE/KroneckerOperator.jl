@@ -411,8 +411,8 @@ function Multiplication(f::Fun{<:TensorSpace}, S::TensorSpace)
 end
 
 ## Functionals
-Evaluation(sp::TensorSpace,x::Vec) = EvaluationWrapper(sp,x,zeros(Int,length(x)),⊗(map(Evaluation,sp.spaces,x)...))
-Evaluation(sp::TensorSpace,x::Tuple) = Evaluation(sp,Vec(x...))
+Evaluation(sp::TensorSpace,x::SVector) = EvaluationWrapper(sp,x,zeros(Int,length(x)),⊗(map(Evaluation,sp.spaces,x)...))
+Evaluation(sp::TensorSpace,x::Tuple) = Evaluation(sp,SVector(x...))
 
 
 

@@ -94,7 +94,7 @@ transform(AS::ArraySpace{SS,n},vals::AbstractVector{Array{V,n}}) where {SS,n,V} 
     transform(vec(AS),map(vec,vals))
 transform(AS::VectorSpace{SS},vals::AbstractVector{AV}) where {SS,AV<:AbstractVector} =
     transform(AS,map(Vector,vals))
-transform(AS::VectorSpace{SS},vals::AbstractVector{Vec{V,n}}) where {SS,n,V} =
+transform(AS::VectorSpace{SS},vals::AbstractVector{SVector{V,n}}) where {SS,n,V} =
     transform(AS,map(Vector,vals))
 
 function itransform(AS::VectorSpace,cfs::AbstractVector)
