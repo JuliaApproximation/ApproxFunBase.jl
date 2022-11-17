@@ -24,6 +24,7 @@ struct Tensorizer{DMS<:Tuple}
     blocks::DMS
 end
 
+const Tensorizer2D{AA, BB} = Tensorizer{Tuple{AA, BB}}
 const TrivialTensorizer{d} = Tensorizer{NTuple{d,Ones{Int,1,Tuple{OneToInf{Int}}}}}
 
 Base.eltype(a::Tensorizer) = NTuple{length(a.blocks),Int}
@@ -31,10 +32,23 @@ Base.eltype(::Tensorizer{<:NTuple{d}}) where {d} = NTuple{d,Int}
 dimensions(a::Tensorizer) = map(sum,a.blocks)
 Base.length(a::Tensorizer) = mapreduce(sum,*,a.blocks)
 
-# ((block_dim_1, block_dim_2,...), (itaration_number, iterator, iterator_state)), (sub_dim_1, dub_dim_2,...), (shift_dim_1, shift_dim_2,...), (numblock_1, numblock_2,...), (itemssofar, length)
-start(a::TrivialTensorizer{d}) where {d} = (ntuple(i->1, d),(0, nothing, nothing)), ntuple(i->1, d), ntuple(i->0, d), ntuple(i->a.blocks[i][1], d), (0,length(a))
 
-function next(a::TrivialTensorizer{d}, ((block, (j, iterator, iter_state)), subblock, shift, numblock, (i,tot))) where {d}
+function start(a::TrivialTensorizer{d}) where {d}
+    if d==2
+        return invoke(start, Tuple{Tensorizer2D}, a)
+    else
+        # ((block_dim_1, block_dim_2,...), (itaration_number, iterator, iterator_state)), (sub_dim_1, dub_dim_2,...), (shift_dim_1, shift_dim_2,...), (numblock_1, numblock_2,...), (itemssofar, length)
+        return (ntuple(i->1, d),(0, nothing, nothing)), ntuple(i->1, d), ntuple(i->0, d), ntuple(i->a.blocks[i][1], d), (0,length(a))
+    end
+end
+
+function next(a::TrivialTensorizer{d}, iterator_tuple) where {d}
+
+    if d==2
+        return invoke(next, Tuple{Tensorizer2D, Tuple}, a, iterator_tuple)
+    end
+
+    (block, (j, iterator, iter_state)), subblock, shift, numblock, (i,tot) = iterator_tuple
 
     # increase subblock, so that last elements in tuple are increased first
     function increase_subblock!(subblock)
@@ -96,13 +110,19 @@ function next(a::TrivialTensorizer{d}, ((block, (j, iterator, iter_state)), subb
 end
 
 
-done(a::TrivialTensorizer{d}, ((block, (j, iterator, iter_state)), sub, shift, numblock, (i,tot))) where {d} = i ≥ tot
+function done(a::TrivialTensorizer{d}, iterator_tuple) where {d}
+    if d==2
+        return invoke(done, Tuple{Tensorizer2D, Tuple}, a, iterator_tuple)
+    end
+    (_, _, _, _, (i,tot)) = iterator_tuple
+    return i ≥ tot
+end
 
 
 # (blockrow,blockcol), (subrow,subcol), (rowshift,colshift), (numblockrows,numblockcols), (itemssofar, length)
-start(a::Tensorizer{Tuple{AA,BB}}) where {AA,BB} = (1,1), (1,1), (0,0), (a.blocks[1][1],a.blocks[2][1]), (0,length(a))
+start(a::Tensorizer2D{AA, BB}) where {AA,BB} = (1,1), (1,1), (0,0), (a.blocks[1][1],a.blocks[2][1]), (0,length(a))
 
-function next(a::Tensorizer{Tuple{AA,BB}}, ((K,J), (k,j), (rsh,csh), (n,m), (i,tot))) where {AA,BB}
+function next(a::Tensorizer2D{AA, BB}, ((K,J), (k,j), (rsh,csh), (n,m), (i,tot))) where {AA,BB}
     ret = k+rsh,j+csh
     if k==n && j==m  # end of block
         if J == 1 || K == length(a.blocks[1])   # end of new block
@@ -127,7 +147,7 @@ function next(a::Tensorizer{Tuple{AA,BB}}, ((K,J), (k,j), (rsh,csh), (n,m), (i,t
 end
 
 
-done(a::Tensorizer, ((K,J), (k,j), (rsh,csh), (n,m), (i,tot))) = i ≥ tot
+done(a::Tensorizer2D, ((K,J), (k,j), (rsh,csh), (n,m), (i,tot))) = i ≥ tot
 
 iterate(a::Tensorizer) = next(a, start(a))
 function iterate(a::Tensorizer, st)
@@ -572,8 +592,11 @@ function totensor(it::Tensorizer,M::AbstractVector)
     B=block(it,n)
     ds = dimensions(it)
 
-    ret=zeros(eltype(M),[sum(it.blocks[i][1:min(B.n[1],length(it.blocks[i]))]) for i=1:length(it.blocks)]...)
+    #ret=zeros(eltype(M),[sum(it.blocks[i][1:min(B.n[1],length(it.blocks[i]))]) for i=1:length(it.blocks)]...)
     
+    ret=zeros(eltype(M),sum(it.blocks[1][1:min(B.n[1],length(it.blocks[1]))]),
+                        sum(it.blocks[2][1:min(B.n[1],length(it.blocks[2]))]))
+
     k=1
     for index in it
         if k > n

@@ -34,6 +34,10 @@ using ApproxFunOrthogonalPolynomials
         # 3D
         f3 = Fun(Chebyshev()^3, [1.0])
         @test f3(0.2, 0.4, 0.2) == 1.0
+
+        # 20D
+        f4 = Fun(Chebyshev()^20, [1.0])
+        @test f4(rand(20)) == 1.0
     end
 
     @testset "Arithmetic" begin
