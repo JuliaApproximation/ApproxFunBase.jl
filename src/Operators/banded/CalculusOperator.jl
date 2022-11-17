@@ -12,7 +12,7 @@ macro calculus_operator(Op)
     DefaultOp = Symbol(:Default, Op)
     return esc(quote
         # The SSS, TTT are to work around #9312
-        abstract type $Op{SSS,OT,TTT} <: CalculusOperator{SSS,OT,TTT} end
+        abstract type $Op{SSS,OT,TTT} <: ApproxFunBase.CalculusOperator{SSS,OT,TTT} end
 
         struct $ConcOp{S<:Space,OT,T} <: $Op{S,OT,T}
             space::S        # the domain space
@@ -23,22 +23,22 @@ macro calculus_operator(Op)
             order::OT
         end
 
-        @wrapper $WrappOp
+        ApproxFunBase.@wrapper $WrappOp
 
 
         ## Constructors
-        $ConcOp(sp::Space,k) = $ConcOp{typeof(sp),typeof(k),prectype(sp)}(sp,k)
+        $ConcOp(sp::Space,k) = $ConcOp{typeof(sp),typeof(k),ApproxFunBase.prectype(sp)}(sp,k)
 
-        $Op(sp::UnsetSpace,k) = $ConcOp(sp,k)
-        $Op(sp::UnsetSpace,k::Real) = $ConcOp(sp,k)
-        $Op(sp::UnsetSpace,k::Integer) = $ConcOp(sp,k)
+        $Op(sp::ApproxFunBase.UnsetSpace,k) = $ConcOp(sp,k)
+        $Op(sp::ApproxFunBase.UnsetSpace,k::Real) = $ConcOp(sp,k)
+        $Op(sp::ApproxFunBase.UnsetSpace,k::Integer) = $ConcOp(sp,k)
 
         function $DefaultOp(sp::Space,k)
-            csp=canonicalspace(sp)
-            if conversion_type(csp,sp)==csp   # Conversion(sp,csp) is not banded, or sp==csp
+            csp=ApproxFunBase.canonicalspace(sp)
+            if ApproxFunBase.conversion_type(csp,sp)==csp   # Conversion(sp,csp) is not banded, or sp==csp
                error("Implement $(string($Op))($(string(sp)),$k)")
             end
-            $WrappOp(TimesOperator([$Op(csp,k),Conversion(sp,csp)]),k)
+            $WrappOp(ApproxFunBase.TimesOperator([$Op(csp,k),Conversion(sp,csp)]),k)
         end
 
         $DefaultOp(d,k) = $Op(Space(d),k)
