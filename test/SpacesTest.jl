@@ -244,7 +244,7 @@ using LinearAlgebra
         @test @inferred(points(a^2)) == vec(Vec.(points(a), points(a)'))
         @test  @inferred(checkpoints(a^2)) == vec(Vec.(checkpoints(a)', checkpoints(a)))
 
-        aa2 = TensorSpace(a , a^2)
+        aa2 = @inferred TensorSpace(a , a^2)
         @test dimension(aa2) == dimension(a)^3
         @test @inferred(domain(aa2)) == domain(a)^3
         @test @inferred(points(aa2)) == vec(Vec.(points(a), points(a)', reshape(points(a), 1,1,4)))
@@ -256,9 +256,9 @@ using LinearAlgebra
 
         p = PointSpace(1:4)
         d = domain(p)
-        @test domain(TensorSpace(p)) == d
-        @test components(domain(TensorSpace(p, p))) == (d, d)
-        @test components(domain(TensorSpace(p, p, p))) == (d, d, d)
+        @test domain(@inferred TensorSpace(p)) == d
+        @test components(domain(@inferred TensorSpace(p, p))) == (d, d)
+        @test components(domain(@inferred TensorSpace(p, p, p))) == (d, d, d)
     end
 
     @testset "ConstantSpace" begin
