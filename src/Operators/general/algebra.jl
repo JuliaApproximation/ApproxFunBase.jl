@@ -51,12 +51,10 @@ function convert(::Type{Operator{T}}, P::PlusOperator) where T
     end
 end
 
-function promoteplus(opsin::Vector{<:Operator}, sz = size(first(opsin)))
-    ops = copy(opsin)
-    # prune zero ops
-    filter!(!iszeroop, ops)
+function promoteplus(opsin, sz = size(first(opsin)))
+    ops = filter(!iszeroop, opsin)
     v = promotespaces(ops)
-    PlusOperator(v, bandwidthsmax(v), sz)
+    PlusOperator(convert_vector(v), bandwidthsmax(v), sz)
 end
 
 for OP in (:domainspace,:rangespace)
