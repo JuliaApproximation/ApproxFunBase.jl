@@ -1,7 +1,9 @@
 # SplineSpace represents a Spline, right now piecewise constant HeavisideSpace is only implemented case
-struct SplineSpace{order,T,R} <: Space{PiecewiseSegment{T},R}
-    domain::PiecewiseSegment{T}
+struct SplineSpace{order,T,R,P<:PiecewiseSegment} <: Space{P,R}
+    domain::P
 end
+
+SplineSpace{m,T,R}(d::PiecewiseSegment{T}) where {m,T,R} = SplineSpace{m,T,R,typeof(d)}(d)
 
 SplineSpace{m,T}(d::PiecewiseSegment{T}) where {m,T} = SplineSpace{m,T,real(eltype(T))}(d)
 SplineSpace{m,T}(d::AbstractVector) where {m,T} = SplineSpace{m}(PiecewiseSegment(sort(d)))
@@ -9,7 +11,7 @@ SplineSpace{m,T}(d::AbstractVector) where {m,T} = SplineSpace{m}(PiecewiseSegmen
 SplineSpace{m}(d::PiecewiseSegment{T}) where {m,T} = SplineSpace{m,T,real(eltype(T))}(d)
 SplineSpace{m}(d::AbstractVector) where {m} = SplineSpace{m}(PiecewiseSegment(sort(d)))
 
-const HeavisideSpace{T,R} = SplineSpace{0,T,R}
+const HeavisideSpace{T,R,P<:PiecewiseSegment} = SplineSpace{0,T,R,P}
 dimension(h::SplineSpace{λ}) where {λ} = length(h.domain.points)+λ-1
 
 convert(::Type{HeavisideSpace},d::PiecewiseSegment) = HeavisideSpace{eltype(d)}(d)
@@ -105,10 +107,10 @@ end
 
 
 
-differentiate(f::Fun{SplineSpace{1,T,R}}) where {T,R} =
+differentiate(f::Fun{<:SplineSpace{1}}) =
     Fun(HeavisideSpace(space(f).domain),
         diff(pad(f.coefficients,dimension(space(f))))./diff(space(f).domain.points))
 
-integrate(f::Fun{HeavisideSpace{T,R}}) where {T,R} =
+integrate(f::Fun{<:HeavisideSpace{T,R}}) where {T,R} =
     Fun(SplineSpace{1,T,R}(space(f).domain),
         [0;cumsum(f.coefficients).*diff(space(f).domain.points)])
