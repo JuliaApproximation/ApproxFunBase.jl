@@ -35,7 +35,7 @@ hasnumargs(f,k) = k == 1 ? applicable(f, 0.0) : applicable(f, (1.0:k)...)
 
 # fast implementation of isapprox with atol a non-keyword argument in most cases
 isapprox_atol(a,b,atol;kwds...) = isapprox(a,b;atol=atol,kwds...)
-isapprox_atol(a::Vec,b::Vec,atol::Real=0;kwds...) = isapprox_atol(collect(a),collect(b),atol;kwds...)
+isapprox_atol(a::SVector,b::SVector,atol::Real=0;kwds...) = isapprox_atol(collect(a),collect(b),atol;kwds...)
 function isapprox_atol(x::Number, y::Number, atol::Real=0; rtol::Real=Base.rtoldefault(x,y))
     x == y || (isfinite(x) && isfinite(y) && abs(x-y) <= atol + rtol*max(abs(x), abs(y)))
 end
@@ -60,8 +60,8 @@ real(x...) = Base.real(x...)
 real(::Type{UnsetNumber}) = UnsetNumber
 real(::Type{Array{T,n}}) where {T<:Real,n} = Array{T,n}
 real(::Type{Array{T,n}}) where {T<:Complex,n} = Array{real(T),n}
-real(::Type{Vec{N,T}}) where {N,T<:Real} = Vec{N,T}
-real(::Type{Vec{N,T}}) where {N,T<:Complex} = Vec{N,real(T)}
+real(::Type{SVector{N,T}}) where {N,T<:Real} = SVector{N,T}
+real(::Type{SVector{N,T}}) where {N,T<:Complex} = SVector{N,real(T)}
 
 float(x) = Base.float(x)
 Base.float(::UnsetNumber) = UnsetNumber()
@@ -85,11 +85,11 @@ eps(z::Dual{Complex{T}}) where {T<:Real} = eps(abs(z))
 
 
 eps(::Type{Vector{T}}) where {T<:Number} = eps(T)
-eps(::Type{Vec{k,T}}) where {k,T<:Number} = eps(T)
+eps(::Type{SVector{k,T}}) where {k,T<:Number} = eps(T)
 
 
 isnan(x) = Base.isnan(x)
-isnan(x::Vec) = map(isnan,x)
+isnan(x::SVector) = map(isnan,x)
 
 
 # BLAS

@@ -8,7 +8,7 @@ export components, component, ncomponents
 # add indexing for all spaces, not just DirectSumSpace
 # mimicking scalar vs vector
 
-# prectype gives the precision, including for Vec
+# prectype gives the precision, including for SVector
 prectype(::Type{D}) where {D<:Domain} = float(eltype(eltype(D)))
 prectype(d::Domain) = prectype(typeof(d))
 
@@ -154,8 +154,8 @@ boundary(d::SegmentDomain) = [leftendpoint(d),rightendpoint(d)] #TODO: Points do
 
 ## map domains
 # we auto vectorize arguments
-tocanonical(d::Domain,x,y,z...) = tocanonical(d,Vec(x,y,z...))
-fromcanonical(d::Domain,x,y,z...) = fromcanonical(d,Vec(x,y,z...))
+tocanonical(d::Domain,x,y,z...) = tocanonical(d,SVector(x,y,z...))
+fromcanonical(d::Domain,x,y,z...) = fromcanonical(d,SVector(x,y,z...))
 
 
 mappoint(d1::Domain,d2::Domain,x...) = fromcanonical(d2,tocanonical(d1,x...))

@@ -1,6 +1,6 @@
 using ApproxFunBase
 using Test
-using ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, Vec, checkpoints
+using ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, SVector, checkpoints
 using StaticArrays
 using BandedMatrices: rowrange, colrange, BandedMatrix
 using LinearAlgebra
@@ -241,18 +241,18 @@ using LinearAlgebra
         a = HeavisideSpace(0:0.25:1)
         @test @inferred(dimension(a^2)) == dimension(a)^2
         @test @inferred(domain(a^2)) == domain(a)^2
-        @test @inferred(points(a^2)) == vec(Vec.(points(a), points(a)'))
-        @test  @inferred(checkpoints(a^2)) == vec(Vec.(checkpoints(a)', checkpoints(a)))
+        @test @inferred(points(a^2)) == vec(SVector.(points(a), points(a)'))
+        @test  @inferred(checkpoints(a^2)) == vec(SVector.(checkpoints(a)', checkpoints(a)))
 
         aa2 = @inferred TensorSpace(a , a^2)
         @test dimension(aa2) == dimension(a)^3
         @test @inferred(domain(aa2)) == domain(a)^3
-        @test @inferred(points(aa2)) == vec(Vec.(points(a), points(a)', reshape(points(a), 1,1,4)))
-        @test  @inferred(checkpoints(aa2)) == vec(Vec.(reshape(checkpoints(a), 1,1,length(checkpoints(a))), checkpoints(a)', checkpoints(a)))
+        @test @inferred(points(aa2)) == vec(SVector.(points(a), points(a)', reshape(points(a), 1,1,4)))
+        @test  @inferred(checkpoints(aa2)) == vec(SVector.(reshape(checkpoints(a), 1,1,length(checkpoints(a))), checkpoints(a)', checkpoints(a)))
 
         @test dimension(a^3) == dimension(a)^3
         @test @inferred(domain(a^3)) == domain(a)^3
-        @test_broken @inferred(points(a^3)) == vec(Vec.(points(a), points(a)', reshape(points(a), 1,1,4)))
+        @test_broken @inferred(points(a^3)) == vec(SVector.(points(a), points(a)', reshape(points(a), 1,1,4)))
 
         p = PointSpace(1:4)
         d = domain(p)
