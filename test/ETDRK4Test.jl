@@ -1,5 +1,6 @@
-using ApproxFunBase, Test
-import ApproxFunBase: expα, expβ, expγ
+using ApproxFunBase
+using Test
+using ApproxFunBase: expα, expβ, expγ
 
 #
 # This tests the numerical stability of the formulæ appearing in Eq. (2.5) of:

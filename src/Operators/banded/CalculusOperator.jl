@@ -166,7 +166,13 @@ function linesum(f::Fun)
     end
 end
 
+∫(f::Fun)=integrate(f)
 
+⨜(f::Fun)=cumsum(f)
+
+for OP in (:Σ,:∮,:⨍,:⨎)
+    @eval $OP(f::Fun)=sum(f)
+end
 
 
 # Multivariate
@@ -243,69 +249,135 @@ end
 
 
 """
-`Derivative(sp::Space,k::Int)` represents the `k`-th derivative on `sp`.
+    Derivative(sp::Space, k::Int)
+
+Return the `k`-th derivative operator on the space `sp`.
+
+# Examples
+```jldoctest
+julia> Derivative(Chebyshev(), 2) * Fun(x->x^4) ≈ Fun(x->12x^2)
+true
+```
 """
 Derivative(::Space,::Int)
 
 """
-`Derivative(sp::Space,k::Vector{Int})` represents a partial derivative on a multivariate space.
-For example,
+    Derivative(sp::Space, k::AbstractVector{Int})
+
+Return a partial derivative operator on a multivariate space. For example,
 ```julia
 Dx = Derivative(Chebyshev()^2,[1,0]) # ∂/∂x
 Dy = Derivative(Chebyshev()^2,[0,1]) # ∂/∂y
 ```
+
+!!! tip
+    Using a static vector as the second argument would help with type-stability.
+
+# Examples
+```jldoctest
+julia> ∂y = Derivative(Chebyshev()^2, [0,1]);
+
+julia> ∂y * Fun((x,y)->x^2 + y^2) ≈ Fun((x,y)->2y)
+true
+```
 """
-Derivative(::Space,::Vector{Int})
+Derivative(::Space, ::AbstractVector{Int})
 
 """
-`Derivative(sp::Space)` represents the first derivative `Derivative(sp,1)`.
+    Derivative(sp::Space)
+
+Return the first derivative operator, equivalent to `Derivative(sp,1)`.
+
+# Examples
+```jldoctest
+julia> Derivative(Chebyshev()) * Fun(x->x^2) ≈ Fun(x->2x)
+true
+```
 """
 Derivative(::Space)
 
 """
-`Derivative(k)` represents the `k`-th derivative, acting on an unset space.
+    Derivative(k)
+
+Return the `k`-th derivative, acting on an unset space.
 Spaces will be inferred when applying or manipulating the operator.
+If `k` is an `Int`, this returns a derivative in an univariate space.
+If `k` is an `AbstractVector{Int}`, this returns a partial derivative
+in a multivariate space.
+
+# Examples
+```jldoctest
+julia> Derivative(1) * Fun(x->x^2) ≈ Fun(x->2x)
+true
+
+julia> Derivative([0,1]) * Fun((x,y)->x^2+y^2) ≈ Fun((x,y)->2y)
+true
+```
 """
 Derivative(k)
 
 """
-`Derivative()` represents the first derivative on an unset space.
+    Derivative()
+
+Return the first derivative on an unset space.
 Spaces will be inferred when applying or manipulating the operator.
+
+# Examples
+```jldoctest
+julia> Derivative() * Fun(x->x^2) ≈ Fun(x->2x)
+true
+```
 """
 Derivative()
 
 
 """
-`Integral(sp::Space,k::Int)` represents a `k`-th integral on `sp`.
+    Integral(sp::Space, k::Int)
+
+Return the `k`-th integral operator on `sp`.
 There is no guarantee on normalization.
 """
-Integral(::Space,::Int)
+Integral(::Space, ::Int)
 
 
 """
-`Integral(sp::Space)` represents the first integral `Integral(sp,1)`.
+    Integral(sp::Space)
+
+Return the first integral operator, equivalent to `Integral(sp,1)`.
 """
 Integral(::Space)
 
 """
-`Integral(k)` represents the `k`-th integral, acting on an unset space.
+    Integral(k::Int)
+
+Return the `k`-th integral operator, acting on an unset space.
 Spaces will be inferred when applying or manipulating the operator.
 """
-Integral(k)
+Integral(k::Int)
 
 """
-`Intergral()` represents the first integral on an unset space.
+    Intergral()
+
+Return the first integral operator on an unset space.
 Spaces will be inferred when applying or manipulating the operator.
 """
 Integral()
 
 """
-`Laplacian(sp::Space)` represents the laplacian on space `sp`.
+    Laplacian(sp::Space)
+
+Return the laplacian operator on space `sp`.
 """
 Laplacian(::Space)
 
 """
-`Laplacian()` represents the laplacian on an unset space.
+    Laplacian()
+
+Return the laplacian operator on an unset space.
 Spaces will be inferred when applying or manipulating the operator.
 """
 Laplacian()
+
+
+const 𝒟 = Derivative()
+const Δ = Laplacian()

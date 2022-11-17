@@ -268,6 +268,31 @@ end
         M = Multiplication(Fun(identity, PointSpace(1:3)))
         @test_throws ErrorException Matrix(M)
     end
+    @testset "real-imag" begin
+        A = (3 + 2im)*I : PointSpace(1:4)
+        Ar = ApproxFunBase.real(A)
+        Ai = imag(A)
+        @test Ar[1:4, 1:4] == diagm(0=>fill(3, 4))
+        @test Ai[1:4, 1:4] == diagm(0=>fill(2, 4))
+        B = conj(A)
+        Bi = imag(B)
+        @test Bi[1:4, 1:4] == diagm(0=>fill(-2, 4))
+        C = convert(Operator{ComplexF64}, A)
+        @test C isa Operator{ComplexF64}
+        @test imag(C)[1:4, 1:4] == diagm(0=>fill(2, 4))
+
+        A = (3 - 2im)*I : PointSpace(1:4)
+        Ar = ApproxFunBase.real(A)
+        Ai = imag(A)
+        @test Ar[1:4, 1:4] == diagm(0=>fill(3, 4))
+        @test Ai[1:4, 1:4] == diagm(0=>fill(-2, 4))
+    end
+    @testset "tuples in promotespaces" begin
+        M = Multiplication(Fun(PointSpace(1:4)), PointSpace(1:4))
+        A = ApproxFunBase.promotespaces([M, M])
+        B = ApproxFunBase.promotespaces((M, M))
+        @test all(((x,y),) -> x == y, zip(A, B))
+    end
 end
 
 @testset "RowVector" begin

@@ -72,11 +72,22 @@ true
 ```
 """
 function ProductFun(cfs::AbstractMatrix{T},sp::AbstractProductSpace{Tuple{S,V},DD};
-  tol::Real=100eps(T),chopping::Bool=false) where {S<:UnivariateSpace,V<:UnivariateSpace,T<:Number,DD}
+    tol::Real=100eps(T),chopping::Bool=false) where {S<:UnivariateSpace,V<:UnivariateSpace,T<:Number,DD}
     if chopping
-        ncfs,kend=norm(cfs,Inf),size(cfs,2)
-        if kend > 1 while isempty(chop(cfs[:,kend],ncfs*tol)) kend-=1 end end
-        ret=VFun{S,T}[Fun(columnspace(sp,k),chop(cfs[:,k],ncfs*tol)) for k=1:max(kend,1)]
+        ncfs, kend = norm(cfs,Inf), size(cfs,2)
+        if kend > 1
+            while kend > 0
+                if all(iszero, @view(cfs[:, kend]))
+                    kend -= 1
+                    continue
+                end
+                if !isempty(chop(@view(cfs[:,kend]), ncfs*tol))
+                    break
+                end
+                kend-=1
+            end
+        end
+        ret=VFun{S,T}[Fun(columnspace(sp,k),chop(@view(cfs[:,k]), ncfs*tol)) for k=1:max(kend,1)]
         ProductFun{S,V,typeof(sp),T}(ret,sp)
     else
         ret=VFun{S,T}[Fun(columnspace(sp,k),cfs[:,k]) for k=1:size(cfs,2)]
@@ -154,8 +165,8 @@ ProductFun(f::Function) = ProductFun(dynamic(f),ChebyshevInterval(),ChebyshevInt
 
 ## Conversion from other 2D Funs
 
-ProductFun(f::LowRankFun) = ProductFun(coefficients(f),space(f,1),space(f,2))
-ProductFun(f::Fun{S}) where {S<:AbstractProductSpace} = ProductFun(coefficientmatrix(f),space(f))
+ProductFun(f::LowRankFun; kw...) = ProductFun(coefficients(f),space(f,1),space(f,2); kw...)
+ProductFun(f::Fun{S}; kw...) where {S<:AbstractProductSpace} = ProductFun(coefficientmatrix(f), space(f); kw...)
 
 ## Conversion to other ProductSpaces with the same coefficients
 

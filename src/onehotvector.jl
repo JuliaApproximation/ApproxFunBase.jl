@@ -15,7 +15,7 @@ function Base.getindex(v::OneHotVector{T}, i::Int) where {T}
 	i == v.n ? one(T) : zero(T)
 end
 # assume that the basis label starts at zero
-function basisfunction(sp, k)
-	k >= 0 || throw(ArgumentError("basis label must be non-negative, received $k"))
-	Fun(sp, OneHotVector(k))
+function basisfunction(sp, oneindex)
+	oneindex >= 0 || throw(ArgumentError("index to set to one must be non-negative, received $oneindex"))
+	Fun(sp, OneHotVector(oneindex))
 end

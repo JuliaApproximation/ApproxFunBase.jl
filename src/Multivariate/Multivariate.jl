@@ -13,9 +13,13 @@ differentiate(u::BivariateFun,i::Integer,j::Integer) =
     j==0 ? u : differentiate(differentiate(u,i),i,j-1)
 grad(u::BivariateFun) = [differentiate(u,1),differentiate(u,2)]
 lap(u::BivariateFun) = differentiate(u,1,2)+differentiate(u,2,2)
-Base.div(u::AbstractVector{B}) where {B<:BivariateFun} =
+Base.div(u::AbstractVector{<:BivariateFun}) =
     differentiate(u[1],1)+differentiate(u[2],2)
 curl(u::AbstractVector{B}) where {B<:BivariateFun} = differentiate(u[2],1)-differentiate(u[1],2)
+
+∇(F::MultivariateFun) = grad(F)
+LinearAlgebra.dot(::typeof(∇), F::Vector{<:MultivariateFun}) = div(F)
+LinearAlgebra.cross(::typeof(∇), F::Vector{<:MultivariateFun}) = curl(F)
 
 Base.chop(f::MultivariateFun) = chop(f,10eps())
 cfstype(::MultivariateFun{T}) where {T} = T
@@ -44,7 +48,7 @@ Fun(f::MultivariateFun,sp::Space) = Fun(Fun(f),sp)
 
 Fun(f,d1::Domain,d2::Domain) = Fun(f,d1*d2)
 
-coefficients(f::BivariateFun,sp::TensorSpace)=coefficients(f,sp[1],sp[2])
+coefficients(f::BivariateFun,sp::TensorSpace)=coefficients(f, factors(sp)...)
 
 
 

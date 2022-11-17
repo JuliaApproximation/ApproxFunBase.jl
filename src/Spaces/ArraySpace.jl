@@ -10,28 +10,26 @@ f = Fun(x->[exp(x),sin(x)],-1..1)
 space(f) == ArraySpace(Chebyshev(),2)
 ```
 """
-struct ArraySpace{S,n,DD,RR} <: DirectSumSpace{NTuple{n,S},DD,Array{RR,n}}
-     spaces::Array{S,n}
+struct ArraySpace{S,n,DD,RR,A<:AbstractArray{S,n}} <: DirectSumSpace{NTuple{n,S},DD,Array{RR,n}}
+     spaces::A
 end
 
-const VectorSpace{S,DD,RR} = ArraySpace{S,1,DD,RR}
-const MatrixSpace{S,DD,RR} = ArraySpace{S,2,DD,RR}
+const VectorSpace{S,DD,RR,A<:AbstractVector{S}} = ArraySpace{S,1,DD,RR,A}
+const MatrixSpace{S,DD,RR,A<:AbstractMatrix{S}} = ArraySpace{S,2,DD,RR,A}
 
 #TODO: Think through domain/domaindominsion
-ArraySpace(sp::AbstractArray{SS,N}) where {SS<:Space,N} =
-    ArraySpace{SS,N,domaintype(first(sp)),mapreduce(rangetype,promote_type,sp)}(sp)
+ArraySpace(sp::AbstractArray{SS,N}, f = first(sp)) where {SS<:Space,N} =
+    ArraySpace{SS,N,domaintype(f),mapreduce(rangetype,promote_type,sp),typeof(sp)}(sp)
 ArraySpace(S::Space,n::NTuple{N,Int}) where {N} = ArraySpace(fill(S,n))
 ArraySpace(S::Space,n::Integer) = ArraySpace(S,(n,))
 ArraySpace(S::Space,n,m) = ArraySpace(fill(S,(n,m)))
 ArraySpace(d::Domain,n...) = ArraySpace(Space(d),n...)
 
 Space(sp::AbstractArray{<:Space}) = ArraySpace(sp)
-convert(::Type{Array}, sp::ArraySpace) = sp.spaces
-convert(::Type{Vector}, sp::VectorSpace) = sp.spaces
-convert(::Type{Matrix}, sp::MatrixSpace) = sp.spaces
-Array(sp::ArraySpace) = sp.spaces
-Vector(sp::VectorSpace) = sp.spaces
-Matrix(sp::MatrixSpace) = sp.spaces
+convert(::Type{A}, sp::ArraySpace) where {A<:Array} = A(sp.spaces)::A
+Array(sp::ArraySpace) = convert(Array, sp.spaces)
+Vector(sp::VectorSpace) = convert(Vector, sp.spaces)
+Matrix(sp::MatrixSpace) = convert(Matrix, sp.spaces)
 
 
 BlockInterlacer(sp::ArraySpace) = BlockInterlacer(blocklengths.(tuple(sp.spaces...)))
@@ -107,8 +105,7 @@ end
 
 
 Base.vec(AS::ArraySpace) = ArraySpace(vec(AS.spaces))
-Base.vec(f::Fun{ArraySpace{S,n,DD,RR}}) where {S,n,DD,RR} =
-    [f[j] for j=1:length(f.space)]
+Base.vec(f::Fun{<:ArraySpace}) = [f[j] for j=1:length(f.space)]
 
 repeat(A::ArraySpace,n,m) = ArraySpace(repeat(A.spaces,n,m))
 
@@ -117,14 +114,14 @@ component(A::MatrixSpace,k::Integer,j::Integer) = A.spaces[k,j]
 Base.getindex(f::Fun{DSS},k::Integer) where {DSS<:ArraySpace} = component(f,k)
 
 
-Base.getindex(f::Fun{MatrixSpace{S,DD,RR}},k::Integer,j::Integer) where {S,DD,RR} =
+Base.getindex(f::Fun{<:MatrixSpace},k::Integer,j::Integer) =
     f[k+stride(f,2)*(j-1)]
 
 Base.getindex(f::Fun{DSS},kj::CartesianIndex{1}) where {DSS<:ArraySpace} = f[kj[1]]
 Base.getindex(f::Fun{DSS},kj::CartesianIndex{2}) where {DSS<:ArraySpace} = f[kj[1],kj[2]]
 
 
-function Fun(A::AbstractArray{Fun{VectorSpace{S,DD,RR},V,VV},2}) where {S,V,VV,DD,RR}
+function Fun(A::AbstractMatrix{<:Fun{<:VectorSpace{S},V,VV}}) where {S,V,VV}
     @assert size(A,1)==1
 
     M = Matrix{Fun{S,V,VV}}(undef, length(space(A[1])),size(A,2))
