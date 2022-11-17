@@ -176,7 +176,7 @@ function promotespaces(A::Operator,B::Operator)
     if spacescompatible(A,B)
         A,B
     else
-        tuple(Vec{2}(promotespaces(uniontypedvec(A,B)))...)
+        tuple(SVector{2}(promotespaces(uniontypedvec(A,B)))...)
     end
 end
 

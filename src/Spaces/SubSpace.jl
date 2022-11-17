@@ -211,7 +211,7 @@ points(sp::SubSpace, n) = points(sp.space, n)
 points(sp::SubSpace) = points(sp, dimension(sp))
 
 
-coefficients(v::AbstractVector,::SubSpace{DS,IT,Segment{Vec{2,TT}}},::TensorSpace{SV,DD}) where {DS,IT,TT,SV,DD<:EuclideanDomain{2}} =
+coefficients(v::AbstractVector,::SubSpace{DS,IT,Segment{SVector{2,TT}}},::TensorSpace{SV,DD}) where {DS,IT,TT,SV,DD<:EuclideanDomain{2}} =
     error("Not callable, only defined for ambiguity errors.")
 coefficients(v::AbstractVector,::SubSpace{DS,IT,D},::TensorSpace{SV,DD}) where {DS,IT,D,SV,DD<:EuclideanDomain{2}} =
     error("Not callable, only defined for ambiguity errors.")

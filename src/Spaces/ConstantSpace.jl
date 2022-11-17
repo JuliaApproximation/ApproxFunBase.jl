@@ -129,7 +129,7 @@ function getindex(C::ConcreteConversion{CS,S,T},k::Integer,j::Integer) where {CS
 end
 
 
-coefficients(f::AbstractVector,sp::ConstantSpace{Segment{Vec{2,TT}}},
+coefficients(f::AbstractVector,sp::ConstantSpace{Segment{SVector{2,TT}}},
              ts::TensorSpace{SV,DD}) where {TT,SV,DD<:EuclideanDomain{2}} =
     f[1]*ones(ts).coefficients
 coefficients(f::AbstractVector,sp::ConstantSpace{<:Domain{<:Number}},
