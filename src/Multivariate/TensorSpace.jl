@@ -298,11 +298,13 @@ tensor_eval_type(::Type{Vector{Any}},::Type{Vector{Any}}) = Vector{Any}
 tensor_eval_type(::Type{Vector{Any}},_) = Vector{Any}
 tensor_eval_type(_,::Type{Vector{Any}}) = Vector{Any}
 
-
+# Specialize some common cases to avoid mapreduce, which has inference issues
+_typeofproddomain(sp::Tuple{Any}) = typeof(domain(sp[1]))
+_typeofproddomain(sp::Tuple{Any,Any}) = typeof(domain(sp[1]) × domain(sp[2]))
+_typeofproddomain(sp) = typeof(mapreduce(domain,×,sp))
 TensorSpace(sp::Tuple) =
-    TensorSpace{typeof(sp),typeof(mapreduce(domain,×,sp)),
-                mapreduce(rangetype,(a,b)->tensor_eval_type(a,b),sp)}(sp)
-
+    TensorSpace{typeof(sp), _typeofproddomain(sp),
+                mapreduce(rangetype,tensor_eval_type,sp)}(sp)
 
 dimension(sp::TensorSpace) = mapreduce(dimension,*,sp.spaces)
 
@@ -615,7 +617,7 @@ function points(sp::TensorSpace,n)
 
     for y in points(b,M),
         x in points(a,N)
-        push!(pts,Vec(x...,y...))
+        push!(pts,SVector(x...,y...))
     end
     pts
 end
@@ -653,7 +655,7 @@ union_rule(a::TensorSpace,b::TensorSpace) = TensorSpace(map(union,a.spaces,b.spa
 ## Convert from 1D to 2D
 
 
-# function isconvertible{T,TT}(sp::Space{Segment{Vec{2,TT}},<:Real},ts::TensorSpace)
+# function isconvertible{T,TT}(sp::Space{Segment{SVector{2,TT}},<:Real},ts::TensorSpace)
 #     d1 = domain(sp)
 #     d2 = domain(ts)
 #     if d2
@@ -671,12 +673,12 @@ isconvertible(sp::UnivariateSpace,ts::TensorSpace{SV,D,R}) where {SV,D<:Euclidea
 #     f[1]*ones(ts).coefficients
 
 #
-# function coefficients(f::AbstractVector,sp::Space{IntervalOrSegment{Vec{2,TT}}},ts::TensorSpace{Tuple{S,V},D,R}) where {S,V<:ConstantSpace,D<:EuclideanDomain{2},R,TT} where {T<:Number}
+# function coefficients(f::AbstractVector,sp::Space{IntervalOrSegment{SVector{2,TT}}},ts::TensorSpace{Tuple{S,V},D,R}) where {S,V<:ConstantSpace,D<:EuclideanDomain{2},R,TT} where {T<:Number}
 #     a = domain(sp)
 #     b = domain(ts)
 #     # make sure we are the same domain. This will be replaced by isisomorphic
-#     @assert first(a) ≈ Vec(first(factor(b,1)),factor(b,2).x) &&
-#         last(a) ≈ Vec(last(factor(b,1)),factor(b,2).x)
+#     @assert first(a) ≈ SVector(first(factor(b,1)),factor(b,2).x) &&
+#         last(a) ≈ SVector(last(factor(b,1)),factor(b,2).x)
 #
 #     coefficients(f,sp,setdomain(factor(ts,1),a))
 # end
@@ -695,7 +697,7 @@ function coefficients(f::AbstractVector,sp::UnivariateSpace,ts::TensorSpace{SV,D
 end
 
 
-function isconvertible(sp::Space{Segment{Vec{2,TT}}},ts::TensorSpace{SV,D,R}) where {TT,SV,D<:EuclideanDomain{2},R}
+function isconvertible(sp::Space{Segment{SVector{2,TT}}},ts::TensorSpace{SV,D,R}) where {TT,SV,D<:EuclideanDomain{2},R}
     d1 = domain(sp)
     d2 = domain(ts)
     if length(ts.spaces) ≠ 2
@@ -713,7 +715,7 @@ function isconvertible(sp::Space{Segment{Vec{2,TT}}},ts::TensorSpace{SV,D,R}) wh
 end
 
 
-function coefficients(f::AbstractVector,sp::Space{Segment{Vec{2,TT}}},
+function coefficients(f::AbstractVector,sp::Space{Segment{SVector{2,TT}}},
                             ts::TensorSpace{SV,D,R}) where {TT,SV,D<:EuclideanDomain{2},R}
     @assert length(ts.spaces) == 2
     d1 = domain(sp)

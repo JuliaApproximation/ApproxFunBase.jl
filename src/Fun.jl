@@ -87,7 +87,7 @@ function Fun(sp::Space,v::AbstractVector{Any})
 end
 
 
-hasnumargs(f::Fun,k) = k == 1 || domaindimension(f) == k  # all funs take a single argument as a Vec
+hasnumargs(f::Fun,k) = k == 1 || domaindimension(f) == k  # all funs take a single argument as a SVector
 
 ##Coefficient routines
 #TODO: domainscompatible?
@@ -352,7 +352,7 @@ function evaluate(f::AbstractVector,S::Space,x...)
 end
 
 evaluate(f::Fun,x) = evaluate(f.coefficients,f.space,x)
-evaluate(f::Fun,x,y,z...) = evaluate(f.coefficients,f.space,Vec(x,y,z...))
+evaluate(f::Fun,x,y,z...) = evaluate(f.coefficients,f.space,SVector(x,y,z...))
 
 
 (f::Fun)(x...) = evaluate(f,x...)
@@ -390,7 +390,7 @@ julia> extrapolate(f, 2)
 ```
 """
 extrapolate(f::Fun,x) = extrapolate(f.coefficients,f.space,x)
-extrapolate(f::Fun,x,y,z...) = extrapolate(f.coefficients,f.space,Vec(x,y,z...))
+extrapolate(f::Fun,x,y,z...) = extrapolate(f.coefficients,f.space,SVector(x,y,z...))
 
 
 ##Data routines

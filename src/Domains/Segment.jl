@@ -25,7 +25,7 @@ Segment(a::Integer, b::Integer) = Segment(Float64(a),Float64(b)) #convenience me
 Segment(a::Complex{IT}, b) where {IT<:Integer} = Segment(ComplexF64(a),b) #convenience method
 Segment(a, b::Complex{IT}) where {IT<:Integer} = Segment(a,ComplexF64(b)) #convenience method
 Segment(a, b) = Segment{promote_type(typeof(a),typeof(b))}(a,b)
-Segment(a::Tuple, b::Tuple) = Segment(Vec(a...),Vec(b...))
+Segment(a::Tuple, b::Tuple) = Segment(SVector(a...),SVector(b...))
 
 
 convert(::Type{Domain{T}}, d::Segment) where {T<:Number} = Segment{T}(leftendpoint(d),rightendpoint(d))
@@ -89,7 +89,7 @@ mobius(d::IntervalOrSegment,x) = (2x - leftendpoint(d) - rightendpoint(d))/compl
 tocanonical(d::IntervalOrSegment{T},x) where {T<:Real} = mobius(d,x)
 tocanonicalD(d::IntervalOrSegment{T},x) where {T<:Real} = 2/complexlength(d)
 fromcanonical(d::IntervalOrSegment{T},x) where {T<:Number} = mean(d) + complexlength(d)x/2
-fromcanonical(d::IntervalOrSegment{T},x) where {T<:Vec} = mean(d) + complexlength(d)x/2
+fromcanonical(d::IntervalOrSegment{T},x) where {T<:SVector} = mean(d) + complexlength(d)x/2
 fromcanonicalD(d::IntervalOrSegment,x) = complexlength(d) / 2
 
 

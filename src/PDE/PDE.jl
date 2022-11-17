@@ -10,8 +10,8 @@ lap(f::Fun) = Laplacian()*f
 
 
 function Laplacian(d::BivariateSpace,k::Integer)
-    Dx2=Derivative(d, Vec{2}(2,0))
-    Dy2=Derivative(d, Vec{2}(0,2))
+    Dx2=Derivative(d, SVector{2}(2,0))
+    Dy2=Derivative(d, SVector{2}(0,2))
     if k==1
         LaplacianWrapper(Dx2+Dy2,d,k)
     else
@@ -26,7 +26,7 @@ grad(d::ProductDomain) = grad(Space(d))
 function grad(d::BivariateSpace)
     n = length(factors(d))
     @assert n == 2 "grad for n>2 is not implemented"
-    Vec{2}(Derivative(d, Vec{2}(1,0)), Derivative(d, Vec{2}(0,1)))
+    SVector{2}(Derivative(d, SVector{2}(1,0)), Derivative(d, SVector{2}(0,1)))
 end
 grad(f::Fun{<:BivariateSpace}) = grad(space(f)) * f
 
