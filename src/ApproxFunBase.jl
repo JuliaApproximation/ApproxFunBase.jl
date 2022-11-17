@@ -102,6 +102,9 @@ strictconvert(T::Type, x) = convert(T, x)::T
 
 uniontypedvec(A, B) = Union{typeof(A), typeof(B)}[A, B]
 
+convert_vector(v::AbstractVector) = convert(Vector, v)
+convert_vector(t::Tuple) = [t...]
+
 include("LinearAlgebra/LinearAlgebra.jl")
 include("Fun.jl")
 include("onehotvector.jl")
