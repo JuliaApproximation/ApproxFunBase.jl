@@ -407,6 +407,7 @@ end
     end
     @test Number(logabsgamma(x)[1]) ≈ logabsgamma(pt)[1]
     @test logabsgamma(x)[2] ≈ logabsgamma(pt)[2]
+    @test Number(gamma(2, x)) ≈ gamma(2, pt)
 end
 
 @time include("ETDRK4Test.jl")
