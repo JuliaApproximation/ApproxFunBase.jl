@@ -51,17 +51,17 @@ import SpecialFunctions: sinpi, cospi, airy, besselh,
               asec, cot, acot, sinh, csch, asinh, acsch,
               sech, acosh, asech, tanh, coth, atanh, acoth,
               log1p, lfact, sinc, cosc, beta, lbeta,
-              eta, zeta, polygamma,
+              eta, zeta, polygamma, logabsgamma, loggamma,
               abs, sign, log, expm1, tan, abs2, sqrt, angle,
               max, min, cbrt, atan, acos, asin, inv,
-              besselj, bessely, besseli, besselk,
+              besselj, bessely, besseli, besselk, besselkx,
               hankelh1, hankelh2, hankelh1x, hankelh2x,
               # functions from Calculus.symbolic_derivatives_1arg
               erf, erfinv, erfc, erfcinv, erfi, gamma, lgamma,
               digamma, invdigamma, trigamma,
               airyai, airybi, airyaiprime, airybiprime,
               besselj0, besselj1, bessely0, bessely1,
-              besselkx, erfcx, dawson
+              erfcx, dawson
 
 import BandedMatrices: bandrange, inbands_setindex!, bandwidth,
               colstart, colstop, colrange, rowstart, rowstop, rowrange,

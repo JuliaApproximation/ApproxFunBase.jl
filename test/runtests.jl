@@ -1,6 +1,7 @@
 using ApproxFunBase, LinearAlgebra, Random, Test
 using ApproxFunBase: ∞
 using Aqua
+using SpecialFunctions
 
 @testset "Project quality" begin
     Aqua.test_all(ApproxFunBase, ambiguities=false)
@@ -387,6 +388,25 @@ end
         λ2 = eigvals(B)
         @test λ1 ≈ λ2
     end
+end
+
+@testset "Special functions" begin
+    pt = 0.5
+    x = Fun(pt, ConstantSpace(1..2))
+    for f in [erf, erfinv, erfc, erfcinv, erfi, gamma,
+                digamma, invdigamma, trigamma, loggamma,
+                airyai, airybi, airyaiprime, airybiprime,
+                besselj0, besselj1, bessely0, bessely1,
+                erfcx, dawson]
+
+        @test Number(f(x)) ≈ f(pt)
+    end
+    for f in [besselj, bessely, besseli, besselk, besselkx,
+              hankelh1, hankelh2, hankelh1x, hankelh2x]
+        @test Number(f(1, x)) ≈ f(1, pt)
+    end
+    @test Number(logabsgamma(x)[1]) ≈ logabsgamma(pt)[1]
+    @test logabsgamma(x)[2] ≈ logabsgamma(pt)[2]
 end
 
 @time include("ETDRK4Test.jl")
