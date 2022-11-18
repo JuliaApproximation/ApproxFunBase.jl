@@ -474,13 +474,13 @@ for f in [:logabsgamma]
         Fun(t[1], space(z)), t[2]
     end
 end
-function loggamma(z::Fun{<:ConstantSpace, <:Real})
+function loggamma(z::Fun{<:ConstantSpace})
     t = loggamma(Number(z))
     Fun(t, space(z))
 end
 for f in [:gamma, :loggamma]
     @eval begin
-        function $f(a, z::Fun{<:ConstantSpace, <:Real})
+        function $f(a, z::Fun{<:ConstantSpace})
             t = $f(a, Number(z))
             Fun(t, space(z))
         end

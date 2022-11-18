@@ -400,6 +400,9 @@ end
                 erfcx, dawson]
 
         @test Number(f(x)) ≈ f(pt)
+        if f ∉ [erfinv, erfcinv, invdigamma]
+            @test Number(f(x*im)) ≈ f(pt*im)
+        end
     end
     for f in [besselj, bessely, besseli, besselk, besselkx,
               hankelh1, hankelh2, hankelh1x, hankelh2x]
@@ -408,6 +411,7 @@ end
     @test Number(logabsgamma(x)[1]) ≈ logabsgamma(pt)[1]
     @test logabsgamma(x)[2] ≈ logabsgamma(pt)[2]
     @test Number(gamma(2, x)) ≈ gamma(2, pt)
+    @test Number(gamma(2, x*im)) ≈ gamma(2, pt*im)
 end
 
 @time include("ETDRK4Test.jl")
