@@ -46,7 +46,8 @@ function convert(::Type{Operator{T}}, P::PlusOperator) where T
         P
     else
         ops = P.ops
-        PlusOperator(ops isa AbstractVector{<:Operator{T}} ? ops : map(x -> strictconvert(Operator{T}, x), ops),
+        PlusOperator(ops isa AbstractVector{<:Operator{T}} ? ops :
+                map(x -> strictconvert(Operator{T}, x), ops),
             P.bandwidths,P.sz)::Operator{T}
     end
 end
@@ -64,14 +65,14 @@ end
 domain(P::PlusOperator) = commondomain(P.ops)
 
 _promote_eltypeof(As...) = _promote_eltypeof(As)
-_promote_eltypeof(As::Union{Vector, Tuple}) = mapreduce(eltype, promote_type, As)
-_promote_eltypeof(As::Vector{Operator{T}}) where {T} = T
+_promote_eltypeof(As::Union{AbstractVector, Tuple}) = mapreduce(eltype, promote_type, As)
+_promote_eltypeof(As::AbstractVector{Operator{T}}) where {T} = T
 
-_extractops(A, ::Any) = [A]
+_extractops(A, ::Any) = SVector{1}(A)
 _extractops(A::PlusOperator, ::typeof(+)) = A.ops
 
 function +(A::Operator,B::Operator)
-    v = [_extractops(A, +); _extractops(B, +)]
+    v = _collateops(A, B, +)
     promoteplus(v, size(A))
 end
 # Optimization for 3-term sum
@@ -247,10 +248,10 @@ __bandwidthssum(A, B::NTuple{2,InfiniteCardinal{0}}) = B
 __bandwidthssum(A, B) = reduce((t1, t2) -> t1 .+ t2, (A, B), init = (0,0))
 
 _timessize(ops) = (size(first(ops),1), size(last(ops),2))
-function TimesOperator(ops::Vector{O},
+function TimesOperator(ops::AbstractVector{O},
         bi::Tuple{Any,Any} = bandwidthssum(ops),
         sz::Tuple{Any,Any} = _timessize(ops)) where {T,O<:Operator{T}}
-    TimesOperator{T,typeof(bi),typeof(sz),O}(ops,bi,sz)
+    TimesOperator{T,typeof(bi),typeof(sz),O}(convert_vector(ops),bi,sz)
 end
 
 _extractops(A::TimesOperator, ::typeof(*)) = A.ops
@@ -268,7 +269,8 @@ function convert(::Type{Operator{T}},P::TimesOperator) where T
         P
     else
         ops = P.ops
-        TimesOperator(ops isa AbstractVector{<:Operator{T}} ? ops : map(x -> strictconvert(Operator{T}, x), ops) ,
+        TimesOperator(ops isa AbstractVector{<:Operator{T}} ? ops :
+                map(x -> strictconvert(Operator{T}, x), ops) ,
             bandwidths(P), size(P))
     end
 end
@@ -517,10 +519,12 @@ for OP in (:(adjoint),:(transpose))
         reverse(bandwidths(A)), reverse(size(A)))
 end
 
-_collateops(A::TimesOperator, B::TimesOperator, ::typeof(*)) = [_extractops(A, *); _extractops(B, *)]
-_collateops(A::TimesOperator, B::Operator, ::typeof(*)) = [_extractops(A, *); _extractops(B, *)]
-_collateops(A::Operator, B::TimesOperator, ::typeof(*)) = [_extractops(A, *); _extractops(B, *)]
-_collateops(A::Operator, B::Operator, ::typeof(*)) = (A, B)
+const PlusOrTimesOp = Union{PlusOperator, TimesOperator}
+_collateops(A::PlusOrTimesOp, B::PlusOrTimesOp, op) = [_extractops(A, op); _extractops(B, op)]
+_collateops(A::PlusOrTimesOp, B::Operator, op) = [_extractops(A, op); _extractops(B, op)]
+_collateops(A::Operator, B::PlusOrTimesOp, op) = [_extractops(A, op); _extractops(B, op)]
+_collateops(A::Operator, B::Operator, op) = (A, B)
+
 function *(A::Operator,B::Operator)
     if isconstop(A)
         promoterangespace(strictconvert(Number,A)*B,rangespace(A))
