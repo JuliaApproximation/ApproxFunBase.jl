@@ -66,18 +66,18 @@ domain(P::PlusOperator) = commondomain(P.ops)
 
 _promote_eltypeof(As...) = _promote_eltypeof(As)
 _promote_eltypeof(As::Union{AbstractVector, Tuple}) = mapreduce(eltype, promote_type, As)
-_promote_eltypeof(As::AbstractVector{Operator{T}}) where {T} = T
+_promote_eltypeof(As::AbstractVector{<:Operator{T}}) where {T} = T
 
 _extractops(A, ::Any) = SVector{1}(A)
 _extractops(A::PlusOperator, ::typeof(+)) = A.ops
 
 function +(A::Operator,B::Operator)
-    v = _collateops(A, B, +)
+    v = collateops(+, A, B)
     promoteplus(v, size(A))
 end
 # Optimization for 3-term sum
 function +(A::Operator,B::Operator,C::Operator)
-    v = [_extractops(A,+); _extractops(B, +); _extractops(C, +)]
+    v = collateops(+, A, B, C)
     promoteplus(v, size(A))
 end
 
@@ -520,10 +520,13 @@ for OP in (:(adjoint),:(transpose))
 end
 
 const PlusOrTimesOp = Union{PlusOperator, TimesOperator}
-_collateops(A::PlusOrTimesOp, B::PlusOrTimesOp, op) = [_extractops(A, op); _extractops(B, op)]
-_collateops(A::PlusOrTimesOp, B::Operator, op) = [_extractops(A, op); _extractops(B, op)]
-_collateops(A::Operator, B::PlusOrTimesOp, op) = [_extractops(A, op); _extractops(B, op)]
-_collateops(A::Operator, B::Operator, op) = (A, B)
+anyplustimes(op::Operator, ops...) = anyplustimes(ops...)
+anyplustimes(op::PlusOrTimesOp, ops...) = true
+anyplustimes() = false
+
+collateops(op, As...) = collateops(op, Val(anyplustimes(As...)), As...)
+collateops(op, ::Val{true}, As...) = mapreduce(x -> _extractops(x, op), vcat, As)
+collateops(op, ::Val{false}, As...) = As
 
 function *(A::Operator,B::Operator)
     if isconstop(A)
@@ -531,7 +534,7 @@ function *(A::Operator,B::Operator)
     elseif isconstop(B)
         promotedomainspace(strictconvert(Number,B)*A,domainspace(B))
     else
-        promotetimes(_collateops(A, B, *),
+        promotetimes(collateops(*, A, B),
             domainspace(B), _timessize((A,B)), false)
     end
 end
