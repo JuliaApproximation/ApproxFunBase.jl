@@ -1,11 +1,10 @@
 export PiecewiseSegment
 
-struct PiecewiseSegment{T} <: Domain{T}
-    points::Vector{T}
-    PiecewiseSegment{T}(d::Vector{T}) where {T} = new{T}(d)
+struct PiecewiseSegment{T,V<:AbstractVector{T}} <: Domain{T}
+    points::V
 end
-PiecewiseSegment(d::AbstractVector) = PiecewiseSegment{eltype(d)}(collect(d))
-PiecewiseSegment(d...) = PiecewiseSegment(collect(mapreduce(eltype,promote_type,d),d))
+PiecewiseSegment{T}(d::V) where {T,V<:AbstractVector{T}} = PiecewiseSegment{T,V}(d)
+PiecewiseSegment(d...) = PiecewiseSegment(SVector{length(d), mapreduce(eltype,promote_type,d)}(d))
 
 function PiecewiseSegment(pcsin::AbstractVector{IT}) where IT<:IntervalOrSegment
     pcs=collect(pcsin)
@@ -28,13 +27,16 @@ end
 
 ==(a::PiecewiseSegment,b::PiecewiseSegment) = a.points==b.points
 
-indomain(x, d::PiecewiseSegment) = any(in.(x, components(d)))
+indomain(x, d::PiecewiseSegment) = any(Base.Fix1(in, x), components(d))
 
 
 canonicaldomain(d::PiecewiseSegment)=d
 ncomponents(d::PiecewiseSegment)=length(d.points)-1
-component(d::PiecewiseSegment,j::Integer) = Segment(d.points[j],d.points[j+1])
-components(d::PiecewiseSegment{T}) where {T} = Segment{T}[component(d,k) for k=1:ncomponents(d)]
+component(d::PiecewiseSegment{T}, j::Integer) where {T} = Segment{T}(d.points[j], d.points[j+1])
+components(d::PiecewiseSegment) = [component(d,k) for k=1:ncomponents(d)]
+function components(d::PiecewiseSegment{<:Any, <:SVector})
+    SVector(ntuple(k->component(d,k), ncomponents(d)))
+end
 
 for OP in (:arclength,:complexlength)
     @eval $OP(d::PiecewiseSegment) = mapreduce($OP,+,components(d))

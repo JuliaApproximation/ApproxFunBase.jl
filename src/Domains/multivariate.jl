@@ -6,11 +6,11 @@ include("ProductDomain.jl")
 const RectDomain = Union{DomainSets.FixedIntervalProduct{2}, DomainSets.Rectangle, VcatDomain{2,<:Any,(1,1),<:Tuple}}
 
 boundary(d::RectDomain) =
-    PiecewiseSegment([SVector(leftendpoint(factor(d,1)),leftendpoint(factor(d,2))),
+    PiecewiseSegment(SVector{5}(SVector(leftendpoint(factor(d,1)),leftendpoint(factor(d,2))),
                       SVector(rightendpoint(factor(d,1)),leftendpoint(factor(d,2))),
                       SVector(rightendpoint(factor(d,1)),rightendpoint(factor(d,2))),
                       SVector(leftendpoint(factor(d,1)),rightendpoint(factor(d,2))),
-                      SVector(leftendpoint(factor(d,1)),leftendpoint(factor(d,2)))])
+                      SVector(leftendpoint(factor(d,1)),leftendpoint(factor(d,2)))))
 
 
 ## Union

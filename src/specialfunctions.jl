@@ -467,6 +467,31 @@ for (funsym, exp) in Calculus.symbolic_derivatives_1arg()
     end
 end
 
+# Other special functions
+for f in [:logabsgamma]
+    @eval function $f(z::Fun{<:ConstantSpace, <:Real})
+        t = $f(Number(z))
+        Fun(t[1], space(z)), t[2]
+    end
+end
+function loggamma(z::Fun{<:ConstantSpace})
+    t = loggamma(Number(z))
+    Fun(t, space(z))
+end
+for f in [:gamma, :loggamma]
+    @eval begin
+        function $f(a, z::Fun{<:ConstantSpace})
+            t = $f(a, Number(z))
+            Fun(t, space(z))
+        end
+    end
+end
+
+for f in [:besselj, :besselk, :besselkx, :bessely, :besseli,
+            :hankelh1x, :hankelh2x, :hankelh1, :hankelh2]
+    @eval $f(nu, x::Fun{<:ConstantSpace}) = Fun($f(nu, Number(x)), space(x))
+end
+
 # Roots
 
 for op in (:(argmax),:(argmin))

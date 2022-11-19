@@ -10,7 +10,7 @@ macro calculus_functional(Op)
     ConcOp = Symbol(:Concrete, Op)
     WrappOp = Symbol(Op, :Wrapper)
     return esc(quote
-        abstract type $Op{SSS,TTT} <: CalculusFunctional{SSS,TTT} end
+        abstract type $Op{SSS,TTT} <: ApproxFunBase.CalculusFunctional{SSS,TTT} end
         struct $ConcOp{S,T} <: $Op{S,T}
             domainspace::S
         end
@@ -18,11 +18,11 @@ macro calculus_functional(Op)
             op::BT
         end
 
-        @wrapper $WrappOp
+        ApproxFunBase.@wrapper $WrappOp
 
 
         # We expect the operator to be real/complex if the basis is real/complex
-        $ConcOp(dsp::Space) = $ConcOp{typeof(dsp),prectype(dsp)}(dsp)
+        $ConcOp(dsp::Space) = $ConcOp{typeof(dsp),ApproxFunBase.prectype(dsp)}(dsp)
 
         $Op() = $Op(UnsetSpace())
         $Op(dsp) = $ConcOp(dsp)
@@ -37,7 +37,7 @@ macro calculus_functional(Op)
         ApproxFunBase.domain(Σ::$ConcOp) = domain(Σ.domainspace)
         ApproxFunBase.domainspace(Σ::$ConcOp) = Σ.domainspace
 
-        Base.getindex(::$ConcOp{UnsetSpace},kr::AbstractRange) =
+        Base.getindex(::$ConcOp{ApproxFunBase.UnsetSpace},kr::AbstractRange) =
             error("Spaces cannot be inferred for operator")
 
         $WrappOp(op::Operator) =

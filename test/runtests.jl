@@ -1,6 +1,7 @@
 using ApproxFunBase, LinearAlgebra, Random, Test
 using ApproxFunBase: ∞
 using Aqua
+using SpecialFunctions
 
 @testset "Project quality" begin
     Aqua.test_all(ApproxFunBase, ambiguities=false)
@@ -212,7 +213,7 @@ end
             f = Fun(PointSpace(1:3), c)
             M = Multiplication(f)
             @testset for t in [1, 3]
-                op = M + t * M
+                op = @inferred M + t * M
                 @test bandwidths(op) == bandwidths(M)
                 @test coefficients(op * f) == @. (1+t)*c^2
                 for op2 in Any[M + M + t * M, op + M]
@@ -229,9 +230,11 @@ end
                 @test coefficients(f1) == coefficients(f2) == coefficients(f3)
             end
             Z = ApproxFunBase.ZeroOperator()
-            @test Z + Z == Z
-            @test Z + Z + Z == Z
-            @test Z + Z + Z + Z == Z
+            @test (@inferred Z + Z) == Z
+            @test (@inferred Z + Z + Z) == Z
+            @test (@inferred Z + Z + Z + Z) == Z
+
+            @inferred (() -> (D = Derivative(); D + D))()
         end
     end
 
@@ -387,6 +390,30 @@ end
         λ2 = eigvals(B)
         @test λ1 ≈ λ2
     end
+end
+
+@testset "Special functions" begin
+    pt = 0.5
+    x = Fun(pt, ConstantSpace(1..2))
+    for f in [erf, erfinv, erfc, erfcinv, erfi, gamma,
+                digamma, invdigamma, trigamma, loggamma,
+                airyai, airybi, airyaiprime, airybiprime,
+                besselj0, besselj1, bessely0, bessely1,
+                erfcx, dawson]
+
+        @test Number(f(x)) ≈ f(pt)
+        if f ∉ [erfinv, erfcinv, invdigamma]
+            @test Number(f(x*im)) ≈ f(pt*im)
+        end
+    end
+    for f in [besselj, bessely, besseli, besselk, besselkx,
+              hankelh1, hankelh2, hankelh1x, hankelh2x]
+        @test Number(f(1, x)) ≈ f(1, pt)
+    end
+    @test Number(logabsgamma(x)[1]) ≈ logabsgamma(pt)[1]
+    @test logabsgamma(x)[2] ≈ logabsgamma(pt)[2]
+    @test Number(gamma(2, x)) ≈ gamma(2, pt)
+    @test Number(gamma(2, x*im)) ≈ gamma(2, pt*im)
 end
 
 @time include("ETDRK4Test.jl")
