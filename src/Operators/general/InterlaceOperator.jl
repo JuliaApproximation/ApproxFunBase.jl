@@ -135,7 +135,7 @@ function InterlaceOperator(ops::VectorOrTupleOfOp, ds::Space, rs::Space)
     end
 
     VT = Vector{Operator{mapreduce(eltype, promote_type, ops)}}
-    opsv = strictconvert(VT, _convert_vector(ops))
+    opsv = strictconvert(VT, convert_vector(ops))
     InterlaceOperator(opsv,ds,rs,
                         cache(BlockInterlacer(tuple(blocklengths(ds)))),
                         cache(interlacer(rs)),
@@ -177,13 +177,11 @@ InterlaceOperator(opsin::AbstractMatrix{<:Operator},::Type{DS}) where {DS<:Space
 InterlaceOperator(opsin::AbstractMatrix,S...) =
     InterlaceOperator(Matrix{Operator{mapreduce(eltype,promote_type,opsin)}}(promotespaces(opsin)),S...)
 
-_convert_vector(v::AbstractVector) = convert(Vector, v)
-_convert_vector_or_svector(v::AbstractVector) = _convert_vector(v)
-_convert_vector(t::Tuple) = [t...]
+_convert_vector_or_svector(v::AbstractVector) = convert_vector(v)
 _convert_vector_or_svector(t::Tuple) = SVector{length(t), mapreduce(typeof, typejoin, t)}(t)
 
 function InterlaceOperator(opsin::AbstractVector{<:Operator})
-    ops = _convert_vector(promotedomainspace(opsin))
+    ops = convert_vector(promotedomainspace(opsin))
     InterlaceOperator(ops, domainspace(first(ops)), rangespace(ops))
 end
 @inline function _InterlaceOperator(opsin, promotedomain)

@@ -245,7 +245,9 @@ iterate(x::ScalarFun) = (x, nothing)
 iterate(x::ScalarFun, ::Any) = nothing
 isempty(x::ScalarFun) = false
 
-iterate(A::ArrayFun, i=1) = (@_inline_meta; (i % UInt) - 1 < length(A) ? (@inbounds A[i], i + 1) : nothing)
+@inline function iterate(A::ArrayFun, i=1)
+    (i % UInt) - 1 < length(A) ? (@inbounds A[i], i + 1) : nothing
+end
 
 in(x::ScalarFun, y::ScalarFun) = x == y
 
