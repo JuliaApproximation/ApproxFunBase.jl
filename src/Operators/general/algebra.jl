@@ -25,6 +25,12 @@ function PlusOperator(opsin::Vector{O},
         ) where {O<:Operator}
     PlusOperator{eltype(O),typeof(bi),typeof(sz),O}(opsin,bi,sz)
 end
+function PlusOperator{ET}(opsin::Vector{O},
+        bi::Tuple{Any,Any} = bandwidthsmax(opsin),
+        sz::Tuple{Any,Any} = size(first(opsin)),
+        ) where {ET,O<:Operator{ET}}
+    PlusOperator{ET,typeof(bi),typeof(sz),O}(opsin,bi,sz)
+end
 
 bandwidths(P::PlusOperator) = P.bandwidths
 
@@ -54,8 +60,9 @@ end
 
 function promoteplus(opsin, sz = size(first(opsin)))
     ops = filter(!iszeroop, opsin)
+    ET = _promote_eltypeof(opsin)
     v = promotespaces(ops)
-    PlusOperator(convert_vector(v), bandwidthsmax(v), sz)
+    PlusOperator{ET}(convert_vector(v), bandwidthsmax(v), sz)
 end
 
 for OP in (:domainspace,:rangespace)
