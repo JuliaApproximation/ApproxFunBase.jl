@@ -213,7 +213,7 @@ end
             f = Fun(PointSpace(1:3), c)
             M = Multiplication(f)
             @testset for t in [1, 3]
-                op = M + t * M
+                op = @inferred M + t * M
                 @test bandwidths(op) == bandwidths(M)
                 @test coefficients(op * f) == @. (1+t)*c^2
                 for op2 in Any[M + M + t * M, op + M]
@@ -230,9 +230,11 @@ end
                 @test coefficients(f1) == coefficients(f2) == coefficients(f3)
             end
             Z = ApproxFunBase.ZeroOperator()
-            @test Z + Z == Z
-            @test Z + Z + Z == Z
-            @test Z + Z + Z + Z == Z
+            @test (@inferred Z + Z) == Z
+            @test (@inferred Z + Z + Z) == Z
+            @test (@inferred Z + Z + Z + Z) == Z
+
+            @inferred (() -> (D = Derivative(); D + D))()
         end
     end
 
