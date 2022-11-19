@@ -12,7 +12,7 @@ struct TensorIteratorFun{d, SS<:TensorSpace{<:NTuple{d, <:UnivariateSpace}}, T<:
     space::SS
     coefficients::Vector{T} 
     iterator::TrivialTensorizer{d}
-    orders::Block
+    orders::Block{1, Int}
 end
 """
     ProductFun(f, space::TensorSpace; [tol=eps()])

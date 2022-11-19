@@ -37,8 +37,8 @@ function start(a::TrivialTensorizer{d}) where {d}
     if d==2
         return invoke(start, Tuple{Tensorizer2D}, a)
     else
-        # ((block_dim_1, block_dim_2,...), (itaration_number, iterator, iterator_state)), (sub_dim_1, dub_dim_2,...), (shift_dim_1, shift_dim_2,...), (numblock_1, numblock_2,...), (itemssofar, length)
-        return (ntuple(i->1, d),(0, nothing, nothing)), ntuple(i->1, d), ntuple(i->0, d), ntuple(i->a.blocks[i][1], d), (0,length(a))
+        # ((block_dim_1, block_dim_2,...), (itaration_number, iterator, iterator_state)), (itemssofar, length)
+        return (ones(Int, d),(0, nothing, nothing)), (0,length(a))
     end
 end
 
@@ -48,27 +48,8 @@ function next(a::TrivialTensorizer{d}, iterator_tuple) where {d}
         return invoke(next, Tuple{Tensorizer2D, Tuple}, a, iterator_tuple)
     end
 
-    (block, (j, iterator, iter_state)), subblock, shift, numblock, (i,tot) = iterator_tuple
+    (block, (j, iterator, iter_state)), (i,tot) = iterator_tuple
 
-    # increase subblock, so that last elements in tuple are increased first
-    function increase_subblock!(subblock)
-        c=d
-        while c > 0
-            if subblock[c] < numblock[c]
-                subblock[c] = subblock[c]+1
-                return
-            end
-        end
-        # should never happen, since numblock == subblock is checked first
-        throw(error("Should not have happened!"))
-    end
-
-    function increase_block(j, iterator, iter_state)
-        res, iter_state = iterate(iterator, iter_state)
-        block = tuple((res.+1)...)
-        j = j+1
-        return block, j, iter_state
-    end
 
     @inline function check_block_finished()
         if iterator === nothing
@@ -80,33 +61,23 @@ function next(a::TrivialTensorizer{d}, iterator_tuple) where {d}
         amount_combinations_block <= j
     end
 
-    ret = ntuple(i->subblock[i]+shift[i], d)
-    ret = reverse(ret)
+    ret = reverse(block)
 
-    # check if reached end of current block (subblock == numblock)
-    if numblock == subblock  # end of block
-        if check_block_finished()   # end of new block
+    if check_block_finished()   # end of new block
 
-            # set up iterator for new block
-            current_sum = sum(block)
-            iterator = multiexponents(d, current_sum+1-d)
-            iter_state = nothing
-            j = 0
-        end
-
-        # increase block, or initialize new block
-        block, j, iter_state = increase_block(j, iterator, iter_state)
-
-        subblock = ntuple(i->1, d) # set all subblocks back to 1
-
-        if i+1 < tot # set new shifts and limits if not done yet
-            numblock = ntuple(i->a.blocks[i][block[i]], d) # I think for the TrivialTensorizer this is always 1, than this can be simplified
-            shift = ntuple(i->sum(a.blocks[i][1:(block[i]-1)]), d)
-        end
-    else
-        increase_subblock!(subblock)
+        # set up iterator for new block
+        current_sum = sum(block)
+        iterator = multiexponents(d, current_sum+1-d)
+        iter_state = nothing
+        j = 0
     end
-    ret, ((block, (j, iterator, iter_state)), subblock, shift, numblock, (i,tot))
+
+    # increase block, or initialize new block
+    res, iter_state = iterate(iterator, iter_state)
+    block .= res.+1
+    j = j+1
+
+    ret, ((block, (j, iterator, iter_state)), (i,tot))
 end
 
 
@@ -114,7 +85,7 @@ function done(a::TrivialTensorizer{d}, iterator_tuple) where {d}
     if d==2
         return invoke(done, Tuple{Tensorizer2D, Tuple}, a, iterator_tuple)
     end
-    (_, _, _, _, (i,tot)) = iterator_tuple
+    (_, (i,tot)) = iterator_tuple
     return i ≥ tot
 end
 
