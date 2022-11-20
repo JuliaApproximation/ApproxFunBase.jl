@@ -1,7 +1,7 @@
 export ToeplitzOperator, HankelOperator
 
 
-mutable struct ToeplitzOperator{T<:Number} <: Operator{T}
+struct ToeplitzOperator{T<:Number} <: Operator{T}
     negative::Vector{T}
     nonnegative::Vector{T}
 end
@@ -93,7 +93,7 @@ end
 ## Hankel Operator
 
 
-mutable struct HankelOperator{T<:Number} <: Operator{T}
+struct HankelOperator{T<:Number} <: Operator{T}
     coefficients::Vector{T}
 end
 
