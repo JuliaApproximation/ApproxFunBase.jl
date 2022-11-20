@@ -573,13 +573,20 @@ end
 -(A::Operator) = ConstantTimesOperator(-1,A)
 -(A::Operator,B::Operator) = A+(-B)
 
-
-function *(f::Fun, A::Operator)
+@inline function _mulop(f::Fun, A::Operator)
     if isafunctional(A) && (isinf(bandwidth(A,1)) || isinf(bandwidth(A,2)))
         LowRankOperator(f,A)
     else
         TimesOperator(Multiplication(f,rangespace(A)),A)
     end
+end
+
+@static if VERSION >= v"1.8"
+    Base.@constprop :aggressive function *(f::Fun, A::Operator)
+        _mulop(f, A)
+    end
+else
+    *(f::Fun, A::Operator) = _mulop(f, A)
 end
 
 *(c::Number,A::Operator) = ConstantTimesOperator(c,A)
