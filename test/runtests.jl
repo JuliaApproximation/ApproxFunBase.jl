@@ -416,5 +416,11 @@ end
     @test Number(gamma(2, x*im)) ≈ gamma(2, pt*im)
 end
 
+@testset "ToeplitzOperator" begin
+    A = @inferred ApproxFunBase.SymToeplitzOperator(Int[])
+    B = A[1:5, 1:5]
+    @test all(iszero, A)
+end
+
 @time include("ETDRK4Test.jl")
 include("show.jl")

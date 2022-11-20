@@ -260,8 +260,8 @@ end
 _extractops(A::TimesOperator, ::typeof(*)) = A.ops
 
 function TimesOperator(A::Operator,B::Operator)
-    v = [_extractops(A, *); _extractops(B, *)]
-    TimesOperator(v, _bandwidthssum(A, B), _timessize((A,B)))
+    v = collateops(*, A, B)
+    TimesOperator(convert_vector(v), _bandwidthssum(A, B), _timessize((A,B)))
 end
 
 
@@ -523,11 +523,12 @@ for OP in (:(adjoint),:(transpose))
 end
 
 const PlusOrTimesOp = Union{PlusOperator, TimesOperator}
-anyplustimes(op::Operator, ops...) = anyplustimes(ops...)
-anyplustimes(op::PlusOrTimesOp, ops...) = true
-anyplustimes() = false
+anyplustimes(f, op::Operator, ops...) = anyplustimes(f, ops...)
+anyplustimes(::typeof(+), op::PlusOperator, ops...) = true
+anyplustimes(::typeof(*), op::TimesOperator, ops...) = true
+anyplustimes(f) = false
 
-collateops(op, As...) = collateops(op, Val(anyplustimes(As...)), As...)
+collateops(op, As::Operator...) = collateops(op, Val(anyplustimes(op, As...)), As...)
 collateops(op, ::Val{true}, As...) = mapreduce(x -> _extractops(x, op), vcat, As)
 collateops(op, ::Val{false}, As...) = As
 

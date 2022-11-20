@@ -22,7 +22,9 @@ end
 function SymToeplitzOperator(V::Vector)
     W=V[2:end]
     V=copy(V)
-    V[1]*=2
+    if length(V) > 0
+        V[1]*=2
+    end
     ToeplitzOperator(W,V)
 end
 
