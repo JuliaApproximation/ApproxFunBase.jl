@@ -189,7 +189,7 @@ for (op, ODE, RHS, growth) in ((:(exp),    "D-f'",           "0",        :(real)
             # This supports Line/Rays
             D=Derivative(domain(f))
             B=Evaluation(domainspace(D),xmax)
-            u=\([B, $L], Any[opfxmax, $R]; tolerance=eps(cfstype(fin))*opmax)
+            u=\([B, $L], [opfxmax, $R]; tolerance=eps(cfstype(fin))*opmax)
 
             setdomain(u,domain(fin))
         end
