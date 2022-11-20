@@ -32,9 +32,10 @@ jobs:
         with:
           # All of these options are optional, so you can remove them if you are happy with the defaults
           concurrent_skipping: 'same_content_newer'
+          cancel_others: true
           skip_after_successful_duplicate: 'true'
-          paths_ignore: '["**/README.md"]'
-          do_not_skip: '["pull_request", "workflow_dispatch", "schedule"]'
+          paths_ignore: '["**/README.md", "**/LICENSE"]'
+          do_not_skip: '["pull_request"]'
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
