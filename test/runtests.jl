@@ -419,7 +419,7 @@ end
 @testset "ToeplitzOperator" begin
     A = @inferred ApproxFunBase.SymToeplitzOperator(Int[])
     B = A[1:5, 1:5]
-    @test all(iszero, A)
+    @test all(iszero, B)
 end
 
 @time include("ETDRK4Test.jl")
