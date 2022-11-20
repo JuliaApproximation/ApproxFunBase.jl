@@ -95,6 +95,7 @@ function InterlaceOperator(ops::AbstractMatrix{<:Operator},ds::Space,rs::Space)
     if size(ops,2) == p && all(isbanded,ops) &&# only support blocksize (1,) for now
             all(i->isa(i,AbstractFill) && getindex_value(i) == 1, dsi.blocks) &&
             all(i->isa(i,AbstractFill) && getindex_value(i) == 1, rsi.blocks)
+
         l,u = 0,0
         for k=1:p,j=1:p
             l=max(l,p*bandwidth(ops[k,j],1)+k-j)
@@ -109,7 +110,7 @@ function InterlaceOperator(ops::AbstractMatrix{<:Operator},ds::Space,rs::Space)
         l,u = (1-dimension(rs),dimension(ds)-1)  # not banded
     end
 
-    MT = Matrix{Operator{mapreduce(eltype, promote_type, ops)}}
+    MT = Matrix{Operator{promote_eltypeof(ops)}}
     opsm = strictconvert(MT, ops)
     InterlaceOperator(opsm,ds,rs,
                         cache(dsi),
@@ -134,7 +135,7 @@ function InterlaceOperator(ops::VectorOrTupleOfOp, ds::Space, rs::Space)
         l,u = (1-dimension(rs),dimension(ds)-1)  # not banded
     end
 
-    VT = Vector{Operator{mapreduce(eltype, promote_type, ops)}}
+    VT = Vector{Operator{promote_eltypeof(ops)}}
     opsv = strictconvert(VT, convert_vector(ops))
     InterlaceOperator(opsv,ds,rs,
                         cache(BlockInterlacer(tuple(blocklengths(ds)))),
@@ -175,7 +176,7 @@ InterlaceOperator(opsin::AbstractMatrix{<:Operator},::Type{DS}) where {DS<:Space
     InterlaceOperator(opsin,DS,DS)
 
 InterlaceOperator(opsin::AbstractMatrix,S...) =
-    InterlaceOperator(Matrix{Operator{mapreduce(eltype,promote_type,opsin)}}(promotespaces(opsin)),S...)
+    InterlaceOperator(Matrix{Operator{promote_eltypeof(opsin)}}(promotespaces(opsin)),S...)
 
 _convert_vector_or_svector(v::AbstractVector) = convert_vector(v)
 _convert_vector_or_svector(t::Tuple) = SVector{length(t), mapreduce(typeof, typejoin, t)}(t)
@@ -199,7 +200,7 @@ else
 end
 
 InterlaceOperator(ops::AbstractArray) =
-    InterlaceOperator(Array{Operator{mapreduce(eltype,promote_type,ops)}, ndims(ops)}(ops))
+    InterlaceOperator(Array{Operator{promote_eltypeof(ops)}, ndims(ops)}(ops))
 
 
 function convert(::Type{Operator{T}},S::InterlaceOperator) where T

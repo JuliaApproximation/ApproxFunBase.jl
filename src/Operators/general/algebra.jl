@@ -60,7 +60,7 @@ end
 
 function promoteplus(opsin, sz = size(first(opsin)))
     ops = filter(!iszeroop, opsin)
-    ET = _promote_eltypeof(opsin)
+    ET = promote_eltypeof(opsin)
     v = promotespaces(ops)
     PlusOperator{ET}(convert_vector(v), bandwidthsmax(v), sz)
 end
@@ -70,10 +70,6 @@ for OP in (:domainspace,:rangespace)
 end
 
 domain(P::PlusOperator) = commondomain(P.ops)
-
-_promote_eltypeof(As...) = _promote_eltypeof(As)
-_promote_eltypeof(As::Union{AbstractVector, Tuple}) = mapreduce(eltype, promote_type, As)
-_promote_eltypeof(As::AbstractVector{<:Operator{T}}) where {T} = T
 
 _extractops(A, ::Any) = SVector{1}(A)
 _extractops(A::PlusOperator, ::typeof(+)) = A.ops
@@ -144,9 +140,9 @@ end
 for OP in (:+,:-)
     @eval begin
         $OP(c::Union{UniformScaling,Number},A::Operator) =
-            $OP(strictconvert(Operator{_promote_eltypeof(A, c)},c),A)
+            $OP(strictconvert(Operator{promote_eltypeof(A, c)},c),A)
         $OP(A::Operator,c::Union{UniformScaling,Number}) =
-            $OP(A,strictconvert(Operator{_promote_eltypeof(A, c)},c))
+            $OP(A,strictconvert(Operator{promote_eltypeof(A, c)},c))
     end
 end
 
@@ -299,7 +295,7 @@ end
     TimesOperator(ops, bw, sz)
 end
 @inline function __promotetimes(opsin, dsp, anytimesop)
-    ops=Vector{Operator{_promote_eltypeof(opsin)}}(undef,0)
+    ops=Vector{Operator{promote_eltypeof(opsin)}}(undef,0)
     sizehint!(ops, length(opsin))
 
     for k = length(opsin):-1:1
