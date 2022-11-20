@@ -390,7 +390,7 @@ function interlace(::Type{T},v::AbstractVector{V},it::BlockInterlacer) where {T,
 end
 
 interlace(v::AbstractVector{V},it::BlockInterlacer) where {V<:AbstractVector} =
-    interlace(mapreduce(eltype,promote_type,v),v,it)
+    interlace(promote_eltypeof(v),v,it)
 
 interlace(v::AbstractVector{V},sp::DirectSumSpace) where {V<:AbstractVector} =
     interlace(v,interlacer(sp))

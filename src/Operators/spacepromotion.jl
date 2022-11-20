@@ -95,21 +95,21 @@ function promoterangespace(ops::VectorOrTupleOfOp{O}) where O<:Operator
     isempty(ops) && return strictconvert(Vector{Operator{eltype(O)}}, ops)
     k=findmaxrangespace(ops)
     #TODO: T might be incorrect
-    T=mapreduce(eltype,promote_type,ops)
+    T=promote_eltypeof(ops)
     _maybetypedmap(promoterangespace, k, Operator{T}, ops)
 end
 function promotedomainspace(ops::VectorOrTupleOfOp{O}) where O<:Operator
     isempty(ops) && return strictconvert(Vector{Operator{eltype(O)}}, ops)
     k=findmindomainspace(ops)
     #TODO: T might be incorrect
-    T=mapreduce(eltype,promote_type,ops)
+    T=promote_eltypeof(ops)
     _maybetypedmap(promotedomainspace, k, Operator{T}, ops)
 end
 function promotedomainspace(ops::VectorOrTupleOfOp{O}, S::Space) where O<:Operator
     isempty(ops) && return strictconvert(Vector{Operator{eltype(O)}}, ops)
     k=conversion_type(findmindomainspace(ops),S)
     #TODO: T might be incorrect
-    T=promote_type(mapreduce(eltype,promote_type,ops),prectype(S))
+    T=promote_type(promote_eltypeof(ops),prectype(S))
     _maybetypedmap(promotedomainspace, k, Operator{T}, ops)
 end
 

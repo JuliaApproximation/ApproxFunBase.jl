@@ -38,7 +38,7 @@ end
 function points(d::ProductDomain,n::Tuple)
     @assert length(factors(d)) == length(n)
     pts=map(points,factors(d),n)
-    ret=Vector{SVector{length(factors(d)),mapreduce(eltype,promote_type,factors(d))}}(undef, 0)
+    ret=Vector{SVector{length(factors(d)),promote_eltypeof(factors(d))}}(undef, 0)
     pushappendpts!(ret,SVector(x),pts)
     ret
 end

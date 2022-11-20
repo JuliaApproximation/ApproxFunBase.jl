@@ -4,7 +4,7 @@ for op in (:Derivative,:Integral)
     @eval begin
         function ($op)(d::AbstractVector{T}) where T<:IntervalOrSegment
             n=length(d)
-            R=zeros(Operator{mapreduce(eltype,promote_type,d)},n,n)
+            R=zeros(Operator{promote_eltypeof(d)},n,n)
             for k=1:n
                 R[k,k]=$op(d[k])
             end
@@ -16,7 +16,7 @@ end
 
 function Evaluation(d::AbstractVector{T},x...) where T<:IntervalOrSegment
     n=length(d)
-    R=zeros(Operator{mapreduce(eltype,promote_type,d)},n,n)
+    R=zeros(Operator{promote_eltypeof(d)},n,n)
     for k=1:n
         R[k,k]=Evaluation(d[k],x...)
     end
@@ -27,7 +27,7 @@ end
 
 ## Construction
 function diagm_container(size, kv::Pair{<:Integer,<:AbstractVector{<:Operator}}...)
-    T = mapreduce(x -> mapreduce(eltype,promote_type,x.second),
+    T = mapreduce(x -> promote_eltypeof(x.second),
                     promote_type, kv)
     n = mapreduce(x -> length(x.second) + abs(x.first), max, kv)
     zeros(Operator{T}, n, n)
@@ -39,12 +39,12 @@ function blockdiag(d1::AbstractVector{T},d2::AbstractVector{T}) where T<:Operato
         error("Empty blockdiag")
     end
     if isempty(d1)
-        TT=mapreduce(eltype,promote_type,d2)
+        TT=promote_eltypeof(d2)
     elseif isempty(d2)
-        TT=mapreduce(eltype,promote_type,d1)
+        TT=promote_eltypeof(d1)
     else
-        TT=promote_type(mapreduce(eltype,promote_type,d1),
-                        mapreduce(eltype,promote_type,d2))
+        TT=promote_type(promote_eltypeof(d1),
+                        promote_eltypeof(d2))
     end
 
       D=zeros(Operator{TT},length(d1)+length(d2),2)

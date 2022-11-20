@@ -4,7 +4,7 @@ struct PiecewiseSegment{T,V<:AbstractVector{T}} <: Domain{T}
     points::V
 end
 PiecewiseSegment{T}(d::V) where {T,V<:AbstractVector{T}} = PiecewiseSegment{T,V}(d)
-PiecewiseSegment(d...) = PiecewiseSegment(SVector{length(d), mapreduce(eltype,promote_type,d)}(d))
+PiecewiseSegment(d...) = PiecewiseSegment(SVector{length(d), promote_eltypeof(d)}(d))
 
 function PiecewiseSegment(pcsin::AbstractVector{IT}) where IT<:IntervalOrSegment
     pcs=collect(pcsin)

@@ -111,6 +111,13 @@ uniontypedvec(A, B) = Union{typeof(A), typeof(B)}[A, B]
 convert_vector(v::AbstractVector) = convert(Vector, v)
 convert_vector(t::Tuple) = [t...]
 
+promote_eltypeof(As...) = promote_eltypeof(As)
+# Avoid mapreduce for common cases, as it often suffers from poor type inference
+promote_eltypeof(As::Tuple{Any}) = eltype(As[1])
+promote_eltypeof(As::Tuple{Any,Any}) = promote_type(eltype(As[1]), eltype(As[2]))
+promote_eltypeof(As::Tuple{Any,Any,Any}) = promote_type(eltype(As[1]), eltype(As[2]), eltype(As[3]))
+promote_eltypeof(As::Union{AbstractArray, Tuple}) = mapfoldl(eltype, promote_type, As)
+
 include("LinearAlgebra/LinearAlgebra.jl")
 include("Fun.jl")
 include("onehotvector.jl")
