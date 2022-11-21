@@ -198,4 +198,4 @@ end
 
 #TODO: fix for complex
 evaluate(A::AbstractArray{T},x::Number) where {T<:Fun} =
-    typeof(first(A)(x))[Akj(x) for Akj in A]
+    [Akj(x) for Akj in A]
