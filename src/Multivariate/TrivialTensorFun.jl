@@ -1,7 +1,7 @@
 
 
 
-struct TensorIteratorFun{d, SS<:TensorSpaceND{d}, T<:Number} <: MultivariateFun{T, d}
+struct TrivialTensorFun{d, SS<:TensorSpaceND{d}, T<:Number} <: MultivariateFun{T, d}
     space::SS
     coefficients::Vector{T} 
     iterator::TrivialTensorizer{d}
@@ -9,14 +9,17 @@ struct TensorIteratorFun{d, SS<:TensorSpaceND{d}, T<:Number} <: MultivariateFun{
 end
 
 
-function TensorIteratorFun(iter::TrivialTensorizer{d},cfs::Vector{T},blk::Block, sp::TensorSpaceND{d}) where {T<:Number,d}
-    TensorIteratorFun(sp, cfs, iter, blk)
+function TrivialTensorFun(iter::TrivialTensorizer{d},cfs::Vector{T},blk::Block, sp::TensorSpaceND{d}) where {T<:Number,d}
+    if any(map(dimension, sp.spaces).!=ℵ₀)
+        error("This Space is not a Trivial Tensor space!")
+    end
+    TrivialTensorFun(sp, cfs, iter, blk)
 end
 
-(f::TensorIteratorFun)(x...) = evaluate(f, x...)
+(f::TrivialTensorFun)(x...) = evaluate(f, x...)
 
 # TensorSpace evaluation
-function evaluate(f::TensorIteratorFun{d, SS, T},x...) where {d, SS, T}
+function evaluate(f::TrivialTensorFun{d, SS, T},x...) where {d, SS, T}
     highest_order = f.orders.n[1]
     n = length(f.coefficients)
 

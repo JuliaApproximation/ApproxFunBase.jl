@@ -628,7 +628,7 @@ evaluate(f::AbstractVector,S::TensorSpace2D,x) = ProductFun(totensor(S,f), S)(x.
 evaluate(f::AbstractVector,S::TensorSpace2D,x,y) = ProductFun(totensor(S,f),S)(x,y)
 
 # ND evaluation functions of Trivial Spaces
-evaluate(f::AbstractVector,S::TensorSpaceND,x) = TensorIteratorFun(totensor(S, f)..., S)(x...)
+evaluate(f::AbstractVector,S::TensorSpaceND,x) = TrivialTensorFun(totensor(S, f)..., S)(x...)
 
 coefficientmatrix(f::Fun{<:AbstractProductSpace}) = totensor(space(f),f.coefficients)
 
