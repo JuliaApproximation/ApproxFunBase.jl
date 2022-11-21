@@ -24,7 +24,7 @@ function evaluate(f::TrivialTensorFun{d, SS, T},x...) where {d, SS, T}
     n = length(f.coefficients)
 
     # this could be lazy evaluated for the sparse case
-    A = [Fun(f.space.spaces[i], [zeros(k);1])(x[i]) for k=0:highest_order, i=1:d]
+    A = T[Fun(f.space.spaces[i], [zeros(T, k);1])(x[i]) for k=0:highest_order, i=1:d]
     result::T = 0
     coef_counter::Int = 1
     for i in f.iterator
