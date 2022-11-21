@@ -59,8 +59,8 @@ function LowRankFun(X::Array{T},dx::S,dy::M) where {S<:Space,M<:Space,T<:Number}
     U,Σ,V=svd(X)
     m=max(1,count(s->s>10eps(T),Σ))
 
-    A=VFun{S,T}[Fun(dx,U[:,k].*sqrt(Σ[k])) for k=1:m]
-    B=VFun{M,T}[Fun(dy,conj(V[:,k]).*sqrt(Σ[k])) for k=1:m]
+    A=VFun{S,T}[Fun(dx,@view(U[:,k]).*sqrt(Σ[k])) for k=1:m]
+    B=VFun{M,T}[Fun(dy,conj.(@view V[:,k]).*sqrt(Σ[k])) for k=1:m]
 
     LowRankFun(A,B)
 end
@@ -68,8 +68,8 @@ end
 ## Construction in a TensorSpace via a Vector of Funs
 
 function LowRankFun(X::Vector{VFun{S,T}},d::TensorSpace{SV,DD}) where {S,T,DD<:EuclideanDomain{2},SV}
-    @assert d[1] == space(X[1])
-    LowRankFun(X,d[2])
+    @assert factor(d, 1) == space(X[1])
+    LowRankFun(X, factor(d, 2))
 end
 
 function LowRankFun(X::Vector{VFun{S,T}},dy::Space) where {S,T}
