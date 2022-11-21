@@ -53,4 +53,4 @@ Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [targets]
-test = ["Aqua", "Random", "ApproxFunOrthogonalPolynomials"]
+test = ["Aqua", "Random"]
