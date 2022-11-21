@@ -340,7 +340,8 @@ end
 *(f::ProductFun,B::Fun) = transpose(B*transpose(f))
 
 
-LowRankFun(f::ProductFun{S,V,SS}) where {S,V,SS<:TensorSpace} = LowRankFun(f.coefficients,factor(space(f),2))
+LowRankFun(f::ProductFun{S,V,SS}) where {S,V,SS<:TensorSpace} =
+    LowRankFun(f.coefficients, space(f))
 LowRankFun(f::Fun) = LowRankFun(ProductFun(f))
 
 function differentiate(f::ProductFun{S,V,SS},j::Integer) where {S,V,SS<:TensorSpace}
