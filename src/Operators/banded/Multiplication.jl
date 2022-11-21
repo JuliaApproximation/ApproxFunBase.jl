@@ -28,6 +28,12 @@ end
 
 ==(A::ConcreteMultiplication, B::ConcreteMultiplication) = (A.f == B.f) && (A.space == B.space)
 
+function *(A::ConcreteMultiplication{D,S}, B::ConcreteMultiplication{D,S}) where {D,S}
+    f1 = A.f
+    f2 = A.f
+    ConcreteMultiplication(f1*f2, A.space)
+end
+
 # We do this in two stages to support Modifier spaces
 # without ambiguity errors
 function defaultMultiplication(f::Fun,sp::Space)
