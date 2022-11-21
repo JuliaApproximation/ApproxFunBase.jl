@@ -5,15 +5,7 @@
 
 export ProductFun
 
-## TODO:
-## In a newer version, an abstract type of ProducFun is needed, where different implementations are possible
-## however, refactoring this is a lot of effort...
-struct TensorIteratorFun{d, SS<:TensorSpace{<:NTuple{d, <:UnivariateSpace}}, T<:Number} <: MultivariateFun{T, d}
-    space::SS
-    coefficients::Vector{T} 
-    iterator::TrivialTensorizer{d}
-    orders::Block{1, Int}
-end
+
 """
     ProductFun(f, space::TensorSpace; [tol=eps()])
 
@@ -93,15 +85,6 @@ function ProductFun(cfs::AbstractMatrix{T},sp::AbstractProductSpace{Tuple{S,V},D
         ret=VFun{S,T}[Fun(columnspace(sp,k),cfs[:,k]) for k=1:size(cfs,2)]
         ProductFun{S,V,typeof(sp),T}(ret,sp)
     end
-end
-
-## TODO: This Product Fun actually does not return a productfun, dirty but was easiest to implement. Probably an abstract type of ProductFuns
-# is needed in the future.
-function ProductFun(iter::TrivialTensorizer{d},cfs::Vector{T},blk::Block, sp::AbstractProductSpace{<:NTuple{d, <:UnivariateSpace}}) where {T<:Number,d}
-
-    @assert d>2
-
-    TensorIteratorFun(sp, cfs, iter, blk) # This is not a ProductFun
 end
 
 ## Construction in a ProductSpace via a Vector of Funs
@@ -261,8 +244,6 @@ end
 
 (f::ProductFun)(x,y) = evaluate(f,x,y)
 
-(f::TensorIteratorFun)(x...) = evaluate(f, x...)
-
 coefficients(f::ProductFun,ox::TensorSpace) = coefficients(f,ox[1],ox[2])
 
 
@@ -304,32 +285,6 @@ evaluate(f::ProductFun{S,V,SS,T},x::Number,::Colon) where {S<:UnivariateSpace,V<
 evaluate(f::ProductFun{S,V,SS,T},x::Number,y::Number) where {S<:UnivariateSpace,V<:UnivariateSpace,SS<:TensorSpace,T} =
     evaluate(f,x,:)(y)
 
-
-# TensorSpace evaluation
-function evaluate(f::TensorIteratorFun{d, SS, T},x...) where {d, SS, T}
-    highest_order = f.orders.n[1]
-    n = length(f.coefficients)
-
-    # this could be lazy evaluated for the sparse case
-    A = [Fun(f.space.spaces[i], [zeros(k);1])(x[i]) for k=0:highest_order, i=1:d]
-    result::T = 0
-    coef_counter::Int = 1
-    for i in f.iterator
-        tmp = f.coefficients[coef_counter]
-        if tmp != 0
-            tmp_res = 1
-            for k=1:d
-                tmp_res *= A[i[k], k]
-            end
-            result += tmp * tmp_res
-        end
-        coef_counter += 1
-        if coef_counter > n
-            break
-        end
-    end
-    return result
-end
 
 
 evaluate(f::ProductFun,x) = evaluate(f,x...)

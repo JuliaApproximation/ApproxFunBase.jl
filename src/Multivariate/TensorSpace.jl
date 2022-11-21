@@ -278,6 +278,10 @@ struct TensorSpace{SV,D,R} <:AbstractProductSpace{SV,D,R}
     spaces::SV
 end
 
+# Tensorspace of 2 univariate spaces
+const TensorSpace2D{AA, BB, D,R} = TensorSpace{<:Tuple{AA, BB}, D, R} where {AA<:UnivariateSpace, BB<:UnivariateSpace}
+const TensorSpaceND{d, D, R} = TensorSpace{<:NTuple{d, <:UnivariateSpace}, D, R}
+
 tensorizer(sp::TensorSpace) = Tensorizer(map(blocklengths,sp.spaces))
 blocklengths(S::TensorSpace) = tensorblocklengths(map(blocklengths,S.spaces)...)
 
@@ -619,17 +623,12 @@ end
 
 itransform(sp::TensorSpace,cfs::AbstractVector) = vec(itransform!(sp,coefficientmatrix(Fun(sp,cfs))))
 
-function evaluate(f::AbstractVector,S::AbstractProductSpace,x)
-    t = totensor(S,f)
-    if typeof(t) <: Tuple
-        return ProductFun(t..., S)(x...)
-    else
-        return ProductFun(t, S)(x...)
-    end
-end
-evaluate(f::AbstractVector,S::AbstractProductSpace,x,y) = ProductFun(totensor(S,f),S)(x,y)
+# 2D evaluation functions
+evaluate(f::AbstractVector,S::TensorSpace2D,x) = ProductFun(totensor(S,f), S)(x...)
+evaluate(f::AbstractVector,S::TensorSpace2D,x,y) = ProductFun(totensor(S,f),S)(x,y)
 
-
+# ND evaluation functions of Trivial Spaces
+evaluate(f::AbstractVector,S::TensorSpaceND,x) = TensorIteratorFun(totensor(S, f)..., S)(x...)
 
 coefficientmatrix(f::Fun{<:AbstractProductSpace}) = totensor(space(f),f.coefficients)
 
