@@ -64,19 +64,8 @@ true
 function ProductFun(cfs::AbstractMatrix{T},sp::AbstractProductSpace{Tuple{S,V},DD};
     tol::Real=100eps(T),chopping::Bool=false) where {S<:UnivariateSpace,V<:UnivariateSpace,T<:Number,DD}
     if chopping
-        ncfs, kend = norm(cfs,Inf), size(cfs,2)
-        if kend > 1
-            while kend > 0
-                if all(iszero, @view(cfs[:, kend]))
-                    kend -= 1
-                    continue
-                end
-                if !isempty(chop(@view(cfs[:,kend]), ncfs*tol))
-                    break
-                end
-                kend-=1
-            end
-        end
+        ncfs = norm(cfs,Inf)
+        kend = size(cfs, 2) - ntrailingzerocols(cfs, ncfs*tol)
         ret=VFun{S,T}[Fun(columnspace(sp,k),chop(@view(cfs[:,k]), ncfs*tol)) for k=1:max(kend,1)]
         ProductFun{S,V,typeof(sp),T}(ret,sp)
     else
@@ -147,7 +136,32 @@ ProductFun(f::Function) = ProductFun(dynamic(f),ChebyshevInterval(),ChebyshevInt
 ## Conversion from other 2D Funs
 
 ProductFun(f::LowRankFun; kw...) = ProductFun(coefficients(f),space(f,1),space(f,2); kw...)
-ProductFun(f::Fun{S}; kw...) where {S<:AbstractProductSpace} = ProductFun(coefficientmatrix(f), space(f); kw...)
+function nzerofirst(itr, tol=0.0)
+    n = 0
+    for v in itr
+        if all(iszero, v) || (tol == 0 ? false : isempty(chop(v, tol)))
+            n += 1
+        else
+            break
+        end
+    end
+    n
+end
+function ntrailingzerocols(A, tol=0.0)
+    itr = (view(A, :, i) for i in reverse(axes(A,2)))
+    nzerofirst(itr, tol)
+end
+function ntrailingzerorows(A, tol=0.0)
+    itr = (view(A, i, :) for i in reverse(axes(A,1)))
+    nzerofirst(itr, tol)
+end
+function ProductFun(f::Fun{<:AbstractProductSpace}; kw...)
+    M = coefficientmatrix(f)
+    nc = ntrailingzerocols(M)
+    nr = ntrailingzerorows(M)
+    A = @view M[1:end-nr, 1:end-nc]
+    ProductFun(A, space(f); kw...)
+end
 
 ## Conversion to other ProductSpaces with the same coefficients
 
