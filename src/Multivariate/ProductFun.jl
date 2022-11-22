@@ -63,15 +63,28 @@ true
 """
 function ProductFun(cfs::AbstractMatrix{T},sp::AbstractProductSpace{Tuple{S,V},DD};
     tol::Real=100eps(T),chopping::Bool=false) where {S<:UnivariateSpace,V<:UnivariateSpace,T<:Number,DD}
+
+    kend = size(cfs, 2)
     if chopping
         ncfs = norm(cfs,Inf)
-        kend = size(cfs, 2) - ntrailingzerocols(cfs, ncfs*tol)
-        ret=VFun{S,T}[Fun(columnspace(sp,k),chop(@view(cfs[:,k]), ncfs*tol)) for k=1:max(kend,1)]
-        ProductFun{S,V,typeof(sp),T}(ret,sp)
-    else
-        ret=VFun{S,T}[Fun(columnspace(sp,k),cfs[:,k]) for k=1:size(cfs,2)]
-        ProductFun{S,V,typeof(sp),T}(ret,sp)
+        kend -= ntrailingzerocols(cfs, ncfs*tol)
     end
+
+    ret = if kend == 0
+        VFun{S,T}[Fun(columnspace(sp,1), T[]) for k=1:1]
+    else
+        VFun{S,T}[Fun(columnspace(sp,k),
+                    if chopping
+                        chop(@view(cfs[:,k]), ncfs*tol)
+                    else
+                        cfs[:,k]
+                    end
+                )
+            for k=1:kend
+        ]
+    end
+
+    ProductFun{S,V,typeof(sp),T}(ret,sp)
 end
 
 ## Construction in a ProductSpace via a Vector of Funs
@@ -195,7 +208,7 @@ ProductFun(f::Fun,sp::BivariateSpace) = ProductFun([Fun(f,columnspace(sp,1))],sp
 
 
 function funlist2coefficients(f::Vector{VFun{S,T}}) where {S,T}
-    A=zeros(T,mapreduce(ncoefficients,max,f),length(f))
+    A=zeros(T,mapreduce(ncoefficients,max,f,init=0),length(f))
     for k=1:length(f)
         A[1:ncoefficients(f[k]),k]=f[k].coefficients
     end
