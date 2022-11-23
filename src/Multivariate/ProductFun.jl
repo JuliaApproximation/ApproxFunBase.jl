@@ -243,6 +243,8 @@ function coefficients(f::ProductFun,ox::Space,oy::Space)
 end
 
 (f::ProductFun)(x,y) = evaluate(f,x,y)
+# ProductFun does only support BivariateFunctions, this function below just does not work
+# (f::ProductFun)(x,y,z) = evaluate(f,x,y,z)
 
 coefficients(f::ProductFun,ox::TensorSpace) = coefficients(f,ox[1],ox[2])
 
