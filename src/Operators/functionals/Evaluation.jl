@@ -58,7 +58,8 @@ end
 
 ## default getindex
 function getindex(D::ConcreteEvaluation,k::Integer)
-    f = Fun(D.space, [zeros(eltype(D),k-1); one(eltype(D))])
+    T = prectype(domainspace(D))
+    f = Fun(D.space, [zeros(T,k-1); one(T)])
     df = differentiate(f,D.order)
     v = df(D.x)
     strictconvert(eltype(D), v)

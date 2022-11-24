@@ -10,11 +10,15 @@ function show(io::IO, f::Fun)
     print(io,")")
 end
 
-show(io::IO,f::Fun{<:ConstantSpace{AnyDomain}}) =
-    print(io, convert(Number,f), " anywhere")
-
-show(io::IO,f::Fun{<:ConstantSpace}) =
-    print(io, convert(Number,f), " on ", domain(f))
+function show(io::IO,f::Fun{<:ConstantSpace})
+    print(io, only(coefficients(f)))
+    d = domain(f)
+    if d isa AnyDomain
+        print(io, " anywhere")
+    else
+        print(io, " on ", d)
+    end
+end
 
 ## MultivariateFun
 
