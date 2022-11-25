@@ -69,14 +69,15 @@ end
 for (dop, fop) in ((:leftendpoint,:first), (:rightendpoint,:last))
     @eval begin
         rangespace(E::ConcreteEvaluation{<:AmbiguousSpace,typeof($dop)}) = UnsetSpace()
-        function rangespace(E::ConcreteEvaluation{S,typeof($dop)}) where {S}
+        function rangespace(E::ConcreteEvaluation{<:Any,typeof($dop)})
             d = domain(domainspace(E))
             isambiguous(d) && return ConstantSpace()
             return ConstantSpace(Point($dop(d)))
         end
-        function getindex(D::ConcreteEvaluation{S,typeof($dop)},k::Integer) where {S}
-            T=eltype(D)
-            T($fop(differentiate(Fun(D.space,[zeros(T,k-1);one(T)]),D.order)))
+        function getindex(D::ConcreteEvaluation{<:Any,typeof($dop)},k::Integer)
+            P = prectype(domainspace(D))
+            R = eltype(D)
+            R($fop(differentiate(Fun(D.space,[zeros(P,k-1);one(P)]),D.order)))
         end
     end
 end
