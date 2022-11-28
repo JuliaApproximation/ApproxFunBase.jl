@@ -407,7 +407,7 @@ function interlace(v::Union{Tuple,Vector{Any}},sp::DirectSumSpace)
     interlace(V,sp)
 end
 
-components(f::Fun{S}) where {S<:DirectSumSpace} = Fun[component(f,j) for j=1:ncomponents(f)]
+components(f::Fun{<:DirectSumSpace}) = [component(f,j) for j=1:ncomponents(f)]
 
 function Fun(v::AbstractVector{F},::Type{PiecewiseSpace}) where F<:Fun
     sp = PiecewiseSpace(map(space,v))
