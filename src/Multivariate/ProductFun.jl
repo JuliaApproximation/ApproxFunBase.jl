@@ -172,7 +172,7 @@ function ProductFun(f::Fun{<:AbstractProductSpace}; kw...)
     M = coefficientmatrix(f)
     nc = ntrailingzerocols(M)
     nr = ntrailingzerorows(M)
-    A = @view M[1:end-nr, 1:end-nc]
+    A = @view M[1:max(1,end-nr), 1:max(1,end-nc)]
     ProductFun(A, space(f); kw...)
 end
 
