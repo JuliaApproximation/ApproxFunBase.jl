@@ -24,6 +24,7 @@ struct Tensorizer{DMS<:Tuple}
     blocks::DMS
 end
 
+const Tensorizer2D{AA, BB} = Tensorizer{Tuple{AA, BB}}
 const TrivialTensorizer{d} = Tensorizer{NTuple{d,Ones{Int,1,Tuple{OneToInf{Int}}}}}
 
 Base.eltype(a::Tensorizer) = NTuple{length(a.blocks),Int}
@@ -31,10 +32,68 @@ Base.eltype(::Tensorizer{<:NTuple{d}}) where {d} = NTuple{d,Int}
 dimensions(a::Tensorizer) = map(sum,a.blocks)
 Base.length(a::Tensorizer) = mapreduce(sum,*,a.blocks)
 
-# (blockrow,blockcol), (subrow,subcol), (rowshift,colshift), (numblockrows,numblockcols), (itemssofar, length)
-start(a::Tensorizer{Tuple{AA,BB}}) where {AA,BB} = (1,1), (1,1), (0,0), (a.blocks[1][1],a.blocks[2][1]), (0,length(a))
 
-function next(a::Tensorizer{Tuple{AA,BB}}, ((K,J), (k,j), (rsh,csh), (n,m), (i,tot))) where {AA,BB}
+function start(a::TrivialTensorizer{d}) where {d}
+    if d==2
+        return invoke(start, Tuple{Tensorizer2D}, a)
+    else
+        # ((block_dim_1, block_dim_2,...), (itaration_number, iterator, iterator_state)), (itemssofar, length)
+        return (ones(Int, d),(0, nothing, nothing)), (0,length(a))
+    end
+end
+
+function next(a::TrivialTensorizer{d}, iterator_tuple) where {d}
+
+    if d==2
+        return invoke(next, Tuple{Tensorizer2D, Tuple}, a, iterator_tuple)
+    end
+
+    (block, (j, iterator, iter_state)), (i,tot) = iterator_tuple
+
+
+    @inline function check_block_finished()
+        if iterator === nothing
+            return true
+        end
+        # there are N-1 over d-1 combinations in a block
+        amount_combinations_block = binomial(sum(block)-1, d-1)
+        # check if all combinations have been iterated over
+        amount_combinations_block <= j
+    end
+
+    ret = reverse(block)
+
+    if check_block_finished()   # end of new block
+
+        # set up iterator for new block
+        current_sum = sum(block)
+        iterator = multiexponents(d, current_sum+1-d)
+        iter_state = nothing
+        j = 0
+    end
+
+    # increase block, or initialize new block
+    res, iter_state = iterate(iterator, iter_state)
+    block .= res.+1
+    j = j+1
+
+    ret, ((block, (j, iterator, iter_state)), (i,tot))
+end
+
+
+function done(a::TrivialTensorizer{d}, iterator_tuple) where {d}
+    if d==2
+        return invoke(done, Tuple{Tensorizer2D, Tuple}, a, iterator_tuple)
+    end
+    (_, (i,tot)) = iterator_tuple
+    return i ≥ tot
+end
+
+
+# (blockrow,blockcol), (subrow,subcol), (rowshift,colshift), (numblockrows,numblockcols), (itemssofar, length)
+start(a::Tensorizer2D{AA, BB}) where {AA,BB} = (1,1), (1,1), (0,0), (a.blocks[1][1],a.blocks[2][1]), (0,length(a))
+
+function next(a::Tensorizer2D{AA, BB}, ((K,J), (k,j), (rsh,csh), (n,m), (i,tot))) where {AA,BB}
     ret = k+rsh,j+csh
     if k==n && j==m  # end of block
         if J == 1 || K == length(a.blocks[1])   # end of new block
@@ -59,7 +118,7 @@ function next(a::Tensorizer{Tuple{AA,BB}}, ((K,J), (k,j), (rsh,csh), (n,m), (i,t
 end
 
 
-done(a::Tensorizer, ((K,J), (k,j), (rsh,csh), (n,m), (i,tot))) = i ≥ tot
+done(a::Tensorizer2D, ((K,J), (k,j), (rsh,csh), (n,m), (i,tot))) = i ≥ tot
 
 iterate(a::Tensorizer) = next(a, start(a))
 function iterate(a::Tensorizer, st)
@@ -103,6 +162,14 @@ block(ci::CachedIterator{T,TrivialTensorizer{2}},k::Int) where {T} =
 
 block(::TrivialTensorizer{2},n::Int) =
     Block(floor(Integer,sqrt(2n) + 1/2))
+
+function block(::TrivialTensorizer{d},n::Int) where {d}
+    order::Int = 0
+    while binomial(order+d, d) < n
+        order = order + 1
+    end
+    return Block(order+1)
+end
 
 block(sp::Tensorizer{<:Tuple{<:AbstractFill{S},<:AbstractFill{T}}},n::Int) where {S,T} =
     Block(floor(Integer,sqrt(2floor(Integer,(n-1)/(getindex_value(sp.blocks[1])*getindex_value(sp.blocks[2])))+1) + 1/2))
@@ -210,6 +277,10 @@ By Choosing `(k,j)` appropriately, we obtain a single basis:
 struct TensorSpace{SV,D,R} <:AbstractProductSpace{SV,D,R}
     spaces::SV
 end
+
+# Tensorspace of 2 univariate spaces
+const TensorSpace2D{AA, BB, D,R} = TensorSpace{<:Tuple{AA, BB}, D, R} where {AA<:UnivariateSpace, BB<:UnivariateSpace}
+const TensorSpaceND{d, D, R} = TensorSpace{<:NTuple{d, <:UnivariateSpace}, D, R}
 
 tensorizer(sp::TensorSpace) = Tensorizer(map(blocklengths,sp.spaces))
 blocklengths(S::TensorSpace) = tensorblocklengths(map(blocklengths,S.spaces)...)
@@ -473,6 +544,8 @@ end
 
 fromtensor(S::Space,M::AbstractMatrix) = fromtensor(tensorizer(S),M)
 totensor(S::Space,M::AbstractVector) = totensor(tensorizer(S),M)
+totensor(SS::TensorSpace{<:NTuple{d}},M::AbstractVector) where {d} = 
+        if d>2; totensoriterator(tensorizer(SS),M) else totensor(tensorizer(SS),M) end
 
 function fromtensor(it::Tensorizer,M::AbstractMatrix)
     n,m=size(M)
@@ -496,17 +569,25 @@ function totensor(it::Tensorizer,M::AbstractVector)
     B=block(it,n)
     ds = dimensions(it)
 
+    #ret=zeros(eltype(M),[sum(it.blocks[i][1:min(B.n[1],length(it.blocks[i]))]) for i=1:length(it.blocks)]...)
+    
     ret=zeros(eltype(M),sum(it.blocks[1][1:min(B.n[1],length(it.blocks[1]))]),
                         sum(it.blocks[2][1:min(B.n[1],length(it.blocks[2]))]))
+
     k=1
-    for (K,J) in it
+    for index in it
         if k > n
             break
         end
-        ret[K,J] = M[k]
+        ret[index...] = M[k]
         k += 1
     end
     ret
+end
+
+@inline function totensoriterator(it::TrivialTensorizer{d},M::AbstractVector) where {d}
+    B=block(it,length(M))
+    return it, M, B
 end
 
 for OP in (:block,:blockstart,:blockstop)
@@ -542,10 +623,12 @@ end
 
 itransform(sp::TensorSpace,cfs::AbstractVector) = vec(itransform!(sp,coefficientmatrix(Fun(sp,cfs))))
 
-evaluate(f::AbstractVector,S::AbstractProductSpace,x) = ProductFun(totensor(S,f),S)(x...)
-evaluate(f::AbstractVector,S::AbstractProductSpace,x,y) = ProductFun(totensor(S,f),S)(x,y)
+# 2D evaluation functions
+evaluate(f::AbstractVector,S::TensorSpace2D,x) = ProductFun(totensor(S,f), S)(x...)
+evaluate(f::AbstractVector,S::TensorSpace2D,x,y) = ProductFun(totensor(S,f),S)(x,y)
 
-
+# ND evaluation functions of Trivial Spaces
+evaluate(f::AbstractVector,S::TensorSpaceND,x) = TrivialTensorFun(totensor(S, f)..., S)(x...)
 
 coefficientmatrix(f::Fun{<:AbstractProductSpace}) = totensor(space(f),f.coefficients)
 

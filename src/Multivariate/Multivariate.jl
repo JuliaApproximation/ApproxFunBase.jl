@@ -30,6 +30,7 @@ include("VectorFun.jl")
 include("TensorSpace.jl")
 include("LowRankFun.jl")
 include("ProductFun.jl")
+include("TrivialTensorFun.jl")
 
 
 arglength(f)=length(Base.uncompressed_ast(f.code.def).args[1])

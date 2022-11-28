@@ -5,6 +5,7 @@
 
 export ProductFun
 
+
 """
     ProductFun(f, space::TensorSpace; [tol=eps()])
 
@@ -28,6 +29,7 @@ julia> coefficients(P) # power only at the (1,1) Chebyshev mode
  0.0  1.0
 ```
 """
+
 struct ProductFun{S<:UnivariateSpace,V<:UnivariateSpace,SS<:AbstractProductSpace,T} <: BivariateFun{T}
     coefficients::Vector{VFun{S,T}}     # coefficients are in x
     space::SS
@@ -268,7 +270,8 @@ function coefficients(f::ProductFun,ox::Space,oy::Space)
 end
 
 (f::ProductFun)(x,y) = evaluate(f,x,y)
-(f::ProductFun)(x,y,z) = evaluate(f,x,y,z)
+# ProductFun does only support BivariateFunctions, this function below just does not work
+# (f::ProductFun)(x,y,z) = evaluate(f,x,y,z)
 
 coefficients(f::ProductFun,ox::TensorSpace) = coefficients(f,ox[1],ox[2])
 
@@ -303,7 +306,6 @@ canonicalevaluate(f::ProductFun,xx::AbstractVector,yy::AbstractVector) =
 
 
 evaluate(f::ProductFun,x,y) = canonicalevaluate(f,tocanonical(f,x,y)...)
-evaluate(f::ProductFun,x,y,z) = canonicalevaluate(f,tocanonical(f,x,y,z)...)
 
 # TensorSpace does not use map
 evaluate(f::ProductFun{S,V,SS,T},x::Number,::Colon) where {S<:UnivariateSpace,V<:UnivariateSpace,SS<:TensorSpace,T} =
@@ -311,6 +313,7 @@ evaluate(f::ProductFun{S,V,SS,T},x::Number,::Colon) where {S<:UnivariateSpace,V<
 
 evaluate(f::ProductFun{S,V,SS,T},x::Number,y::Number) where {S<:UnivariateSpace,V<:UnivariateSpace,SS<:TensorSpace,T} =
     evaluate(f,x,:)(y)
+
 
 
 evaluate(f::ProductFun,x) = evaluate(f,x...)

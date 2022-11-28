@@ -35,6 +35,8 @@ import Base.Broadcast: BroadcastStyle, Broadcasted, AbstractArrayStyle,
 
 import Statistics: mean
 
+import Combinatorics: multiexponents
+
 import LinearAlgebra: BlasInt, BlasFloat, norm, ldiv!, mul!, det, cross,
               qr, qr!, rank, isdiag, istril, istriu, issymmetric,
               Tridiagonal, diagm, diagm_container, factorize,
