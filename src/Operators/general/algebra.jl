@@ -105,16 +105,16 @@ end
 for TYP in (:RaggedMatrix,:Matrix,:BandedMatrix,
             :BlockBandedMatrix,:BandedBlockBandedMatrix)
     @eval begin
-        $TYP(P::SubOperator{T,PP,NTuple{2,BlockRange1}}) where {T,PP<:PlusOperator} =
+        $TYP(P::SubOperator{<:Any,<:PlusOperator,NTuple{2,BlockRange1}}) =
             convert_axpy!($TYP,P)   # use axpy! to copy
-        $TYP(P::SubOperator{T,PP}) where {T,PP<:PlusOperator} =
+        $TYP(P::SubOperator{<:Any,<:PlusOperator}) =
             convert_axpy!($TYP,P)   # use axpy! to copy
-        $TYP(P::SubOperator{T,PP,NTuple{2,UnitRange{Int}}}) where {T,PP<:PlusOperator} =
+        $TYP(P::SubOperator{<:Any,<:PlusOperator,NTuple{2,UnitRange{Int}}}) =
             convert_axpy!($TYP,P)   # use axpy! to copy
     end
 end
 
-function BLAS.axpy!(α,P::SubOperator{T,PP},A::AbstractMatrix) where {T,PP<:PlusOperator}
+function BLAS.axpy!(α,P::SubOperator{<:Any,<:PlusOperator},A::AbstractMatrix)
     for op in parent(P).ops
         BLAS.axpy!(α, view(op,P.indexes[1],P.indexes[2]), A)
     end
@@ -393,73 +393,84 @@ end
 _rettype(::Type{BandedMatrix{T}}) where {T} = BandedMatrix{T,Matrix{T},Base.OneTo{Int}}
 _rettype(T) = T
 for TYP in (:Matrix, :BandedMatrix, :RaggedMatrix)
-    @eval function $TYP(V::SubOperator{T,<:TimesOperator,NTuple{2,UnitRange{Int}}}) where {T}
-        P = parent(V)
+    @eval begin
+        function $TYP(V::SubOperator{T,<:TimesOperator,NTuple{2,UnitRange{Int}}}) where {T}
+            P = parent(V)
 
-        if isbanded(P)
-            if $TYP ≠ BandedMatrix
-                return $TYP(BandedMatrix(V))
+            if isbanded(P)
+                if $TYP ≠ BandedMatrix
+                    return $TYP(BandedMatrix(V))
+                end
+            elseif isbandedblockbanded(P)
+                N = block(rangespace(P), last(parentindices(V)[1]))
+                M = block(domainspace(P), last(parentindices(V)[2]))
+                B = P[Block(1):N, Block(1):M]
+                return $TYP(view(B, parentindices(V)...), _colstops(V))
             end
-        elseif isbandedblockbanded(P)
-            N = block(rangespace(P), last(parentindices(V)[1]))
-            M = block(domainspace(P), last(parentindices(V)[2]))
-            B = P[Block(1):N, Block(1):M]
-            return $TYP(view(B, parentindices(V)...), _colstops(V))
-        end
 
-        kr,jr = parentindices(V)
+            kr,jr = parentindices(V)
 
-        (isempty(kr) || isempty(jr)) && return $TYP(Zeros, V)
+            (isempty(kr) || isempty(jr)) && return $TYP(Zeros, V)
 
-        if maximum(kr) > size(P,1) || maximum(jr) > size(P,2) ||
-            minimum(kr) < 1 || minimum(jr) < 1
-            throw(BoundsError(P, (kr,jr)))
-        end
+            if maximum(kr) > size(P,1) || maximum(jr) > size(P,2) ||
+                minimum(kr) < 1 || minimum(jr) < 1
+                throw(BoundsError(P, (kr,jr)))
+            end
 
-        @assert length(P.ops) ≥ 2
-        if size(V,1)==0
-            return $TYP(Zeros, V)
-        end
-
-
-        # find optimal truncations for each operator
-        # by finding the non-zero entries
-        krlin = Matrix{Union{Int,InfiniteCardinal{0}}}(undef,length(P.ops),2)
-
-        krlin[1,1],krlin[1,2]=kr[1],kr[end]
-        for m=1:length(P.ops)-1
-            krlin[m+1,1]=rowstart(P.ops[m],krlin[m,1])
-            krlin[m+1,2]=rowstop(P.ops[m],krlin[m,2])
-        end
-        krlin[end,1]=max(krlin[end,1],colstart(P.ops[end],jr[1]))
-        krlin[end,2]=min(krlin[end,2],colstop(P.ops[end],jr[end]))
-        for m=length(P.ops)-1:-1:2
-            krlin[m,1]=max(krlin[m,1],colstart(P.ops[m],krlin[m+1,1]))
-            krlin[m,2]=min(krlin[m,2],colstop(P.ops[m],krlin[m+1,2]))
-        end
-
-
-        krl = Matrix{Int}(krlin)
-
-        # Check if any range is invalid, in which case return zero
-        for m=1:length(P.ops)
-            if krl[m,1]>krl[m,2]
+            @assert length(P.ops) ≥ 2
+            if size(V,1)==0
                 return $TYP(Zeros, V)
             end
+
+
+            # find optimal truncations for each operator
+            # by finding the non-zero entries
+            krlin = Matrix{Union{Int,InfiniteCardinal{0}}}(undef,length(P.ops),2)
+
+            krlin[1,1],krlin[1,2]=kr[1],kr[end]
+            for m=1:length(P.ops)-1
+                krlin[m+1,1]=rowstart(P.ops[m],krlin[m,1])
+                krlin[m+1,2]=rowstop(P.ops[m],krlin[m,2])
+            end
+            krlin[end,1]=max(krlin[end,1],colstart(P.ops[end],jr[1]))
+            krlin[end,2]=min(krlin[end,2],colstop(P.ops[end],jr[end]))
+            for m=length(P.ops)-1:-1:2
+                krlin[m,1]=max(krlin[m,1],colstart(P.ops[m],krlin[m+1,1]))
+                krlin[m,2]=min(krlin[m,2],colstop(P.ops[m],krlin[m+1,2]))
+            end
+
+
+            krl = Matrix{Int}(krlin)
+
+            # Check if any range is invalid, in which case return zero
+            for m=1:length(P.ops)
+                if krl[m,1]>krl[m,2]
+                    return $TYP(Zeros, V)
+                end
+            end
+
+
+
+            # The following returns a banded Matrix with all rows
+            # for large k its upper triangular
+            RT = $TYP{T}
+            RT2 = _rettype(RT)
+            BA::RT2 = strictconvert(RT, P.ops[end][krl[end,1]:krl[end,2],jr])
+            for m = (length(P.ops)-1):-1:1
+                BA = strictconvert(RT, P.ops[m][krl[m,1]:krl[m,2],krl[m+1,1]:krl[m+1,2]]) * BA
+            end
+
+            RT(BA)
         end
-
-
-
-        # The following returns a banded Matrix with all rows
-        # for large k its upper triangular
-        RT = $TYP{T}
-        RT2 = _rettype(RT)
-        BA::RT2 = strictconvert(RT, P.ops[end][krl[end,1]:krl[end,2],jr])
-        for m = (length(P.ops)-1):-1:1
-            BA = strictconvert(RT, P.ops[m][krl[m,1]:krl[m,2],krl[m+1,1]:krl[m+1,2]]) * BA
+        function $TYP(V::SubOperator{<:Any,<:TimesOperator,<:NTuple{2,AbstractRange{Int}}})
+            pinds = parentindices(V)
+            P = parent(V)
+            pinds_ur = map(x->first(x):last(x), pinds)
+            W = view(P, pinds_ur...)
+            A = $TYP(W)
+            B = A[map(x -> range(1, step=step(x), length=length(x)), pinds)...]
+            strictconvert($TYP, B)
         end
-
-        RT(BA)
     end
 end
 

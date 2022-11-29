@@ -286,6 +286,15 @@ end
             C = B * B
             @test_throws BoundsError @view C[1:2, 0:2]
             @test_throws BoundsError @view C[1:10, 1:2]
+
+            f = Fun(PointSpace(1:10))
+            M = Multiplication(f, space(f))
+            T = TimesOperator([M,M])
+            S = view(T, 1:2:7, 1:2:7)
+            B = BandedMatrix(S)
+            for I in CartesianIndices(B)
+                @test B[I] ≈ S[Tuple(I)...]
+            end
         end
     end
     @testset "conversion to a matrix" begin
