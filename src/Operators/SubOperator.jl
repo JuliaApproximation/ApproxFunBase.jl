@@ -17,10 +17,11 @@ _checkbounds(A::Operator,kr::Union{Colon,InfRanges},jr)::Bool =
 _checkbounds(A::Operator,kr,jr::Union{Colon,InfRanges})::Bool =
     !(maximum(kr) > size(A,1)  || minimum(kr) < 1 )
 
-_checkbounds(A::Operator,kr,jr)::Bool =
-    !(!isempty(kr) && (maximum(kr) > size(A,1) || minimum(kr) < 1)) ||
-    (!isempty(jr) && (maximum(jr) > size(A,2) || minimum(jr) < 1))
-
+function _checkbounds(A::Operator,kr,jr)::Bool
+    (isempty(kr) || isempty(jr)) && return true
+    (1 <= minimum(kr) <= maximum(kr) <= size(A,1)) &&
+    (1 <= minimum(jr) <= maximum(jr) <= size(A,2))
+end
 
 _checkbounds(A::Operator,K::Block,J::Block)::Bool =
      1 ≤ first(K.n[1]) ≤ length(blocklengths(rangespace(A))) &&

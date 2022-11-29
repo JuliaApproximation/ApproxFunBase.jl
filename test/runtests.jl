@@ -2,6 +2,7 @@ using ApproxFunBase, LinearAlgebra, Random, Test
 using ApproxFunBase: ∞
 using Aqua
 using SpecialFunctions
+using BandedMatrices
 
 @testset "Project quality" begin
     Aqua.test_all(ApproxFunBase, ambiguities=false)
@@ -265,6 +266,11 @@ end
                 @test size(V) == (1,)
                 @test all(==(1), V)
             end
+            A = Fun(PointSpace(1:4))
+            B = Multiplication(A, space(A))
+            C = B * B
+            @test_throws BoundsError @view C[1:2, 0:2]
+            @test_throws BoundsError @view C[1:10, 1:2]
         end
     end
     @testset "conversion to a matrix" begin
