@@ -306,5 +306,9 @@ using LinearAlgebra
         a = ApproxFunBase.ArraySpace(PointSpace(1:4), 2, 2)
         b = @inferred ApproxFunBase.ArraySpace(PointSpace(1:4), Val((2,2)))
         @test a == b
+
+        a = @inferred space(rand(2,2))
+        b = @inferred space(@SArray rand(2,2))
+        @test a == b
     end
 end

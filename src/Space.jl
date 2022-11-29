@@ -638,7 +638,9 @@ for OP in (:maxspace,:(union))
 end
 
 space(x::Number) = ConstantSpace(typeof(x))
-space(f::AbstractArray{T}) where T<:Number = ArraySpace(ConstantSpace{T}(), size(f)...)
+_maybestaticsize(A) = size(A)
+_maybestaticsize(A::SArray) = Val(size(A))
+space(f::AbstractArray{T}) where T<:Number = ArraySpace(ConstantSpace(T), _maybestaticsize(f))
 
 setdomain(A::ConstantSpace{DD,R}, d) where {DD,R} = ConstantSpace{typeof(d),R}(d)
 

@@ -7,7 +7,7 @@ using Base, BlockArrays, BandedMatrices, BlockBandedMatrices, DomainSets,
               # Arpack
 
 import StaticArrays, Calculus
-import StaticArrays: SVector, @SArray
+using StaticArrays: SVector, @SArray, SArray
 
 import DomainSets: Domain, indomain, UnionDomain, ProductDomain, Point, ∂,
               elements, DifferenceDomain, Interval, ChebyshevInterval, boundary,
