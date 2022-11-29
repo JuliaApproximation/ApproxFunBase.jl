@@ -235,7 +235,7 @@ end
             @test (@inferred Z + Z + Z) == Z
             @test (@inferred Z + Z + Z + Z) == Z
 
-            @inferred (() -> (D = Derivative(); D + D))()
+            @inferred (() -> (local D = Derivative(); D + D))()
 
             A = @inferred M + M
             @test A * f ≈ 2 * (M * f)
