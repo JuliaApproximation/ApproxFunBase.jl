@@ -18,7 +18,7 @@ _checkbounds(A::Operator,kr,jr::Union{Colon,InfRanges})::Bool =
     !(maximum(kr) > size(A,1)  || minimum(kr) < 1 )
 
 function _checkbounds(A::Operator,kr,jr)::Bool
-    (isempty(kr) || isempty(jr)) && return false
+    (isempty(kr) || isempty(jr)) && return true
     (1 <= minimum(kr) <= maximum(kr) <= size(A,1)) &&
     (1 <= minimum(jr) <= maximum(jr) <= size(A,2))
 end
