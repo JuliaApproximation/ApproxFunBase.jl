@@ -236,6 +236,21 @@ end
             @test (@inferred Z + Z + Z + Z) == Z
 
             @inferred (() -> (D = Derivative(); D + D))()
+
+            A = @inferred M + M
+            @test A * f ≈ 2 * (M * f)
+            M = Multiplication(f, space(f))
+            A = M + M
+            @test A * f ≈ 2 * (M * f)
+            B = @inferred convert(Operator{ComplexF64}, A)
+            @test eltype(B) == ComplexF64
+            @test B * f ≈ 2 * (M * f)
+
+            C = @inferred 2M
+            D = M + C
+            E = @inferred convert(Operator{ComplexF64}, D)
+            @test eltype(E) == ComplexF64
+            @test E * f ≈ 3 * (M * f)
         end
     end
 
