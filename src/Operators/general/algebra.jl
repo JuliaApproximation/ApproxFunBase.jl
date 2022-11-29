@@ -47,14 +47,20 @@ for (OP,mn) in ((:colstart,:min),(:colstop,:max),(:rowstart,:min),(:rowstop,:max
     end
 end
 
+# We assume that a Vector{Operator{T}} occurs when incompatible operators are added
+# in this case, we may retain the container
+_convertops(::Type{Operator{T}}, ops) where {T} =
+    map(x -> strictconvert(Operator{T}, x), ops)
+_convertops(::Type{Operator{T}}, ops::Vector{Operator{S}}) where {T,S} =
+    Operator{T}[strictconvert(Operator{T}, op) for op in ops]
 function convert(::Type{Operator{T}}, P::PlusOperator) where T
     if T==eltype(P)
         P
     else
         ops = P.ops
-        PlusOperator(ops isa AbstractVector{<:Operator{T}} ? ops :
-                map(x -> strictconvert(Operator{T}, x), ops),
-            P.bandwidths,P.sz)::Operator{T}
+        PlusOperator(eltype(ops) <: Operator{T} ? ops :
+                _convertops(Operator{T}, ops),
+            P.bandwidths, P.sz)::Operator{T}
     end
 end
 
@@ -272,8 +278,8 @@ function convert(::Type{Operator{T}},P::TimesOperator) where T
         P
     else
         ops = P.ops
-        TimesOperator(ops isa AbstractVector{<:Operator{T}} ? ops :
-                map(x -> strictconvert(Operator{T}, x), ops) ,
+        TimesOperator(eltype(ops) <: Operator{T} ? ops :
+                _convertops(Operator{T}, ops) ,
             bandwidths(P), size(P))
     end
 end
