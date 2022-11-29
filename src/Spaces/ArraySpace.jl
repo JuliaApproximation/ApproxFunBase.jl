@@ -20,6 +20,7 @@ const MatrixSpace{S,DD,RR,A<:AbstractMatrix{S}} = ArraySpace{S,2,DD,RR,A}
 #TODO: Think through domain/domaindominsion
 ArraySpace(sp::AbstractArray{SS,N}, f = first(sp)) where {SS<:Space,N} =
     ArraySpace{SS,N,domaintype(f),mapreduce(rangetype,promote_type,sp),typeof(sp)}(sp)
+ArraySpace(S::Space,::Val{n}) where {n} = ArraySpace(@SArray fill(S,n...))
 ArraySpace(S::Space,n::NTuple{N,Int}) where {N} = ArraySpace(fill(S,n))
 ArraySpace(S::Space,n::Integer) = ArraySpace(S,(n,))
 ArraySpace(S::Space,n,m) = ArraySpace(fill(S,(n,m)))
