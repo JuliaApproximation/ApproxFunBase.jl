@@ -387,7 +387,7 @@ end
 _rettype(::Type{BandedMatrix{T}}) where {T} = BandedMatrix{T,Matrix{T},Base.OneTo{Int}}
 _rettype(T) = T
 for TYP in (:Matrix, :BandedMatrix, :RaggedMatrix)
-    @eval function $TYP(V::SubOperator{T,TO,Tuple{UnitRange{Int},UnitRange{Int}}}) where {T,TO<:TimesOperator}
+    @eval function $TYP(V::SubOperator{T,<:TimesOperator,NTuple{2,UnitRange{Int}}}) where {T}
         P = parent(V)
 
         if isbanded(P)
@@ -407,7 +407,7 @@ for TYP in (:Matrix, :BandedMatrix, :RaggedMatrix)
 
         if maximum(kr) > size(P,1) || maximum(jr) > size(P,2) ||
             minimum(kr) < 1 || minimum(jr) < 1
-            throw(BoundsError())
+            throw(BoundsError(P, (kr,jr)))
         end
 
         @assert length(P.ops) ≥ 2
@@ -458,7 +458,7 @@ for TYP in (:Matrix, :BandedMatrix, :RaggedMatrix)
 end
 
 for TYP in (:BlockBandedMatrix, :BandedBlockBandedMatrix)
-    @eval function $TYP(V::SubOperator{T,TO,Tuple{BlockRange1,BlockRange1}}) where {T,TO<:TimesOperator}
+    @eval function $TYP(V::SubOperator{T,<:TimesOperator,Tuple{BlockRange1,BlockRange1}}) where {T}
         P = parent(V)
         KR,JR = parentindices(V)
 
@@ -469,7 +469,7 @@ for TYP in (:BlockBandedMatrix, :BandedBlockBandedMatrix)
 
         if Int(maximum(KR)) > blocksize(P,1) || Int(maximum(JR)) > blocksize(P,2) ||
             Int(minimum(KR)) < 1 || Int(minimum(JR)) < 1
-            throw(BoundsError())
+            throw(BoundsError(P, (KR,JR)))
         end
 
 
