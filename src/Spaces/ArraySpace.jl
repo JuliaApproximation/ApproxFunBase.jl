@@ -32,7 +32,7 @@ Vector(sp::VectorSpace) = convert(Vector, sp.spaces)
 Matrix(sp::MatrixSpace) = convert(Matrix, sp.spaces)
 
 
-BlockInterlacer(sp::ArraySpace) = BlockInterlacer(blocklengths.(tuple(sp.spaces...)))
+BlockInterlacer(sp::ArraySpace) = BlockInterlacer(map(blocklengths, Tuple(sp.spaces)))
 interlacer(sp::ArraySpace) = BlockInterlacer(sp)
 
 for OP in (:length,:firstindex,:lastindex,:size)
