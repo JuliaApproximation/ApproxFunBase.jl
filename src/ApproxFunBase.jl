@@ -7,6 +7,7 @@ using Base, BlockArrays, BandedMatrices, BlockBandedMatrices, DomainSets,
               # Arpack
 
 import StaticArrays, Calculus
+using StaticArrays: SVector, @SArray, SArray
 
 import DomainSets: Domain, indomain, UnionDomain, ProductDomain, Point, ∂,
               elements, DifferenceDomain, Interval, ChebyshevInterval, boundary,
@@ -87,8 +88,6 @@ import InfiniteArrays: PosInfinity, InfRanges, AbstractInfUnitRange,
 const BlockRange1 = BlockRange{1,Tuple{UnitRange{Int}}}
 
 import Base: view
-
-import StaticArrays: StaticArray, SVector
 
 import DomainSets: dimension
 
