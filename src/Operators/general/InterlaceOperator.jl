@@ -179,6 +179,10 @@ InterlaceOperator(opsin::AbstractMatrix,S...) =
     InterlaceOperator(Matrix{Operator{promote_eltypeof(opsin)}}(promotespaces(opsin)),S...)
 
 _convert_vector_or_svector(v::AbstractVector) = convert_vector(v)
+_uniontypes_svector(t) = SVector{length(t), mapfoldl(typeof, (x,y)->Union{x,y}, t)}(t)
+_convert_vector_or_svector(t::NTuple{2,Any}) = _uniontypes_svector(t)
+_convert_vector_or_svector(t::NTuple{3,Any}) = _uniontypes_svector(t)
+_convert_vector_or_svector(t::NTuple{4,Any}) = _uniontypes_svector(t)
 _convert_vector_or_svector(t::Tuple) = SVector{length(t), mapreduce(typeof, typejoin, t)}(t)
 
 function InterlaceOperator(opsin::AbstractVector{<:Operator})
