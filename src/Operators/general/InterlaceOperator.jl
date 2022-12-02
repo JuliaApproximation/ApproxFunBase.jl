@@ -56,16 +56,16 @@ function promotespaces(A::Matrix{<:Operator})
     isempty(A) && return A
     ret = similar(A) #TODO: promote might have different Array type
     for j=1:size(A,2)
-        ret[:,j] = promotedomainspace(A[:,j])
+        ret[:,j] = promotedomainspace(@view A[:,j])
     end
     for k=1:size(A,1)
-        ret[k,:] = promoterangespace(ret[k,:])
+        ret[k,:] = promoterangespace(@view ret[k,:])
     end
 
     # do a second loop as spaces might have been inferred
     # during range space
     for j=1:size(A,2)
-        ret[:,j] = promotedomainspace(ret[:,j])
+        ret[:,j] = promotedomainspace(@view ret[:,j])
     end
     ret
 end

@@ -86,10 +86,8 @@ promotedomainspace(P::Operator,sp::Space,cursp::Space) =
 
 
 
-__maybetypedmap(f, k, ops) = map(op->f(op,k), ops)
-_maybetypedmap(f, k, O, ops::AbstractVector) =
-    strictconvert(Vector{O}, __maybetypedmap(f, k, ops))
-_maybetypedmap(f, k, O, ops) = __maybetypedmap(f, k, ops)
+_maybetypedmap(f, k, O, ops::AbstractVector) = O[f(op,k) for op in ops]
+_maybetypedmap(f, k, O, ops) = map(op->f(op,k), ops)
 
 function promoterangespace(ops::VectorOrTupleOfOp{O}) where O<:Operator
     isempty(ops) && return strictconvert(Vector{Operator{eltype(O)}}, ops)
