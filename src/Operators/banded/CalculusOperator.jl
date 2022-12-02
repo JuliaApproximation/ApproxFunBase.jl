@@ -31,6 +31,7 @@ macro calculus_operator(Op)
 
         $Op(sp::ApproxFunBase.UnsetSpace,k) = $ConcOp(sp,k)
         $Op(sp::ApproxFunBase.UnsetSpace,k::Number) = $ConcOp(sp,k)
+        $Op(sp::ApproxFunBase.UnsetSpace,k::Real) = $ConcOp(sp,k)
         $Op(sp::ApproxFunBase.UnsetSpace,k::Integer) = $ConcOp(sp,k)
 
         function $DefaultOp(sp::Space,k)
