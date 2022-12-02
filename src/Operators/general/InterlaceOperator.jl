@@ -152,7 +152,7 @@ end
 function InterlaceOperator(opsin::AbstractMatrix{<:Operator},::Type{DS},::Type{RS}) where {DS<:Space,RS<:Space}
     isempty(opsin) && throw(ArgumentError("Cannot create InterlaceOperator from empty Matrix"))
     ops=promotespaces(opsin)
-    InterlaceOperator(ops,DS(components(domainspace(ops))),RS(rangespace(ops[:,1]).spaces))
+    InterlaceOperator(ops,DS(components(domainspace(ops))),RS(rangespace(@view ops[:,1]).spaces))
 end
 
 
