@@ -154,14 +154,7 @@ for TYP in (:SumSpace,:PiecewiseSpace)
     end
 end
 
-function hasconversion(a::SumSpace, b::Space)
-    for n=1:length(a.spaces)
-        if hasconversion(a.spaces[n],b) ≠ true
-            return false
-        end
-    end
-    return true
-end
+hasconversion(a::SumSpace, b::Space) = all(s -> hasconversion(s, b), a.spaces)
 
 function Conversion(a::SumSpace, b::Space)
     if !hasconversion(a, b)
@@ -230,20 +223,32 @@ end
 
 for (Op,OpWrap) in ((:Derivative,:DerivativeWrapper),(:Integral,:IntegralWrapper))
     @eval begin
-        $Op(S::PiecewiseSpace,k::Integer) =
-            $OpWrap(InterlaceOperator(Diagonal([map(s->$Op(s,k),components(S))...]),PiecewiseSpace),k)
-        function $Op(S::ArraySpace,k::Integer)
+        function $Op(S::PiecewiseSpace, k::Number)
+            assert_integer(k)
+            t = map(s->$Op(s,k),components(S))
+            D = Diagonal(convert_vector_or_svector(t))
+            O = InterlaceOperator(D, PiecewiseSpace)
+            $OpWrap(O,k)
+        end
+        function $Op(S::ArraySpace, k::Number)
+            assert_integer(k)
             ops = map(s->$Op(s,k),S)
-            $OpWrap(InterlaceOperator(Diagonal(ops),S,ArraySpace(reshape(rangespace.(ops),size(S)))),k)
+            RS = ArraySpace(reshape(map(rangespace, ops), size(S)))
+            O = InterlaceOperator(Diagonal(ops), S, RS)
+            $OpWrap(O,k)
         end
     end
 end
 
-function Derivative(S::SumSpace,k::Integer)
+function Derivative(S::SumSpace, k::Number)
+    assert_integer(k)
     # we want to map before we decompose, as the map may introduce
     # mixed bases.
     if typeof(canonicaldomain(S))==typeof(domain(S))
-        DerivativeWrapper(InterlaceOperator(Diagonal([map(s->Derivative(s,k),components(S))...]),SumSpace),k)
+        t = map(s->Derivative(s,k),components(S))
+        D = Diagonal(convert_vector_or_svector(t))
+        O = InterlaceOperator(D, SumSpace)
+        DerivativeWrapper(O,k)
     else
         DefaultDerivative(S,k)
     end
@@ -268,17 +273,24 @@ end
 
 ## Multiply components
 
-function Multiplication(f::Fun{PW},sp::PiecewiseSpace) where PW<:PiecewiseSpace
+function Multiplication(f::Fun{<:PiecewiseSpace}, sp::PiecewiseSpace)
     p=perm(domain(f).domains,domain(sp).domains)  # sort f
     vf=components(f)[p]
-
-    MultiplicationWrapper(f,InterlaceOperator(Diagonal([map(Multiplication,vf,sp.spaces)...]),PiecewiseSpace))
+    t = map(Multiplication,vf,sp.spaces)
+    D = Diagonal(convert_vector_or_svector(t))
+    O = InterlaceOperator(D, PiecewiseSpace)
+    MultiplicationWrapper(f, O)
 end
 
 Multiplication(f::Fun{SumSpace{SV1,D,R1}},sp::SumSpace{SV2,D,R2}) where {SV1,SV2,D,R1,R2} =
     MultiplicationWrapper(f,mapreduce(g->Multiplication(g,sp),+,components(f)))
-Multiplication(f::Fun,sp::SumSpace) =
-    MultiplicationWrapper(f,InterlaceOperator(Diagonal([map(s->Multiplication(f,s),components(sp))...]),SumSpace))
+
+function Multiplication(f::Fun, sp::SumSpace)
+    t = map(s->Multiplication(f,s),components(sp))
+    D = Diagonal(convert_vector_or_svector(t))
+    O = InterlaceOperator(D, SumSpace)
+    MultiplicationWrapper(f, O)
+end
 
 Multiplication(f::Fun, sp::PiecewiseSpace) = MultiplicationWrapper(f, Multiplication(Fun(f,sp),sp))
 

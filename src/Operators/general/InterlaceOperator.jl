@@ -47,7 +47,7 @@ function rangespace(A::VectorOrTupleOfOp)
         error("Cannot construct rangespace for $A as domain spaces are not compatible")
     end
     spl=map(rangespace, A)
-    ArraySpace(_convert_vector_or_svector(spl), first(spl))
+    ArraySpace(_convert_vector_promotetypes(spl), first(spl))
 end
 
 promotespaces(A::AbstractMatrix{<:Operator}) = promotespaces(Matrix(A))
@@ -178,12 +178,12 @@ InterlaceOperator(opsin::AbstractMatrix{<:Operator},::Type{DS}) where {DS<:Space
 InterlaceOperator(opsin::AbstractMatrix,S...) =
     InterlaceOperator(Matrix{Operator{promote_eltypeof(opsin)}}(promotespaces(opsin)),S...)
 
-_convert_vector_or_svector(v::AbstractVector) = convert_vector(v)
+_convert_vector_promotetypes(v::AbstractVector) = convert_vector(v)
 _uniontypes_svector(t) = SVector{length(t), mapfoldl(typeof, (x,y)->Union{x,y}, t)}(t)
-_convert_vector_or_svector(t::NTuple{2,Any}) = _uniontypes_svector(t)
-_convert_vector_or_svector(t::NTuple{3,Any}) = _uniontypes_svector(t)
-_convert_vector_or_svector(t::NTuple{4,Any}) = _uniontypes_svector(t)
-_convert_vector_or_svector(t::Tuple) = SVector{length(t), mapreduce(typeof, typejoin, t)}(t)
+_convert_vector_promotetypes(t::NTuple{2,Any}) = _uniontypes_svector(t)
+_convert_vector_promotetypes(t::NTuple{3,Any}) = _uniontypes_svector(t)
+_convert_vector_promotetypes(t::NTuple{4,Any}) = _uniontypes_svector(t)
+_convert_vector_promotetypes(t::Tuple) = SVector{length(t), mapreduce(typeof, typejoin, t)}(t)
 
 function InterlaceOperator(opsin::AbstractVector{<:Operator})
     ops = convert_vector(promotedomainspace(opsin))

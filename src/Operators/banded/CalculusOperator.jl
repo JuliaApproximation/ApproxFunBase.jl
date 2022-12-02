@@ -30,6 +30,7 @@ macro calculus_operator(Op)
         $ConcOp(sp::Space,k) = $ConcOp{typeof(sp),typeof(k),ApproxFunBase.prectype(sp)}(sp,k)
 
         $Op(sp::ApproxFunBase.UnsetSpace,k) = $ConcOp(sp,k)
+        $Op(sp::ApproxFunBase.UnsetSpace,k::Number) = $ConcOp(sp,k)
         $Op(sp::ApproxFunBase.UnsetSpace,k::Real) = $ConcOp(sp,k)
         $Op(sp::ApproxFunBase.UnsetSpace,k::Integer) = $ConcOp(sp,k)
 
@@ -183,7 +184,8 @@ end
 
 
 ## Map to canonical
-function DefaultDerivative(sp::Space,k::Integer)
+function DefaultDerivative(sp::Space, k::Number)
+    assert_integer(k)
     if typeof(canonicaldomain(sp)).name==typeof(domain(sp)).name
         # this is the normal default constructor
         csp=canonicalspace(sp)
@@ -212,7 +214,8 @@ function DefaultDerivative(sp::Space,k::Integer)
 end
 
 
-function DefaultIntegral(sp::Space,k::Integer)
+function DefaultIntegral(sp::Space, k::Number)
+    assert_integer(k)
     if typeof(canonicaldomain(sp)).name==typeof(domain(sp)).name
         # this is the normal default constructor
         csp=canonicalspace(sp)

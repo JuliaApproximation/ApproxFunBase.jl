@@ -112,12 +112,21 @@ uniontypedvec(A, B) = Union{typeof(A), typeof(B)}[A, B]
 convert_vector(v::AbstractVector) = convert(Vector, v)
 convert_vector(t::Tuple) = [t...]
 
+convert_vector_or_svector(v::AbstractVector) = convert(Vector, v)
+convert_vector_or_svector(t::Tuple) = SVector(t)
+
 promote_eltypeof(As...) = promote_eltypeof(As)
 # Avoid mapreduce for common cases, as it often suffers from poor type inference
 promote_eltypeof(As::Tuple{Any}) = eltype(As[1])
 promote_eltypeof(As::Tuple{Any,Any}) = promote_type(eltype(As[1]), eltype(As[2]))
 promote_eltypeof(As::Tuple{Any,Any,Any}) = promote_type(eltype(As[1]), eltype(As[2]), eltype(As[3]))
 promote_eltypeof(As::Union{AbstractArray, Tuple}) = mapfoldl(eltype, promote_type, As)
+
+assert_integer(::Integer) = nothing
+function assert_integer(k::Number)
+    @assert Integer(k) == k "order must be an integer"
+    return nothing
+end
 
 include("LinearAlgebra/LinearAlgebra.jl")
 include("Fun.jl")
