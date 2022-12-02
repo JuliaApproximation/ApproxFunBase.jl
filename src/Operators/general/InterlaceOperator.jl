@@ -1,7 +1,3 @@
-
-
-
-
 ##interlace block operators
 function isboundaryrow(A,k)
     for j=1:size(A,2)
@@ -19,12 +15,12 @@ domainscompatible(A::AbstractMatrix{T}) where {T<:Operator} = domainscompatible(
 
 function spacescompatible(A::AbstractMatrix{T}) where T<:Operator
     for k=1:size(A,1)
-        if !spacescompatible(map(rangespace,A[k,:]))
+        if !spacescompatible(map(rangespace, @view A[k,:]))
             return false
         end
     end
     for k=1:size(A,2)
-        if !spacescompatible(map(domainspace,A[:,k]))
+        if !spacescompatible(map(domainspace, @view A[:,k]))
             return false
         end
     end
@@ -38,7 +34,7 @@ function domainspace(A::AbstractMatrix{T}) where T<:Operator
         error("Cannot construct domainspace for $A as spaces are not compatible")
     end
 
-    spl=map(domainspace,A[1,:])
+    spl=map(domainspace, @view A[1,:])
     Space(spl)
 end
 
