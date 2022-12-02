@@ -277,7 +277,7 @@ function Multiplication(f::Fun{<:PiecewiseSpace}, sp::PiecewiseSpace)
     p=perm(domain(f).domains,domain(sp).domains)  # sort f
     vf=components(f)[p]
     t = map(Multiplication,vf,sp.spaces)
-    D = Diagonal(convert_vector_or_svector_promotetypes(t))
+    D = Diagonal(convert_vector_or_svector(t))
     O = InterlaceOperator(D, PiecewiseSpace)
     MultiplicationWrapper(f, O)
 end
@@ -287,7 +287,7 @@ Multiplication(f::Fun{SumSpace{SV1,D,R1}},sp::SumSpace{SV2,D,R2}) where {SV1,SV2
 
 function Multiplication(f::Fun, sp::SumSpace)
     t = map(s->Multiplication(f,s),components(sp))
-    D = Diagonal(convert_vector_or_svector_promotetypes(t))
+    D = Diagonal(convert_vector_or_svector(t))
     O = InterlaceOperator(D, SumSpace)
     MultiplicationWrapper(f, O)
 end
