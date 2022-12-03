@@ -1,7 +1,3 @@
-
-
-
-
 ##interlace block operators
 function isboundaryrow(A,k)
     for j=1:size(A,2)
@@ -19,12 +15,12 @@ domainscompatible(A::AbstractMatrix{T}) where {T<:Operator} = domainscompatible(
 
 function spacescompatible(A::AbstractMatrix{T}) where T<:Operator
     for k=1:size(A,1)
-        if !spacescompatible(map(rangespace,A[k,:]))
+        if !spacescompatible(map(rangespace, @view A[k,:]))
             return false
         end
     end
     for k=1:size(A,2)
-        if !spacescompatible(map(domainspace,A[:,k]))
+        if !spacescompatible(map(domainspace, @view A[:,k]))
             return false
         end
     end
@@ -38,7 +34,7 @@ function domainspace(A::AbstractMatrix{T}) where T<:Operator
         error("Cannot construct domainspace for $A as spaces are not compatible")
     end
 
-    spl=map(domainspace,A[1,:])
+    spl=map(domainspace, @view A[1,:])
     Space(spl)
 end
 
@@ -47,7 +43,7 @@ function rangespace(A::VectorOrTupleOfOp)
         error("Cannot construct rangespace for $A as domain spaces are not compatible")
     end
     spl=map(rangespace, A)
-    ArraySpace(_convert_vector_promotetypes(spl), first(spl))
+    ArraySpace(convert_vector_or_svector_promotetypes(spl), first(spl))
 end
 
 promotespaces(A::AbstractMatrix{<:Operator}) = promotespaces(Matrix(A))
@@ -56,16 +52,16 @@ function promotespaces(A::Matrix{<:Operator})
     isempty(A) && return A
     ret = similar(A) #TODO: promote might have different Array type
     for j=1:size(A,2)
-        ret[:,j] = promotedomainspace(A[:,j])
+        ret[:,j] = promotedomainspace(@view A[:,j])
     end
     for k=1:size(A,1)
-        ret[k,:] = promoterangespace(ret[k,:])
+        ret[k,:] = promoterangespace(@view ret[k,:])
     end
 
     # do a second loop as spaces might have been inferred
     # during range space
     for j=1:size(A,2)
-        ret[:,j] = promotedomainspace(ret[:,j])
+        ret[:,j] = promotedomainspace(@view ret[:,j])
     end
     ret
 end
@@ -152,7 +148,7 @@ end
 function InterlaceOperator(opsin::AbstractMatrix{<:Operator},::Type{DS},::Type{RS}) where {DS<:Space,RS<:Space}
     isempty(opsin) && throw(ArgumentError("Cannot create InterlaceOperator from empty Matrix"))
     ops=promotespaces(opsin)
-    InterlaceOperator(ops,DS(components(domainspace(ops))),RS(rangespace(ops[:,1]).spaces))
+    InterlaceOperator(ops,DS(components(domainspace(ops))),RS(rangespace(@view ops[:,1]).spaces))
 end
 
 
@@ -177,13 +173,6 @@ InterlaceOperator(opsin::AbstractMatrix{<:Operator},::Type{DS}) where {DS<:Space
 
 InterlaceOperator(opsin::AbstractMatrix,S...) =
     InterlaceOperator(Matrix{Operator{promote_eltypeof(opsin)}}(promotespaces(opsin)),S...)
-
-_convert_vector_promotetypes(v::AbstractVector) = convert_vector(v)
-_uniontypes_svector(t) = SVector{length(t), mapfoldl(typeof, (x,y)->Union{x,y}, t)}(t)
-_convert_vector_promotetypes(t::NTuple{2,Any}) = _uniontypes_svector(t)
-_convert_vector_promotetypes(t::NTuple{3,Any}) = _uniontypes_svector(t)
-_convert_vector_promotetypes(t::NTuple{4,Any}) = _uniontypes_svector(t)
-_convert_vector_promotetypes(t::Tuple) = SVector{length(t), mapreduce(typeof, typejoin, t)}(t)
 
 function InterlaceOperator(opsin::AbstractVector{<:Operator})
     ops = convert_vector(promotedomainspace(opsin))

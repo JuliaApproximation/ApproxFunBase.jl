@@ -115,6 +115,13 @@ convert_vector(t::Tuple) = [t...]
 convert_vector_or_svector(v::AbstractVector) = convert(Vector, v)
 convert_vector_or_svector(t::Tuple) = SVector(t)
 
+convert_vector_or_svector_promotetypes(v::AbstractVector) = convert_vector(v)
+_uniontypes_svector(t) = SVector{length(t), mapfoldl(typeof, (x,y)->Union{x,y}, t)}(t)
+convert_vector_or_svector_promotetypes(t::NTuple{2,Any}) = _uniontypes_svector(t)
+convert_vector_or_svector_promotetypes(t::NTuple{3,Any}) = _uniontypes_svector(t)
+convert_vector_or_svector_promotetypes(t::NTuple{4,Any}) = _uniontypes_svector(t)
+convert_vector_or_svector_promotetypes(t::Tuple) = SVector{length(t), mapreduce(typeof, typejoin, t)}(t)
+
 promote_eltypeof(As...) = promote_eltypeof(As)
 # Avoid mapreduce for common cases, as it often suffers from poor type inference
 promote_eltypeof(As::Tuple{Any}) = eltype(As[1])
