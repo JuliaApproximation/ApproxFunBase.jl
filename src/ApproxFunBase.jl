@@ -131,7 +131,7 @@ promote_eltypeof(As::Union{AbstractArray, Tuple}) = mapfoldl(eltype, promote_typ
 
 assert_integer(::Integer) = nothing
 function assert_integer(k::Number)
-    @assert Integer(k) == k "order must be an integer"
+    @assert isinteger(k) "order must be an integer"
     return nothing
 end
 
