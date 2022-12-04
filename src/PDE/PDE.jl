@@ -9,7 +9,8 @@ lap(d::Domain) = Laplacian(d)
 lap(f::Fun) = Laplacian()*f
 
 
-function Laplacian(d::BivariateSpace,k::Integer)
+function Laplacian(d::BivariateSpace, k::Number)
+    assert_integer(k)
     Dx2=Derivative(d, SVector{2}(2,0))
     Dy2=Derivative(d, SVector{2}(0,2))
     if k==1
