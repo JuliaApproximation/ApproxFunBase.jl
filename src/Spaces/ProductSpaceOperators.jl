@@ -118,12 +118,12 @@ for TYP in (:SumSpace,:PiecewiseSpace)
             # swaps sumspace order
             ConversionWrapper(PermutationOperator{T}(perm(v1,v2),S1,S2))
         elseif all(map(hasconversion,v1,v2))
-            # we can blocmk convert
+            # we can block convert
             ConversionWrapper(SpaceOperator(
                 InterlaceOperator(Diagonal([map(Conversion,v1,v2)...]),$TYP),
                 S1,S2))
         elseif all(map(hasconversion,sort1,sort2))
-            # we can blocmk convert
+            # we can block convert
             P1 = PermutationOperator{T}(perm(v1,sort1),S1,$TYP(sort1))
             P2 = PermutationOperator{T}(perm(sort2,v2),$TYP(sort2),S2)
             ConversionWrapper(TimesOperator(
@@ -137,7 +137,7 @@ for TYP in (:SumSpace,:PiecewiseSpace)
             if csort1 == csort2
                 # we can block convert after permuting
                 prm = perm(map(canonicalspace,v1),map(canonicalspace,v2))
-                ds2 = $TYP(S1.spaces[perm])
+                ds2 = $TYP(S1.spaces[prm])
                 P = PermutationOperator{T}(prm, S1, ds2)
                 ConversionWrapper(TimesOperator(Conversion(ds2,S2),P))
             elseif all(map(hasconversion,csort1,csort2))
