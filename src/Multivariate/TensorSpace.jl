@@ -312,7 +312,7 @@ conversion_rule(a::TensorSpace{<:NTuple{2,Space}}, b::TensorSpace{<:NTuple{2,Spa
 maxspace(a::TensorSpace{<:NTuple{2,Space}}, b::TensorSpace{<:NTuple{2,Space}}) =
     maxspace(a.spaces[1],b.spaces[1]) ⊗ maxspace(a.spaces[2],b.spaces[2])
 
-function spacescompatible(A::TensorSpace{<:NTuple{N}}, B::TensorSpace{<:NTuple{N}}) where {N}
+function spacescompatible(A::TensorSpace{<:NTuple{N,Space}}, B::TensorSpace{<:NTuple{N,Space}}) where {N}
     all(((a,b),) -> spacescompatible(a,b), zip(factors(A), factors(B)))
 end
 
