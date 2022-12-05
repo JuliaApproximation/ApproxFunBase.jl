@@ -384,13 +384,6 @@ convert(::Type{BandedBlockBandedMatrix}, S::SubOperator{T,KroneckerOperator{SS,V
 
 
 ## Conversion
-
-
-
-
-conversion_rule(a::TensorSpace,b::TensorSpace) = conversion_type(a.spaces[1],b.spaces[1])⊗conversion_type(a.spaces[2],b.spaces[2])
-maxspace(a::TensorSpace,b::TensorSpace) = maxspace(a.spaces[1],b.spaces[1])⊗maxspace(a.spaces[2],b.spaces[2])
-
 # TODO: we explicetly state type to avoid type inference bug in 0.4
 
 ConcreteConversion(a::BivariateSpace,b::BivariateSpace) =
