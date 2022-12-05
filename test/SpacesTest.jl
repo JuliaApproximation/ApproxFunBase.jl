@@ -259,6 +259,11 @@ using LinearAlgebra
         @test domain(@inferred TensorSpace(p)) == d
         @test components(domain(@inferred TensorSpace(p, p))) == (d, d)
         @test components(domain(@inferred TensorSpace(p, p, p))) == (d, d, d)
+
+        @testset "spacescompatible for TensorSpace" begin
+            a = PointSpace(1:4)^2
+            @test ApproxFunBase.spacescompatible(a, a)
+        end
     end
 
     @testset "ConstantSpace" begin
