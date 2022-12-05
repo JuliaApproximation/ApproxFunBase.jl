@@ -303,9 +303,17 @@ TensorSpace(sp::Tuple) =
 
 dimension(sp::TensorSpace) = mapreduce(dimension,*,sp.spaces)
 
-for OP in (:spacescompatible,:(==))
-    @eval $OP(A::TensorSpace{SV,D,R},B::TensorSpace{SV,D,R}) where {SV,D,R} =
-        all(Bool[$OP(A.spaces[k],B.spaces[k]) for k=1:length(A.spaces)])
+==(A::TensorSpace{<:NTuple{N,Space}}, B::TensorSpace{<:NTuple{N,Space}}) where {N} =
+        all(((a,b),) -> a == b, zip(factors(A), factors(B)))
+
+conversion_rule(a::TensorSpace{<:NTuple{2,Space}}, b::TensorSpace{<:NTuple{2,Space}}) =
+    conversion_type(a.spaces[1],b.spaces[1]) ⊗ conversion_type(a.spaces[2],b.spaces[2])
+
+maxspace(a::TensorSpace{<:NTuple{2,Space}}, b::TensorSpace{<:NTuple{2,Space}}) =
+    maxspace(a.spaces[1],b.spaces[1]) ⊗ maxspace(a.spaces[2],b.spaces[2])
+
+function spacescompatible(A::TensorSpace{<:NTuple{N,Space}}, B::TensorSpace{<:NTuple{N,Space}}) where {N}
+    all(((a,b),) -> spacescompatible(a,b), zip(factors(A), factors(B)))
 end
 
 canonicalspace(T::TensorSpace) = TensorSpace(map(canonicalspace,T.spaces))
@@ -544,7 +552,7 @@ end
 
 fromtensor(S::Space,M::AbstractMatrix) = fromtensor(tensorizer(S),M)
 totensor(S::Space,M::AbstractVector) = totensor(tensorizer(S),M)
-totensor(SS::TensorSpace{<:NTuple{d}},M::AbstractVector) where {d} = 
+totensor(SS::TensorSpace{<:NTuple{d}},M::AbstractVector) where {d} =
         if d>2; totensoriterator(tensorizer(SS),M) else totensor(tensorizer(SS),M) end
 
 function fromtensor(it::Tensorizer,M::AbstractMatrix)
@@ -570,7 +578,7 @@ function totensor(it::Tensorizer,M::AbstractVector)
     ds = dimensions(it)
 
     #ret=zeros(eltype(M),[sum(it.blocks[i][1:min(B.n[1],length(it.blocks[i]))]) for i=1:length(it.blocks)]...)
-    
+
     ret=zeros(eltype(M),sum(it.blocks[1][1:min(B.n[1],length(it.blocks[1]))]),
                         sum(it.blocks[2][1:min(B.n[1],length(it.blocks[2]))]))
 
