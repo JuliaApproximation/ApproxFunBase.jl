@@ -265,6 +265,8 @@ using LinearAlgebra
             @test ApproxFunBase.spacescompatible(a, a)
             b = PointSpace(1:4) ⊗ PointSpace(1:3)
             @test !ApproxFunBase.spacescompatible(a, b)
+            @test a == a
+            @test a != b
         end
     end
 

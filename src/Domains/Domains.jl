@@ -31,7 +31,7 @@ end
 function Base.setdiff(d::SegmentDomain,p::Point)
     x = Number(p)
     (x ∉ d || x ≈ leftendpoint(d) || x ≈ rightendpoint(d)) && return d
-    DifferenceDomain(d,p)
+    SetdiffDomain(d,p)
 end
 
 
@@ -41,7 +41,7 @@ end
 include("multivariate.jl")
 
 affine_setdiff(d::Domain, ptsin::UnionDomain) =
-    _affine_setdiff(d, Number.(elements(ptsin)))
+    _affine_setdiff(d, Number.(components(ptsin)))
 
 affine_setdiff(d::Domain, ptsin::WrappedDomain{<:AbstractVector}) =
     _affine_setdiff(d, ptsin.domain)

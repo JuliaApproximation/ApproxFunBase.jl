@@ -304,7 +304,7 @@ TensorSpace(sp::Tuple) =
 dimension(sp::TensorSpace) = mapreduce(dimension,*,sp.spaces)
 
 ==(A::TensorSpace{<:NTuple{N,Space}}, B::TensorSpace{<:NTuple{N,Space}}) where {N} =
-        all(((a,b),) -> a == b, zip(factors(A), factors(B)))
+        factors(A) == factors(B)
 
 conversion_rule(a::TensorSpace{<:NTuple{2,Space}}, b::TensorSpace{<:NTuple{2,Space}}) =
     conversion_type(a.spaces[1],b.spaces[1]) ⊗ conversion_type(a.spaces[2],b.spaces[2])
