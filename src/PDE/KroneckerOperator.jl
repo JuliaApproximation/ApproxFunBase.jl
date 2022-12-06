@@ -255,7 +255,7 @@ Base.transpose(S::ConstantTimesOperator) = sp.c*transpose(S.op)
 ### Calculus
 
 #TODO: general dimension
-function Derivative(S::TensorSpace{SV,DD}, order) where {SV,DD<:EuclideanDomain{2}}
+function Derivative(S::TensorSpace{<:Any,<:EuclideanDomain{2}}, order)
     @assert length(order)==2
     if order[1]==0
         Dy=Derivative(S.spaces[2],order[2])
@@ -272,7 +272,7 @@ function Derivative(S::TensorSpace{SV,DD}, order) where {SV,DD<:EuclideanDomain{
         T=promote_type(eltype(Dx),eltype(Dy))
     end
     # try to work around type inference
-    DerivativeWrapper{typeof(K),typeof(S),Vector{Int},T}(K,order)
+    DerivativeWrapper{typeof(K),typeof(S),typeof(order),T}(K,order)
 end
 
 

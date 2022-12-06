@@ -4,7 +4,6 @@ using Base, BlockArrays, BandedMatrices, BlockBandedMatrices, DomainSets,
               IntervalSets, SpecialFunctions, AbstractFFTs, FFTW,
               SpecialFunctions, DSP, DualNumbers, LinearAlgebra, SparseArrays,
               LowRankApprox, FillArrays, InfiniteArrays, InfiniteLinearAlgebra
-              # Arpack
 
 import StaticArrays, Calculus
 using StaticArrays: SVector, @SArray, SArray
@@ -12,7 +11,8 @@ using StaticArrays: SVector, @SArray, SArray
 import DomainSets: Domain, indomain, UnionDomain, ProductDomain, Point, ∂,
               elements, DifferenceDomain, Interval, ChebyshevInterval, boundary,
               rightendpoint, leftendpoint, dimension, WrappedDomain, VcatDomain,
-              component, components, ncomponents
+              component, components, ncomponents, factor, factors, nfactors,
+              canonicaldomain
 
 using AbstractFFTs: Plan
 

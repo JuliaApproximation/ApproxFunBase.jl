@@ -303,6 +303,8 @@ TensorSpace(sp::Tuple) =
 
 dimension(sp::TensorSpace) = mapreduce(dimension,*,sp.spaces)
 
+==(A::TensorSpace{<:NTuple{2,Space}}, B::TensorSpace{<:NTuple{2,Space}}) =
+    factors(A) == factors(B)
 ==(A::TensorSpace{<:NTuple{N,Space}}, B::TensorSpace{<:NTuple{N,Space}}) where {N} =
         all(((a,b),) -> a == b, zip(factors(A), factors(B)))
 

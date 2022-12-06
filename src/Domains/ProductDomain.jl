@@ -1,11 +1,3 @@
-
-nfactors(d::ProductDomain) = length(components(d))
-factors(d::ProductDomain) = components(d)
-factor(d::ProductDomain,k::Integer) = component(d,k)
-
-canonicaldomain(d::ProductDomain) = ProductDomain(map(canonicaldomain,factors(d))...)
-
-
 # product domains are their own canonical domain
 for OP in (:fromcanonical,:tocanonical)
     @eval begin
