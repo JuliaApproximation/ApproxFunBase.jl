@@ -390,10 +390,12 @@ ConcreteConversion(a::BivariateSpace,b::BivariateSpace) =
     ConcreteConversion{typeof(a),typeof(b),
                         promote_type(prectype(a),prectype(b))}(a,b)
 
-Conversion(a::TensorSpace,b::TensorSpace) = ConversionWrapper(promote_type(prectype(a),prectype(b)),
-                KroneckerOperator(Conversion(a.spaces[1],b.spaces[1]),Conversion(a.spaces[2],b.spaces[2])))
-
-
+function Conversion(a::TensorSpace2D,b::TensorSpace2D)
+    C1 = Conversion(a.spaces[1],b.spaces[1])
+    C2 = Conversion(a.spaces[2],b.spaces[2])
+    K = KroneckerOperator(C1, C2, a, b)
+    ConversionWrapper(promote_type(prectype(a),prectype(b)), K)
+end
 
 function Multiplication(f::Fun{<:TensorSpace}, S::TensorSpace)
     lr = LowRankFun(f)
