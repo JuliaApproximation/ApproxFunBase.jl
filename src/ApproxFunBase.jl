@@ -9,7 +9,7 @@ import StaticArrays, Calculus
 using StaticArrays: SVector, @SArray, SArray
 
 import DomainSets: Domain, indomain, UnionDomain, ProductDomain, Point, ∂,
-              elements, DifferenceDomain, Interval, ChebyshevInterval, boundary,
+              SetdiffDomain, Interval, ChebyshevInterval, boundary,
               rightendpoint, leftendpoint, dimension, WrappedDomain, VcatDomain,
               component, components, ncomponents, factor, factors, nfactors,
               canonicaldomain
