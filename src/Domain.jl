@@ -62,8 +62,19 @@ const IntervalOrSegmentDomain{T} = Union{AbstractInterval{T}, SegmentDomain{T}}
 canonicaldomain(d::IntervalOrSegmentDomain) = ChebyshevInterval{real(prectype(d))}()
 
 domainscompatible(a,b) = domainscompatible(domain(a),domain(b))
-domainscompatible(a::Domain,b::Domain) = isambiguous(a) || isambiguous(b) ||
-                    isapprox(a,b)
+_isapprox(a, b) = isapprox(a,b)
+function _isapprox(a::Interval, b::Interval)
+    # hacky compat for DomainSets v0.6,
+    # where comparing open and closed intevals throws an error
+    # However, we don't need to compare at all if the endpoints differ
+    # this introduces a duplicate check, but that's probably ok
+    isapprox(leftendpoint(a), leftendpoint(b), atol=100eps(prectype(a))) &&
+    isapprox(rightendpoint(a), rightendpoint(b), atol=100eps(prectype(a))) &&
+    isapprox(a, b)
+end
+function domainscompatible(a::Domain, b::Domain)
+    isambiguous(a) || isambiguous(b) || _isapprox(a, b)
+end
 
 domainscompatible(::ChebyshevInterval, ::ChebyshevInterval) = true
 
