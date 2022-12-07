@@ -352,6 +352,7 @@ isconvertible(a,b) = a == b || hasconversion(a,b)
 # uses an intermediate space b
 
 coefficients(f,sp1,sp2,sp3) = coefficients(coefficients(f,sp1,sp2),sp2,sp3)
+coefficients!(f,sp1,sp2,sp3) = coefficients!(coefficients!(f,sp1,sp2),sp2,sp3)
 
 coefficients(f::AbstractVector,::Type{T1},::Type{T2}) where {T1<:Space,T2<:Space} =
     coefficients(f,T1(),T2())
@@ -484,7 +485,7 @@ _plan_itransform!!(::Val{true}) = plan_itransform!
 _plan_itransform!!(::Val{false}) = plan_itransform
 function ICanonicalTransformPlan(space, v, ip::Val{inplace} = Val(false)) where {inplace}
     csp = checkcanonicalspace(space)
-    cfs = inplace ? coefficients(v,space,csp) : v
+    cfs = inplace ? v : coefficients(v,space,csp)
     ICanonicalTransformPlan(space, _plan_itransform!!(ip)(csp,cfs), csp, ip)
 end
 plan_itransform(sp::Space,v) = ICanonicalTransformPlan(sp, v, Val(false))
