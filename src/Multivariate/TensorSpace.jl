@@ -733,4 +733,4 @@ end
 
 
 
-Fun(::typeof(identity), S::TensorSpace) = Fun(xyz->collect(xyz),S)
+Fun(::typeof(identity), S::TensorSpace) = Fun(collect, S)
