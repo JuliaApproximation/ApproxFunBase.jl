@@ -170,21 +170,20 @@ end
 ## routines
 
 spacescompatible(AS::ArraySpace,BS::ArraySpace) =
-    size(AS) == size(BS) && all(spacescompatible.(AS.spaces,BS.spaces))
+    size(AS) == size(BS) && all(((x,y),) -> spacescompatible(x,y), zip(AS.spaces,BS.spaces))
 canonicalspace(AS::ArraySpace) = ArraySpace(canonicalspace.(AS.spaces))
 evaluate(f::AbstractVector,S::ArraySpace,x) = map(g->g(x),Fun(S,f))
 
 
 ## choosedomainspace
 
-function choosedomainspace(A::InterlaceOperator{T,1},sp::ArraySpace) where T
-    # this ensures correct dispatch for unino
-    sps = Vector{Space}(
-        filter(x->!isambiguous(x),map(choosedomainspace,A.ops,sp.spaces)))
+function choosedomainspace(A::VectorInterlaceOperator, sp::ArraySpace)
+    # this ensures correct dispatch for union
+    sps = filter(!isambiguous, map(choosedomainspace,A.ops,sp.spaces))
     if isempty(sps)
         UnsetSpace()
     else
-        union(sps...)
+        reduce(union, sps)
     end
 end
 
@@ -228,7 +227,7 @@ function Fun(M::AbstractMatrix{<:Number},sp::MatrixSpace)
     Fun(map((f,s)->Fun(f,s),M,sp.spaces))
 end
 
-Fun(M::UniformScaling,sp::MatrixSpace) = Fun(M.λ*Matrix(I,size(sp)...),sp)
+Fun(M::UniformScaling,sp::MatrixSpace) = Fun(Matrix(M,size(sp)),sp)
 
 
 
