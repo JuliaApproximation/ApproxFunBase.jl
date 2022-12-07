@@ -51,7 +51,7 @@ function next(a::TrivialTensorizer{d}, iterator_tuple) where {d}
     (block, (j, iterator, iter_state)), (i,tot) = iterator_tuple
 
 
-    @inline function check_block_finished()
+    @inline function check_block_finished(j, iterator, block)
         if iterator === nothing
             return true
         end
@@ -63,8 +63,7 @@ function next(a::TrivialTensorizer{d}, iterator_tuple) where {d}
 
     ret = reverse(block)
 
-    if check_block_finished()   # end of new block
-
+    if check_block_finished(j, iterator, block)   # end of new block
         # set up iterator for new block
         current_sum = sum(block)
         iterator = multiexponents(d, current_sum+1-d)
