@@ -56,7 +56,7 @@ convert(::Type{Operator},L::UniformScaling) = ConstantOperator(L.λ)
 
 ## Algebra
 
-for op in (:+,:-,:*)
+for op in (:+,:-)
     @eval ($op)(A::ConstantOperator,B::ConstantOperator) = ConstantOperator($op(A.λ,B.λ))
 end
 

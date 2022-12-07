@@ -329,6 +329,11 @@ end
     @testset "conversion and constantoperator" begin
         A = Conversion(PointSpace(1:4), PointSpace(1:4))
         @test convert(Number, A) == 1
+
+        C = I : PointSpace(1:4)
+        C2 = C * C
+        @test domainspace(C2) == PointSpace(1:4)
+        @test convert(Number, C2) == 1
     end
 end
 

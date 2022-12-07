@@ -394,7 +394,7 @@ for OP in (:abs,:sign,:log,:angle)
 end
 
 ## Special Multiplication
-for f in (:+, :-, :*, :exp, :sin, :cos)
+for f in (:+, :-, :exp, :sin, :cos)
     @eval $f(M::Multiplication) = Multiplication($f(M.f), domainspace(M))
 end
 
