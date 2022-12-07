@@ -566,14 +566,10 @@ end
 
 # Conversions we always assume are intentional: no need to promote
 
-*(A::ConversionWrapper{TO1},B::ConversionWrapper{TO}) where {TO1<:TimesOperator,TO<:TimesOperator} =
-    ConversionWrapper(TimesOperator(A.op,B.op))
-*(A::ConversionWrapper{TO},B::Conversion) where {TO<:TimesOperator} =
-    ConversionWrapper(TimesOperator(A.op,B))
-*(A::Conversion,B::ConversionWrapper{TO}) where {TO<:TimesOperator} =
-    ConversionWrapper(TimesOperator(A,B.op))
+_unwrap_conversion(c) = c
+_unwrap_conversion(c::ConversionWrapper{<:TimesOperator}) = c.op
 
-*(A::Conversion,B::Conversion) = ConversionWrapper(TimesOperator(A,B))
+*(A::Conversion,B::Conversion) = ConversionWrapper(TimesOperator(_unwrap_conversion(A), _unwrap_conversion(B)))
 *(A::Conversion,B::TimesOperator) = TimesOperator(A,B)
 *(A::TimesOperator,B::Conversion) = TimesOperator(A,B)
 *(A::Operator,B::Conversion) =
