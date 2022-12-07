@@ -552,7 +552,11 @@ collateops(op, ::Val{false}, As...) = As
 
 *(A::Operator,B::Operator) = A_mul_B(A, B)
 function A_mul_B(A::Operator, B::Operator; dspB = domainspace(B), rspA = rangespace(A))
-    if isconstop(A)
+    if isconstop(A) && isconstop(B)
+        An = strictconvert(Number,A)
+        Bn = strictconvert(Number,B)
+        Operator(An*Bn*I, dspB)
+    elseif isconstop(A)
         promoterangespace(strictconvert(Number,A)*B, rspA)
     elseif isconstop(B)
         promotedomainspace(strictconvert(Number,B)*A, dspB)
