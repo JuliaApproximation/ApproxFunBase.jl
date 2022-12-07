@@ -213,8 +213,8 @@ function *(A::KroneckerOperator, B::KroneckerOperator)
     rspA = rangespace(A)
     A1, A2 = A.ops
     B1, B2 = B.ops
-    AB1 = A_mul_B(A1, B1; dspB = factor(dspB,1), rspA = factor(rspA,1))
-    AB2 = A_mul_B(A2, B2; dspB = factor(dspB,2), rspA = factor(rspA,2))
+    AB1 = A1 * B1
+    AB2 = A2 * B2
     KroneckerOperator(AB1, AB2, dspB, rspA)
 end
 

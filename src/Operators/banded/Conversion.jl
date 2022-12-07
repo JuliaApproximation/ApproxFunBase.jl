@@ -99,6 +99,7 @@ function convert(::Type{Operator{T}},D::ConversionWrapper) where T
     end
 end
 
+convert(::Type{T}, C::ConversionWrapper) where {T<:Number} = strictconvert(T, C.op)
 
 
 #promotedomainspace(P::Conversion,sp::Space)=ConversionWrapper(Operator(I, sp))

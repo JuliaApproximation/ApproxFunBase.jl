@@ -326,6 +326,10 @@ end
         B = ApproxFunBase.promotespaces((M, M))
         @test all(((x,y),) -> x == y, zip(A, B))
     end
+    @testset "conversion and constantoperator" begin
+        A = Conversion(PointSpace(1:4), PointSpace(1:4))
+        @test convert(Number, A) == 1
+    end
 end
 
 @testset "RowVector" begin
