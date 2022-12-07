@@ -694,7 +694,7 @@ struct BlockInterlacer{DMS<:Tuple}
 end
 
 
-const TrivialInterlacer{d} = BlockInterlacer{NTuple{d,<:Ones}}
+const TrivialInterlacer{d} = BlockInterlacer{<:NTuple{d,Ones}}
 
 BlockInterlacer(v::AbstractVector) = BlockInterlacer(tuple(v...))
 
