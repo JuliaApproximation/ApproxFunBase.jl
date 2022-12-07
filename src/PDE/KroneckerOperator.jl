@@ -208,8 +208,15 @@ function getindex(KO::KroneckerOperator,k::Integer)
 end
 
 
-*(A::KroneckerOperator,B::KroneckerOperator) =
-    KroneckerOperator(A.ops[1]*B.ops[1],A.ops[2]*B.ops[2])
+function *(A::KroneckerOperator, B::KroneckerOperator)
+    dspB = domainspace(B)
+    rspA = rangespace(A)
+    A1, A2 = A.ops
+    B1, B2 = B.ops
+    AB1 = A_mul_B(A1, B1; dspB = factor(dspB,1), rspA = factor(rspA,1))
+    AB2 = A_mul_B(A2, B2; dspB = factor(dspB,2), rspA = factor(rspA,2))
+    KroneckerOperator(AB1, AB2, dspB, rspA)
+end
 
 
 
@@ -390,10 +397,12 @@ ConcreteConversion(a::BivariateSpace,b::BivariateSpace) =
     ConcreteConversion{typeof(a),typeof(b),
                         promote_type(prectype(a),prectype(b))}(a,b)
 
-Conversion(a::TensorSpace,b::TensorSpace) = ConversionWrapper(promote_type(prectype(a),prectype(b)),
-                KroneckerOperator(Conversion(a.spaces[1],b.spaces[1]),Conversion(a.spaces[2],b.spaces[2])))
-
-
+function Conversion(a::TensorSpace2D,b::TensorSpace2D)
+    C1 = Conversion(a.spaces[1],b.spaces[1])
+    C2 = Conversion(a.spaces[2],b.spaces[2])
+    K = KroneckerOperator(C1, C2, a, b)
+    ConversionWrapper(promote_type(prectype(a),prectype(b)), K)
+end
 
 function Multiplication(f::Fun{<:TensorSpace}, S::TensorSpace)
     lr = LowRankFun(f)

@@ -334,8 +334,9 @@ end
         op = op2 : domainspace(op1) → rangespace(op2)
         return [op], bandwidths(op)
     else
-        op1_dsp = op1:rangespace(op2)
-        return [op1_dsp, op2], bandwidthssum((op1_dsp, op2))
+        op2_dsp = op2:dsp
+        op1_dsp = op1:rangespace(op2_dsp)
+        return [op1_dsp, op2_dsp], bandwidthssum((op1_dsp, op2_dsp))
     end
 end
 
@@ -549,14 +550,15 @@ collateops(op, As::Operator...) = collateops(op, Val(anyplustimes(op, As...)), A
 collateops(op, ::Val{true}, As...) = mapreduce(x -> _extractops(x, op), vcat, As)
 collateops(op, ::Val{false}, As...) = As
 
-function *(A::Operator,B::Operator)
+*(A::Operator,B::Operator) = A_mul_B(A, B)
+function A_mul_B(A::Operator, B::Operator; dspB = domainspace(B), rspA = rangespace(A))
     if isconstop(A)
-        promoterangespace(strictconvert(Number,A)*B,rangespace(A))
+        promoterangespace(strictconvert(Number,A)*B, rspA)
     elseif isconstop(B)
-        promotedomainspace(strictconvert(Number,B)*A,domainspace(B))
+        promotedomainspace(strictconvert(Number,B)*A, dspB)
     else
         promotetimes(collateops(*, A, B),
-            domainspace(B), _timessize((A,B)), false)
+            dspB, _timessize((A,B)), false)
     end
 end
 
