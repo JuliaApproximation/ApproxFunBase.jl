@@ -23,14 +23,12 @@ ArraySpace(sp::AbstractArray{SS,N}, f = first(sp)) where {SS<:Space,N} =
 ArraySpace(S::Space,::Val{n}) where {n} = ArraySpace(@SArray fill(S,n...))
 ArraySpace(S::Space,n::NTuple{N,Int}) where {N} = ArraySpace(fill(S,n))
 ArraySpace(S::Space,n::Integer) = ArraySpace(S,(n,))
-ArraySpace(S::Space,n,m) = ArraySpace(fill(S,(n,m)))
+ArraySpace(S::Space,n,m) = ArraySpace(S,(n,m))
 ArraySpace(d::Domain,n...) = ArraySpace(Space(d),n...)
 
 Space(sp::AbstractArray{<:Space}) = ArraySpace(sp)
-convert(::Type{A}, sp::ArraySpace) where {A<:Array} = A(sp.spaces)::A
-Array(sp::ArraySpace) = convert(Array, sp.spaces)
-Vector(sp::VectorSpace) = convert(Vector, sp.spaces)
-Matrix(sp::MatrixSpace) = convert(Matrix, sp.spaces)
+convert(::Type{A}, sp::ArraySpace) where {A<:Array} = convert(A, sp.spaces)::A
+(::Type{A})(sp::ArraySpace) where {A<:Array} = A(sp.spaces)
 
 
 BlockInterlacer(sp::ArraySpace) = BlockInterlacer(map(blocklengths, Tuple(sp.spaces)))
@@ -170,21 +168,21 @@ end
 ## routines
 
 spacescompatible(AS::ArraySpace,BS::ArraySpace) =
-    size(AS) == size(BS) && all(spacescompatible.(AS.spaces,BS.spaces))
+    size(AS) == size(BS) && all(((x,y),) -> spacescompatible(x,y), zip(AS.spaces,BS.spaces))
 canonicalspace(AS::ArraySpace) = ArraySpace(canonicalspace.(AS.spaces))
 evaluate(f::AbstractVector,S::ArraySpace,x) = map(g->g(x),Fun(S,f))
 
+==(A::ArraySpace, B::ArraySpace) = size(A) == size(B) && all(((x,y),) -> x==y, zip(A.spaces, B.spaces))
 
 ## choosedomainspace
 
-function choosedomainspace(A::InterlaceOperator{T,1},sp::ArraySpace) where T
-    # this ensures correct dispatch for unino
-    sps = Vector{Space}(
-        filter(x->!isambiguous(x),map(choosedomainspace,A.ops,sp.spaces)))
+function choosedomainspace(A::VectorInterlaceOperator, sp::ArraySpace)
+    # this ensures correct dispatch for union
+    sps = filter(!isambiguous, map(choosedomainspace,A.ops,sp.spaces))
     if isempty(sps)
         UnsetSpace()
     else
-        union(sps...)
+        reduce(union, sps)
     end
 end
 
@@ -223,12 +221,12 @@ Fun(f::AbstractMatrix{FF},d::MatrixSpace) where {FF<:Fun} = Fun(d,coefficients(f
 # columns are coefficients
 function Fun(M::AbstractMatrix{<:Number},sp::MatrixSpace)
     if size(M) ≠ size(sp)
-        throw(DimensionMismatch())
+        throw(DimensionMismatch("size of array $(size(M)) doesn't match that of the space $(size(sp))"))
     end
-    Fun(map((f,s)->Fun(f,s),M,sp.spaces))
+    Fun(map(Fun, M, sp.spaces))
 end
 
-Fun(M::UniformScaling,sp::MatrixSpace) = Fun(M.λ*Matrix(I,size(sp)...),sp)
+Fun(M::UniformScaling,sp::MatrixSpace) = Fun(Matrix(M,size(sp)),sp)
 
 
 

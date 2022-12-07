@@ -312,6 +312,11 @@ using LinearAlgebra
         a = ApproxFunBase.ArraySpace(PointSpace(1:4), 2)
         b = @inferred ApproxFunBase.ArraySpace(PointSpace(1:4), Val(2))
         @test a == b
+        c = ApproxFunBase.ArraySpace(PointSpace(1:4), 3)
+        @test a != c
+        d = ApproxFunBase.ArraySpace(PointSpace(2:5), 2)
+        @test a != d
+
         a = ApproxFunBase.ArraySpace(PointSpace(1:4), 2, 2)
         b = @inferred ApproxFunBase.ArraySpace(PointSpace(1:4), Val((2,2)))
         @test a == b
