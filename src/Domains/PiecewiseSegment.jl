@@ -12,7 +12,7 @@ function PiecewiseSegment(pcsin::AbstractVector{IT}) where IT<:IntervalOrSegment
     successful=true
     while successful
         successful=false
-        for k in axes(pcsin, 1)
+        for k in axes(pcs, 1)
             if leftendpoint(pcs[k]) == last(p)
                 push!(p,rightendpoint(pcs[k]))
                 deleteat!(pcs,k)
