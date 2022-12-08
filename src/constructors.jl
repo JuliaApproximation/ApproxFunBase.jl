@@ -183,6 +183,9 @@ function Fun(::typeof(identity), d::Domain)
     end
 end
 
+Fun(::typeof(identity), d::IntervalOrSegment{<:Number}) =
+    Fun(Space(d), [mean(d), complexlength(d)/2])
+
 Fun(::typeof(identity), S::Space) = Fun(identity,domain(S))
 
 
