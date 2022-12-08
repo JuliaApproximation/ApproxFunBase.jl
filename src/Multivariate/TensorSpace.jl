@@ -38,7 +38,7 @@ function start(a::TrivialTensorizer{d}) where {d}
         return invoke(start, Tuple{Tensorizer2D}, a)
     else
         # ((block_dim_1, block_dim_2,...), (itaration_number, iterator, iterator_state)), (itemssofar, length)
-        return (ones(Int, d),(0, nothing, nothing)), (0,length(a))
+        return (SizedVector{d}(ones(Int, d)),(0, nothing, nothing)), (0,length(a))
     end
 end
 
