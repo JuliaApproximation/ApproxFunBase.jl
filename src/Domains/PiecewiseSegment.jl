@@ -4,7 +4,7 @@ struct PiecewiseSegment{T,V<:AbstractVector{T}} <: Domain{T}
     points::V
 end
 PiecewiseSegment{T}(d::V) where {T,V<:AbstractVector{T}} = PiecewiseSegment{T,V}(d)
-PiecewiseSegment(d...) = PiecewiseSegment(SVector{length(d), promote_eltypeof(d)}(d))
+PiecewiseSegment(d...) = PiecewiseSegment(SVector{length(d), mapfoldl(typeof, promote_type, d)}(d))
 
 function PiecewiseSegment(pcsin::AbstractVector{IT}) where IT<:IntervalOrSegment
     pcs=collect(pcsin)
@@ -12,7 +12,7 @@ function PiecewiseSegment(pcsin::AbstractVector{IT}) where IT<:IntervalOrSegment
     successful=true
     while successful
         successful=false
-        for k=1:length(pcs)
+        for k in axes(pcs, 1)
             if leftendpoint(pcs[k]) == last(p)
                 push!(p,rightendpoint(pcs[k]))
                 deleteat!(pcs,k)
