@@ -248,6 +248,13 @@ for TYP in (:Derivative,:Integral,:Laplacian)
     end
 end
 
+# the default domain space is higher to avoid negative ultraspherical spaces
+function Integral(d::IntervalOrSegment,n::Integer)
+    ds = Space(d)
+    rs = rangespace(Derivative(ds))
+    Integral(rs, n)
+end
+
 ==(A::Derivative, B::Derivative) = A.order == B.order && domainspace(A) == domainspace(B)
 
 
