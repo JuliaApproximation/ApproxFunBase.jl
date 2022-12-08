@@ -38,7 +38,8 @@ function start(a::TrivialTensorizer{d}) where {d}
         return invoke(start, Tuple{Tensorizer2D}, a)
     else
         # ((block_dim_1, block_dim_2,...), (itaration_number, iterator, iterator_state)), (itemssofar, length)
-        return (ones(Int, d),(0, nothing, nothing)), (0,length(a))
+        block = SVector{d}(Ones{Int}(d))
+        return (block, (0, nothing, nothing)), (0,length(a))
     end
 end
 
@@ -72,8 +73,9 @@ function next(a::TrivialTensorizer{d}, iterator_tuple) where {d}
     end
 
     # increase block, or initialize new block
-    res, iter_state = iterate(iterator, iter_state)
-    block .= res.+1
+    _res, iter_state = iterate(iterator, iter_state)
+    res = SVector{d}(_res)
+    block = res.+1
     j = j+1
 
     ret, ((block, (j, iterator, iter_state)), (i,tot))
