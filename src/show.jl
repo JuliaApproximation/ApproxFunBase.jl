@@ -10,14 +10,10 @@ function show(io::IO, f::Fun)
     print(io,")")
 end
 
-function show(io::IO,f::Fun{<:ConstantSpace})
-    print(io, only(coefficients(f)))
+function show(io::IO,f::Fun{<:Union{ConstantSpace, ArraySpace{<:ConstantSpace}}})
     d = domain(f)
-    if d isa AnyDomain
-        print(io, " anywhere")
-    else
-        print(io, " on ", d)
-    end
+    print(io, f(d isa AnyDomain ? 0.0 : leftendpoint(d)))
+    print(io, d isa AnyDomain ? " anywhere" : " on " * string(d))
 end
 
 ## MultivariateFun
