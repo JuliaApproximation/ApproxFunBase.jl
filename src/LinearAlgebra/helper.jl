@@ -23,7 +23,7 @@ normalize!(n,w::Union{Vector{T},Ptr{T}}) where {T<:Union{ComplexF64,ComplexF32}}
 
 
 flipsign(x,y) = Base.flipsign(x,y)
-flipsign(x,y::Complex) = y==0 ? x : x*sign(y)
+flipsign(x,y::Complex) = x * (z = sign(y); iszero(y) ? one(z) : z)
 
 # Used for spaces not defined yet
 struct UnsetNumber <: Number  end
