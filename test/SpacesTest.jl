@@ -263,6 +263,8 @@ using LinearAlgebra
         @testset "spacescompatible for TensorSpace" begin
             a = PointSpace(1:4)^2
             @test ApproxFunBase.spacescompatible(a, a)
+            @test ApproxFunBase.spacescompatible((a, a))
+            @test ApproxFunBase.spacescompatible((a, a), (a, a))
             b = PointSpace(1:4) ⊗ PointSpace(1:3)
             @test !ApproxFunBase.spacescompatible(a, b)
             @test a == a
