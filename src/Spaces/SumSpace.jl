@@ -172,14 +172,9 @@ function spacescompatible(A::Tuple,B::Tuple)
         return false
     end
     #assumes domain doesn't impact sorting
-    asort=sort(collect(A));bsort=sort(collect(B))
-    for k=1:length(asort)
-        if !spacescompatible(asort[k],bsort[k])
-            return false
-        end
-    end
-
-    return true
+    asort=sort(SVector(A))
+    bsort=sort(SVector(B))
+    all(((x,y),) -> spacescompatible(x,y), zip(asort, bsort))
 end
 
 

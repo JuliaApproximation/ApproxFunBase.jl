@@ -28,6 +28,13 @@
 			@test length(v) == 2
 			@test all(==(repr(S1)), v)
 		end
+		@testset "PiecewiseSpace" begin
+			p = PointSpace(1:4)
+			ps = PiecewiseSpace(p)
+			rpr = repr(ps)
+			@test contains(rpr, "PiecewiseSpace")
+			@test contains(rpr, repr(p))
+		end
 	end
 	@testset "Fun" begin
 		f = Fun(PointSpace(1:3), [1,2,3])
