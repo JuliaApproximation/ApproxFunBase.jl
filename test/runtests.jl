@@ -82,6 +82,8 @@ end
         @test all(==(D), v)
     end
 
+    @test @inferred(ApproxFunBase.flipsign(2, 0im)) == 2
+
     # TODO: Tensorizer tests
 end
 
