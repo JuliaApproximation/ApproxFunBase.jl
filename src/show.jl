@@ -157,10 +157,16 @@ end
 
 function show(io::IO,ss::PiecewiseSpace)
     s = components(ss)
+    if length(s) == 1
+        print(io, "PiecewiseSpace(")
+    end
     show(io,s[1])
     for sp in s[2:end]
         print(io,"⨄")
         show(io,sp)
+    end
+    if length(s) == 1
+        print(io, ")")
     end
 end
 
