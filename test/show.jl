@@ -50,7 +50,7 @@
 		f = Fun(ConstantSpace(), [2])
 		@test contains(repr(f), repr(f(0)))
 
-		f = Fun(x->[3], ConstantSpace(0..1))
+		f = Fun(ApproxFunBase.ArraySpace([ConstantSpace(0..1)]), [3])
 		@test contains(repr(f), repr(f(0)))
 	end
 	@testset "Operator" begin
