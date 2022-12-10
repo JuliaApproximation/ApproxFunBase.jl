@@ -1,5 +1,7 @@
 module ApproxFunBaseTest
 
+Base.Experimental.@optlevel 1
+
 using ApproxFunBase
 using ApproxFunBase: plan_transform, plan_itransform, israggedbelow, RaggedMatrix, isbandedbelow, isbanded,
     blockstart, blockstop, resizedata!
@@ -142,11 +144,18 @@ function backend_testinfoperator(A)
         @test isa(A[k,j],eltype(A))
     end
 
-    @test A[1:5,1:5][2:5,1:5] ≈ A[2:5,1:5]
-    @test A[1:5,2:5] ≈ A[1:5,1:5][:,2:end]
-    @test A[1:10,1:10][5:10,5:10] ≈ [A[k,j] for k=5:10,j=5:10]
-    @test A[1:10,1:10][5:10,5:10] ≈ A[5:10,5:10]
-    @test A[1:30,1:30][20:30,20:30] ≈ A[20:30,20:30]
+    A10 = A[1:10,1:10]
+    A10m = Matrix(A10)
+    A10_510 = A10m[5:10,5:10]
+    A30 = A[1:30,1:30]
+    A30_2030 = A30[20:30,20:30]
+    A30_2030m = Matrix(A30_2030)
+
+    @test Matrix(B[2:5,1:5]) ≈ Matrix(A[2:5,1:5])
+    @test Matrix(A[1:5,2:5]) ≈ Matrix(B[:,2:end])
+    @test A10_510 ≈ [A[k,j] for k=5:10,j=5:10]
+    @test A10_510 ≈ Matrix(A[5:10,5:10])
+    @test A30_2030m ≈ Matrix(A[20:30,20:30])
 
     @test Matrix(A[Block(1):Block(3),Block(1):Block(3)]) ≈ Matrix(A[blockstart(rangespace(A),1):blockstop(rangespace(A),3),blockstart(domainspace(A),1):blockstop(domainspace(A),3)])
     @test Matrix(A[Block(3):Block(4),Block(2):Block(4)]) ≈ Matrix(A[blockstart(rangespace(A),3):blockstop(rangespace(A),4),blockstart(domainspace(A),2):blockstop(domainspace(A),4)])
@@ -157,29 +166,39 @@ function backend_testinfoperator(A)
     end
 
     co=cache(A)
-    @test co[1:10,1:10] ≈ A[1:10,1:10]
-    @test co[1:10,1:10] ≈ A[1:10,1:10]
-    @test co[20:30,20:30] ≈ A[1:30,1:30][20:30,20:30]
+    @test Matrix(co[1:10,1:10]) ≈ A10m
+    @test Matrix(co[20:30,20:30]) ≈ A30_2030m
 
     let C=cache(A)
         resizedata!(C,5,35)
         resizedata!(C,10,35)
-        @test C.data[1:10,1:C.datasize[2]] ≈ A[1:10,1:C.datasize[2]]
+        @test Matrix(C.data[1:10,1:C.datasize[2]]) ≈ Matrix(A[1:10,1:C.datasize[2]])
     end
 end
 
 # Check that the tests pass after conversion as well
 function testinfoperator(A::Operator{T}) where T<:Real
     backend_testinfoperator(A)
-    backend_testinfoperator(strictconvert(Operator{Float64}, A))
-    backend_testinfoperator(strictconvert(Operator{Float32}, A))
-    backend_testinfoperator(strictconvert(Operator{ComplexF64}, A))
+    if T != Float64
+        B = strictconvert(Operator{Float64}, A)
+        backend_testinfoperator(B)
+    end
+    if T != Float32
+        B = strictconvert(Operator{Float32}, A)
+        backend_testinfoperator(B)
+    end
+    B = strictconvert(Operator{ComplexF64}, A)
+    backend_testinfoperator(B)
 end
 
 function testinfoperator(A::Operator{T}) where T<:Complex
     backend_testinfoperator(A)
-    backend_testinfoperator(strictconvert(Operator{ComplexF32}, A))
-    backend_testinfoperator(strictconvert(Operator{ComplexF64}, A))
+    if T != ComplexF32
+        backend_testinfoperator(strictconvert(Operator{ComplexF32}, A))
+    end
+    if T != ComplexF64
+        backend_testinfoperator(strictconvert(Operator{ComplexF64}, A))
+    end
 end
 
 function testraggedbelowoperator(A)
