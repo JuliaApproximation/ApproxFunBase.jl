@@ -191,12 +191,6 @@ for FUNC in (:conversion_rule,:maxspace_rule,:union_rule)
     @eval $FUNC(a, b) = _conversion_rule(a, b)
 end
 
-# This does any(x -> x isa T, (a,b)), but is type-inferred
-anyoftype(::Type{T}, ::T, ::T) where {T} = true
-anyoftype(::Type{T}, ::T, ::Any) where {T} = true
-anyoftype(::Type{T}, ::Any, ::T) where {T} = true
-anyoftype(T, a, b) = false
-
 pick_maybe_nonambiguous_space(a::Space, b...) = a
 pick_maybe_nonambiguous_space(a::AmbiguousSpace, b) = pick_maybe_nonambiguous_space(b)
 pick_maybe_nonambiguous_space(a::NoSpace, b...) = a
@@ -210,7 +204,7 @@ Override `ApproxFun.conversion_rule` when adding new `Conversion` operators.
 See also [`maxspace`](@ref)
 """
 function conversion_type(a, b)
-    if anyoftype(UnsetSpace, a, b)
+    if a isa UnsetSpace || b isa UnsetSpace
         return pick_maybe_nonambiguous_space(a, b)
     end
     if spacescompatible(a,b)
@@ -237,7 +231,7 @@ See also [`conversion_type`](@ref)
 """
 maxspace(a,b) = NoSpace()  # TODO: this fixes weird bug with Nothing
 function maxspace(a::Space, b::Space)
-    if anyoftype(UnsetSpace, a, b)
+    if a isa UnsetSpace || b isa UnsetSpace
         return pick_maybe_nonambiguous_space(a, b)
     end
 
@@ -298,7 +292,7 @@ end
 union(a::AmbiguousSpace, b::AmbiguousSpace) = b
 
 function union_by_union_rule(@nospecialize(a::Space), @nospecialize(b::Space))
-    if anyoftype(AmbiguousSpace, a, b)
+    if a isa AmbiguousSpace || b isa AmbiguousSpace
         return pick_maybe_nonambiguous_space(a, b)
     end
     if spacescompatible(a,b)
