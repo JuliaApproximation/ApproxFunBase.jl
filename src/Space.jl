@@ -191,16 +191,9 @@ for FUNC in (:conversion_rule,:maxspace_rule,:union_rule)
     @eval $FUNC(a, b) = _conversion_rule(a, b)
 end
 
-
-
-for FUNC in (:conversion_type,:maxspace)
-    @eval begin
-        $FUNC(a::UnsetSpace,b::UnsetSpace) = a
-        $FUNC(a::UnsetSpace,b::Space) = b
-        $FUNC(a::Space,b::UnsetSpace) = a
-    end
-end
-
+pick_maybe_nonambiguous_space(a::Space, b...) = a
+pick_maybe_nonambiguous_space(a::AmbiguousSpace, b) = pick_maybe_nonambiguous_space(b)
+pick_maybe_nonambiguous_space(a::NoSpace, b...) = a
 
 """
     conversion_type(a::Space, b::Space)
@@ -210,7 +203,10 @@ Override `ApproxFun.conversion_rule` when adding new `Conversion` operators.
 
 See also [`maxspace`](@ref)
 """
-function conversion_type(a,b)
+function conversion_type(a, b)
+    if a isa UnsetSpace || b isa UnsetSpace
+        return pick_maybe_nonambiguous_space(a, b)
+    end
     if spacescompatible(a,b)
         a
     elseif !domainscompatible(a,b)
@@ -235,6 +231,10 @@ See also [`conversion_type`](@ref)
 """
 maxspace(a,b) = NoSpace()  # TODO: this fixes weird bug with Nothing
 function maxspace(a::Space, b::Space)
+    if a isa UnsetSpace || b isa UnsetSpace
+        return pick_maybe_nonambiguous_space(a, b)
+    end
+
     if spacescompatible(a,b)
         return a
     elseif !domainscompatible(a,b)
@@ -290,11 +290,11 @@ end
 # this is used primarily for addition of two funs
 # that may be incompatible
 union(a::AmbiguousSpace, b::AmbiguousSpace) = b
-union_by_union_rule(a::AmbiguousSpace, b::Space) = b
-union_by_union_rule(a::Space, b::AmbiguousSpace) = a
-
 
 function union_by_union_rule(@nospecialize(a::Space), @nospecialize(b::Space))
+    if a isa AmbiguousSpace || b isa AmbiguousSpace
+        return pick_maybe_nonambiguous_space(a, b)
+    end
     if spacescompatible(a,b)
         if isambiguous(domain(a))
             return b
@@ -319,7 +319,7 @@ function union(@nospecialize(a::Space), @nospecialize(b::Space))
         crc = union_by_union_rule(cspa,cspb)
         crc isa NoSpace || return crc
     end
-    # TODO: Uncomment when Julia bug is fixed
+
     cr2=maxspace(a,b)  #Max space since we can convert both to it
     cr2 isa NoSpace || return cr2
 
@@ -591,12 +591,9 @@ domain(S::ZeroSpace) = S.domain
 dimension(::ZeroSpace) = 0
 
 spacescompatible(::ZeroSpace,::ZeroSpace) = true
-for FUNC in (:conversion_type,:maxspace)
-    @eval begin
-        $FUNC(::ZeroSpace,::UnsetSpace) = UnsetSpace()
-        $FUNC(::UnsetSpace,::ZeroSpace) = UnsetSpace()
-    end
-end
+
+pick_maybe_nonambiguous_space(a::UnsetSpace, b::ZeroSpace) = a
+pick_maybe_nonambiguous_space(a::ZeroSpace, b::UnsetSpace) = b
 
 
 """
