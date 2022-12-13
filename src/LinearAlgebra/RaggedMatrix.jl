@@ -226,7 +226,8 @@ function unsafe_mul!(Y::RaggedMatrix,A::RaggedMatrix,B::RaggedMatrix)
     fill!(Y.data,0)
 
     for j=1:size(B,2),k=1:colstop(B,j)
-        BLAS.axpy!(B[k,j],view(A,1:colstop(A,k),k),view(Y.data,Y.cols[j] .- 1 .+ (1:colstop(A,k))))
+        LinearAlgebra.axpy!(B[k,j], view(A,1:colstop(A,k),k),
+            view(Y.data,Y.cols[j] .- 1 .+ (1:colstop(A,k))))
     end
 
     Y
