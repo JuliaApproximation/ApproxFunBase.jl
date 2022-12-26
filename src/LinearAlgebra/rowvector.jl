@@ -55,7 +55,6 @@ parent(rowvec::RowVector) = rowvec.vec
 @inline length(rowvec::RowVector) =  length(rowvec.vec)
 @inline size(rowvec::RowVector) = (1, length(rowvec.vec))
 @inline axes(rowvec::RowVector) = (Base.OneTo(1), axes(rowvec.vec, 1))
-IndexStyle(::RowVector) = IndexLinear()
 IndexStyle(::Type{<:RowVector}) = IndexLinear()
 
 @propagate_inbounds getindex(rowvec::RowVector, i::Int) = rowvec.vec[i]
@@ -75,11 +74,8 @@ to_vec(x) = x
 
 # Horizontal concatenation #
 
-@inline hcat(X::RowVector...) = RowVector(mapreduce(parent, vcat, X))
 @inline hcat(X::Union{RowVector,Number}...) = RowVector(mapreduce(to_vec, vcat, X))
 
-@inline typed_hcat(::Type{T}, X::RowVector...) where {T} =
-    RowVector(Base.typed_vcat(T, to_vecs(X...)...))
 @inline typed_hcat(::Type{T}, X::Union{RowVector,Number}...) where {T} =
     RowVector(Base.typed_vcat(T, to_vecs(X...)...))
 
