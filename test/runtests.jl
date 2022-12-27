@@ -431,6 +431,13 @@ end
         λ2 = eigvals(B)
         @test λ1 ≈ λ2
     end
+
+    @testset "complexroots" begin
+        cfs = [1.0, 1.0]
+        r = complexroots(cfs)
+        @test r == [-1.0]
+        @test complexroots([0.0], cfs) == [-1.0]
+    end
 end
 
 @testset "Special functions" begin

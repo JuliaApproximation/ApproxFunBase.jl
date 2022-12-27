@@ -587,7 +587,29 @@ end
 extrema(f::Fun{PiecewiseSpace{<:Any,<:UnionDomain,<:Real},<:Real}) =
     mapreduce(extrema,(x,y)->extrema([x...;y...]),components(f))
 
+function companion_matrix(c::Vector{T}) where T
+    n=length(c)-1
+
+    A=zeros(T,n,n)
+
+    for k=1:n
+        A[k,end]=-c[k]/c[end]
+    end
+
+    for k=2:n
+        A[k,k-1]=one(T)
+    end
+
+    return A
+end
+
 function complexroots end
+
+complexroots(cfs::Vector{<:Union{Float64,ComplexF64}}) =
+    hesseneigvals(companion_matrix(chop(cfs,10eps())))
+
+complexroots(neg::Vector, pos::Vector) =
+    complexroots([reverse(chop(neg,10eps()), dims=1); pos])
 
 function roots(f::Fun{<:PiecewiseSpace})
     rts=mapreduce(roots,vcat,components(f))
