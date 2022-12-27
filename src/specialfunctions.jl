@@ -627,7 +627,58 @@ end
 
 roots(f::Fun{<:PointSpace}) = space(f).points[values(f) .== 0]
 
+## Root finding for Chebyshev expansions
+#
+#  Contains code that is based in part on Chebfun v5's chebfun/@chebteck/roots.m,
+# which is distributed with the following license:
 
+# Copyright (c) 2015, The Chancellor, Masters and Scholars of the University
+# of Oxford, and the Chebfun Developers. All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of the University of Oxford nor the names of its
+#       contributors may be used to endorse or promote products derived from
+#       this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+#function roots(f::Fun)
+#    irts=map(real,filter!(x->abs(x)<=1.+10eps(),filter!#(isreal,complexroots(f.coefficients))))
+#
+#    map!(x->x>1. ? 1. : x,irts)
+#    map!(x->x<-1. ? -1. : x,irts)
+#
+#    if length(irts)==0
+#        Float64[]
+#    else
+#        fromcanonical(f,irts)
+#    end
+#end
+
+function roots(f::Fun)
+    f2=Fun(f,domain(f)) # default is to convert to Chebyshev/Fourier
+    if space(f2)==space(f)
+        error("roots not implemented for ", typeof(f))
+    else
+        roots(f2)
+    end
+end
 
 #
 # These formulæ, appearing in Eq. (2.5) of:
