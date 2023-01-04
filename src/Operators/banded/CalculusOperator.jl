@@ -184,7 +184,7 @@ end
 
 
 ## Map to canonical
-function DefaultDerivative(sp::Space, k::Number)
+@inline function _DefaultDerivative(sp::Space, k::Number)
     assert_integer(k)
     if typeof(canonicaldomain(sp)).name==typeof(domain(sp)).name
         # this is the normal default constructor
@@ -213,6 +213,12 @@ function DefaultDerivative(sp::Space, k::Number)
     end
 end
 
+@static if VERSION >= v"1.8"
+    Base.@constprop :aggressive DefaultDerivative(sp::Space, k::Number) =
+        _DefaultDerivative(sp, k)
+else
+    DefaultDerivative(sp::Space, k::Number) = _DefaultDerivative(sp, k)
+end
 
 function DefaultIntegral(sp::Space, k::Number)
     assert_integer(k)
