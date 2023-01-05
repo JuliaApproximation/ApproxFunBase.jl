@@ -548,7 +548,7 @@ end
 for OP in (:(adjoint), :(transpose))
     @eval $OP(A::TimesOperator) = TimesOperator(
         strictconvert(Vector, reverse!(map($OP, A.ops))),
-        reverse(bandwidths(A)), reverse(size(A)))
+        reverse(bandwidths(A)), reverse(size(A)), reverse(blockbandwidths(A)))
 end
 
 const PlusOrTimesOp = Union{PlusOperator,TimesOperator}
