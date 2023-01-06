@@ -314,14 +314,18 @@ maxspace(a::TensorSpace{<:NTuple{2,Space}}, b::TensorSpace{<:NTuple{2,Space}}) =
     maxspace(a.spaces[1],b.spaces[1]) ⊗ maxspace(a.spaces[2],b.spaces[2])
 
 function spacescompatible(A::TensorSpace{<:NTuple{N,Space}}, B::TensorSpace{<:NTuple{N,Space}}) where {N}
-    all(((a,b),) -> spacescompatible(a,b), zip(factors(A), factors(B)))
+    _spacescompatible(factors(A), factors(B))
+end
+_spacescompatible(::Tuple{}, ::Tuple{}) = true
+function _spacescompatible(A::Tuple{Space, Vararg{Space}}, B::Tuple{Space, Vararg{Space}})
+    spacescompatible(A[1], B[1]) && _spacescompatible(Base.tail(A), Base.tail(B))
 end
 
 canonicalspace(T::TensorSpace) = TensorSpace(map(canonicalspace,T.spaces))
 
 
 TensorSpace(A::SVector{N,<:Space}) where N = TensorSpace(tuple(A...))
-TensorSpace(A...) = TensorSpace(tuple(A...))
+TensorSpace(A...) = TensorSpace(A)
 TensorSpace(A::ProductDomain) = TensorSpace(tuple(map(Space,components(A))...))
 ⊗(A::TensorSpace,B::TensorSpace) = TensorSpace(A.spaces...,B.spaces...)
 ⊗(A::TensorSpace,B::Space) = TensorSpace(A.spaces...,B)
@@ -333,7 +337,7 @@ Space(sp::ProductDomain) = TensorSpace(sp)
 
 setdomain(sp::TensorSpace, d::ProductDomain) = TensorSpace(setdomain.(factors(sp), factors(d)))
 
-*(A::Space, B::Space) = A⊗B
+*(A::Space, B::Space) = A ⊗ B
 function ^(A::Space, p::Integer)
     p >= 1 || throw(ArgumentError("exponent must be >= 1, received $p"))
     # Enumerate common cases to help with constant propagation
