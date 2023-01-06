@@ -11,11 +11,13 @@ struct PlusOperator{T,BW,SZ,O<:Operator{T},BBW,SBBW} <: Operator{T}
     blockbandwidths::BBW
     subblockbandwidths::SBBW
     isbandedblockbanded::Bool
+    israggedbelow::Bool
 
     function PlusOperator{T,BW,SZ,O,BBW,SBBW}(opsin::Vector{O}, bw::BW,
-        sz::SZ, bbw::BBW, sbbw::SBBW, ibbb::Bool) where {T,O<:Operator{T},BW,SZ,BBW,SBBW}
+            sz::SZ, bbw::BBW, sbbw::SBBW,
+            ibbb::Bool, irb::Bool) where {T,O<:Operator{T},BW,SZ,BBW,SBBW}
         all(x -> size(x) == sz, opsin) || throw("sizes of operators are incompatible")
-        new{T,BW,SZ,O,BBW,SBBW}(opsin, bw, sz, bbw,sbbw, ibbb)
+        new{T,BW,SZ,O,BBW,SBBW}(opsin, bw, sz, bbw,sbbw, ibbb, irb)
     end
 end
 
@@ -30,10 +32,11 @@ function PlusOperator{ET}(ops::Vector{O},
     bbw::Tuple{Any,Any}=bandwidthsmax(ops, blockbandwidths),
     sbbw::Tuple{Any,Any}=bandwidthsmax(ops, subblockbandwidths),
     ibbb::Bool=all(isbandedblockbanded, ops),
+    irb::Bool=all(israggedbelow, ops),
     ) where {ET,O<:Operator{ET}}
 
     PlusOperator{ET,typeof(bw),typeof(sz),O,typeof(bbw),typeof(sbbw)}(
-        ops, bw, sz, bbw, sbbw, ibbb)
+        ops, bw, sz, bbw, sbbw, ibbb, irb)
 end
 
 for (OP, mn) in ((:colstart, :min), (:colstop, :max), (:rowstart, :min), (:rowstop, :max))
@@ -61,7 +64,8 @@ function convert(::Type{Operator{T}}, P::PlusOperator) where {T}
         PlusOperator(eltype(ops) <: Operator{T} ? ops :
                      _convertops(Operator{T}, ops),
             bandwidths(P), size(P), blockbandwidths(P),
-            subblockbandwidths(P), isbandedblockbanded(P))::Operator{T}
+            subblockbandwidths(P), isbandedblockbanded(P),
+            israggedbelow(P))::Operator{T}
     end
 end
 
@@ -226,9 +230,11 @@ struct TimesOperator{T,BW,SZ,O<:Operator{T},BBW,SBBW} <: Operator{T}
     blockbandwidths::BBW
     subblockbandwidths::SBBW
     isbandedblockbanded::Bool
+    israggedbelow::Bool
 
     function TimesOperator{T,BW,SZ,O,BBW,SBBW}(ops::Vector{O}, bw::BW,
-        sz::SZ, bbw::BBW, sbbw::SBBW, ibbb::Bool) where {T,O<:Operator{T},BW,SZ,BBW,SBBW}
+        sz::SZ, bbw::BBW, sbbw::SBBW,
+        ibbb::Bool, irb::Bool) where {T,O<:Operator{T},BW,SZ,BBW,SBBW}
         # check compatible
         for k = 1:length(ops)-1
             size(ops[k], 2) == size(ops[k+1], 1) || throw(ArgumentError("incompatible operator sizes"))
@@ -246,7 +252,7 @@ struct TimesOperator{T,BW,SZ,O<:Operator{T},BBW,SBBW} <: Operator{T}
             newops = ops
         end
 
-        new{T,BW,SZ,O,BBW,SBBW}(newops, bw, sz, bbw, sbbw, ibbb)
+        new{T,BW,SZ,O,BBW,SBBW}(newops, bw, sz, bbw, sbbw, ibbb, irb)
     end
 end
 
@@ -266,9 +272,10 @@ function TimesOperator(ops::AbstractVector{O},
         bbw::Tuple{Any,Any}=bandwidthssum(ops, blockbandwidths),
         sbbw::Tuple{Any,Any}=bandwidthssum(ops, subblockbandwidths),
         ibbb::Bool=all(isbandedblockbanded, ops),
+        irb::Bool=all(israggedbelow, ops),
         ) where {O<:Operator}
     TimesOperator{eltype(O),typeof(bw),typeof(sz),O,typeof(bbw),typeof(sbbw)}(
-        convert_vector(ops), bw, sz, bbw, sbbw, ibbb)
+        convert_vector(ops), bw, sz, bbw, sbbw, ibbb, irb)
 end
 
 _extractops(A::TimesOperator, ::typeof(*)) = A.ops
@@ -276,9 +283,10 @@ _extractops(A::TimesOperator, ::typeof(*)) = A.ops
 function TimesOperator(A::Operator, B::Operator)
     v = collateops(*, A, B)
     ibbb = all(isbandedblockbanded, (A, B))
+    irb = all(israggedbelow, (A, B))
     TimesOperator(convert_vector(v), _bandwidthssum(A, B), _timessize((A, B)),
         _bandwidthssum(A, B, blockbandwidths),
-        _bandwidthssum(A, B, subblockbandwidths), ibbb)
+        _bandwidthssum(A, B, subblockbandwidths), ibbb, irb)
 end
 
 
@@ -292,7 +300,8 @@ function convert(::Type{Operator{T}}, P::TimesOperator) where {T}
         TimesOperator(eltype(ops) <: Operator{T} ? ops :
                       _convertops(Operator{T}, ops),
             bandwidths(P), size(P), blockbandwidths(P),
-            subblockbandwidths(P), isbandedblockbanded(P))::Operator{T}
+            subblockbandwidths(P), isbandedblockbanded(P),
+            israggedbelow(P))::Operator{T}
     end
 end
 
@@ -308,8 +317,8 @@ end
     anytimesop=true)
 
     @assert length(opsin) > 1 "need at least 2 operators"
-    ops, bw, bbw, sbbw, ibbb = __promotetimes(opsin, dsp, anytimesop)
-    TimesOperator(ops, bw, sz, bbw, sbbw, ibbb)
+    ops, bw, bbw, sbbw, ibbb, irb = __promotetimes(opsin, dsp, anytimesop)
+    TimesOperator(ops, bw, sz, bbw, sbbw, ibbb, irb)
 end
 function __promotetimes(opsin, dsp, anytimesop)
     ops = Vector{Operator{promote_eltypeof(opsin)}}(undef, 0)
@@ -328,11 +337,13 @@ function __promotetimes(opsin, dsp, anytimesop)
         end
     end
     reverse!(ops), bandwidthssum(ops), bandwidthssum(ops, blockbandwidths),
-    bandwidthssum(ops, subblockbandwidths), all(isbandedblockbanded, ops)
+    bandwidthssum(ops, subblockbandwidths), all(isbandedblockbanded, ops),
+    all(israggedbelow, ops)
 end
 @inline function _op_bws(op)
     [op], bandwidths(op), blockbandwidths(op),
-    subblockbandwidths(op), isbandedblockbanded(op)
+    subblockbandwidths(op), isbandedblockbanded(op),
+    israggedbelow(op)
 end
 @inline function __promotetimes(opsin::Tuple{Operator,Operator}, dsp, anytimesop)
     @assert !any(Base.Fix2(isa, TimesOperator), opsin) "TimesOperator should have been extracted already"
@@ -356,7 +367,8 @@ end
         return [ops...], bandwidthssum(ops),
             bandwidthssum(ops, blockbandwidths),
             bandwidthssum(ops, subblockbandwidths),
-            all(isbandedblockbanded, ops)
+            all(isbandedblockbanded, ops),
+            all(israggedbelow, ops)
     end
 end
 
@@ -374,7 +386,7 @@ subblockbandwidths(P::PlusOrTimesOp) = P.subblockbandwidths
 
 isbandedblockbanded(P::PlusOrTimesOp) = P.isbandedblockbanded
 
-israggedbelow(P::PlusOrTimesOp) = isbandedbelow(P) || all(israggedbelow, P.ops)
+israggedbelow(P::PlusOrTimesOp) = P.israggedbelow
 
 Base.stride(P::TimesOperator) = mapreduce(stride, gcd, P.ops)
 
