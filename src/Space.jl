@@ -133,10 +133,8 @@ Implement a [`Conversion`](@ref) operator or override [`coefficients`](@ref) to 
 
 # Examples
 ```jldoctest
-julia> f = Fun(x->x^2, NormalizedLegendre());
-
-julia> ApproxFunBase.canonicalspace(f)
-Legendre()
+julia> ApproxFunBase.canonicalspace(NormalizedChebyshev())
+Chebyshev()
 ```
 """
 canonicalspace(T) = T

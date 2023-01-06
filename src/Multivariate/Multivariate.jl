@@ -57,9 +57,12 @@ points(f::BivariateFun,k...)=points(space(f),size(f,1),size(f,2),k...)
 
 
 function *(vx::LowRankFun, u0::ProductFun)
-    sum(zip(vx.A, vx.B)) do (a,b)
-        transpose(b*(transpose(a*u0)))
+    A, B = vx.A, vx.B
+    ret = transpose(B[begin]*(transpose(A[begin]*u0)))
+    for i in eachindex(A, B)[begin+1:end]
+        ret += transpose(B[i]*(transpose(A[i]*u0)))
     end
+    ret
 end
 
 *(a::ProductFun,b::LowRankFun)=b*a
