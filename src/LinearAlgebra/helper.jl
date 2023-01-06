@@ -51,7 +51,7 @@ end
 
 # The second case handles zero
 isapproxinteger(::Integer) = true
-isapproxinteger(x) = isapprox(x,round(Int,x))  || isapprox(x+1,round(Int,x+1))
+isapproxinteger(x) = isinteger(x) || isapprox(x,round(Int,x))  || isapprox(x+1,round(Int,x+1))
 
 
 # This creates ApproxFunBase.real, ApproxFunBase.eps and ApproxFunBase.dou
