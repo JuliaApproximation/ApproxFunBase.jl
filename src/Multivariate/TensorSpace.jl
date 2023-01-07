@@ -34,23 +34,13 @@ Base.length(a::Tensorizer) = mapreduce(sum,*,a.blocks)
 
 
 function start(a::TrivialTensorizer{d}) where {d}
-    if d==2
-        return invoke(start, Tuple{Tensorizer2D}, a)
-    else
-        # ((block_dim_1, block_dim_2,...), (itaration_number, iterator, iterator_state)), (itemssofar, length)
-        block = SVector{d}(Ones{Int}(d))
-        return (block, (0, nothing, nothing)), (0,length(a))
-    end
+    # ((block_dim_1, block_dim_2,...), (itaration_number, iterator, iterator_state)), (itemssofar, length)
+    block = SVector{d}(Ones{Int}(d))
+    return (block, (0, nothing, nothing)), (0,length(a))
 end
 
 function next(a::TrivialTensorizer{d}, iterator_tuple) where {d}
-
-    if d==2
-        return invoke(next, Tuple{Tensorizer2D, Tuple}, a, iterator_tuple)
-    end
-
     (block, (j, iterator, iter_state)), (i,tot) = iterator_tuple
-
 
     @inline function check_block_finished(j, iterator, block)
         if iterator === nothing
@@ -82,19 +72,22 @@ function next(a::TrivialTensorizer{d}, iterator_tuple) where {d}
 end
 
 
-function done(a::TrivialTensorizer{d}, iterator_tuple) where {d}
-    if d==2
-        return invoke(done, Tuple{Tensorizer2D, Tuple}, a, iterator_tuple)
-    end
-    (_, (i,tot)) = iterator_tuple
+function done(a::TrivialTensorizer, iterator_tuple)
+    i, tot = last(iterator_tuple)
     return i ≥ tot
 end
 
 
 # (blockrow,blockcol), (subrow,subcol), (rowshift,colshift), (numblockrows,numblockcols), (itemssofar, length)
-start(a::Tensorizer2D{AA, BB}) where {AA,BB} = (1,1), (1,1), (0,0), (a.blocks[1][1],a.blocks[2][1]), (0,length(a))
+start(a::Tensorizer2D) = _start(a::Tensorizer2D)
+start(a::TrivialTensorizer{2}) = _start(a::Tensorizer2D)
 
-function next(a::Tensorizer2D{AA, BB}, ((K,J), (k,j), (rsh,csh), (n,m), (i,tot))) where {AA,BB}
+_start(a) = (1,1), (1,1), (0,0), (a.blocks[1][1],a.blocks[2][1]), (0,length(a))
+
+next(a::Tensorizer2D, state) = _next(a, state)
+next(a::TrivialTensorizer{2}, state) = _next(a, state)
+
+function _next(a, ((K,J), (k,j), (rsh,csh), (n,m), (i,tot)))
     ret = k+rsh,j+csh
     if k==n && j==m  # end of block
         if J == 1 || K == length(a.blocks[1])   # end of new block
@@ -118,8 +111,10 @@ function next(a::Tensorizer2D{AA, BB}, ((K,J), (k,j), (rsh,csh), (n,m), (i,tot))
     ret, ((K,J), (k,j), (rsh,csh), (n,m), (i+1,tot))
 end
 
+done(a::Tensorizer2D, state) = _done(a, state)
+done(a::TrivialTensorizer{2}, state) = _done(a, state)
 
-done(a::Tensorizer2D, ((K,J), (k,j), (rsh,csh), (n,m), (i,tot))) = i ≥ tot
+_done(a, (_, _, _, _, (i,tot))) = i ≥ tot
 
 iterate(a::Tensorizer) = next(a, start(a))
 function iterate(a::Tensorizer, st)
@@ -580,7 +575,6 @@ end
 function totensor(it::Tensorizer,M::AbstractVector)
     n=length(M)
     B=block(it,n)
-    ds = dimensions(it)
 
     #ret=zeros(eltype(M),[sum(it.blocks[i][1:min(B.n[1],length(it.blocks[i]))]) for i=1:length(it.blocks)]...)
 
