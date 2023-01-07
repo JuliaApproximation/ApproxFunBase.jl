@@ -95,8 +95,13 @@ struct MultiplicationWrapper{D<:Space,S<:Space,O<:Operator,T} <: Multiplication{
     op::O
 end
 
-MultiplicationWrapper(T::Type,f::Fun{D,V},op::Operator) where {D<:Space,V} = MultiplicationWrapper{D,typeof(domainspace(op)),typeof(op),T}(f,op)
-MultiplicationWrapper(f::Fun{D,V},op::Operator) where {D<:Space,V} = MultiplicationWrapper(eltype(op),f,op)
+function MultiplicationWrapper(::Type{T}, f::Fun{D}, op::Operator,
+        dspop::S = domainspace(op)) where {D,T,S<:Space}
+    MultiplicationWrapper{D,S,typeof(op),T}(f,op)
+end
+function MultiplicationWrapper(f::Fun, op::Operator, dspop::Space = domainspace(op))
+    MultiplicationWrapper(eltype(op), f, op, dspop)
+end
 
 @wrapper MultiplicationWrapper
 
