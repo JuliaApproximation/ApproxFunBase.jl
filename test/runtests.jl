@@ -171,12 +171,17 @@ end
             sp = PointSpace(1:3)
             coeff = [1:3;]
             f = Fun(sp, coeff)
-            for sp2 in Any[(), (sp,)]
+            for sp2 in ((), (sp,))
                 a = Multiplication(f, sp2...)
                 b = Multiplication(f, sp2...)
                 @test a == b
                 @test bandwidths(a) == bandwidths(b)
             end
+            M = Multiplication(f, sp) * Multiplication(f, sp)
+            M1 = ApproxFunBase.MultiplicationWrapper(f, M)
+            M2 = ApproxFunBase.MultiplicationWrapper(eltype(M), f, M)
+            M3 = @inferred ApproxFunBase.MultiplicationWrapper(f, M, sp)
+            @test M1 * f ≈ M2 * f ≈ M3 * f
         end
         @testset "TimesOperator" begin
             sp = PointSpace(1:3)
@@ -191,7 +196,7 @@ end
             end
             @testset "unwrap TimesOperator" begin
                 M = Multiplication(f)
-                for ops in Any[Operator{Float64}[M, M * M], Operator{Float64}[M*M, M]]
+                for ops in (Operator{Float64}[M, M * M], Operator{Float64}[M*M, M])
                     @test TimesOperator(ops).ops == [M, M, M]
                 end
             end
@@ -219,7 +224,7 @@ end
                 op = @inferred M + t * M
                 @test bandwidths(op) == bandwidths(M)
                 @test coefficients(op * f) == @. (1+t)*c^2
-                for op2 in Any[M + M + t * M, op + M]
+                for op2 in (M + M + t * M, op + M)
                     @test bandwidths(op2) == bandwidths(M)
                     @test coefficients(op2 * f) == @. (2+t)*c^2
                 end
