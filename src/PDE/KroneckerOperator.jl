@@ -105,7 +105,7 @@ end
 
 bandwidths(K::KroneckerOperator) = (ℵ₀,ℵ₀)
 
-for f in [:isblockbanded, :israggedbelow]
+for f in [:isblockbanded, :israggedbelow, :isdiag]
     _f = Symbol(:_, f)
     @eval begin
         $f(K::KroneckerOperator) = $(_f)(K.ops)
