@@ -105,11 +105,16 @@ end
 
 bandwidths(K::KroneckerOperator) = (ℵ₀,ℵ₀)
 
-isblockbanded(K::KroneckerOperator) = all(isblockbanded,K.ops)
-isbandedblockbanded(K::KroneckerOperator) =
-    all(op->isbanded(op) && isinf(size(op,1)) && isinf(size(op,2)),K.ops)
-israggedbelow(K::KroneckerOperator) = all(israggedbelow,K.ops)
-
+for f in [:isblockbanded, :isbandedblockbanded, :israggedbelow]
+    _f = Symbol(:_, f)
+    @eval begin
+        $f(K::KroneckerOperator) = $(_f)(K.ops)
+        function $(_f)(ops::Tuple)
+            $f(first(ops)) && $(_f)(Base.tail(ops))
+        end
+        $(_f)(::Tuple{}) = true
+    end
+end
 
 blockbandwidths(K::KroneckerOperator) =
     (blockbandwidth(K.ops[1],1)+blockbandwidth(K.ops[2],1),

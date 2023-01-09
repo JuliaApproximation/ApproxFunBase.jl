@@ -329,7 +329,7 @@ union(a::Space, bs::Space...) = foldl(union, bs, init = a)
 """
     hasconversion(a,b)
 
-Test whether a banded `Conversion` operator exists.
+Test whether a banded `Conversion` operator exists from `a` to `b`.
 """
 hasconversion(a,b) = maxspace(a,b) == b
 
@@ -369,8 +369,6 @@ _Fun(v, sp) = Fun(v, sp)
 _maybeconvert(inplace::Val{true}, f, v) = v
 _maybeconvert(inplace::Val{false}, f::AbstractVector, v) = strictconvert(Vector{float(eltype(f))}, v)
 function defaultcoefficients(f,a,b,inplace = Val(false))
-    ct=conversion_type(a,b) # gives a space that has a banded conversion to both a and b
-
     x = if spacescompatible(a,b)
         f
     elseif hasconversion(a,b)
