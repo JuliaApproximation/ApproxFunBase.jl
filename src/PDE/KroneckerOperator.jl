@@ -103,7 +103,7 @@ function rowstop(A::KroneckerOperator,k::Integer)
 end
 
 
-bandwidths(K::KroneckerOperator) = (ℵ₀,ℵ₀)
+bandwidths(K::KroneckerOperator) = isdiag(K) ? (0,0) : (ℵ₀,ℵ₀)
 
 for f in [:isblockbanded, :israggedbelow, :isdiag]
     _f = Symbol(:_, f)

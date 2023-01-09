@@ -802,6 +802,19 @@ for TYP in (:RaggedMatrix, :Matrix)
     end
 end
 
+function Diagonal(S::Operator)
+    sz1, sz2 = size(S)
+    if !isdiag(S) || isinf(sz1) || isinf(sz2) || sz1 != sz2
+        error("Cannot convert $S to a ", Diagonal)
+    end
+
+    if isbanded(S)
+        Diagonal(BandedMatrix(S))
+    else
+        default_Diagonal(S)
+    end
+end
+
 function Vector(S::Operator)
     if size(S,2) ≠ 1  || isinf(size(S,1))
         error("Cannot convert $S to a AbstractVector")
@@ -814,8 +827,10 @@ convert(::Type{AA}, B::Operator) where AA<:AbstractArray = AA(B)
 
 
 # TODO: template out fully
+isdiagsquare(V) = isdiag(V) && size(V,1) == size(V,2)
 arraytype(::Operator) = Matrix
 function arraytype(V::SubOperator{T,B,Tuple{KR,JR}}) where {T, B, KR <: Union{BlockRange, Block}, JR <: Union{BlockRange, Block}}
+    isdiagsquare(V) && return Diagonal
     P = parent(V)
     isbandedblockbanded(P) && return BandedBlockBandedMatrix
     isblockbanded(P) && return BlockBandedMatrix
@@ -823,6 +838,7 @@ function arraytype(V::SubOperator{T,B,Tuple{KR,JR}}) where {T, B, KR <: Union{Bl
 end
 
 function arraytype(V::SubOperator{T,B,Tuple{KR,JR}}) where {T, B, KR <: Block, JR <: Block}
+    isdiagsquare(V) && return Diagonal
     P = parent(V)
     isbandedblockbanded(V) && return BandedMatrix
     return Matrix
@@ -830,6 +846,7 @@ end
 
 
 function arraytype(V::SubOperator)
+    isdiagsquare(V) && return Diagonal
     P = parent(V)
     isbanded(P) && return BandedMatrix
     # isbandedblockbanded(P) && return BandedBlockBandedMatrix
@@ -885,7 +902,15 @@ function default_Matrix(S::Operator)
     eltype(S)[S[k,j] for k=1:n, j=1:m]
 end
 
+function default_Diagonal(S::Operator)
+    n, m = size(S)
+    if isinf(n) || isinf(m) || !isdiagsquare(S)
+        error("Cannot convert $S to a Diagonal")
+    end
 
+    v = eltype(S)[S[j,j] for j=1:m]
+    Diagonal(v)
+end
 
 
 # The diagonal of the operator may not be the diagonal of the sub
