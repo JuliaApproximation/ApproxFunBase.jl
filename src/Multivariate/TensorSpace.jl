@@ -305,7 +305,7 @@ dimension(sp::TensorSpace) = mapreduce(dimension,*,sp.spaces)
 conversion_rule(a::TensorSpace{<:NTuple{2,Space}}, b::TensorSpace{<:NTuple{2,Space}}) =
     conversion_type(a.spaces[1],b.spaces[1]) ⊗ conversion_type(a.spaces[2],b.spaces[2])
 
-maxspace(a::TensorSpace{<:NTuple{2,Space}}, b::TensorSpace{<:NTuple{2,Space}}) =
+maxspace_rule(a::TensorSpace{<:NTuple{2,Space}}, b::TensorSpace{<:NTuple{2,Space}}) =
     maxspace(a.spaces[1],b.spaces[1]) ⊗ maxspace(a.spaces[2],b.spaces[2])
 
 function spacescompatible(A::TensorSpace{<:NTuple{N,Space}}, B::TensorSpace{<:NTuple{N,Space}}) where {N}
@@ -319,7 +319,7 @@ end
 canonicalspace(T::TensorSpace) = TensorSpace(map(canonicalspace,T.spaces))
 
 
-TensorSpace(A::SVector{N,<:Space}) where N = TensorSpace(tuple(A...))
+TensorSpace(A::SVector{<:Any,<:Space}) = TensorSpace(Tuple(A))
 TensorSpace(A...) = TensorSpace(A)
 TensorSpace(A::ProductDomain) = TensorSpace(tuple(map(Space,components(A))...))
 ⊗(A::TensorSpace,B::TensorSpace) = TensorSpace(A.spaces...,B.spaces...)
