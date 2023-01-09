@@ -68,7 +68,7 @@ import SpecialFunctions: sinpi, cospi, airy, besselh,
 
 import BandedMatrices: bandrange, inbands_setindex!, bandwidth,
               colstart, colstop, colrange, rowstart, rowstop, rowrange,
-              bandwidths, _BandedMatrix, BandedMatrix
+              bandwidths, _BandedMatrix, BandedMatrix, isbanded
 
 import BlockArrays: blocksize, block, blockaxes, blockindex
 import BlockBandedMatrices: blockbandwidth, blockbandwidths, blockcolstop,
