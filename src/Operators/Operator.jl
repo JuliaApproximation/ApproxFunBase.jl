@@ -549,6 +549,8 @@ macro wrappergetindex(Wrap)
             ApproxFunBase.mul_coefficients(view(parent(A).op,S.indexes[1],S.indexes[2]),b)
         ApproxFunBase.mul_coefficients(A::ApproxFunBase.SubOperator{T,OP},b) where {T,OP<:$Wrap} =
             ApproxFunBase.mul_coefficients(view(parent(A).op,S.indexes[1],S.indexes[2]),b)
+
+        isdiag(W::$Wrap) = isdiag(W.op)
     end
 
     for TYP in (:(ApproxFunBase.BandedMatrix),:(ApproxFunBase.RaggedMatrix),
