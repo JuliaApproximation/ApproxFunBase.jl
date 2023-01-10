@@ -5,7 +5,7 @@ Base.Experimental.@optlevel 1
 using ApproxFunBase
 using ApproxFunBase: plan_transform, plan_itransform, israggedbelow, RaggedMatrix, isbandedbelow, isbanded,
     blockstart, blockstop, resizedata!
-using BandedMatrices: rowstart, rowstop, colstart, colstop, BandedMatrix, bandwidth
+using BandedMatrices: BandedMatrices, rowstart, rowstop, colstart, colstop, BandedMatrix, bandwidth
 using BlockArrays
 using BlockArrays: blockrowstop, blockcolstop
 using BlockBandedMatrices
@@ -238,7 +238,8 @@ function testbandedoperator(A)
         @test rowstop(A,k) ≤ k + bandwidth(A,2)
     end
 
-    @test isa(A[1:10,1:10],BandedMatrix)
+    Am = A[1:10,1:10]
+    @test Am isa AbstractMatrix && BandedMatrices.isbanded(Am)
 end
 
 
@@ -263,7 +264,8 @@ function testbandedblockbandedoperator(A)
     @test isfinite(subblockbandwidth(A,1))
     @test isfinite(subblockbandwidth(A,2))
 
-    @test isa(A[Block.(1:4),Block.(1:4)], BandedBlockBandedMatrix)
+    Am = A[Block.(1:4),Block.(1:4)]
+    @test Am isa AbstractMatrix && isbandedblockbanded(Am)
 end
 
 end # module

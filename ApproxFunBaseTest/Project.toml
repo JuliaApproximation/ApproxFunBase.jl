@@ -1,7 +1,7 @@
 name = "ApproxFunBaseTest"
 uuid = "a931bfaf-0cfd-4a5c-b69c-bf2eed002b43"
 authors = ["Jishnu Bhattacharya <jishnub.github@gmail.com>"]
-version = "0.1.2"
+version = "0.1.3"
 
 [deps]
 ApproxFunBase = "fbd15aa5-315a-5a7d-a8a4-24992e37be05"
