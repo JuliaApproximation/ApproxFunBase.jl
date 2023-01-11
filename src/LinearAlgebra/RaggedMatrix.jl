@@ -17,7 +17,7 @@ function ragged_checks(data, cols, m)
     return nothing
 end
 
-if VERSION >= v"1.8"
+@static if VERSION >= v"1.8"
     mutable struct RaggedMatrix{T} <: AbstractMatrix{T}
         const data::Vector{T} # a Vector of non-zero entries
         const cols::Vector{Int} # a Vector specifying the first index of each column
