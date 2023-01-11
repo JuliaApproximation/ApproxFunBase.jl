@@ -6,22 +6,36 @@ getindex(A::AbstractMatrix,k::Integer,::Type{FiniteRange}) = A[k,1:rowstop(A,k)]
 
 const ⤓ = FiniteRange
 
-mutable struct RaggedMatrix{T} <: AbstractMatrix{T}
-    data::Vector{T} # a Vector of non-zero entries
-    cols::Vector{Int} # a Vector specifying the first index of each column
-    m::Int #Number of rows
-    function RaggedMatrix{T}(data::Vector{T}, cols::Vector{Int}, m::Int) where T
-        # make sure the cols are monitonically increasing
-        @assert 1==cols[1]
-        for j=1:length(cols)-1
-            @assert cols[j] ≤ cols[j+1]
+function ragged_checks(data, cols, m)
+    # make sure the cols are monitonically increasing
+    @assert 1==cols[1]
+    @assert issorted(cols)
+    @assert cols[end] == length(data)+1
+
+    # make sure we have less entries than the size of the matrix
+    @assert length(data) ≤ m*(length(cols)-1)
+    return nothing
+end
+
+if VERSION >= v"1.8"
+    mutable struct RaggedMatrix{T} <: AbstractMatrix{T}
+        const data::Vector{T} # a Vector of non-zero entries
+        const cols::Vector{Int} # a Vector specifying the first index of each column
+        m::Int #Number of rows
+        function RaggedMatrix{T}(data::Vector{T}, cols::Vector{Int}, m::Int) where T
+            ragged_checks(data, cols, m)
+            new{T}(data,cols,m)
         end
-        @assert cols[end] == length(data)+1
-
-        # make sure we have less entries than the size of the matrix
-        @assert length(data) ≤ m*(length(cols)-1)
-
-        new{T}(data,cols,m)
+    end
+else
+    mutable struct RaggedMatrix{T} <: AbstractMatrix{T}
+        data::Vector{T} # a Vector of non-zero entries
+        cols::Vector{Int} # a Vector specifying the first index of each column
+        m::Int #Number of rows
+        function RaggedMatrix{T}(data::Vector{T}, cols::Vector{Int}, m::Int) where T
+            ragged_checks(data, cols, m)
+            new{T}(data,cols,m)
+        end
     end
 end
 
