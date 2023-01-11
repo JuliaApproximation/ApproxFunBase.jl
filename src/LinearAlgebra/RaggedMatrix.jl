@@ -39,13 +39,18 @@ colstop(A::RaggedMatrix,j::Integer) = min(A.cols[j+1]-A.cols[j],size(A,1))
 
 Base.IndexStyle(::Type{RM}) where {RM<:RaggedMatrix} = IndexCartesian()
 
+@inline function incol(A, k, j, ind = A.cols[j]+k-1)
+    ind < A.cols[j+1]
+end
+
 function getindex(A::RaggedMatrix,k::Int,j::Int)
     if k>size(A,1) || k < 1 || j>size(A,2) || j < 1
         throw(BoundsError(A,(k,j)))
     end
 
-    if A.cols[j]+k-1 < A.cols[j+1]
-        A.data[A.cols[j]+k-1]
+    ind = A.cols[j]+k-1
+    if incol(A, k, j, ind)
+        A.data[ind]
     else
         zero(eltype(A))
     end
@@ -56,8 +61,9 @@ function Base.setindex!(A::RaggedMatrix,v,k::Int,j::Int)
         throw(BoundsError(A,(k,j)))
     end
 
-    if A.cols[j]+k-1 < A.cols[j+1]
-        A.data[A.cols[j]+k-1]=v
+    ind = A.cols[j]+k-1
+    if incol(A, k, j, ind)
+        A.data[ind]=v
     elseif v ≠ 0
         throw(BoundsError(A,(k,j)))
     end
@@ -131,6 +137,9 @@ end
 
 RaggedMatrix(A::AbstractMatrix, colns::AbstractVector{Int}) = RaggedMatrix{eltype(A)}(A, colns)
 
+function Base.replace_in_print_matrix(A::RaggedMatrix,i::Integer,j::Integer,s::AbstractString)
+    incol(A, i, j) ? s : Base.replace_with_centered_mark(s)
+end
 
 ## BLAS
 
