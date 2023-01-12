@@ -17,26 +17,10 @@ function ragged_checks(data, cols, m)
     return nothing
 end
 
-@static if VERSION >= v"1.8"
-    mutable struct RaggedMatrix{T} <: AbstractMatrix{T}
-        const data::Vector{T} # a Vector of non-zero entries
-        const cols::Vector{Int} # a Vector specifying the first index of each column
-        m::Int #Number of rows
-        function RaggedMatrix{T}(data::Vector{T}, cols::Vector{Int}, m::Int) where T
-            ragged_checks(data, cols, m)
-            new{T}(data,cols,m)
-        end
-    end
+if VERSION >= v"1.8"
+    include("RaggedMatrix_const.jl")
 else
-    mutable struct RaggedMatrix{T} <: AbstractMatrix{T}
-        data::Vector{T} # a Vector of non-zero entries
-        cols::Vector{Int} # a Vector specifying the first index of each column
-        m::Int #Number of rows
-        function RaggedMatrix{T}(data::Vector{T}, cols::Vector{Int}, m::Int) where T
-            ragged_checks(data, cols, m)
-            new{T}(data,cols,m)
-        end
-    end
+    include("RaggedMatrix_nonconst.jl")
 end
 
 RaggedMatrix(dat::Vector,cols::Vector{Int},m::Int) =
