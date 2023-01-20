@@ -569,7 +569,7 @@ function resize!(it::CachedIterator,n::Integer)
 end
 
 
-eltype(it::CachedIterator{T}) where {T} = T
+eltype(it::Type{<:CachedIterator{T}}) where {T} = T
 
 iterate(it::CachedIterator) = iterate(it,1)
 function iterate(it::CachedIterator,st::Int)
@@ -696,9 +696,9 @@ end
 
 const TrivialInterlacer{d} = BlockInterlacer{<:NTuple{d,Ones}}
 
-BlockInterlacer(v::AbstractVector) = BlockInterlacer(tuple(v...))
+BlockInterlacer(v::AbstractVector) = BlockInterlacer(Tuple(v))
 
-Base.eltype(it::BlockInterlacer) = Tuple{Int,Int}
+eltype(::Type{<:BlockInterlacer}) = Tuple{Int,Int}
 
 dimensions(b::BlockInterlacer) = map(sum,b.blocks)
 dimension(b::BlockInterlacer,k) = sum(b.blocks[k])

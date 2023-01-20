@@ -3,6 +3,7 @@ using ApproxFunBase: ∞
 using Aqua
 using SpecialFunctions
 using BandedMatrices
+using FillArrays
 
 @testset "Project quality" begin
     Aqua.test_all(ApproxFunBase, ambiguities=false)
@@ -473,6 +474,28 @@ end
     A = @inferred ApproxFunBase.SymToeplitzOperator(Int[])
     B = A[1:5, 1:5]
     @test all(iszero, B)
+end
+
+@testset "Tensorizer" begin
+    @testset "TrivialTensorizer" begin
+        ax = Ones{Int}(∞)
+        t = ApproxFunBase.Tensorizer((ax,ax))
+        v = collect(Iterators.take(t, 15))
+        @test eltype(v) == eltype(t)
+        @testset for (i, vi) in enumerate(v)
+            @test vi == t[i]
+            @test findfirst(t, vi) == i
+        end
+    end
+    @testset "Tensorizer2D" begin
+        ax = Ones{Int}(4)
+        t = ApproxFunBase.Tensorizer((ax,ax))
+        v = collect(Iterators.take(t, 15))
+        @test eltype(v) == eltype(t)
+        @testset for (i, vi) in enumerate(v)
+            @test findfirst(t, vi) == i
+        end
+    end
 end
 
 @time include("ETDRK4Test.jl")
