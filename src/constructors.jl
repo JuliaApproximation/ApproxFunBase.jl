@@ -95,13 +95,8 @@ Fun(c::Number,d::Domain) = c==0 ? c*zeros(d) : c*ones(d)
 Fun(c::Number,d::Space) = c==0 ? c*zeros(prectype(d),d) : c*ones(prectype(d),d)
 
 ## Adaptive constructors
-if VERSION >= v"1.9.0-"
-    _splat(f) = Base.Splat(f)
-else
-    _splat(f) = Base.splat(f)
-end
 function default_Fun(f, d::Space)
-    _default_Fun(hasnumargs(f, 1) ? f : _splat(f), d)
+    _default_Fun(hasnumargs(f, 1) ? f : Base.splat(f), d)
 end
 # In _default_Fun, we know that the function takes a single argument
 function _default_Fun(f, d::Space)
