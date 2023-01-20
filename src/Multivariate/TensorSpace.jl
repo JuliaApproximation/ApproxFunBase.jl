@@ -35,7 +35,7 @@ Base.keys(a::Tensorizer) = oneto(length(a))
 
 function start(a::TrivialTensorizer{d}) where {d}
     # ((block_dim_1, block_dim_2,...), (itaration_number, iterator, iterator_state)), (itemssofar, length)
-    block = SVector{d}(Ones{Int}(d))
+    block = ntuple(one, d)
     return (block, (0, nothing, nothing)), (0,length(a))
 end
 
@@ -64,7 +64,7 @@ function next(a::TrivialTensorizer{d}, iterator_tuple) where {d}
 
     # increase block, or initialize new block
     _res, iter_state = iterate(iterator, iter_state)
-    res = SVector{d}(_res)
+    res = Tuple(SVector{d}(_res))
     block = res.+1
     j = j+1
 
@@ -79,8 +79,8 @@ end
 
 
 # (blockrow,blockcol), (subrow,subcol), (rowshift,colshift), (numblockrows,numblockcols), (itemssofar, length)
-start(a::Tensorizer2D) = _start(a::Tensorizer2D)
-start(a::TrivialTensorizer{2}) = _start(a::Tensorizer2D)
+start(a::Tensorizer2D) = _start(a)
+start(a::TrivialTensorizer{2}) = _start(a)
 
 _start(a) = (1,1), (1,1), (0,0), (a.blocks[1][1],a.blocks[2][1]), (0,length(a))
 
