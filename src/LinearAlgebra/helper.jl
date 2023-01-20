@@ -712,8 +712,9 @@ Base.length(b::BlockInterlacer) = mapreduce(sum,+,b.blocks)
 
 # are all Ints, so finite dimensional
 function done(it::BlockInterlacer,st)
-    for k=1:length(it.blocks)
-        if st[end][k] < sum(it.blocks[k])
+    lngs = st[end]
+    for (k, (itk, lk)) in enumerate(zip(it.blocks, lngs))
+        if lk < sum(itk)
             return false
         end
     end
@@ -729,10 +730,10 @@ function iterate(it::BlockInterlacer, (N,k,blkst,lngs))
 
     if N > length(it.blocks)
         # increment to next block
-        blkst = map(function(blit,blst)
+        blkst = map(it.blocks,blkst) do blit,blst
                 xblst = iterate(blit, blst...)
                 xblst == nothing ? blst : (xblst[2],)
-            end,it.blocks,blkst)
+            end
         return iterate(it,(1,1,blkst,lngs))
     end
 

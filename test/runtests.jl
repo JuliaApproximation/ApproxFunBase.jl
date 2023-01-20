@@ -478,19 +478,33 @@ end
 
 @testset "Tensorizer" begin
     @testset "TrivialTensorizer" begin
-        ax = Ones{Int}(∞)
-        t = ApproxFunBase.Tensorizer((ax,ax))
-        v = collect(Iterators.take(t, 15))
-        @test eltype(v) == eltype(t)
-        @testset for (i, vi) in enumerate(v)
-            @test vi == t[i]
-            @test findfirst(t, vi) == i
+        @testset "2D" begin
+            ax = Ones{Int}(∞)
+            t = ApproxFunBase.Tensorizer((ax,ax))
+            v = collect(Iterators.take(t, 150))
+            @test eltype(v) == eltype(t)
+            @testset for (i, vi) in enumerate(v)
+                blk = ApproxFunBase.block(t, i)
+                @test i ∈ ApproxFunBase.blockrange(t, blk)
+                @test vi == t[i]
+                @test findfirst(t, vi) == i
+            end
+        end
+        @testset "nD" begin
+            ax = Ones{Int}(∞)
+            t = ApproxFunBase.Tensorizer((ax,ax,ax))
+            v = collect(Iterators.take(t, 150))
+            @test eltype(v) == eltype(t)
+            @testset for i in eachindex(v)
+                blk = ApproxFunBase.block(t, i)
+                @test i ∈ ApproxFunBase.blockrange(t, blk)
+            end
         end
     end
     @testset "Tensorizer2D" begin
         ax = Ones{Int}(4)
         t = ApproxFunBase.Tensorizer((ax,ax))
-        v = collect(Iterators.take(t, 15))
+        v = collect(Iterators.take(t, 16))
         @test eltype(v) == eltype(t)
         @testset for (i, vi) in enumerate(v)
             @test findfirst(t, vi) == i
