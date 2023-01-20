@@ -171,10 +171,22 @@ block(::TrivialTensorizer{2},n::Int) =
     Block(floor(Integer,sqrt(2n) + 1/2))
 
 function block(::TrivialTensorizer{d},n::Int) where {d}
-    order::Int = 0
+    binomial(d, d) >= n && return Block(1)
+    order = 1
     while binomial(order+d, d) < n
-        order = order + 1
+        order *= 2
     end
+    searchords = order÷2:order
+    # perform a binary search
+    while length(searchords) > 1
+        midpt = searchords[length(searchords)÷2]
+        if binomial(midpt+d, d) < n
+            searchords = (midpt + 1):last(searchords)
+        else
+            searchords = first(searchords):midpt
+        end
+    end
+    order = searchords[]
     return Block(order+1)
 end
 
