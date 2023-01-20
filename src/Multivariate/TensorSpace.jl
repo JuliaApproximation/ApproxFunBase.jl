@@ -159,19 +159,6 @@ function Base.findfirst(sp::Tensorizer{<:NTuple{2,Ones{Int}}}, kj::NTuple{2,Int}
         nothing
     end
 end
-function Base.findfirst(sp::Tensorizer{<:NTuple{2,AbstractFill}}, kj::NTuple{2,Int})
-    k,j=kj
-
-    if k > 0 && j > 0
-        a,b = getindex_value(sp.blocks[1]),getindex_value(sp.blocks[2])
-        kb1,kr = fldmod(k-1,a)
-        jb1,jr = fldmod(j-1,b)
-        nb=kb1+jb1
-        a*b*(nb*(nb+1)÷2+kb1)+a*jr+kr+1
-    else
-        0
-    end
-end
 
 # which block of the tensor
 # equivalent to sum of indices -1
