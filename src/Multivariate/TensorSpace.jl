@@ -29,7 +29,7 @@ const TrivialTensorizer{d} = Tensorizer{NTuple{d,Ones{Int,1,Tuple{OneToInf{Int}}
 
 eltype(::Type{<:Tensorizer{<:Tuple{Vararg{Any,N}}}}) where {N} = NTuple{N,Int}
 dimensions(a::Tensorizer) = map(sum,a.blocks)
-Base.length(a::Tensorizer) = mapreduce(sum,*,a.blocks)
+Base.length(a::Tensorizer) = reduce(*, dimensions(a)) # easier type-inference than mapreduce
 
 Base.keys(a::Tensorizer) = oneto(length(a))
 
