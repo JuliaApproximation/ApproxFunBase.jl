@@ -27,11 +27,11 @@ end
 const Tensorizer2D{AA, BB} = Tensorizer{Tuple{AA, BB}}
 const TrivialTensorizer{d} = Tensorizer{NTuple{d,Ones{Int,1,Tuple{OneToInf{Int}}}}}
 
-Base.eltype(a::Tensorizer) = NTuple{length(a.blocks),Int}
-Base.eltype(::Tensorizer{<:NTuple{d}}) where {d} = NTuple{d,Int}
+eltype(::Type{<:Tensorizer{<:Tuple{Vararg{Any,N}}}}) where {N} = NTuple{N,Int}
 dimensions(a::Tensorizer) = map(sum,a.blocks)
 Base.length(a::Tensorizer) = mapreduce(sum,*,a.blocks)
 
+Base.keys(a::Tensorizer) = oneto(length(a))
 
 function start(a::TrivialTensorizer{d}) where {d}
     # ((block_dim_1, block_dim_2,...), (itaration_number, iterator, iterator_state)), (itemssofar, length)
@@ -131,11 +131,35 @@ function Base.findfirst(::TrivialTensorizer{2},kj::Tuple{Int,Int})
         n=k+j-2
         (n*(n+1))÷2+k
     else
-        0
+        nothing
     end
 end
+function Base.findfirst(sp::Tensorizer{<:NTuple{2,Ones{Int}}}, kj::NTuple{2,Int})
+    k,j=kj
 
-function Base.findfirst(sp::Tensorizer{Tuple{<:AbstractFill{S},<:AbstractFill{T}}},kj::Tuple{Int,Int}) where {S,T}
+    len1, len2 = length(sp.blocks[1]), length(sp.blocks[2])
+    if 0 < k <= len1 && 0 < j <= len2
+        kb1 = k-1
+        jb1 = j-1
+        nb=kb1+jb1+1
+        # Fully filled blocks, that go from (1,n) to (n,1)
+        nb_full = min(nb-1, len2)
+        ind = nb_full*(nb_full+1)÷2
+        # Number of partially filled blocks, that is blocks where `a` in (`a`,`b`) doesn't start at 1
+        # This happens when `b` in a block starts from `length(sp.blocks[2])` and `a` starts from > 1
+        nb_part = nb - nb_full - 1
+        if nb_part > 0
+            ind -= nb_part * (1 - 2nb_full + nb_part) ÷ 2
+        end
+        sum12 = nb + 1 # a + b where the element is (a,b)
+        start2 = min(nb, len2) # the second element is bound by the number of blocks
+        nel_block = start2 - j + 1 # the second index decreases
+        ind += nel_block
+    else
+        nothing
+    end
+end
+function Base.findfirst(sp::Tensorizer{<:NTuple{2,AbstractFill}}, kj::NTuple{2,Int})
     k,j=kj
 
     if k > 0 && j > 0
@@ -186,21 +210,10 @@ blocklengths(it::Tensorizer) = tensorblocklengths(it.blocks...)
 blocklengths(it::CachedIterator) = blocklengths(it.iterator)
 
 function getindex(it::TrivialTensorizer{2},n::Integer)
-    m=block(it,n)
+    m=Int(block(it,n))
     p=findfirst(it,(1,m))
     j=1+n-p
     j,m-j+1
-end
-
-# could be cleaned up using blocks
-function getindex(it::Tensorizer{<:Tuple{<:AbstractFill{S},<:AbstractFill{T}}},n::Integer) where {S,T}
-    a,b = getindex_value(it.blocks[1]),getindex_value(it.blocks[2])
-    nb1,nr = fldmod(n-1,a*b) # nb1 = "nb" - 1, i.e. using zero-base
-    m1=block(it,n).n[1]-1
-    pb1=fld(findfirst(it,(1,b*m1+1))-1,a*b)
-    jb1=nb1-pb1
-    kr1,jr1 = fldmod(nr,a)
-    b*jb1+jr1+1,a*(m1-jb1)+kr1+1
 end
 
 
