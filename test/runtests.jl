@@ -481,6 +481,7 @@ end
         @testset "2D" begin
             ax = Ones{Int}(∞)
             t = ApproxFunBase.Tensorizer((ax,ax))
+            @test (@inferred length(t)) == length(ax)^2
             v = collect(Iterators.take(t, 150))
             @test eltype(v) == eltype(t)
             @testset for (i, vi) in enumerate(v)
@@ -495,7 +496,7 @@ end
             t = ApproxFunBase.Tensorizer((ax,ax,ax))
             v = collect(Iterators.take(t, 150))
             @test eltype(v) == eltype(t)
-            @testset for i in eachindex(v)
+            @testset for (i,vi) in enumerate(v)
                 blk = ApproxFunBase.block(t, i)
                 @test i ∈ ApproxFunBase.blockrange(t, blk)
             end
