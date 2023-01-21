@@ -71,9 +71,15 @@ using LinearAlgebra
             end
             @test ApproxFunBase.intpow(f,-2) == f^-2 == 1/(f*f)
 
-            @test sp^1 == sp
-            @test sp^2 == sp * sp
-            @test sp^3 == sp * sp * sp
+            if VERSION >= v"1.8"
+                @test (@inferred (x -> x^1)(sp)) == sp
+                @test (@inferred (x -> x^2)(sp)) == sp * sp
+                @test (@inferred (x -> x^3)(sp)) == sp * sp * sp
+            else
+                @test sp^1 == sp
+                @test sp^2 == sp * sp
+                @test sp^3 == sp * sp * sp
+            end
             @test sp^4 == sp * sp * sp * sp
             @test sp^5 == sp * sp * sp * sp * sp
         end
