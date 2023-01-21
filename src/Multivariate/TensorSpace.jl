@@ -7,6 +7,10 @@ abstract type AbstractProductSpace{SV,DD,RR} <: Space{DD,RR} end
 
 spacetype(::AbstractProductSpace{SV},k) where {SV} = SV.parameters[k]
 
+nfactors(d::AbstractProductSpace) = length(factors(d))
+factors(d::AbstractProductSpace) = d.spaces
+factor(d::AbstractProductSpace,k) = factors(d)[k]
+
 
 ##### Tensorizer
 # This gives the map from coefficients to the
@@ -394,36 +398,33 @@ iterate(sp::TensorSpace{Tuple{S1,S2}},k...) where {S1,S2<:Space{D,R}} where {D,R
 # TODO: remove
 columnspace(S::TensorSpace,_) = S.spaces[1]
 
+isambiguous(A::TensorSpace) = any(isambiguous, A.spaces)
+
+Base.transpose(d::TensorSpace2D) = TensorSpace(d.spaces[2],d.spaces[1])
+
 
 struct ProductSpace{S<:Space,V<:Space,D,R} <: AbstractProductSpace{Tuple{S,V},D,R}
     spacesx::Vector{S}
     spacey::V
+    domain::D
 end
 
 function ProductSpace(spacesx::AbstractVector, spacey)
-    ProductSpace{eltype(spacesx),typeof(spacey),typeof(mapreduce(domain, ×, spacesx)),
-                mapreduce(s->eltype(domain(s)),promote_type,spacesx)}(spacesx,spacey)
+    dx = domain(spacesx[1])
+    @assert all(sp -> domain(sp) == dx, spacesx) "domains of component Funs must be identical"
+    dy = domain(spacey)
+    Tdx = mapreduce(s->eltype(domain(s)),promote_type,spacesx)
+    Tdy = eltype(dy)
+    Td = promote_type(Tdx, Tdy)
+    d = convert(Domain{Td}, dx) × convert(Domain{Td}, dy)
+    ProductSpace{eltype(spacesx),typeof(spacey),typeof(d),Td}(spacesx, spacey, d)
 end
 
 # TODO: This is a weird definition
 ⊗(A::AbstractVector{S},B::Space) where {S<:Space} = ProductSpace(A,B)
-domain(f::ProductSpace) = domain(f.spacesx[1]) × domain(f.spacey)
+domain(f::ProductSpace) = f.domain
 
 factors(d::ProductSpace) = (d.spacesx, d.spacey)
-
-nfactors(d::AbstractProductSpace) = length(d.spaces)
-factors(d::AbstractProductSpace) = d.spaces
-factor(d::AbstractProductSpace,k) = factors(d)[k]
-
-
-isambiguous(A::TensorSpace) = isambiguous(A.spaces[1]) || isambiguous(A.spaces[2])
-
-
-Base.transpose(d::TensorSpace) = TensorSpace(d.spaces[2],d.spaces[1])
-
-
-
-
 
 ## Transforms
 function nDtransform_inner!(A, tempv, Rpre, Rpost, dim, plan!)
