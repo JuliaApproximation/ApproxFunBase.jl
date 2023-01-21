@@ -29,7 +29,7 @@ interlacer(sp::Space) = BlockInterlacer(tuple(blocklengths(sp)))
 
 function blocklengths(sp::DirectSumSpace)
     bl=map(blocklengths,components(sp))
-    N=mapreduce(length,max,bl)
+    N = maximum(map(length, bl))
     mapreduce(b->pad(b,N),+,bl)
 end
 block(sp::DirectSumSpace,k::Int) =
@@ -413,7 +413,7 @@ function Fun(v::Tuple,::Type{PiecewiseSpace})
     Fun(sp,interlace(v,sp))
 end
 
-Fun(v::AbstractVector{Any},::Type{PiecewiseSpace}) = Fun(tuple(v...),PiecewiseSpace)
+Fun(v::AbstractVector{Any},::Type{PiecewiseSpace}) = Fun(Tuple(v),PiecewiseSpace)
 
 ## transforms
 points(d::PiecewiseSpace,n) = vcat(points.(pieces(d), pieces_npoints(d,n))...)
@@ -485,7 +485,7 @@ end
 
 ## Multivariate
 
-ncomponents(sp::TensorSpace) = mapreduce(s -> ncomponents(s), *, factors(sp))
+ncomponents(sp::TensorSpace) = mapreduce(ncomponents, *, factors(sp))
 
 component(sp::TensorSpace{Tuple{S1,S2}},k::Integer) where {S1<:DirectSumSpace,S2<:DirectSumSpace} =
     error("Not defined. Used component(sp,k,j).")
