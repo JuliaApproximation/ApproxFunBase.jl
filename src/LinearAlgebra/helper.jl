@@ -752,7 +752,7 @@ function iterate(it::BlockInterlacer, (N,k,blkst,lngs))
     end
 
 
-    lngs = tuple(lngs[1:N-1]...,lngs[N]+1,lngs[N+1:end]...)
+    lngs = tuple(lngs[1:N-1]...,lngs[N]+1,lngs[N+1:end]...)::typeof(lngs)
     return (N,lngs[N]),(N,k+1,blkst,lngs)
 end
 
