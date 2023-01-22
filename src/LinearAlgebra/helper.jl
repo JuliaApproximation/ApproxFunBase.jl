@@ -752,7 +752,7 @@ function iterate(it::BlockInterlacer, (N,k,blkst,lngs))
     end
 
 
-    lngs = tuple(lngs[1:N-1]...,lngs[N]+1,lngs[N+1:end]...)
+    lngs = Base.setindex(lngs, lngs[N]+1, N)
     return (N,lngs[N]),(N,k+1,blkst,lngs)
 end
 
