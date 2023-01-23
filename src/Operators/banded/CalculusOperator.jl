@@ -72,7 +72,8 @@ macro calculus_operator(Op)
             else
                 # work around typeinfernece bug
                 op=ApproxFunBase.strictconvert(Operator{T},D.op)
-                $WrappOp{typeof(op),typeof(domainspace(op)),typeof(D.order),T}(op,D.order)
+                S = domainspace(op)
+                $WrappOp{typeof(op),typeof(S),typeof(D.order),T}(op,D.order,S)::Operator{T}
             end
         end
 
