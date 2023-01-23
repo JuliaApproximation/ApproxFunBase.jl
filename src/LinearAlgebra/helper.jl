@@ -702,8 +702,9 @@ eltype(::Type{<:BlockInterlacer}) = Tuple{Int,Int}
 
 dimensions(b::BlockInterlacer) = map(sum,b.blocks)
 dimension(b::BlockInterlacer,k) = sum(b.blocks[k])
-Base.length(b::BlockInterlacer) = mapreduce(sum,+,b.blocks)
+length(b::BlockInterlacer) = mapreduce(sum,+,b.blocks)
 
+Base.IteratorSize(::Type{BlockInterlacer{T}}) where {T} = _IteratorSize(T)
 
 # the state is always (whichblock,curblock,cursubblock,curcoefficients)
 # start(it::BlockInterlacer) = (1,1,map(start,it.blocks),ntuple(zero,length(it.blocks)))

@@ -28,12 +28,15 @@ struct Tensorizer{DMS<:Tuple}
     blocks::DMS
 end
 
+const InfOnes = Ones{Int,1,Tuple{OneToInf{Int}}}
 const Tensorizer2D{AA, BB} = Tensorizer{Tuple{AA, BB}}
-const TrivialTensorizer{d} = Tensorizer{NTuple{d,Ones{Int,1,Tuple{OneToInf{Int}}}}}
+const TrivialTensorizer{d} = Tensorizer{NTuple{d,InfOnes}}
 
 eltype(::Type{<:Tensorizer{<:Tuple{Vararg{Any,N}}}}) where {N} = NTuple{N,Int}
 dimensions(a::Tensorizer) = map(sum,a.blocks)
-Base.length(a::Tensorizer) = reduce(*, dimensions(a)) # easier type-inference than mapreduce
+length(a::Tensorizer) = reduce(*, dimensions(a)) # easier type-inference than mapreduce
+
+Base.IteratorSize(::Type{Tensorizer{T}}) where {T<:Tuple} = _IteratorSize(T)
 
 Base.keys(a::Tensorizer) = oneto(length(a))
 
@@ -129,7 +132,9 @@ end
 
 cache(a::Tensorizer) = CachedIterator(a)
 
-function Base.findfirst(::TrivialTensorizer{2},kj::Tuple{Int,Int})
+@deprecate findfirst(t::Tensorizer, kj::NTuple{2,Int}) findfirst(kj, t)
+
+function Base.findfirst(kj::NTuple{2,Int}, ::TrivialTensorizer{2})
     k,j=kj
     if k > 0 && j > 0
         n=k+j-2
@@ -138,7 +143,7 @@ function Base.findfirst(::TrivialTensorizer{2},kj::Tuple{Int,Int})
         nothing
     end
 end
-function Base.findfirst(sp::Tensorizer{<:NTuple{2,Ones{Int}}}, kj::NTuple{2,Int})
+function Base.findfirst(kj::NTuple{2,Int}, sp::Tensorizer{<:NTuple{2,Ones{Int}}})
     k,j=kj
 
     len1, len2 = length(sp.blocks[1]), length(sp.blocks[2])
@@ -212,9 +217,9 @@ blocklengths(::TrivialTensorizer{2}) = 1:∞
 blocklengths(it::Tensorizer) = tensorblocklengths(it.blocks...)
 blocklengths(it::CachedIterator) = blocklengths(it.iterator)
 
-function getindex(it::TrivialTensorizer{2},n::Integer)
+function getindex(it::TrivialTensorizer{2}, n::Integer)
     m=Int(block(it,n))
-    p=findfirst(it,(1,m))
+    p=findfirst((1,m), it)
     j=1+n-p
     j,m-j+1
 end
