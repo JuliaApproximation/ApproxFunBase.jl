@@ -571,6 +571,10 @@ end
 
 eltype(it::Type{<:CachedIterator{T}}) where {T} = T
 
+Base.IteratorSize(::Type{<:CachedIterator{<:Any,IT}}) where {IT} = Base.IteratorSize(IT)
+
+Base.keys(c::CachedIterator) = keys(c.iterator)
+
 iterate(it::CachedIterator) = iterate(it,1)
 function iterate(it::CachedIterator,st::Int)
     if  st == it.length + 1 && iterate(it.iterator,it.state...) === nothing
@@ -702,8 +706,9 @@ eltype(::Type{<:BlockInterlacer}) = Tuple{Int,Int}
 
 dimensions(b::BlockInterlacer) = map(sum,b.blocks)
 dimension(b::BlockInterlacer,k) = sum(b.blocks[k])
-Base.length(b::BlockInterlacer) = mapreduce(sum,+,b.blocks)
+length(b::BlockInterlacer) = mapreduce(sum,+,b.blocks)
 
+Base.IteratorSize(::Type{BlockInterlacer{T}}) where {T} = _IteratorSize(T)
 
 # the state is always (whichblock,curblock,cursubblock,curcoefficients)
 # start(it::BlockInterlacer) = (1,1,map(start,it.blocks),ntuple(zero,length(it.blocks)))

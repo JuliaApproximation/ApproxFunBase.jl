@@ -135,6 +135,11 @@ function assert_integer(k::Number)
     return nothing
 end
 
+function _IteratorSize(::Type{T}) where {T<:Tuple}
+    s = ntuple(i-> Base.IteratorSize(fieldtype(T, i)), fieldcount(T))
+    any(x -> x isa Base.IsInfinite, s) ? Base.IsInfinite() : Base.HasLength()
+end
+
 include("LinearAlgebra/LinearAlgebra.jl")
 include("Fun.jl")
 include("onehotvector.jl")
