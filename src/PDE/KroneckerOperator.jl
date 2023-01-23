@@ -278,8 +278,7 @@ function Derivative(S::TensorSpace{<:Any,<:EuclideanDomain{2}}, order)
         K=Dx⊗Dy
         T=promote_type(eltype(Dx),eltype(Dy))
     end
-    # try to work around type inference
-    DerivativeWrapper{typeof(K),typeof(S),typeof(order),T}(K,order)
+    DerivativeWrapper{typeof(K),typeof(S),typeof(order),T}(K,order,S)
 end
 
 

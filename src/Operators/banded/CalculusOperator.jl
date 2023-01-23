@@ -21,6 +21,7 @@ macro calculus_operator(Op)
         struct $WrappOp{BT<:Operator,S<:Space,OT,T} <: $Op{S,OT,T}
             op::BT
             order::OT
+            space::S
         end
 
         ApproxFunBase.@wrapper $WrappOp
@@ -61,7 +62,7 @@ macro calculus_operator(Op)
         end
 
         $WrappOp(op::Operator,d,order) =
-            $WrappOp{typeof(op),typeof(d),typeof(order),eltype(op)}(op,order)
+            $WrappOp{typeof(op),typeof(d),typeof(order),eltype(op)}(op,order,d)
         $WrappOp(op::Operator,order) = $WrappOp(op, domainspace(op), order)
         $WrappOp(op::Operator) = $WrappOp(op,1)
 
