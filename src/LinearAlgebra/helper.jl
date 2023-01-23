@@ -571,6 +571,10 @@ end
 
 eltype(it::Type{<:CachedIterator{T}}) where {T} = T
 
+Base.IteratorSize(::Type{<:CachedIterator{<:Any,IT}}) where {IT} = Base.IteratorSize(IT)
+
+Base.keys(c::CachedIterator) = keys(c.iterator)
+
 iterate(it::CachedIterator) = iterate(it,1)
 function iterate(it::CachedIterator,st::Int)
     if  st == it.length + 1 && iterate(it.iterator,it.state...) === nothing

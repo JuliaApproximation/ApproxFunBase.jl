@@ -511,6 +511,15 @@ end
             @test findfirst(t, vi) == i
         end
     end
+    @testset "cache" begin
+        ax = Ones{Int}(4);
+        t = ApproxFunBase.Tensorizer((ax,ax))
+        c = ApproxFunBase.cache(t)
+        v = collect(c)
+        @testset for i in eachindex(c)
+            @test c[i] == v[i]
+        end
+    end
 end
 
 @time include("ETDRK4Test.jl")
