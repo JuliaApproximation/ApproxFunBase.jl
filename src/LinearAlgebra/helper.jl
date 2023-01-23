@@ -555,7 +555,7 @@ function resize!(it::CachedIterator,n::Integer)
 
         @inbounds for k = m+1:n
             xst = iterate(it.iterator,it.state...)
-            if xst == nothing
+            if xst === nothing
                 it.length = k-1
                 return it
             end
@@ -573,7 +573,7 @@ eltype(it::Type{<:CachedIterator{T}}) where {T} = T
 
 iterate(it::CachedIterator) = iterate(it,1)
 function iterate(it::CachedIterator,st::Int)
-    if  st == it.length + 1 && iterate(it.iterator,it.state...) == nothing
+    if  st == it.length + 1 && iterate(it.iterator,it.state...) === nothing
         nothing
     else
         (it[st],st+1)
@@ -732,14 +732,14 @@ function iterate(it::BlockInterlacer, (N,k,blkst,lngs))
         # increment to next block
         blkst = map(it.blocks,blkst) do blit,blst
                 xblst = iterate(blit, blst...)
-                xblst == nothing ? blst : (xblst[2],)
+                xblst === nothing ? blst : (xblst[2],)
             end
         return iterate(it,(1,1,blkst,lngs))
     end
 
     Bnxtb = iterate(it.blocks[N],blkst[N]...)  # B is block size
 
-    if Bnxtb == nothing
+    if Bnxtb === nothing
         # increment to next N
         return iterate(it,(N+1,1,blkst,lngs))
     end
