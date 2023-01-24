@@ -87,11 +87,16 @@ function view(A::Operator,kr::InfRanges,jr::InfRanges)
     if isbanded(A) && st==step(jr)  # Otherwise, its not a banded operator
         kr1=first(kr)
         jr1=first(jr)
-        l,u=(bandwidth(A,1)+jr1-kr1)÷st,(bandwidth(A,2)+kr1-jr1)÷st
+        shft = kr1-jr1
+        # working on the whole bandwidths tuple instead of
+        # the individual bandwidths helps with type-inference,
+        # e.g. if the bandwidth is inferred as
+        # Union{NTuple{2,InfiniteCardinal{0}}, NTuple{2,Int}}
+        bw = map(x -> x ÷ st, map(+, bandwidths(A), (-shft,shft)))
     else
-        l,u=ℵ₀,ℵ₀
+        bw=(ℵ₀,ℵ₀)
     end
-    SubOperator(A,(kr,jr),size(A),(l,u))
+    SubOperator(A,(kr,jr),size(A),bw)
 end
 
 view(V::SubOperator, kr::AbstractRange, jr::AbstractRange) =
@@ -102,8 +107,13 @@ function view(A::Operator, kr::AbstractRange, jr::AbstractRange)
     if isbanded(A) && st == step(jr)
         kr1=first(kr)
         jr1=first(jr)
-        l,u=(bandwidth(A,1)+jr1-kr1)÷st,(bandwidth(A,2)+kr1-jr1)÷st
-        SubOperator(A,(kr,jr),(length(kr),length(jr)),(l,u))
+        shft = kr1-jr1
+        # working on the whole bandwidths tuple instead of
+        # the individual bandwidths helps with type-inference,
+        # e.g. if the bandwidth is inferred as
+        # Union{NTuple{2,InfiniteCardinal{0}}, NTuple{2,Int}}
+        bw = map(x -> x ÷ st, map(+, bandwidths(A), (-shft,shft)))
+        SubOperator(A,(kr,jr),(length(kr),length(jr)),bw)
     else
         SubOperator(A,(kr,jr))
     end
@@ -113,8 +123,12 @@ end
 function view(A::Operator,kr::UnitRange,jr::UnitRange)
     if isbanded(A)
         shft=first(kr)-first(jr)
-        l,u=bandwidth(A,1)-shft,bandwidth(A,2)+shft
-        SubOperator(A,(kr,jr),(length(kr),length(jr)),(l,u))
+        # working on the whole bandwidths tuple instead of
+        # the individual bandwidths helps with type-inference,
+        # e.g. if the bandwidth is inferred as
+        # Union{NTuple{2,InfiniteCardinal{0}}, NTuple{2,Int}}
+        bw = map(+, bandwidths(A), (-shft,shft))
+        SubOperator(A,(kr,jr),(length(kr),length(jr)),bw)
     else
         SubOperator(A,(kr,jr))
     end
