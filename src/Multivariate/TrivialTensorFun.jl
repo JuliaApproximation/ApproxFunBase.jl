@@ -3,7 +3,7 @@
 
 struct TrivialTensorFun{d, SS<:TensorSpaceND{d}, T<:Number} <: MultivariateFun{T, d}
     space::SS
-    coefficients::Vector{T} 
+    coefficients::Vector{T}
     iterator::TrivialTensorizer{d}
     orders::Block{1, Int}
 end
