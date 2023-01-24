@@ -672,22 +672,29 @@ boundary(S::Space) = boundary(domain(S))
 """
     (s::Space)(n::Integer)
 
-Return a `Fun` with coefficients being a sparse representation of
-`[zeros(n-1); 1]`. The result is primarily meant to be evaluated at
+Return a `Fun` with the coefficients being a sparse representation of
+`[zeros(n); 1]`. The result is primarily meant to be evaluated at
 a specific point.
 
-!!! note
-    The number of coefficients `n` does not represent the order or index
-    corresponding to the basis function. In fact, for orthogonal polynomials,
-    the index is often off by one.
+For orthogonal polynomial spaces, the result will usually represent the `n`-th
+basis function.
 
 # Examples
 ```jldoctest
-julia> f = Chebyshev()(2) # T₁(x)
-Fun(Chebyshev(), [0.0, 1.0])
-
-julia> f(0.2)
-0.2
+julia> Chebyshev()(2)
+Fun(Chebyshev(), [0.0, 0.0, 1.0])
 ```
 """
-(s::Space)(n::Integer) = basisfunction(s, n)
+(s::Space)(n::Integer) = basisfunction(s, n+1)
+"""
+    (s::Space)(n::Integer, points...)
+
+Evaluate `s(n)(points...)`
+
+# Examples
+```jldoctest
+julia> Chebyshev()(1, 0.5)
+0.5
+```
+"""
+(s::Space)(n::Integer, args...) = s(n)(args...)
