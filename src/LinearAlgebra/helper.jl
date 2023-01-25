@@ -571,9 +571,11 @@ end
 
 eltype(it::Type{<:CachedIterator{T}}) where {T} = T
 
-Base.IteratorSize(::Type{<:CachedIterator{<:Any,IT}}) where {IT} = Base.IteratorSize(IT)
+function Base.IteratorSize(::Type{<:CachedIterator{<:Any,IT}}) where {IT}
+    Base.IteratorSize(IT) isa Base.IsInfinite ? Base.IsInfinite() : Base.HasLength()
+end
 
-Base.keys(c::CachedIterator) = keys(c.iterator)
+Base.keys(c::CachedIterator) = oneto(length(c))
 
 iterate(it::CachedIterator) = iterate(it,1)
 function iterate(it::CachedIterator,st::Int)
@@ -589,30 +591,12 @@ function getindex(it::CachedIterator, k)
     if mx > length(it) || mx < 1
         throw(BoundsError(it,k))
     end
-    resize!(it,isempty(k) ? 0 : mx).storage[k]
+    v = resize!(it, mx)
+    v.storage[k]
 end
 
-function findfirst(f::Function,A::CachedIterator)
-    k=1
-    for c in A
-        if f(c)
-            return k
-        end
-        k+=1
-    end
-    return 0
-end
-
-function findfirst(A::CachedIterator,x)
-    k=1
-    for c in A
-        if c == x
-            return k
-        end
-        k+=1
-    end
-    return 0
-end
+@deprecate findfirst(A::CachedIterator, x) findfirst(x, A::CachedIterator)
+findfirst(x::T, A::CachedIterator{T}) where {T} = findfirst(==(x), A)
 
 length(A::CachedIterator) = length(A.iterator)
 

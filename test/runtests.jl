@@ -539,5 +539,31 @@ end
     end
 end
 
+@testset "CachedIterator" begin
+    v = ApproxFunBase.CachedIterator(1:4)
+    @test Base.IteratorSize(v) == Base.HasLength()
+    @test length(v) == 4
+    @test eltype(v) == Int
+    @test findfirst(3, v) == 3
+    vs = collect(v)
+    @test vs == [1:4;]
+    @test eltype(vs) == Int
+
+    v = ApproxFunBase.CachedIterator(Iterators.take(1:14, 4))
+    @test Base.IteratorSize(v) == Base.HasLength()
+    @test length(v) == 4
+    @test eltype(v) == Int
+    @test findfirst(3, v) == 3
+    vs = collect(v)
+    @test vs == [1:4;]
+    @test eltype(vs) == Int
+
+    v = ApproxFunBase.CachedIterator(1:∞)
+    @test Base.IteratorSize(v) == Base.IsInfinite()
+    @test isinf(length(v))
+    @test eltype(v) == Int
+    @test findfirst(3, v) == 3
+end
+
 @time include("ETDRK4Test.jl")
 include("show.jl")
