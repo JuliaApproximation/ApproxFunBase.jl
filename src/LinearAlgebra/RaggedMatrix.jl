@@ -153,19 +153,19 @@ function mul!(y::Vector, A::RaggedMatrix, b::Vector)
     fill!(y,zero(T))
     for j=1:m
         kr=A.cols[j]:A.cols[j+1]-1
-        BLAS.axpy!(b[j],view(A.data,kr),view(y,1:length(kr)))
+        axpy!(b[j],view(A.data,kr),view(y,1:length(kr)))
     end
     y
 end
 
 
-function BLAS.axpy!(a, X::RaggedMatrix, Y::RaggedMatrix)
+function axpy!(a, X::RaggedMatrix, Y::RaggedMatrix)
     if size(X) ≠ size(Y)
         throw(BoundsError())
     end
 
     if X.cols == Y.cols
-        BLAS.axpy!(a,X.data,Y.data)
+        axpy!(a,X.data,Y.data)
     else
         for j = 1:size(X,2)
             Xn = colstop(X,j)
@@ -176,7 +176,7 @@ function BLAS.axpy!(a, X::RaggedMatrix, Y::RaggedMatrix)
                 end
             end
             cs = min(Xn,Yn)
-            BLAS.axpy!(a,view(X.data,X.cols[j]:X.cols[j]+cs-1),
+            axpy!(a,view(X.data,X.cols[j]:X.cols[j]+cs-1),
                          view(Y.data,Y.cols[j]:Y.cols[j]+cs-1))
         end
     end
@@ -188,7 +188,7 @@ colstop(X::SubArray{T,2,RaggedMatrix{T},Tuple{UnitRange{Int},UnitRange{Int}}},
                                             first(parentindices(X)[1]) + 1,
                             size(X,1))
 
-function BLAS.axpy!(a,X::RaggedMatrix,
+function axpy!(a,X::RaggedMatrix,
                     Y::SubArray{T,2,RaggedMatrix{T},Tuple{UnitRange{Int},UnitRange{Int}}}) where T
     if size(X) ≠ size(Y)
         throw(BoundsError())
@@ -213,7 +213,7 @@ function BLAS.axpy!(a,X::RaggedMatrix,
         end
 
 
-        BLAS.axpy!(a,view(X.data,kr),
+        axpy!(a,view(X.data,kr),
                     view(P.data,(P.cols[j + jsh] + ksh-1) .+ (1:length(kr))))
     end
 
@@ -235,7 +235,7 @@ function unsafe_mul!(Y::RaggedMatrix,A::RaggedMatrix,B::RaggedMatrix)
     fill!(Y.data,0)
 
     for j=1:size(B,2),k=1:colstop(B,j)
-        LinearAlgebra.axpy!(B[k,j], view(A,1:colstop(A,k),k),
+        axpy!(B[k,j], view(A,1:colstop(A,k),k),
             view(Y.data,Y.cols[j] .- 1 .+ (1:colstop(A,k))))
     end
 

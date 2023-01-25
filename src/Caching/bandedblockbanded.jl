@@ -31,7 +31,7 @@ function resizedata!(B::CachedOperator{T,<:BandedBlockBandedMatrix{T}}, ::Colon,
         jr=B.datasize[2]+1:col
         kr=colstart(B.data,jr[1]):colstop(B.data,jr[end])
 
-        isempty(kr) || BLAS.axpy!(1.0,view(B.op,kr,jr),view(B.data,kr,jr))
+        isempty(kr) || axpy!(1.0,view(B.op,kr,jr),view(B.data,kr,jr))
 
         B.datasize = (last(kr),col)
     end

@@ -202,7 +202,7 @@ function resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},
 
     kr=co.datasize[1]+1:n
     jr=max(1,kr[1]-l):n+u
-    BLAS.axpy!(1.0,view(co.op.ops[ind],kr .- r,jr),
+    axpy!(1.0,view(co.op.ops[ind],kr .- r,jr),
                     view(co.data.bands,kr,jr))
 
     co.datasize=(n,n+u)
@@ -252,7 +252,7 @@ function resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},
     jr=max(ncols+1,kr[1]-l):n+u
     io∞=InterlaceOperator(io.ops[r∞,d∞])
 
-    BLAS.axpy!(1.0,view(io∞,kr.-r,jr.-ncols),view(co.data.bands,kr,jr))
+    axpy!(1.0,view(io∞,kr.-r,jr.-ncols),view(co.data.bands,kr,jr))
 
     co.datasize=(n,n+u)
     co
@@ -318,7 +318,7 @@ function resizedata!(QR::QROperator{CachedOperator{T,AlmostBandedMatrix{T},
             dind=R.u+1+k-j
             v=view(R.data,dind:dind+M-1,j)
             dt=dot(wp,v)
-            LinearAlgebra.axpy!(-2*dt,wp,v)
+            axpy!(-2*dt,wp,v)
         end
 
         # scale banded/filled entries
@@ -331,7 +331,7 @@ function resizedata!(QR::QROperator{CachedOperator{T,AlmostBandedMatrix{T},
                 @inbounds dt=muladd(conj(W[ℓ-k+1,k]),
                                     unsafe_getindex(MO.data.fill,ℓ,j),dt)
             end
-            LinearAlgebra.axpy!(-2*dt,wp2,v)
+            axpy!(-2*dt,wp2,v)
         end
 
         # scale filled entries
@@ -339,7 +339,7 @@ function resizedata!(QR::QROperator{CachedOperator{T,AlmostBandedMatrix{T},
         for j=1:size(F,2)
             v=view(F,k:k+M-1,j) # the k,jth entry of F
             dt=dot(wp,v)
-            LinearAlgebra.axpy!(-2*dt,wp,v)
+            axpy!(-2*dt,wp,v)
         end
     end
     QR.ncols=col
