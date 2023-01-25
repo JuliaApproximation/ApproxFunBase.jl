@@ -505,7 +505,7 @@ end
                 blk = ApproxFunBase.block(t, i)
                 @test i ∈ ApproxFunBase.blockrange(t, blk)
                 @test vi == t[i]
-                @test findfirst(t, vi) == i
+                @test findfirst(vi, t) == i
             end
         end
         @testset "nD" begin
@@ -525,7 +525,7 @@ end
         v = collect(Iterators.take(t, 16))
         @test eltype(v) == eltype(t)
         @testset for (i, vi) in enumerate(v)
-            @test findfirst(t, vi) == i
+            @test findfirst(vi, t) == i
         end
     end
     @testset "cache" begin
@@ -563,6 +563,13 @@ end
     @test isinf(length(v))
     @test eltype(v) == Int
     @test findfirst(3, v) == 3
+
+    s = PointSpace(1:4) + PointSpace(1:4)
+    b = ApproxFunBase.BlockInterlacer(s);
+    it = ApproxFunBase.CachedIterator(b)
+    # Test that the iterator isn't stateful
+    @test collect(it) == collect(Iterators.take(it, length(it)))
+    @test collect(it) == collect(b)
 end
 
 @time include("ETDRK4Test.jl")
