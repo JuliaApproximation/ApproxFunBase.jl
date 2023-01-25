@@ -116,9 +116,9 @@ for TYP in (:RaggedMatrix, :Matrix, :BandedMatrix,
     end
 end
 
-function BLAS.axpy!(α, P::SubOperator{<:Any,<:PlusOperator}, A::AbstractMatrix)
+function axpy!(α, P::SubOperator{<:Any,<:PlusOperator}, A::AbstractMatrix)
     for op in parent(P).ops
-        BLAS.axpy!(α, view(op, P.indexes[1], P.indexes[2]), A)
+        axpy!(α, view(op, P.indexes[1], P.indexes[2]), A)
     end
 
     A
@@ -216,7 +216,7 @@ end
 
 
 
-BLAS.axpy!(α, S::SubOperator{T,OP}, A::AbstractMatrix) where {T,OP<:ConstantTimesOperator} =
+axpy!(α, S::SubOperator{T,OP}, A::AbstractMatrix) where {T,OP<:ConstantTimesOperator} =
     unwrap_axpy!(α * parent(S).λ, S, A)
 
 

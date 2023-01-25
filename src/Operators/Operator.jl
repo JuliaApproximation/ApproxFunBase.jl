@@ -484,7 +484,7 @@ end
 
 
 # Convenience for wrapper ops
-unwrap_axpy!(α,P,A) = BLAS.axpy!(α,view(parent(P).op,P.indexes[1],P.indexes[2]),A)
+unwrap_axpy!(α,P,A) = axpy!(α,view(parent(P).op,P.indexes[1],P.indexes[2]),A)
 iswrapper(_) = false
 haswrapperstructure(_) = false
 
@@ -539,7 +539,7 @@ macro wrappergetindex(Wrap)
         Base.getindex(OP::$Wrap,k::Colon, j::ApproxFunBase.InfRanges) = view(OP, k, j)
         Base.getindex(OP::$Wrap,k::Colon, j::Colon) = view(OP, k, j)
 
-        BLAS.axpy!(α,P::ApproxFunBase.SubOperator{T,OP},A::AbstractMatrix) where {T,OP<:$Wrap} =
+        axpy!(α,P::ApproxFunBase.SubOperator{T,OP},A::AbstractMatrix) where {T,OP<:$Wrap} =
             ApproxFunBase.unwrap_axpy!(α,P,A)
 
         ApproxFunBase.mul_coefficients(A::$Wrap,b) = ApproxFunBase.mul_coefficients(A.op,b)
@@ -729,7 +729,7 @@ const WrapperOperator = Union{SpaceOperator,MultiplicationWrapper,DerivativeWrap
 ## BLAS and matrix routines
 # We assume that copy may be overriden
 
-BLAS.axpy!(a, X::Operator, Y::AbstractMatrix) = (Y .= a .* AbstractMatrix(X) .+ Y)
+axpy!(a, X::Operator, Y::AbstractMatrix) = (Y .= a .* AbstractMatrix(X) .+ Y)
 copyto!(dest::AbstractMatrix, src::Operator) = copyto!(dest, AbstractMatrix(src))
 
 # this is for operators that implement copy via axpy!
@@ -751,7 +751,7 @@ RaggedMatrix(::Type{Zeros}, V::Operator) =
 
 
 convert_axpy!(::Type{MT}, S::Operator) where {MT <: AbstractMatrix} =
-        BLAS.axpy!(one(eltype(S)), S, MT(Zeros, S))
+        axpy!(one(eltype(S)), S, MT(Zeros, S))
 
 
 

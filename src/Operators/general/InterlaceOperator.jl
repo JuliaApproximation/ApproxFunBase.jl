@@ -298,7 +298,7 @@ function getindex(L::InterlaceOperator{T},kr::UnitRange) where T
         if !isempty(ret_kr)
             sub_kr=cr[ret_kr[1]][2]:cr[ret_kr[end]][2]
 
-            LinearAlgebra.axpy!(1.0,L.ops[ν][sub_kr],view(ret,ret_kr))
+            axpy!(1.0,L.ops[ν][sub_kr],view(ret,ret_kr))
         end
     end
     ret
@@ -349,7 +349,7 @@ for TYP in (:BandedMatrix, :BlockBandedMatrix, :BandedBlockBandedMatrix, :Ragged
                 if !isempty(ret_kr)
                     sub_kr=cr[ret_kr[1]][2]:cr[ret_kr[end]][2]
 
-                    BLAS.axpy!(1.0,view(L.ops[ν],sub_kr,jr),view(ret,ret_kr,:))
+                    axpy!(1.0,view(L.ops[ν],sub_kr,jr),view(ret,ret_kr,:))
                 end
             end
             ret
@@ -380,7 +380,7 @@ for TYP in (:BandedMatrix, :BlockBandedMatrix, :BandedBlockBandedMatrix, :Ragged
                     sub_kr=cr[ret_kr[1]][2]:cr[ret_kr[end]][2]
                     sub_jr=cd[ret_jr[1]][2]:cd[ret_jr[end]][2]
 
-                    BLAS.axpy!(1.0,view(L.ops[ν,μ],sub_kr,sub_jr),
+                    axpy!(1.0,view(L.ops[ν,μ],sub_kr,sub_jr),
                                    view(ret,ret_kr,ret_jr))
                 end
             end

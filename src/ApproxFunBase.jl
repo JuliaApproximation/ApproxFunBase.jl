@@ -41,7 +41,8 @@ import Combinatorics: multiexponents
 import LinearAlgebra: BlasInt, BlasFloat, norm, ldiv!, mul!, det, cross,
               qr, qr!, rank, isdiag, istril, istriu, issymmetric,
               Tridiagonal, diagm, diagm_container, factorize,
-              nullspace, Hermitian, Symmetric, adjoint, transpose, char_uplo
+              nullspace, Hermitian, Symmetric, adjoint, transpose, char_uplo,
+              axpy!
 
 import SparseArrays: blockdiag
 

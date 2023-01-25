@@ -41,7 +41,7 @@ function resizedata!(B::CachedOperator{T,RaggedMatrix{T}},::Colon,n::Integer) wh
 
         jr=B.datasize[2]+1:n
         kr=1:K
-        BLAS.axpy!(1.0,view(B.op,kr,jr),view(B.data,kr,jr))
+        axpy!(1.0,view(B.op,kr,jr),view(B.data,kr,jr))
 
         B.datasize = (K,n)
 
@@ -84,7 +84,7 @@ function resizedata!(QR::QROperator{CachedOperator{T,RaggedMatrix{T},
                 kr=J:J+length(wp)-1
                 v=view(MO.data,kr,j)
                 dt=dot(wp,v)
-                LinearAlgebra.axpy!(-2*dt,wp,v)
+                axpy!(-2*dt,wp,v)
             end
         end
     end
@@ -115,7 +115,7 @@ function resizedata!(QR::QROperator{CachedOperator{T,RaggedMatrix{T},
         for j=k:MO.datasize[2]
             v=view(MO.data,kr,j)
             dt=dot(wp,v)
-            LinearAlgebra.axpy!(-2*dt,wp,v)
+            axpy!(-2*dt,wp,v)
         end
     end
     QR.ncols=col
@@ -221,7 +221,7 @@ for ArrTyp in (:AbstractVector, :AbstractMatrix)
             for k=n:-1:1
                 @inbounds ck = A.cols[k]
                 @inbounds u[k,c] /= A.data[ck+k-1]
-                BLAS.axpy!(-u[k,c], view(A.data,ck:ck+k-2), view(u,1:k-1,c))
+                axpy!(-u[k,c], view(A.data,ck:ck+k-2), view(u,1:k-1,c))
             end
         end
         u
@@ -270,7 +270,7 @@ function mulpars(Ac::Adjoint{T,<:QROperatorQ{QROperator{RR,RaggedMatrix{T},T},T}
         yp=view(Y,k-1+(cr))
 
         dt=dot(wp,yp)
-        LinearAlgebra.axpy!(-2*dt,wp,yp)
+        axpy!(-2*dt,wp,yp)
         k+=1
     end
     nz = findlast(!iszero, Y)

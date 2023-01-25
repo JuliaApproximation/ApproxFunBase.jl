@@ -74,7 +74,7 @@ function mulpars(Ac::Adjoint{T,<:QROperatorQ{QROperator{RR,Matrix{T},T},T}},
         yp=view(Y,k:k+M-1)
 
         dt=dot(wp,yp)
-        LinearAlgebra.axpy!(-2*dt,wp,yp)
+        axpy!(-2*dt,wp,yp)
         k+=1
     end
     nz = findlast(!iszero, Y)
