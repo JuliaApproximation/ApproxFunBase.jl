@@ -6,7 +6,7 @@ function show(io::IO, f::Fun)
     print(io,"Fun(")
     show(io,space(f))
     print(io,", ")
-    show(io,coefficients(f))
+    show(IOContext(io, :compact=>true), coefficients(f))
     print(io,")")
 end
 
