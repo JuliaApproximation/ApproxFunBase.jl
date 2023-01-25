@@ -3,13 +3,20 @@ export Space, domainspace, rangespace, maxspace,Space,conversion_type, transform
 
 
 
-# Space maps the Domain to the type R
-# For example, we have
-#   Chebyshev{Interval{Float64}} <: Space{Interval{Float64},Float64}
-#   Laurent{PeriodicSegment{Float64}} <: Space{PeriodicSegment{Float64},ComplexF64}
-#   Fourier{Circle{ComplexF64}} <: Space{Circle{ComplexF64},Float64}
-# Note for now Space doesn't contain any information about the coefficients
+"""
+    Space{D<:Domain, R}
 
+Abstract supertype of various spaces in which a `Fun` may be defined, where `R` represents
+the type of the basis functions over the domain. Space maps the `Domain` to the type `R`.
+
+For example, we have
+* `Chebyshev{Interval{Float64}} <: Space{Interval{Float64},Float64}`
+* `Laurent{PeriodicSegment{Float64}} <: Space{PeriodicSegment{Float64},ComplexF64}`
+* `Fourier{Circle{ComplexF64}} <: Space{Circle{ComplexF64},Float64}`
+
+!!! note
+    For now, `Space` doesn't contain any information about the coefficients
+"""
 abstract type Space{D,R} end
 
 
@@ -661,3 +668,33 @@ spacescompatible(::SequenceSpace,::SequenceSpace) = true
 ## Boundary
 
 boundary(S::Space) = boundary(domain(S))
+
+"""
+    (s::Space)(n::Integer)
+
+Return a `Fun` with the coefficients being a sparse representation of
+`[zeros(n); 1]`. The result is primarily meant to be evaluated at
+a specific point.
+
+For orthogonal polynomial spaces, the result will usually represent the `n`-th
+basis function.
+
+# Examples
+```jldoctest
+julia> Chebyshev()(2)
+Fun(Chebyshev(), [0.0, 0.0, 1.0])
+```
+"""
+(s::Space)(n::Integer) = basisfunction(s, n+1)
+"""
+    (s::Space)(n::Integer, points...)
+
+Evaluate `s(n)(points...)`
+
+# Examples
+```jldoctest
+julia> Chebyshev()(1, 0.5)
+0.5
+```
+"""
+(s::Space)(n::Integer, args...) = s(n)(args...)

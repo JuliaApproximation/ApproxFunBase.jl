@@ -185,6 +185,10 @@ using LinearAlgebra
             @test B isa Operator{ComplexF64}
             @test ComplexF64.(Ainv[1:4, 1:4]) == B[1:4, 1:4]
         end
+
+        @testset "call spaces" begin
+            @test PointSpace(1:4)(3, 4) == 1
+        end
     end
 
     @testset "DiracSpace" begin
