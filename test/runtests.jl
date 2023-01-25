@@ -505,7 +505,7 @@ end
                 blk = ApproxFunBase.block(t, i)
                 @test i ∈ ApproxFunBase.blockrange(t, blk)
                 @test vi == t[i]
-                @test findfirst(t, vi) == i
+                @test findfirst(vi, t) == i
             end
         end
         @testset "nD" begin
@@ -525,7 +525,7 @@ end
         v = collect(Iterators.take(t, 16))
         @test eltype(v) == eltype(t)
         @testset for (i, vi) in enumerate(v)
-            @test findfirst(t, vi) == i
+            @test findfirst(vi, t) == i
         end
     end
     @testset "cache" begin

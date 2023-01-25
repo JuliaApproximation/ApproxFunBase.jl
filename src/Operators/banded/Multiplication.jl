@@ -135,9 +135,9 @@ function default_mult_compatible(f::Fun, g::Fun)
     end
 end
 # This should be overriden whenever the multiplication space is different
-function default_mult(f::Fun,g::Fun)
+@inline function _default_mult(f::Fun, g::Fun, domcomp::Bool)
     # When the spaces differ we promote and multiply
-    if domainscompatible(space(f),space(g))
+    if domcomp
         default_mult_compatible(f, g)
     else
         sp=union(space(f),space(g))::Space
@@ -147,7 +147,18 @@ function default_mult(f::Fun,g::Fun)
     end
 end
 
-*(f::Fun,g::Fun) = default_mult(f,g)
+@static if VERSION >= v"1.8"
+    Base.@constprop :aggressive function default_mult(f::Fun, g::Fun,
+            domcomp = domainscompatible(space(f),space(g)))
+        _default_mult(f, g, domcomp)
+    end
+else
+    function default_mult(f::Fun, g::Fun, domcomp = domainscompatible(space(f),space(g)))
+        _default_mult(f, g, domcomp)
+    end
+end
+
+*(f::Fun, g::Fun; domcomp = domainscompatible(space(f),space(g))) = default_mult(f, g, domcomp)
 
 coefficienttimes(f::Fun,g::Fun) = Multiplication(f,space(g))*g
 
