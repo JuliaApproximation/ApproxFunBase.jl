@@ -546,7 +546,7 @@ end
 CachedIterator{T,IT}(it::IT, state) where {T,IT} = CachedIterator{T,IT}(it,T[],state,0)
 CachedIterator(it::IT) where IT = CachedIterator{eltype(it),IT}(it, ())
 
-function resize!(it::CachedIterator,n::Integer)
+function resize!(it::CachedIterator{T},n::Integer) where {T}
     m = it.length
     if n > m
         if n > length(it.storage)
@@ -559,10 +559,10 @@ function resize!(it::CachedIterator,n::Integer)
                 it.length = k-1
                 return it
             end
-            it.storage[k] = xst[1]
-            it.state = (xst[2],)
+            v::T, st = xst
+            it.storage[k] = v
+            it.state = (st,)
         end
-
         it.length = n
     end
     it
@@ -579,7 +579,7 @@ Base.keys(c::CachedIterator) = oneto(length(c))
 
 iterate(it::CachedIterator) = iterate(it,1)
 function iterate(it::CachedIterator,st::Int)
-    if  st == it.length + 1 && iterate(it.iterator,it.state...) === nothing
+    if  st > it.length && iterate(it.iterator,it.state...) === nothing
         nothing
     else
         (it[st],st+1)
