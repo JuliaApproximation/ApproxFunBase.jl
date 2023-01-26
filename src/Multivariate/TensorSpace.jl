@@ -17,11 +17,11 @@ factor(d::AbstractProductSpace,k) = factors(d)[k]
 # tensor entry of a tensor product of d spaces
 # findfirst is overriden to get efficient inverse
 # blocklengths is a tuple of block lengths, e.g., Chebyshev()^2
-# would be Tensorizer((1:∞,1:∞))
+# would be Tensorizer((Ones{Int}(∞), Ones{Int}(∞)))
 # ConstantSpace() ⊗ Chebyshev()
-# would be Tensorizer((1:1,1:∞))
+# would be Tensorizer((1:1,Ones{Int}(∞)))
 # and Chebyshev() ⊗ ArraySpace([Chebyshev(),Chebyshev()])
-# would be Tensorizer((1:∞,2:2:∞))
+# would be Tensorizer((Ones{Int}(∞), Fill(2,∞)))
 
 
 struct Tensorizer{DMS<:Tuple}
@@ -79,7 +79,7 @@ function next(a::TrivialTensorizer{d}, iterator_tuple) where {d}
 end
 
 
-function done(a::TrivialTensorizer, iterator_tuple)
+function done(a::TrivialTensorizer, iterator_tuple)::Bool
     i, tot = last(iterator_tuple)
     return i ≥ tot
 end
@@ -89,12 +89,13 @@ end
 start(a::Tensorizer2D) = _start(a)
 start(a::TrivialTensorizer{2}) = _start(a)
 
-_start(a) = (1,1), (1,1), (0,0), (a.blocks[1][1],a.blocks[2][1]), (0,length(a))
+_start(a) = (1,1, 1,1, 0,0, a.blocks[1][1],a.blocks[2][1]), (0,length(a))
 
-next(a::Tensorizer2D, state) = _next(a, state)
-next(a::TrivialTensorizer{2}, state) = _next(a, state)
+next(a::Tensorizer2D, state) = _next(a, state::typeof(_start(a)))
+next(a::TrivialTensorizer{2}, state) = _next(a, state::typeof(_start(a)))
 
-function _next(a, ((K,J), (k,j), (rsh,csh), (n,m), (i,tot)))
+function _next(a, st)
+    (K,J, k,j, rsh,csh, n,m), (i,tot) = st
     ret = k+rsh,j+csh
     if k==n && j==m  # end of block
         if J == 1 || K == length(a.blocks[1])   # end of new block
@@ -115,13 +116,16 @@ function _next(a, ((K,J), (k,j), (rsh,csh), (n,m), (i,tot)))
     else
         k += 1
     end
-    ret, ((K,J), (k,j), (rsh,csh), (n,m), (i+1,tot))
+    ret, ((K,J, k,j, rsh,csh, n,m), (i+1,tot))
 end
 
-done(a::Tensorizer2D, state) = _done(a, state)
-done(a::TrivialTensorizer{2}, state) = _done(a, state)
+done(a::Tensorizer2D, state) = _done(a, state::typeof(_start(a)))
+done(a::TrivialTensorizer{2}, state) = _done(a, state::typeof(_start(a)))
 
-_done(a, (_, _, _, _, (i,tot))) = i ≥ tot
+function _done(a, st)::Bool
+    i, tot = last(st)
+    i ≥ tot
+end
 
 iterate(a::Tensorizer) = next(a, start(a))
 function iterate(a::Tensorizer, st)
