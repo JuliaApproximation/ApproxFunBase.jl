@@ -263,14 +263,7 @@ function BandedBlockBandedMatrix(::Type{Zeros}, S::SubOperator)
                                 rows,cols, (l,u), (λ-jsh,μ+ksh))
 end
 
-function BandedBlockBandedMatrix(::Type{Zeros}, S::SubOperator{<:Any,<:Any,Tuple{BlockRange1,BlockRange1}})
-    KR,JR = parentindices(S)
-    KO = parent(S)
-    l,u = blockbandwidths(KO)::Tuple{Int,Int}
-    λ,μ = subblockbandwidths(KO)::Tuple{Int,Int}
-
-    rt = rangespace(KO)
-    dt = domainspace(KO)
+function _BandedBlockBandedMatrixZeros(::Type{T}, KR, JR, (l,u), (λ,μ), rt, dt) where {T}
     J = first(JR)
     K = first(KR)
     bl_sh = Int(J) - Int(K)
@@ -278,8 +271,17 @@ function BandedBlockBandedMatrix(::Type{Zeros}, S::SubOperator{<:Any,<:Any,Tuple
     KBR = blocklengthrange(rt,KR)
     KJR = blocklengthrange(dt,JR)
 
-    BandedBlockBandedMatrix(Zeros{eltype(KO)}(sum(KBR),sum(KJR)),
-                                AbstractVector{Int}(KBR),AbstractVector{Int}(KJR), (l+bl_sh,u-bl_sh), (λ,μ))
+    BandedBlockBandedMatrix(Zeros{T}(sum(KBR),sum(KJR)),
+                                convert(AbstractVector{Int}, KBR),
+                                convert(AbstractVector{Int}, KJR),
+                                (l+bl_sh,u-bl_sh), (λ,μ))
+end
+function BandedBlockBandedMatrix(::Type{Zeros}, S::SubOperator{<:Any,<:Any,Tuple{BlockRange1,BlockRange1}})
+    KR,JR = parentindices(S)
+    KO = parent(S)
+    l,u = blockbandwidths(KO)::Tuple{Int,Int}
+    λ,μ = subblockbandwidths(KO)::Tuple{Int,Int}
+    _BandedBlockBandedMatrixZeros(eltype(KO), KR, JR, (l,u), (λ,μ), rangespace(KO), domainspace(KO))
 end
 
 
