@@ -439,10 +439,10 @@ for TYP in (:Matrix, :BandedMatrix, :RaggedMatrix)
                     return $TYP(BandedMatrix(V))
                 end
             elseif isbandedblockbanded(P)
-                N = block(rangespace(P), last(parentindices(V)[1]))
-                M = block(domainspace(P), last(parentindices(V)[2]))
-                B = P[Block(1):N, Block(1):M]
-                return $TYP(view(B, parentindices(V)...), _colstops(V))
+                N = block(rangespace(P), last(parentindices(V)[1]))::Block{1,Int}
+                M = block(domainspace(P), last(parentindices(V)[2]))::Block{1,Int}
+                B = P[Block(1):N, Block(1):M]::AbstractMatrix{T}
+                return $TYP(view(B, parentindices(V)...), _colstops(V))::$TYP{T}
             end
 
             kr, jr = parentindices(V)
