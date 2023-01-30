@@ -194,13 +194,16 @@ function colstop(S::SubOperator{<:Any,<:Any,NTuple{2,UnitRange{Int}}},j::Integer
     cs = colstop(parent(S),parentindices(S)[2][j])
     kr = parentindices(S)[1]
     n = size(S,1)
-    if cs < first(kr)
-        0
-    elseif cs ≥ last(kr)
-        n
-    else
-        min(n,findfirst(isequal(cs),kr))
-    end
+    # function barrier to improve performance
+    (cs ->
+        if cs < first(kr)
+            0
+        elseif cs ≥ last(kr)
+            n
+        else
+            min(n,findfirst(isequal(cs),kr))
+        end
+    )(cs)
 end
 function colstart(S::SubOperator{<:Any,<:Any,NTuple{2,UnitRange{Int}}},j::Integer)
     cind = colstart(parent(S),parentindices(S)[2][j])
