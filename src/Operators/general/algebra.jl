@@ -397,7 +397,7 @@ for OP in (:rowstart, :rowstop)
             return $defOP(P, k)
         end
         for j = eachindex(P.ops)
-            k = $OP(P.ops[j], k)::Int
+            k = $OP(P.ops[j], k)::Union{Int, InfiniteCardinal{0}}
         end
         k
     end
@@ -410,7 +410,7 @@ for OP in (:colstart, :colstop)
             return $defOP(P, k)
         end
         for j = reverse(eachindex(P.ops))
-            k = $OP(P.ops[j], k)::Int
+            k = $OP(P.ops[j], k)::Union{Int, InfiniteCardinal{0}}
         end
         k
     end
