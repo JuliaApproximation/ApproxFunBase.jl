@@ -48,11 +48,11 @@ rangespace(S::SpaceOperator) = S.rangespace
 
 ##TODO: Do we need both max and min?
 function findmindomainspace(ops)
-    mapreduce(domainspace, union, ops, init = UnsetSpace())
+    mapreduce(domainspace, union, ops)
 end
 
 function findmaxrangespace(ops)
-    mapreduce(rangespace, maxspace, ops, init = UnsetSpace())
+    mapreduce(rangespace, maxspace, ops)
 end
 
 

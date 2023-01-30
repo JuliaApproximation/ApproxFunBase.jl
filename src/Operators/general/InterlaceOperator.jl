@@ -240,7 +240,7 @@ function colstop(M::InterlaceOperator, j::Integer)
         for N = 1:size(M.ops,1)
             cs = colstop(M.ops[N,J],jj)::Int
             if cs > 0
-                K = max(K,findfirst(M.rangeinterlacer,(N,cs))::Int)
+                K = max(K,findfirst((N,cs), M.rangeinterlacer)::Int)
             end
         end
         K
