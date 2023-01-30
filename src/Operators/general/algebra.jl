@@ -494,7 +494,7 @@ for TYP in (:Matrix, :BandedMatrix, :RaggedMatrix)
             RT2 = _rettype(RT)
             BA::RT2 = strictconvert(RT, P.ops[end][krl[end, 1]:krl[end, 2], jr])
             for m = (length(P.ops)-1):-1:1
-                BA = strictconvert(RT, P.ops[m][krl[m, 1]:krl[m, 2], krl[m+1, 1]:krl[m+1, 2]]) * BA
+                BA = strictconvert(RT, P.ops[m][krl[m, 1]:krl[m, 2], krl[m+1, 1]:krl[m+1, 2]])::RT2 * BA
             end
 
             RT(BA)
