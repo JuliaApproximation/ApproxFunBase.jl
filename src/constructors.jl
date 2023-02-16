@@ -38,14 +38,19 @@ end
 
 # default_Fun is the default constructor, based on evaluation and transforms
 # last argument is whether to splat or not
-default_Fun(T::Type,f,d::Space,pts::AbstractArray, shouldsplat::Val{true}) =
-    Fun(d,transform(d,T[f(x...) for x in pts]))
+function default_Fun(T::Type, f, d::Space, pts::AbstractArray, shouldsplat::Val{true})
+    default_Fun(T, Base.splat(f), d, pts, Val(false))
+end
 
-default_Fun(T::Type,f,d::Space,pts::AbstractArray, shouldsplat::Val{false}) =
-    Fun(d,transform(d,broadcast!(f, similar(pts, T), pts)))
+function default_Fun(T::Type, f, d::Space, pts::AbstractArray, shouldsplat::Val{false})
+    fv = broadcast!(f, similar(pts, T), pts)
+    tfn = _transform!!(Val(supportsinplacetransform(d)))
+    coeffs = tfn(d, fv)
+    Fun(d, coeffs)
+end
 
 
-function default_Fun(f,d::Space,n::Integer, shouldsplat::Val{false})
+function default_Fun(f, d::Space, n::Integer, shouldsplat::Val{false})
     pts=points(d, n)
     f1=f(pts[1])
     if isa(f1,AbstractArray) && size(d) ≠ size(f1)
@@ -57,19 +62,11 @@ function default_Fun(f,d::Space,n::Integer, shouldsplat::Val{false})
     default_Fun(Tprom,f,d,pts,Val(false))
 end
 
-function default_Fun(f,d::Space,n::Integer, shouldsplat::Val{true})
-    pts=points(d, n)
-    f1=f(pts[1]...)
-    if isa(f1,AbstractArray) && size(d) ≠ size(f1)
-        return Fun(f,Space(fill(d,size(f1))),n)
-    end
-
-    # we need 3 eltype calls for the case Interval(Point([1.,1.]))
-    Tprom=choosefuncfstype(typeof(f1),prectype(domain(d)))
-    default_Fun(Tprom,f,d,pts,Val(true))
+function default_Fun(f, d::Space, n::Integer, shouldsplat::Val{true})
+    default_Fun(Base.splat(f), d, n, Val(false))
 end
 
-default_Fun(f,d::Space,n::Integer) = default_Fun(f,d,n,Val(!hasnumargs(f,1)))
+default_Fun(f,d::Space,n::Integer) = default_Fun(f,d,n,Val(!hasonearg(f)))
 
 Fun(f,d::Space,n::Integer) = default_Fun(dynamic(f),d,n)
 
@@ -96,7 +93,7 @@ Fun(c::Number,d::Space) = c==0 ? c*zeros(prectype(d),d) : c*ones(prectype(d),d)
 
 ## Adaptive constructors
 function default_Fun(f, d::Space)
-    _default_Fun(hasnumargs(f, 1) ? f : Base.splat(f), d)
+    _default_Fun(hasonearg(f) ? f : Base.splat(f), d)
 end
 # In _default_Fun, we know that the function takes a single argument
 function _default_Fun(f, d::Space)
