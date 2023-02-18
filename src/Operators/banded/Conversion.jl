@@ -82,6 +82,7 @@ end
 ConversionWrapper(::Type{T},op) where {T} = ConversionWrapper{typeof(op),T}(op)
 ConversionWrapper(B::Operator) =
     ConversionWrapper{typeof(B),eltype(B)}(B)
+ConversionWrapper(C::ConversionWrapper) = C
 Conversion(A::Space,B::Space,C::Space) =
     ConversionWrapper(Conversion(B,C)*Conversion(A,B))
 Conversion(A::Space,B::Space,C::Space,D::Space...) =
