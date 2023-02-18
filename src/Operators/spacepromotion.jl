@@ -1,8 +1,26 @@
 export →
 
+"""
+    SpaceOperator
 
-## Space Operator is used to wrap other operators
-# and change the domain/range space
+`SpaceOperator` is used to wrap other operators
+and change the domain/range space.
+This is purely a wrapper. No checks are performed to assess
+the compatibility of spaces, and no conversions are performed.
+
+# Examples
+```jldoctest
+julia> C = Conversion(Chebyshev(), Ultraspherical(0.5));
+
+julia> S = ApproxFunBase.SpaceOperator(C, Chebyshev(), Legendre());
+
+julia> rangespace(S)
+Legendre()
+
+julia> domainspace(S)
+Chebyshev()
+```
+"""
 struct SpaceOperator{O<:Operator,S<:Space,V<:Space,T} <: Operator{T}
     op::O
     domainspace::S
