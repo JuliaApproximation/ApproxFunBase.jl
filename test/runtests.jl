@@ -348,6 +348,13 @@ end
         C2 = C * C
         @test domainspace(C2) == PointSpace(1:4)
         @test convert(Number, C2) == 1
+
+        v = Float64[i^2 for i in 1:4]
+        f = Fun(PointSpace(1:4), v)
+        g = C * f
+        @test g ≈ f
+        ApproxFunBase.mul_coefficients!(Operator(2I), v)
+        @test v ≈ Float64[2i^2 for i in 1:4]
     end
 end
 

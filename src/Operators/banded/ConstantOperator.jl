@@ -60,6 +60,9 @@ for op in (:+,:-)
     @eval ($op)(A::ConstantOperator,B::ConstantOperator) = ConstantOperator($op(A.λ,B.λ))
 end
 
+mul_coefficients(A::ConstantOperator, b) = A.λ * b
+mul_coefficients!(A::ConstantOperator, b) = b .*= A.λ
+
 
 ## Basis Functional
 
