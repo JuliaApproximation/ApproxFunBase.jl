@@ -24,8 +24,8 @@ macro calculus_operator(Op)
             space::S
         end
 
-        ApproxFunBase.@wrapper $WrappOp
-
+        ApproxFunBase.@wrapper $WrappOp false # the false doesn't forward the domain space
+        ApproxFunBase.domainspace(A::$WrappOp) = A.space
 
         ## Constructors
         $ConcOp(sp::Space,k) = $ConcOp{typeof(sp),typeof(k),ApproxFunBase.prectype(sp)}(sp,k)
