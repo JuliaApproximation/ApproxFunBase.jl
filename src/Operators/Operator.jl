@@ -493,32 +493,29 @@ haswrapperstructure(_) = false
 #
 #  Ex: c*op or real(op)
 macro wrapperstructure(Wrap)
-    ret = quote
-        ApproxFunBase.haswrapperstructure(::$Wrap) = true
-    end
-
-    for func in (:(ApproxFunBase.bandwidths),:(LinearAlgebra.stride),
+    v1 = map((:(ApproxFunBase.bandwidths),:(LinearAlgebra.stride),
                  :(ApproxFunBase.isbandedblockbanded),:(ApproxFunBase.isblockbanded),
                  :(ApproxFunBase.israggedbelow),:(Base.size),:(ApproxFunBase.isbanded),
                  :(ApproxFunBase.blockbandwidths),:(ApproxFunBase.subblockbandwidths),
-                 :(LinearAlgebra.issymmetric))
-        ret = quote
-            $ret
+                 :(LinearAlgebra.issymmetric))) do func
 
-            $func(D::$Wrap) = $func(D.op)
-        end
+        :($func(D::$Wrap) = $func(D.op))
     end
 
-     for func in (:(ApproxFunBase.bandwidth),:(ApproxFunBase.colstart),:(ApproxFunBase.colstop),
+    v2 = map((:(ApproxFunBase.bandwidth),:(ApproxFunBase.colstart),:(ApproxFunBase.colstop),
                      :(ApproxFunBase.rowstart),:(ApproxFunBase.rowstop),:(ApproxFunBase.blockbandwidth),
-                     :(Base.size),:(ApproxFunBase.subblockbandwidth))
-         ret = quote
-             $ret
-
+                     :(Base.size),:(ApproxFunBase.subblockbandwidth))) do func
+        quote
              $func(D::$Wrap,k::Integer) = $func(D.op,k)
              $func(A::$Wrap,i::ApproxFunBase.PosInfinity) = ℵ₀ # $func(A.op,i) | see PR #42
-         end
+        end
      end
+
+    ret = quote
+        ApproxFunBase.haswrapperstructure(::$Wrap) = true
+        $(v1...)
+        $(v2...)
+    end
 
     esc(ret)
 end
@@ -529,7 +526,19 @@ end
 # not necessarily the same spaces
 #
 macro wrappergetindex(Wrap)
+    v = map((:(ApproxFunBase.BandedMatrix),:(ApproxFunBase.RaggedMatrix),
+                :Matrix,:Vector,:AbstractVector)) do TYP
+        quote
+            $TYP(P::ApproxFunBase.SubOperator{T,OP}) where {T,OP<:$Wrap} =
+                $TYP(view(parent(P).op,P.indexes[1],P.indexes[2]))
+            $TYP(P::ApproxFunBase.SubOperator{T,OP,NTuple{2,UnitRange{Int}}}) where {T,OP<:$Wrap} =
+                $TYP(view(parent(P).op,P.indexes[1],P.indexes[2]))
+        end
+    end
+
     ret = quote
+        $(v...)
+
         Base.getindex(OP::$Wrap,k::Integer...) =
             OP.op[k...]::eltype(OP)
 
@@ -549,22 +558,6 @@ macro wrappergetindex(Wrap)
             ApproxFunBase.mul_coefficients(view(parent(A).op,S.indexes[1],S.indexes[2]),b)
 
         isdiag(W::$Wrap) = isdiag(W.op)
-    end
-
-    for TYP in (:(ApproxFunBase.BandedMatrix),:(ApproxFunBase.RaggedMatrix),
-                :Matrix,:Vector,:AbstractVector)
-        ret = quote
-            $ret
-
-            $TYP(P::ApproxFunBase.SubOperator{T,OP}) where {T,OP<:$Wrap} =
-                $TYP(view(parent(P).op,P.indexes[1],P.indexes[2]))
-            $TYP(P::ApproxFunBase.SubOperator{T,OP,NTuple{2,UnitRange{Int}}}) where {T,OP<:$Wrap} =
-                $TYP(view(parent(P).op,P.indexes[1],P.indexes[2]))
-        end
-    end
-
-    ret = quote
-        $ret
 
         # fast converts to banded matrices would be based on indices, not blocks
         function ApproxFunBase.BandedMatrix(S::ApproxFunBase.SubOperator{T,OP,NTuple{2,ApproxFunBase.BlockRange1}}) where {T,OP<:$Wrap}
@@ -618,16 +611,16 @@ end
 # use this for wrapper operators that have the same spaces but
 # not necessarily the same entries or structure
 #
-macro wrapperspaces(Wrap)
-    ret = quote  end
-
-    for func in (:(ApproxFunBase.rangespace),:(ApproxFunBase.domain),
-                 :(ApproxFunBase.domainspace),:(ApproxFunBase.isconstop))
-        ret = quote
-            $ret
-
-            $func(D::$Wrap) = $func(D.op)
-        end
+macro wrapperspaces(Wrap, forwarddomain = true)
+    fns = [:(ApproxFunBase.rangespace),:(ApproxFunBase.domain), :(ApproxFunBase.isconstop)]
+    if forwarddomain
+        fns = [fns; :(ApproxFunBase.domainspace)]
+    end
+    v = map(fns) do func
+        :($func(D::$Wrap) = $func(D.op))
+    end
+    ret = quote
+        $(v...)
     end
 
     esc(ret)
@@ -636,10 +629,10 @@ end
 
 # use this for wrapper operators that have the same entries and same spaces
 #
-macro wrapper(Wrap)
+macro wrapper(Wrap, forwarddomain = true)
     ret = quote
         ApproxFunBase.@wrappergetindex($Wrap)
-        ApproxFunBase.@wrapperspaces($Wrap)
+        ApproxFunBase.@wrapperspaces($Wrap, $forwarddomain)
 
         ApproxFunBase.iswrapper(::$Wrap) = true
     end
