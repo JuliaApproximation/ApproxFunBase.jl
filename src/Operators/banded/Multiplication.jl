@@ -90,15 +90,20 @@ choosedomainspace(M::ConcreteMultiplication{D,UnsetSpace},sp::Space) where {D} =
 
 diagm(a::Fun) = Multiplication(a)
 
-struct MultiplicationWrapper{D<:Space,S<:Space,O<:Operator,T} <: Multiplication{D,S,T}
+struct MultiplicationWrapper{D<:Space,S<:Space,T,O<:Operator{T}} <: Multiplication{D,S,T}
     f::VFun{D,T}
     op::O
     space::S
+
+    function MultiplicationWrapper{D,S,T,O}(f::Fun{D,T},op::O,space::S) where {D,S,T,O<:Operator{T}}
+        new{D,S,T,O}(f,op,space)
+    end
 end
 
 function MultiplicationWrapper(::Type{T}, f::Fun{D}, op::Operator,
         space::S = domainspace(op)) where {D,T,S<:Space}
-    MultiplicationWrapper{D,S,typeof(op),T}(f,op,space)
+    g = convert(VFun{D,T}, f)
+    MultiplicationWrapper{D,S,T,typeof(op)}(g,op,space)
 end
 function MultiplicationWrapper(f::Fun, op::Operator, space::Space = domainspace(op))
     MultiplicationWrapper(eltype(op), f, op, space)
