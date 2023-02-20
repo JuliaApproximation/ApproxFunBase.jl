@@ -612,7 +612,10 @@ end
 _unwrap_conversion(c) = c
 _unwrap_conversion(c::ConversionWrapper{<:TimesOperator}) = c.op
 
-*(A::Conversion, B::Conversion) = ConversionWrapper(TimesOperator(_unwrap_conversion(A), _unwrap_conversion(B)))
+function *(A::Conversion, B::Conversion)
+    T = TimesOperator(_unwrap_conversion(A), _unwrap_conversion(B))
+    ConversionWrapper(T, domainspace(B), rangespace(A))
+end
 *(A::Conversion, B::TimesOperator) = TimesOperator(A, B)
 *(A::TimesOperator, B::Conversion) = TimesOperator(A, B)
 *(A::Operator, B::Conversion) =

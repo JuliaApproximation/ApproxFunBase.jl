@@ -72,21 +72,29 @@ Conversion() = ConversionWrapper(Operator(I,UnsetSpace()))
 # the domain and range space
 # but continue to know its a derivative
 
-struct ConversionWrapper{S<:Operator,T} <: Conversion{T}
+struct ConversionWrapper{S<:Operator,T,D,R} <: Conversion{T}
     op::S
+    domainspace::D
+    rangespace::R
 end
 
-@wrapper ConversionWrapper
+@wrapper ConversionWrapper false false
 
+domainspace(C::ConversionWrapper) = C.domainspace
+rangespace(C::ConversionWrapper) = C.rangespace
 
-ConversionWrapper(::Type{T},op) where {T} = ConversionWrapper{typeof(op),T}(op)
-ConversionWrapper(B::Operator) =
-    ConversionWrapper{typeof(B),eltype(B)}(B)
+function ConversionWrapper{O,T}(op, d = domainspace(op), r = rangespace(op)) where {O,T}
+    ConversionWrapper{O,T,typeof(d),typeof(r)}(op, d, r)
+end
+ConversionWrapper(::Type{T},op,args...) where {T} = ConversionWrapper{typeof(op),T}(op,args...)
+ConversionWrapper(B::Operator, args...) =
+    ConversionWrapper{typeof(B),eltype(B)}(B, args...)
 ConversionWrapper(C::ConversionWrapper) = C
+ConversionWrapper(C::ConversionWrapper, args...) = ConversionWrapper(C.op, args...)
 Conversion(A::Space,B::Space,C::Space) =
-    ConversionWrapper(Conversion(B,C)*Conversion(A,B))
+    ConversionWrapper(Conversion(B,C)*Conversion(A,B), A, C)
 Conversion(A::Space,B::Space,C::Space,D::Space...) =
-    ConversionWrapper(Conversion(C,D...)*Conversion(B,C)*Conversion(A,B))
+    ConversionWrapper(Conversion(C,D...)*Conversion(B,C)*Conversion(A,B), A, last(D))
 
 ==(A::ConversionWrapper,B::ConversionWrapper) = A.op==B.op
 
@@ -96,7 +104,7 @@ function convert(::Type{Operator{T}},D::ConversionWrapper) where T
         D
     else
         BO=strictconvert(Operator{T},D.op)
-        ConversionWrapper{typeof(BO),T}(BO)
+        ConversionWrapper{typeof(BO),T}(BO, domainspace(D), rangespace(D))
     end
 end
 

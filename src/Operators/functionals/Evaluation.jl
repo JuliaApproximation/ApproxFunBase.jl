@@ -97,13 +97,12 @@ struct EvaluationWrapper{S<:Space,M,FS<:Operator,OT,T<:Number} <: Evaluation{T}
 end
 
 
-@wrapper EvaluationWrapper
+@wrapper EvaluationWrapper false
 EvaluationWrapper(sp::Space,x,order,func::Operator) =
     EvaluationWrapper{typeof(sp),typeof(x),typeof(func),typeof(order),eltype(func)}(sp,x,order,func)
 
 
 domainspace(E::Evaluation) = E.space
-domain(E::Evaluation) = domain(E.space)
 promotedomainspace(E::Evaluation,sp::Space) = Evaluation(sp,E.x,E.order)
 
 
