@@ -608,12 +608,8 @@ end
 
 
 # Conversions we always assume are intentional: no need to promote
-
-_unwrap_conversion(c) = c
-_unwrap_conversion(c::ConversionWrapper{<:TimesOperator}) = c.op
-
 function *(A::Conversion, B::Conversion)
-    T = TimesOperator(_unwrap_conversion(A), _unwrap_conversion(B))
+    T = TimesOperator(unwrap(A), unwrap(B))
     ConversionWrapper(T, domainspace(B), rangespace(A))
 end
 *(A::Conversion, B::TimesOperator) = TimesOperator(A, B)

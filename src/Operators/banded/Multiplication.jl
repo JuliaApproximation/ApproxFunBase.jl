@@ -35,7 +35,7 @@ function defaultMultiplication(f::Fun,sp::Space)
     if csp==sp || !hasconversion(sp,csp)
         error("Implement Multiplication(::Fun{$(typeof(space(f)))},::$(typeof(sp)))")
     end
-    MultiplicationWrapper(f,Multiplication(f,csp)*Conversion(sp,csp))
+    MultiplicationWrapper(f, Multiplication(f,csp)*Conversion(sp,csp), sp)
 end
 
 Multiplication(f::Fun,sp::Space) = defaultMultiplication(f,sp)

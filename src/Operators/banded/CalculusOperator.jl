@@ -10,7 +10,7 @@ macro calculus_operator(Op)
     ConcOp = Symbol(:Concrete, Op)
     WrappOp = Symbol(Op, :Wrapper)
     DefaultOp = Symbol(:Default, Op)
-    return esc(quote
+    q = quote
         # The SSS, TTT are to work around #9312
         abstract type $Op{SSS,OT,TTT} <: ApproxFunBase.CalculusOperator{SSS,OT,TTT} end
 
@@ -18,14 +18,16 @@ macro calculus_operator(Op)
             space::S        # the domain space
             order::OT
         end
-        struct $WrappOp{BT<:Operator,S<:Space,OT,T} <: $Op{S,OT,T}
+        struct $WrappOp{BT<:Operator,S<:Space,R<:Space,OT,T} <: $Op{S,OT,T}
             op::BT
             order::OT
-            space::S
+            domainspace::S
+            rangespace::R
         end
 
-        ApproxFunBase.@wrapper $WrappOp false # the false doesn't forward the domain space
-        ApproxFunBase.domainspace(A::$WrappOp) = A.space
+        ApproxFunBase.@wrapper $WrappOp false false
+        ApproxFunBase.domainspace(A::$WrappOp) = A.domainspace
+        ApproxFunBase.rangespace(A::$WrappOp) = A.rangespace
 
         ## Constructors
         $ConcOp(sp::Space,k) = $ConcOp{typeof(sp),typeof(k),ApproxFunBase.prectype(sp)}(sp,k)
@@ -35,12 +37,15 @@ macro calculus_operator(Op)
         $Op(sp::ApproxFunBase.UnsetSpace,k::Real) = $ConcOp(sp,k)
         $Op(sp::ApproxFunBase.UnsetSpace,k::Integer) = $ConcOp(sp,k)
 
-        function $DefaultOp(sp::Space,k)
+        function $DefaultOp(sp::Space, k)
             csp=ApproxFunBase.canonicalspace(sp)
             if ApproxFunBase.conversion_type(csp,sp)==csp   # Conversion(sp,csp) is not banded, or sp==csp
                error("Implement $(string($Op))($(string(sp)),$k)")
             end
-            $WrappOp(ApproxFunBase.TimesOperator([$Op(csp,k),Conversion(sp,csp)]),k)
+            O = $Op(csp,k)
+            C = Conversion_maybeconcrete(sp, csp, Val(:forward))
+            Top = ApproxFunBase.TimesOperator([O,C])
+            $WrappOp(Top, sp, k, rangespace(O))
         end
 
         $DefaultOp(d,k) = $Op(Space(d),k)
@@ -57,33 +62,31 @@ macro calculus_operator(Op)
             if T==eltype(D)
                 D
             else
-                $ConcOp{typeof(D.space),typeof(D.order),T}(D.space,D.order)
+                $ConcOp{typeof(D.space),typeof(D.order),T}(D.space, D.order)
             end
         end
 
-        $WrappOp(op::Operator,d,order) =
-            $WrappOp{typeof(op),typeof(d),typeof(order),eltype(op)}(op,order,d)
-        $WrappOp(op::Operator,order) = $WrappOp(op, domainspace(op), order)
-        $WrappOp(op::Operator) = $WrappOp(op,1)
+        $WrappOp(op::Operator, order = 1, d = domainspace(op), r = rangespace(op)) =
+            $WrappOp{typeof(op),typeof(d),typeof(r),typeof(order),eltype(op)}(op,order,d,r)
 
         function Base.convert(::Type{Operator{T}},D::$WrappOp) where T
             if T==eltype(D)
                 D
             else
-                # work around typeinfernece bug
                 op=ApproxFunBase.strictconvert(Operator{T},D.op)
-                S = domainspace(op)
-                $WrappOp{typeof(op),typeof(S),typeof(D.order),T}(op,D.order,S)::Operator{T}
+                S = domainspace(D)
+                R = rangespace(D)
+                $WrappOp(op,D.order,S,R)::Operator{T}
             end
         end
 
         ## Routines
-        ApproxFunBase.domain(D::$ConcOp) = domain(D.space)
         ApproxFunBase.domainspace(D::$ConcOp) = D.space
 
         Base.getindex(::$ConcOp{UnsetSpace,OT,T},k::Integer,j::Integer) where {OT,T} =
             error("Spaces cannot be inferred for operator")
-            ApproxFunBase.rangespace(D::$ConcOp{UnsetSpace,T}) where {T} = UnsetSpace()
+
+        ApproxFunBase.rangespace(D::$ConcOp{UnsetSpace,T}) where {T} = UnsetSpace()
 
         #promoting domain space is allowed to change range space
         # for integration, we fall back on existing conversion for now
@@ -97,11 +100,9 @@ macro calculus_operator(Op)
                 $Op(sp,D.order)
             end
         end
-    end)
-#     for func in (:rangespace,:domainspace,:bandwidths)
-#         # We assume the operator wrapped has the correct spaces
-#         @eval $func(D::$WrappOp)=$func(D.op)
-#     end
+    end
+
+    return esc(q)
 end
 
 choosedomainspace(M::CalculusOperator{UnsetSpace},sp::Space) =
@@ -194,7 +195,9 @@ end
         if conversion_type(csp,sp)==csp   # Conversion(sp,csp) is not banded, or sp==csp
            error("Implement Derivative(", sp, ",", k,")")
         end
-        DerivativeWrapper(TimesOperator(Derivative(csp,k),Conversion(sp,csp)), sp, k)
+        D = Derivative(csp,k)
+        C = Conversion_maybeconcrete(sp, csp, Val(:forward))
+        DerivativeWrapper(TimesOperator(D, C), k, sp, rangespace(D))
     else
         csp = canonicalspace(sp)
         D1 = if csp == sp
@@ -204,13 +207,13 @@ end
         else
             Dcsp = Derivative(csp)
             rsp = rangespace(Dcsp)
-            Dcsp * Conversion(sp, csp)
+            Dcsp * Conversion_maybeconcrete(sp, csp, Val(:forward))
         end
         D=DerivativeWrapper(SpaceOperator(D1,sp,setdomain(rsp,domain(sp))),1)
         if k==1
             D
         else
-            DerivativeWrapper(TimesOperator(Derivative(rangespace(D),k-1),D), sp, k)
+            DerivativeWrapper(TimesOperator(Derivative(rangespace(D),k-1),D), k, sp)
         end
     end
 end

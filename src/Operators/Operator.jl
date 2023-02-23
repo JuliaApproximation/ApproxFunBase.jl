@@ -645,6 +645,8 @@ macro wrapper(Wrap, forwarddomain = true, forwardrange = true)
     esc(ret)
 end
 
+unwrap(A::Operator) = iswrapper(A) ? A.op : A
+
 ## Standard Operators and linear algebra
 
 
