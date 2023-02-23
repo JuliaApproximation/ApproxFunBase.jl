@@ -35,7 +35,7 @@ function defaultMultiplication(f::Fun,sp::Space)
     if csp==sp || !hasconversion(sp,csp)
         error("Implement Multiplication(::Fun{$(typeof(space(f)))},::$(typeof(sp)))")
     end
-    MultiplicationWrapper(f,Multiplication(f,csp)*Conversion(sp,csp))
+    MultiplicationWrapper(f, Multiplication(f,csp)*Conversion(sp,csp), sp)
 end
 
 Multiplication(f::Fun,sp::Space) = defaultMultiplication(f,sp)
@@ -90,26 +90,34 @@ choosedomainspace(M::ConcreteMultiplication{D,UnsetSpace},sp::Space) where {D} =
 
 diagm(a::Fun) = Multiplication(a)
 
-struct MultiplicationWrapper{D<:Space,S<:Space,O<:Operator,T} <: Multiplication{D,S,T}
+struct MultiplicationWrapper{D<:Space,S<:Space,T,O<:Operator{T}} <: Multiplication{D,S,T}
     f::VFun{D,T}
     op::O
+    space::S
+
+    function MultiplicationWrapper{D,S,T,O}(f::Fun{D,T},op::O,space::S) where {D,S,T,O<:Operator{T}}
+        new{D,S,T,O}(f,op,space)
+    end
 end
 
 function MultiplicationWrapper(::Type{T}, f::Fun{D}, op::Operator,
-        dspop::S = domainspace(op)) where {D,T,S<:Space}
-    MultiplicationWrapper{D,S,typeof(op),T}(f,op)
+        space::S = domainspace(op)) where {D,T,S<:Space}
+    g = convert(VFun{D,T}, f)
+    MultiplicationWrapper{D,S,T,typeof(op)}(g,op,space)
 end
-function MultiplicationWrapper(f::Fun, op::Operator, dspop::Space = domainspace(op))
-    MultiplicationWrapper(eltype(op), f, op, dspop)
+function MultiplicationWrapper(f::Fun, op::Operator, space::Space = domainspace(op))
+    MultiplicationWrapper(eltype(op), f, op, space)
 end
 
-@wrapper MultiplicationWrapper
+domainspace(M::MultiplicationWrapper) = M.space
+
+@wrapper MultiplicationWrapper false
 
 function convert(::Type{Operator{TT}},C::MultiplicationWrapper{S,V,O,T}) where {TT,S,V,O,T}
     if TT==T
         C
     else
-        MultiplicationWrapper(Fun{S,TT}(C.f),Operator{TT}(C.op))::Operator{TT}
+        MultiplicationWrapper(Fun{S,TT}(C.f),Operator{TT}(C.op), C.space)::Operator{TT}
     end
 end
 

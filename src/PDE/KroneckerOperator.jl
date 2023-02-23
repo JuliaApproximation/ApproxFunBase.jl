@@ -56,11 +56,12 @@ function convert(::Type{Operator{T}},K::KroneckerOperator) where T<:Number
     if T == eltype(K)
         K
     else
-        ops=Operator{T}(K.ops[1]),Operator{T}(K.ops[2])
-        KroneckerOperator{typeof(ops[1]),typeof(ops[2]),typeof(K.domainspace),typeof(K.rangespace),
-                            typeof(K.domaintensorizer),typeof(K.rangetensorizer),T}(ops,
+        ops = map(Operator{T}, K.ops)
+        KroneckerOperator{map(typeof, ops)...,
+            typeof(K.domainspace),typeof(K.rangespace),
+            typeof(K.domaintensorizer),typeof(K.rangetensorizer),T}(ops,
               K.domainspace,K.rangespace,
-              K.domaintensorizer,K.rangetensorizer)
+              K.domaintensorizer,K.rangetensorizer)::Operator{T}
     end
 end
 
@@ -267,18 +268,15 @@ function Derivative(S::TensorSpace{<:Any,<:EuclideanDomain{2}}, order)
     if order[1]==0
         Dy=Derivative(S.spaces[2],order[2])
         K=Operator(I,S.spaces[1])⊗Dy
-        T=eltype(Dy)
     elseif order[2]==0
         Dx=Derivative(S.spaces[1],order[1])
         K=Dx⊗Operator(I,S.spaces[2])
-        T=eltype(Dx)
     else
         Dx=Derivative(S.spaces[1],order[1])
         Dy=Derivative(S.spaces[2],order[2])
         K=Dx⊗Dy
-        T=promote_type(eltype(Dx),eltype(Dy))
     end
-    DerivativeWrapper{typeof(K),typeof(S),typeof(order),T}(K,order,S)
+    DerivativeWrapper(K,order,S)
 end
 
 
@@ -393,14 +391,14 @@ convert(::Type{BandedBlockBandedMatrix}, S::SubOperator{T,KroneckerOperator{SS,V
 # TODO: we explicetly state type to avoid type inference bug in 0.4
 
 ConcreteConversion(a::BivariateSpace,b::BivariateSpace) =
-    ConcreteConversion{typeof(a),typeof(b),
-                        promote_type(prectype(a),prectype(b))}(a,b)
+    ConcreteConversion(promote_type(prectype(a),prectype(b)), a,b)
 
 function Conversion(a::TensorSpace2D,b::TensorSpace2D)
     C1 = Conversion(a.spaces[1],b.spaces[1])
     C2 = Conversion(a.spaces[2],b.spaces[2])
     K = KroneckerOperator(C1, C2, a, b)
-    ConversionWrapper(promote_type(prectype(a),prectype(b)), K)
+    T = promote_type(prectype(a),prectype(b))
+    ConversionWrapper(strictconvert(Operator{T}, K))
 end
 
 function Multiplication(f::Fun{<:TensorSpace}, S::TensorSpace)

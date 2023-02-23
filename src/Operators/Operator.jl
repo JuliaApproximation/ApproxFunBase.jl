@@ -611,16 +611,20 @@ end
 # use this for wrapper operators that have the same spaces but
 # not necessarily the same entries or structure
 #
-macro wrapperspaces(Wrap, forwarddomain = true)
-    fns = [:(ApproxFunBase.rangespace),:(ApproxFunBase.domain), :(ApproxFunBase.isconstop)]
+macro wrapperspaces(Wrap, forwarddomain = true, forwardrange = true)
+    fns = [:(ApproxFunBase.isconstop)]
     if forwarddomain
         fns = [fns; :(ApproxFunBase.domainspace)]
+    end
+    if forwardrange
+        fns = [fns; :(ApproxFunBase.rangespace)]
     end
     v = map(fns) do func
         :($func(D::$Wrap) = $func(D.op))
     end
     ret = quote
         $(v...)
+        ApproxFunBase.domain(D::$Wrap) = domain(domainspace(D))
     end
 
     esc(ret)
@@ -629,10 +633,10 @@ end
 
 # use this for wrapper operators that have the same entries and same spaces
 #
-macro wrapper(Wrap, forwarddomain = true)
+macro wrapper(Wrap, forwarddomain = true, forwardrange = true)
     ret = quote
         ApproxFunBase.@wrappergetindex($Wrap)
-        ApproxFunBase.@wrapperspaces($Wrap, $forwarddomain)
+        ApproxFunBase.@wrapperspaces($Wrap, $forwarddomain, $forwardrange)
 
         ApproxFunBase.iswrapper(::$Wrap) = true
     end
@@ -640,6 +644,8 @@ macro wrapper(Wrap, forwarddomain = true)
 
     esc(ret)
 end
+
+unwrap(A::Operator) = iswrapper(A) ? A.op : A
 
 ## Standard Operators and linear algebra
 
