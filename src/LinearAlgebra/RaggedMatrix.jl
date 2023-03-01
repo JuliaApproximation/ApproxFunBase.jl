@@ -183,13 +183,13 @@ function axpy!(a, X::RaggedMatrix, Y::RaggedMatrix)
     Y
 end
 
-colstop(X::SubArray{T,2,RaggedMatrix{T},Tuple{UnitRange{Int},UnitRange{Int}}},
+colstop(X::SubArray{T,2,RaggedMatrix{T},NTuple{2,UnitRange{Int}}},
      j::Integer) where {T} = min(colstop(parent(X),j + first(parentindices(X)[2])-1) -
                                             first(parentindices(X)[1]) + 1,
                             size(X,1))
 
 function axpy!(a,X::RaggedMatrix,
-                    Y::SubArray{T,2,RaggedMatrix{T},Tuple{UnitRange{Int},UnitRange{Int}}}) where T
+                    Y::SubArray{T,2,RaggedMatrix{T},NTuple{2,UnitRange{Int}}}) where T
     if size(X) ≠ size(Y)
         throw(BoundsError())
     end

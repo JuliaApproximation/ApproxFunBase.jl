@@ -332,7 +332,7 @@ for TYP in (:BandedMatrix, :BlockBandedMatrix, :BandedBlockBandedMatrix, :Ragged
                 :Matrix)
     @eval begin
         function $TYP(S::SubOperator{T,InterlaceOperator{T,1,SS,PS,DI,RI,BI},
-                            Tuple{UnitRange{Int},UnitRange{Int}}}) where {SS,PS,DI,RI,BI,T}
+                            NTuple{2,UnitRange{Int}}}) where {SS,PS,DI,RI,BI,T}
             kr,jr=parentindices(S)
             L=parent(S)
 
@@ -356,7 +356,7 @@ for TYP in (:BandedMatrix, :BlockBandedMatrix, :BandedBlockBandedMatrix, :Ragged
         end
 
         function $TYP(S::SubOperator{T,InterlaceOperator{T,2,SS,PS,DI,RI,BI},
-                      Tuple{UnitRange{Int},UnitRange{Int}}}) where {SS,PS,DI,RI,BI,T}
+                      NTuple{2,UnitRange{Int}}}) where {SS,PS,DI,RI,BI,T}
             kr,jr=parentindices(S)
             L=parent(S)
 
