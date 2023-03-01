@@ -552,7 +552,7 @@ macro wrappergetindex(Wrap)
             ApproxFunBase.unwrap_axpy!(α,P,A)
 
         ApproxFunBase.mul_coefficients(A::$Wrap,b) = ApproxFunBase.mul_coefficients(A.op,b)
-        ApproxFunBase.mul_coefficients(A::ApproxFunBase.SubOperator{T,OP,Tuple{UnitRange{Int},UnitRange{Int}}},b) where {T,OP<:$Wrap} =
+        ApproxFunBase.mul_coefficients(A::ApproxFunBase.SubOperator{T,OP,NTuple{2,UnitRange{Int}}},b) where {T,OP<:$Wrap} =
             ApproxFunBase.mul_coefficients(view(parent(A).op,S.indexes[1],S.indexes[2]),b)
         ApproxFunBase.mul_coefficients(A::ApproxFunBase.SubOperator{T,OP},b) where {T,OP<:$Wrap} =
             ApproxFunBase.mul_coefficients(view(parent(A).op,S.indexes[1],S.indexes[2]),b)

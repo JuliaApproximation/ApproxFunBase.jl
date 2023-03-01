@@ -416,7 +416,7 @@ Evaluation(sp::TensorSpace,x::Tuple) = Evaluation(sp,SVector(x...))
 
 
 # it's faster to build the operators to the last b
-function mul_coefficients(A::SubOperator{T,KKO,Tuple{UnitRange{Int},UnitRange{Int}}}, b) where {T,KKO<:KroneckerOperator}
+function mul_coefficients(A::SubOperator{T,KKO,NTuple{2,UnitRange{Int}}}, b) where {T,KKO<:KroneckerOperator}
     P = parent(A)
     kr,jr = parentindices(A)
     dt,rt = domaintensorizer(P),rangetensorizer(P)

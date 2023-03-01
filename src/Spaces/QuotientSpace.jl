@@ -262,7 +262,7 @@ for (gesdd, elty, relty) in ((:dgesdd_,:Float64,:Float64),
 end
 
 
-function BandedMatrix(S::SubOperator{T,ConcreteConversion{QuotientSpace{SP,O,D,R},SP,T},Tuple{UnitRange{Int},UnitRange{Int}}}) where {SP,O,D,R,T}
+function BandedMatrix(S::SubOperator{T,ConcreteConversion{QuotientSpace{SP,O,D,R},SP,T},NTuple{2,UnitRange{Int}}}) where {SP,O,D,R,T}
     kr,jr = parentindices(S)
     C = parent(S)
     #ret = BandedMatrix{eltype(S)}(undef, size(S), bandwidths(S))

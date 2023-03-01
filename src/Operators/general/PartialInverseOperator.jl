@@ -109,7 +109,7 @@ end
 
 ## These are both hacks that apparently work
 
-function BandedMatrix(S::SubOperator{T,<:PartialInverseOperator,Tuple{UnitRange{Int},UnitRange{Int}}}) where {T}
+function BandedMatrix(S::SubOperator{T,<:PartialInverseOperator,NTuple{2,UnitRange{Int}}}) where {T}
     kr,jr = parentindices(S)
     P = parent(S)
     #ret = BandedMatrix{eltype(S)}(undef, size(S), bandwidths(S))
