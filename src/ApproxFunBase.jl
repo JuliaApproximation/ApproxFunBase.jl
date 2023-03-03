@@ -151,6 +151,7 @@ include("Caching/caching.jl")
 include("PDE/PDE.jl")
 include("Spaces/Spaces.jl")
 include("hacks.jl")
+include("testing.jl")
 include("specialfunctions.jl")
 include("show.jl")
 

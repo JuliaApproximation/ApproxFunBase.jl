@@ -5,8 +5,9 @@ end
 ContinuousSpace(d::PiecewiseSegment{T}) where {T} =
     ContinuousSpace{T,real(eltype(T)),typeof(d)}(d)
 
-
-Space(d::PiecewiseSegment) = ContinuousSpace(d)
+# This should be uncommented when ApproxFunOrthogonalPolynomials
+# uses ContinuousSpace from this package
+# Space(d::PiecewiseSegment) = ContinuousSpace(d)
 
 isperiodic(C::ContinuousSpace) = isperiodic(domain(C))
 
