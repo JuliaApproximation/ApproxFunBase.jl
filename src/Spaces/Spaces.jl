@@ -1,7 +1,6 @@
-
-
 include("ConstantSpace.jl")
 include("SumSpace.jl")
+include("ContinuousSpace.jl")
 include("ArraySpace.jl")
 include("ProductSpaceOperators.jl")
 include("SubSpace.jl")
