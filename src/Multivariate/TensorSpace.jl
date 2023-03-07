@@ -327,11 +327,11 @@ dimension(sp::TensorSpace) = mapreduce(dimension,*,sp.spaces)
 ==(A::TensorSpace{<:NTuple{N,Space}}, B::TensorSpace{<:NTuple{N,Space}}) where {N} =
         factors(A) == factors(B)
 
-conversion_rule(a::TensorSpace{<:NTuple{2,Space}}, b::TensorSpace{<:NTuple{2,Space}}) =
-    conversion_type(a.spaces[1],b.spaces[1]) ⊗ conversion_type(a.spaces[2],b.spaces[2])
+conversion_rule(a::TensorSpace{<:NTuple{N,Space}}, b::TensorSpace{<:NTuple{N,Space}}) where {N} =
+    mapreduce((a,b)->conversion_type(a,b),⊗,a.spaces,b.spaces)
 
-maxspace_rule(a::TensorSpace{<:NTuple{2,Space}}, b::TensorSpace{<:NTuple{2,Space}}) =
-    maxspace(a.spaces[1],b.spaces[1]) ⊗ maxspace(a.spaces[2],b.spaces[2])
+maxspace_rule(a::TensorSpace{<:NTuple{N,Space}}, b::TensorSpace{<:NTuple{N,Space}}) where {N} =
+    mapreduce((a,b)->maxspace(a,b),⊗,a.spaces,b.spaces)
 
 function spacescompatible(A::TensorSpace{<:NTuple{N,Space}}, B::TensorSpace{<:NTuple{N,Space}}) where {N}
     _spacescompatible(factors(A), factors(B))

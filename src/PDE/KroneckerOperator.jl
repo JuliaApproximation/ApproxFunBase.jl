@@ -6,21 +6,31 @@ export KroneckerOperator
 # KroneckerOperator gives the kronecker product of two 1D operators
 #########
 
-struct KroneckerOperator{S,V,DS,RS,DI,RI,T} <: Operator{T}
-    ops::Tuple{S,V}
+struct KroneckerOperator{S, V, DS,RS,DI,RI,T} <: Operator{T}
+    ops::Tuple
     domainspace::DS
     rangespace::RS
     domaintensorizer::DI
     rangetensorizer::RI
 end
 
+# function KroneckerOperator{S,V,DS,RS,DI,RI,T}(ops::NTuple{<:Any, <:Conversion}, ds, rs, di, ri)
+#     KroneckerOperator{DS,RS,DI,RI,T}(ops,ds,rs,di,ri)
+# end
+
 
 KroneckerOperator(A,B,ds::Space,rs::Space,di,ri) =
     KroneckerOperator{typeof(A),typeof(B),typeof(ds),typeof(rs),typeof(di),typeof(ri),
                         promote_type(eltype(A),eltype(B))}((A,B),ds,rs,di,ri)
+KroneckerOperator(A::Tuple,ds::Space,rs::Space,di,ri) =
+    KroneckerOperator{typeof(A[1]), typeof(A[2]), typeof(ds),typeof(rs),typeof(di),typeof(ri),
+                        promote_type(eltype(A[1]),eltype(A[2]))}(A,ds,rs,di,ri)
 
 KroneckerOperator(A,B,ds::Space,rs::Space) = KroneckerOperator(A,B,ds,rs,
                     CachedIterator(tensorizer(ds)),CachedIterator(tensorizer(rs)))
+KroneckerOperator(A::Tuple, ds::Space, rs::Space) = KroneckerOperator(A,ds,rs,
+                    CachedIterator(tensorizer(ds)),CachedIterator(tensorizer(rs)))
+
 function KroneckerOperator(A,B)
     ds=domainspace(A)⊗domainspace(B)
     rs=rangespace(A)⊗rangespace(B)
@@ -262,25 +272,18 @@ Base.transpose(S::ConstantTimesOperator) = sp.c*transpose(S.op)
 
 ### Calculus
 
-#TODO: general dimension
-function Derivative(S::TensorSpace{<:Any,<:EuclideanDomain{2}}, order)
-    @assert length(order)==2
-    if order[1]==0
-        Dy=Derivative(S.spaces[2],order[2])
-        K=Operator(I,S.spaces[1])⊗Dy
-    elseif order[2]==0
-        Dx=Derivative(S.spaces[1],order[1])
-        K=Dx⊗Operator(I,S.spaces[2])
-    else
-        Dx=Derivative(S.spaces[1],order[1])
-        Dy=Derivative(S.spaces[2],order[2])
-        K=Dx⊗Dy
-    end
-    DerivativeWrapper(K,order,S)
+function Derivative(S::TensorSpace{<:Any,<:EuclideanDomain}, order)
+    @assert length(order)==length(S.spaces)
+    @inline Derivative_or_I(i) = order[i]>0 ? Derivative(S.spaces[i], order[i]) : Operator(I,S.spaces[i])
+    DerivativeWrapper(mapreduce(i->Derivative_or_I(i),⊗,1:length(order)), order, S)
 end
 
-
 DefiniteIntegral(S::TensorSpace) = DefiniteIntegralWrapper(mapreduce(DefiniteIntegral,⊗,S.spaces))
+function DefiniteIntegral(S::TensorSpace, dim::Vector{Int})
+    @assert length(dim)==length(S.spaces)
+    @inline Int_or_I(i) = 1==dim[i] ? DefiniteIntegral(S.spaces[i]) : Operator(I,S.spaces[i])
+    DefiniteIntegralWrapper(mapreduce(i->Int_or_I(i),⊗,1:length(dim)))
+end
 
 
 
@@ -397,6 +400,13 @@ function Conversion(a::TensorSpace2D,b::TensorSpace2D)
     C1 = Conversion(a.spaces[1],b.spaces[1])
     C2 = Conversion(a.spaces[2],b.spaces[2])
     K = KroneckerOperator(C1, C2, a, b)
+    T = promote_type(prectype(a),prectype(b))
+    ConversionWrapper(strictconvert(Operator{T}, K))
+end
+
+function Conversion(a::TensorSpace,b::TensorSpace)
+    C = map(Conversion,a.spaces,b.spaces)
+    K = KroneckerOperator(C, a, b)
     T = promote_type(prectype(a),prectype(b))
     ConversionWrapper(strictconvert(Operator{T}, K))
 end
