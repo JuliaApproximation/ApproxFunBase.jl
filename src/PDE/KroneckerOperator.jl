@@ -6,24 +6,20 @@ export KroneckerOperator
 # KroneckerOperator gives the kronecker product of two 1D operators
 #########
 
-struct KroneckerOperator{S, V, DS,RS,DI,RI,T} <: Operator{T}
-    ops::Tuple
+struct KroneckerOperator{TT, DS,RS,DI,RI,T} <: Operator{T}
+    ops::TT
     domainspace::DS
     rangespace::RS
     domaintensorizer::DI
     rangetensorizer::RI
 end
 
-# function KroneckerOperator{S,V,DS,RS,DI,RI,T}(ops::NTuple{<:Any, <:Conversion}, ds, rs, di, ri)
-#     KroneckerOperator{DS,RS,DI,RI,T}(ops,ds,rs,di,ri)
-# end
-
 
 KroneckerOperator(A,B,ds::Space,rs::Space,di,ri) =
-    KroneckerOperator{typeof(A),typeof(B),typeof(ds),typeof(rs),typeof(di),typeof(ri),
+    KroneckerOperator{typeof((A, B)),typeof(ds),typeof(rs),typeof(di),typeof(ri),
                         promote_type(eltype(A),eltype(B))}((A,B),ds,rs,di,ri)
 KroneckerOperator(A::Tuple,ds::Space,rs::Space,di,ri) =
-    KroneckerOperator{typeof(A[1]), typeof(A[2]), typeof(ds),typeof(rs),typeof(di),typeof(ri),
+    KroneckerOperator{typeof(A), typeof(ds),typeof(rs),typeof(di),typeof(ri),
                         promote_type(eltype(A[1]),eltype(A[2]))}(A,ds,rs,di,ri)
 
 KroneckerOperator(A,B,ds::Space,rs::Space) = KroneckerOperator(A,B,ds,rs,
@@ -67,7 +63,7 @@ function convert(::Type{Operator{T}},K::KroneckerOperator) where T<:Number
         K
     else
         ops = map(Operator{T}, K.ops)
-        KroneckerOperator{map(typeof, ops)...,
+        KroneckerOperator{typeof(ops),
             typeof(K.domainspace),typeof(K.rangespace),
             typeof(K.domaintensorizer),typeof(K.rangetensorizer),T}(ops,
               K.domainspace,K.rangespace,
@@ -348,9 +344,9 @@ const Trivial2DTensorizer = CachedIterator{Tuple{Int,Int},
 # This routine is an efficient version of KroneckerOperator for the case of
 # tensor product of trivial blocks
 
-function BandedBlockBandedMatrix(S::SubOperator{T,KroneckerOperator{SS,V,DS,RS,
+function BandedBlockBandedMatrix(S::SubOperator{T,KroneckerOperator{TT,DS,RS,
                                      Trivial2DTensorizer,Trivial2DTensorizer,T},
-                                     Tuple{BlockRange1,BlockRange1}}) where {SS,V,DS,RS,T}
+                                     Tuple{BlockRange1,BlockRange1}}) where {TT,DS,RS,T}
     KR,JR = parentindices(S)
     KR_i, JR_i = Int.(KR), Int.(JR)
 
@@ -382,9 +378,9 @@ function BandedBlockBandedMatrix(S::SubOperator{T,KroneckerOperator{SS,V,DS,RS,
     ret
 end
 
-convert(::Type{BandedBlockBandedMatrix}, S::SubOperator{T,KroneckerOperator{SS,V,DS,RS,
+convert(::Type{BandedBlockBandedMatrix}, S::SubOperator{T,KroneckerOperator{TT,DS,RS,
                                      Trivial2DTensorizer,Trivial2DTensorizer,T},
-                                     Tuple{BlockRange1,BlockRange1}}) where {SS,V,DS,RS,T} =
+                                     Tuple{BlockRange1,BlockRange1}}) where {TT,DS,RS,T} =
     BandedBlockBandedMatrix(S)
 
 ## TensorSpace operators
@@ -459,7 +455,7 @@ end
 
 # if the second operator is a constant, we may scale the first operator,
 # and apply it on the coefficients
-function (*)(ko::KroneckerOperator{<:Operator, <:ConstantOperator}, pf::ProductFun)
+function (*)(ko::KroneckerOperator{<:Tuple{<:Operator, <:ConstantOperator}}, pf::ProductFun)
     O1, O2 = ko.ops
     O12 = O2.λ * O1
     ProductFun(map(x -> O12*x, pf.coefficients), factor(pf.space, 2))

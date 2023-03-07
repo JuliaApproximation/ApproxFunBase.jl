@@ -215,7 +215,7 @@ blocklength(it,k::Block) = blocklength(it,k.n[1])
 blocklength(it,k::BlockRange) = blocklength(it,Int.(k))
 
 blocklengths(::TrivialTensorizer{2}) = 1:∞
-
+blocklengths(::TrivialTensorizer{d}) where {d} = binomial.((1:∞).+(d-2), d-1)
 
 
 blocklengths(it::Tensorizer) = tensorblocklengths(it.blocks...)
@@ -304,7 +304,15 @@ const TensorSpace2D{AA, BB, D,R} = TensorSpace{<:Tuple{AA, BB}, D, R} where {AA<
 const TensorSpaceND{d, D, R} = TensorSpace{<:NTuple{d, <:UnivariateSpace}, D, R}
 
 tensorizer(sp::TensorSpace) = Tensorizer(map(blocklengths,sp.spaces))
-blocklengths(S::TensorSpace) = tensorblocklengths(map(blocklengths,S.spaces)...)
+function blocklengths(S::TensorSpace)
+    list_blocks = map(blocklengths,S.spaces)
+    if all(x->x == Ones{Int}(ℵ₀), list_blocks)
+        d = length(S.spaces)
+        return binomial.((1:∞).+(d-2), d-1)
+    else
+        return tensorblocklengths(list_blocks)
+    end
+end
 
 
 # the evaluation is *, so the type will be the same as *
