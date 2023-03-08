@@ -136,7 +136,7 @@ for f in [:isblockbanded, :israggedbelow, :isdiag]
         $(_f)(::Tuple{}) = true
     end
 end
-isbandedblockbanded(K::KroneckerOperator) = _isbandedblockbanded(K.ops)
+isbandedblockbanded(K::KroneckerOperator) = length(K.ops)>2 ? false : _isbandedblockbanded(K.ops)
 isbandedblockbandedcheck(op) = isbanded(op) && isinf(size(op,1)) && isinf(size(op,2))
 function _isbandedblockbanded(ops::Tuple)
     isbandedblockbandedcheck(first(ops)) && _isbandedblockbanded(Base.tail(ops))
