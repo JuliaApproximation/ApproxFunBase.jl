@@ -31,6 +31,7 @@ end
 const InfOnes = Ones{Int,1,Tuple{OneToInf{Int}}}
 const Tensorizer2D{AA, BB} = Tensorizer{Tuple{AA, BB}}
 const TrivialTensorizer{d} = Tensorizer{NTuple{d,InfOnes}}
+const TrivialConstantTensorizer{d} = Tensorizer{<:NTuple{d,SVector{1, <:Int}}}  # for all dimensions constant
 
 eltype(::Type{<:Tensorizer{<:Tuple{Vararg{Any,N}}}}) where {N} = NTuple{N,Int}
 dimensions(a::Tensorizer) = map(sum,a.blocks)
@@ -39,6 +40,24 @@ length(a::Tensorizer) = reduce(*, dimensions(a)) # easier type-inference than ma
 Base.IteratorSize(::Type{Tensorizer{T}}) where {T<:Tuple} = _IteratorSize(T)
 
 Base.keys(a::Tensorizer) = oneto(length(a))
+
+
+function start(a::TrivialConstantTensorizer{d}) where {d}
+    @assert length(a) == 1
+    block = ntuple(one, d)
+    return (block, (0,1))
+end
+
+function next(a::TrivialConstantTensorizer{d}, iterator_tuple) where {d}
+    (block, (i,tot)) = iterator_tuple
+    ret = block
+    ret, (block, (i+1,tot))
+end
+
+function done(a::TrivialConstantTensorizer, iterator_tuple)::Bool
+    i, tot = last(iterator_tuple)
+    return i ≥ tot
+end
 
 function start(a::TrivialTensorizer{d}) where {d}
     # ((block_dim_1, block_dim_2,...), (itaration_number, iterator, iterator_state)), (itemssofar, length)
@@ -315,7 +334,7 @@ function blocklengths(S::TensorSpace)
         d = length(S.spaces)
         return _blocklengths_trivialTensorizer(d).(1:∞)
     else
-        return tensorblocklengths(list_blocks)
+        return tensorblocklengths(list_blocks...)
     end
 end
 
@@ -634,7 +653,7 @@ function totensor(it::Tensorizer,M::AbstractVector)
     ret
 end
 
-@inline function totensoriterator(it::TrivialTensorizer{d},M::AbstractVector) where {d}
+@inline function totensoriterator(it::Union{TrivialTensorizer{d}, TrivialConstantTensorizer{d}} ,M::AbstractVector) where {d}
     B=block(it,length(M))
     return it, M, B
 end
@@ -677,7 +696,29 @@ evaluate(f::AbstractVector,S::TensorSpace2D,x) = ProductFun(totensor(S,f), S)(x.
 evaluate(f::AbstractVector,S::TensorSpace2D,x,y) = ProductFun(totensor(S,f),S)(x,y)
 
 # ND evaluation functions of Trivial Spaces
-evaluate(f::AbstractVector,S::TensorSpaceND,x) = TrivialTensorFun(totensor(S, f)..., S)(x...)
+not_const_spaces_indices(S) = filter!(i->i≠0, map(i->S.spaces[i] isa ConstantSpace ? 0 : i,1:length(S.spaces)))
+function evaluate(f::AbstractVector,S::TensorSpaceND,x)
+    if !any(s->s isa ConstantSpace, S.spaces)
+        return TrivialTensorFun(totensor(S, f)..., S)(x...)
+    end
+    not_cons_indices = not_const_spaces_indices(S)
+    xmod = if length(x) == length(not_cons_indices)
+        x
+    else
+        x[not_cons_indices]
+    end
+    (length(not_cons_indices) == 0) && return f[1]
+    S_new = reduce(⊗, S.spaces[not_cons_indices])
+    if length(not_cons_indices) > 2
+        return TrivialTensorFun(totensor(S_new, f)..., S_new)(x...)
+    elseif length(S_new) == 2
+        return ProductFun(totensor(S_new, f), S_new)(x...)
+    elseif length(S_new) == 1
+        return Fun(S_new[1], f)(x)
+    else
+        error("This should not happen")
+    end
+end
 
 coefficientmatrix(f::Fun{<:AbstractProductSpace}) = totensor(space(f),f.coefficients)
 

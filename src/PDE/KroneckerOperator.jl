@@ -27,6 +27,22 @@ KroneckerOperator(A,B,ds::Space,rs::Space) = KroneckerOperator(A,B,ds,rs,
 KroneckerOperator(A::Tuple, ds::Space, rs::Space) = KroneckerOperator(A,ds,rs,
                     CachedIterator(tensorizer(ds)),CachedIterator(tensorizer(rs)))
 
+# DON'T nest KroneckerOperators
+function KroneckerOperator(A::KroneckerOperator,B::KroneckerOperator)
+    ds=domainspace(A)⊗domainspace(B)
+    rs=rangespace(A)⊗rangespace(B)
+    KroneckerOperator((A.ops..., B.ops...), ds, rs)
+end
+function KroneckerOperator(A::KroneckerOperator,B)
+    ds=domainspace(A)⊗domainspace(B)
+    rs=rangespace(A)⊗rangespace(B)
+    KroneckerOperator((A.ops..., B), ds, rs)
+end
+function KroneckerOperator(A,B::KroneckerOperator)
+    ds=domainspace(A)⊗domainspace(B)
+    rs=rangespace(A)⊗rangespace(B)
+    KroneckerOperator((A, B.ops...), ds, rs)
+end
 function KroneckerOperator(A,B)
     ds=domainspace(A)⊗domainspace(B)
     rs=rangespace(A)⊗rangespace(B)
@@ -46,15 +62,13 @@ KroneckerOperator(K::KroneckerOperator) = K
 KroneckerOperator(T::TimesOperator) = mapfoldr(op -> KroneckerOperator(op), *, T.ops)
 
 function promotedomainspace(K::KroneckerOperator,ds::TensorSpace)
-    A=promotedomainspace(K.ops[1],ds.spaces[1])
-    B=promotedomainspace(K.ops[2],ds.spaces[2])
-    KroneckerOperator(A,B,ds,rangespace(A)⊗rangespace(B))
+    A = (i->promoterangespace(K.ops[i], ds.spaces[i]) for i=1:length(K.ops))
+    KroneckerOperator(A,ds,rangespace(K)) ## TODO: maybe rangespace(K) has to be replaces by rangespace(A[1])⊗...
 end
 
 function promoterangespace(K::KroneckerOperator,rs::TensorSpace)
-    A=promoterangespace(K.ops[1],rs.spaces[1])
-    B=promoterangespace(K.ops[2],rs.spaces[2])
-    KroneckerOperator(A,B,domainspace(K),rs)
+    A = (i->promoterangespace(K.ops[i], rs.spaces[i]) for i=1:length(K.ops))
+    KroneckerOperator(A,domainspace(K),rs)
 end
 
 
@@ -130,11 +144,12 @@ end
 _isbandedblockbanded(::Tuple{}) = true
 
 blockbandwidths(K::KroneckerOperator) =
-    (blockbandwidth(K.ops[1],1)+blockbandwidth(K.ops[2],1),
-    blockbandwidth(K.ops[1],2)+blockbandwidth(K.ops[2],2))
+    (mapreduce(k->blockbandwidth(k,1), +, K.ops), 
+    mapreduce(k->blockbandwidth(k,2), +, K.ops))
 
 # If each block were in turn BlockBandedMatrix, these would
 # be the    bandwidths
+# TODO: How does this work for multiple Ops?
 subblock_blockbandwidths(K::KroneckerOperator) =
     (max(blockbandwidth(K.ops[1],1),blockbandwidth(K.ops[2],2)) ,
            max(blockbandwidth(K.ops[1],2),blockbandwidth(K.ops[2],1)))
@@ -188,20 +203,24 @@ domaintensorizer(K::KroneckerOperator) = K.domaintensorizer
 rangetensorizer(K::KroneckerOperator) = K.rangetensorizer
 
 
+# For 2 ops, we can do this
 # we suport 4-indexing with KroneckerOperator
 # If A is K x J and B is N x M, then w
 # index to match KO=reshape(kron(B,A),N,K,M,J)
 # that is
 # KO[k,n,j,m] = A[k,j]*B[n,m]
-# TODO: arbitrary number of ops
 
-getindex(KO::KroneckerOperator,k::Integer,n::Integer,j::Integer,m::Integer) =
-    KO.ops[1][k,j]*KO.ops[2][n,m]
+# TODO: arbitrary number of ops
+# We get tuples of arbitraty length from the tensorizers
+
+## this should not be used anymore, can be deleted
+# getindex(KO::KroneckerOperator,k::Integer,n::Integer,j::Integer,m::Integer) =
+#     KO.ops[1][k,j]*KO.ops[2][n,m]
 
 function getindex(KO::KroneckerOperator,kin::Integer,jin::Integer)
-    j,m=KO.domaintensorizer[jin]
-    k,n=KO.rangetensorizer[kin]
-    KO[k,n,j,m]
+    domain_tuple=KO.domaintensorizer[jin]
+    range_tuple=KO.rangetensorizer[kin]
+    mapreduce((k,i_in,j_out)->k[i_in,j_out], *, KO.ops, range_tuple, domain_tuple)
 end
 
 function getindex(KO::KroneckerOperator,k::Integer)
@@ -218,11 +237,8 @@ end
 function *(A::KroneckerOperator, B::KroneckerOperator)
     dspB = domainspace(B)
     rspA = rangespace(A)
-    A1, A2 = A.ops
-    B1, B2 = B.ops
-    AB1 = A1 * B1
-    AB2 = A2 * B2
-    KroneckerOperator(AB1, AB2, dspB, rspA)
+    AB = Tuple([a*b for (a,b) in zip(A.ops, B.ops)])
+    KroneckerOperator(AB, dspB, rspA)
 end
 
 
