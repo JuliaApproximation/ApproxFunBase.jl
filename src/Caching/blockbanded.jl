@@ -22,6 +22,12 @@ end
 
 diagblockshift(a,b) = error("Developer: Not implemented for blocklengths $a, $b")
 
+function diagblockshift(a::BroadcastArray{<:Int, 1}, b::BroadcastArray{<:Int, 1})
+    if a.f == b.f
+        return 0
+    end
+    error("Broadcastvectors of blocklengths $a, $b are not implemented.")
+end
 function diagblockshift(a::AbstractRange, b::AbstractRange)
     @assert step(a) == step(b)
     first(b)-first(a)

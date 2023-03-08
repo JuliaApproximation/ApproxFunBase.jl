@@ -215,7 +215,12 @@ blocklength(it,k::Block) = blocklength(it,k.n[1])
 blocklength(it,k::BlockRange) = blocklength(it,Int.(k))
 
 blocklengths(::TrivialTensorizer{2}) = 1:∞
-blocklengths(::TrivialTensorizer{d}) where {d} = binomial.((1:∞).+(d-2), d-1)
+
+## anonymous function needed in order to compare if two blocklenghts are equal
+_blocklengths_trivialTensorizer(d) = let d=d
+    x->binomial(x+(d-2), d-1)
+end
+blocklengths(::TrivialTensorizer{d}) where {d} = _blocklengths_trivialTensorizer(d).(1:∞)
 
 
 blocklengths(it::Tensorizer) = tensorblocklengths(it.blocks...)
@@ -308,7 +313,7 @@ function blocklengths(S::TensorSpace)
     list_blocks = map(blocklengths,S.spaces)
     if all(x->x == Ones{Int}(ℵ₀), list_blocks)
         d = length(S.spaces)
-        return binomial.((1:∞).+(d-2), d-1)
+        return _blocklengths_trivialTensorizer(d).(1:∞)
     else
         return tensorblocklengths(list_blocks)
     end
