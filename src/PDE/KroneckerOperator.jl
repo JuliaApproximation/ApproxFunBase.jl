@@ -290,6 +290,13 @@ function Derivative(S::TensorSpace{<:Any,<:EuclideanDomain}, order)
     DerivativeWrapper(mapreduce(i->Derivative_or_I(i),⊗,1:length(order)), order, S)
 end
 
+function Integral(S::TensorSpace{<:Any,<:EuclideanDomain}, order)
+    @assert length(order)==length(S.spaces)
+    @assert max(order...)<=1
+    @inline Integral_or_I(i) = order[i]>0 ? Integral(S.spaces[i]) : Operator(I,S.spaces[i])
+    IntegralWrapper(mapreduce(i->Integral_or_I(i),⊗,1:length(order)))
+end
+
 DefiniteIntegral(S::TensorSpace) = DefiniteIntegralWrapper(mapreduce(DefiniteIntegral,⊗,S.spaces))
 function DefiniteIntegral(S::TensorSpace, dim::Vector{Int})
     @assert length(dim)==length(S.spaces)
