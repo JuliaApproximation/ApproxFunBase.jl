@@ -30,8 +30,10 @@ end
 
 const InfOnes = Ones{Int,1,Tuple{OneToInf{Int}}}
 const Tensorizer2D{AA, BB} = Tensorizer{Tuple{AA, BB}}
+const MixedTrivConstTensorizer{d} = Tensorizer{<:Tuple{Vararg{Union{InfOnes, SVector{1, <:Int}},d}}} # const or trivial
+# TrivialTensorizer and ConstantTensorizer are special cases of MixedTrivConstTensorizer
 const TrivialTensorizer{d} = Tensorizer{NTuple{d,InfOnes}}
-const TrivialConstantTensorizer{d} = Tensorizer{<:NTuple{d,SVector{1, <:Int}}}  # for all dimensions constant
+const ConstantTensorizer{d} = Tensorizer{<:NTuple{d,SVector{1, <:Int}}}  # for all dimensions constant
 
 eltype(::Type{<:Tensorizer{<:Tuple{Vararg{Any,N}}}}) where {N} = NTuple{N,Int}
 dimensions(a::Tensorizer) = map(sum,a.blocks)
@@ -42,19 +44,19 @@ Base.IteratorSize(::Type{Tensorizer{T}}) where {T<:Tuple} = _IteratorSize(T)
 Base.keys(a::Tensorizer) = oneto(length(a))
 
 
-function start(a::TrivialConstantTensorizer{d}) where {d}
+function start(a::ConstantTensorizer{d}) where {d}
     @assert length(a) == 1
     block = ntuple(one, d)
     return (block, (0,1))
 end
 
-function next(a::TrivialConstantTensorizer{d}, iterator_tuple) where {d}
+function next(a::ConstantTensorizer{d}, iterator_tuple) where {d}
     (block, (i,tot)) = iterator_tuple
     ret = block
     ret, (block, (i+1,tot))
 end
 
-function done(a::TrivialConstantTensorizer, iterator_tuple)::Bool
+function done(a::ConstantTensorizer, iterator_tuple)::Bool
     i, tot = last(iterator_tuple)
     return i ≥ tot
 end
@@ -97,8 +99,56 @@ function next(a::TrivialTensorizer{d}, iterator_tuple) where {d}
     ret, ((block, (j, iterator, iter_state)), (i,tot))
 end
 
-
 function done(a::TrivialTensorizer, iterator_tuple)::Bool
+    i, tot = last(iterator_tuple)
+    return i ≥ tot
+end
+
+
+function start(a::MixedTrivConstTensorizer{d}) where {d}
+    # const indices are always left to be one
+    relevant_ind = filter!(i->i≠0, map(i->a.blocks[i] isa SVector{1, <:Int} ? 0 : i,1:length(a.blocks)))
+    real_d = length(relevant_ind)
+    # ((block_dim_1, block_dim_2,...), (itaration_number, iterator, iterator_state)), (itemssofar, length)
+    block = ones(Int, real_d)
+    return (block, (relevant_ind, real_d, 0, nothing, nothing)), (0,length(a))
+end
+
+function next(a::MixedTrivConstTensorizer{d}, iterator_tuple) where {d}
+    (block, (relevant_ind, real_d, j, iterator, iter_state)), (i,tot) = iterator_tuple
+
+    @inline function check_block_finished(j, iterator, block)
+        if iterator === nothing
+            return true
+        end
+        # there are N-1 over d-1 combinations in a block
+        amount_combinations_block = binomial(sum(block)-1, real_d-1)
+        # check if all combinations have been iterated over
+        amount_combinations_block <= j
+    end
+
+    ret_vec = ones(Int, d)
+    ret_vec[relevant_ind] = reverse(block)
+    ret = Tuple(SVector{d}(ret_vec))
+
+    if check_block_finished(j, iterator, block)   # end of new block
+        # set up iterator for new block
+        current_sum = sum(block)
+        iterator = multiexponents(real_d, current_sum+1-real_d)
+        iter_state = nothing
+        j = 0
+    end
+
+    # increase block, or initialize new block
+    _res, iter_state = iterate(iterator, iter_state)
+    # res = Tuple(SVector{real_d}(_res))
+    block = _res.+1
+    j = j+1
+
+    ret, ((block, (relevant_ind, real_d, j, iterator, iter_state)), (i,tot))
+end
+
+function done(a::MixedTrivConstTensorizer, iterator_tuple)::Bool
     i, tot = last(iterator_tuple)
     return i ≥ tot
 end
@@ -107,11 +157,13 @@ end
 # (blockrow,blockcol), (subrow,subcol), (rowshift,colshift), (numblockrows,numblockcols), (itemssofar, length)
 start(a::Tensorizer2D) = _start(a)
 start(a::TrivialTensorizer{2}) = _start(a)
+start(a::MixedTrivConstTensorizer{2}) = _start(a)
 
 _start(a) = (1,1, 1,1, 0,0, a.blocks[1][1],a.blocks[2][1]), (0,length(a))
 
 next(a::Tensorizer2D, state) = _next(a, state::typeof(_start(a)))
 next(a::TrivialTensorizer{2}, state) = _next(a, state::typeof(_start(a)))
+next(a::MixedTrivConstTensorizer{2}, state) = _next(a, state::typeof(_start(a)))
 
 function _next(a, st)
     (K,J, k,j, rsh,csh, n,m), (i,tot) = st
@@ -140,6 +192,7 @@ end
 
 done(a::Tensorizer2D, state) = _done(a, state::typeof(_start(a)))
 done(a::TrivialTensorizer{2}, state) = _done(a, state::typeof(_start(a)))
+done(a::MixedTrivConstTensorizer{2}, state) = _done(a, state::typeof(_start(a)))
 
 function _done(a, st)::Bool
     i, tot = last(st)
@@ -240,7 +293,13 @@ _blocklengths_trivialTensorizer(d) = let d=d
     x->binomial(x+(d-2), d-1)
 end
 blocklengths(::TrivialTensorizer{d}) where {d} = _blocklengths_trivialTensorizer(d).(1:∞)
-
+blocklengths(::ConstantTensorizer) = SVector(1)
+function blocklengths(a::MixedTrivConstTensorizer{d}) where {d}
+    real_d = mapreduce(bl->bl isa SVector{1, <:Int} ? 0 : 1, +, a.blocks)
+    real_d == 0 && return SVector(1)
+    real_d == 1 && return 1:∞
+    return _blocklengths_trivialTensorizer(real_d).(1:∞)
+end
 
 blocklengths(it::Tensorizer) = tensorblocklengths(it.blocks...)
 blocklengths(it::CachedIterator) = blocklengths(it.iterator)
@@ -653,7 +712,7 @@ function totensor(it::Tensorizer,M::AbstractVector)
     ret
 end
 
-@inline function totensoriterator(it::Union{TrivialTensorizer{d}, TrivialConstantTensorizer{d}} ,M::AbstractVector) where {d}
+@inline function totensoriterator(it::MixedTrivConstTensorizer{d} ,M::AbstractVector) where {d}
     B=block(it,length(M))
     return it, M, B
 end
