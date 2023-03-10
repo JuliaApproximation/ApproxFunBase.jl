@@ -144,18 +144,18 @@ points(sp::WeightSpace,n) = points(sp.space,n)
 weight(S::WeightSpace, x...) = error("Override `weight(::$S, $x)`")
 
 
-struct WeightSpacePlan{S,P,T,V}
+struct WeightSpacePlan{S,P,T,V,PTS<:AbstractVector{T},WT<:AbstractVector{V}}
     space::S
     plan::P
-    points::Vector{T}
-    weights::Vector{V}
+    points::PTS
+    weights::WT
 end
 
-struct IWeightSpacePlan{S,P,T,V}
+struct IWeightSpacePlan{S,P,T,V,PTS<:AbstractVector{T},WT<:AbstractVector{V}}
     space::S
     plan::P
-    points::Vector{T}
-    weights::Vector{V}
+    points::PTS
+    weights::WT
 end
 
 function plan_transform(S::WeightSpace,vals::AbstractVector)
