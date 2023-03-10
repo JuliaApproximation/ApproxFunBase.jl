@@ -1,35 +1,35 @@
-Vcheckbounds(A::Operator,kr::Colon) = nothing
-
-@inline function checkbounds(A, inds...)
-    _checkbounds(A, inds...)::Bool || throw(BoundsError(A,inds))
+function checkbounds(A::Operator, inds...)
+    checkbounds(Bool, A, inds...) || throw(BoundsError(A,inds))
     nothing
 end
 
-_checkbounds(A::Operator,kr)::Bool =
+checkbounds(::Type{Bool}, A::Operator,kr::Colon) = true
+
+checkbounds(::Type{Bool}, A::Operator,kr) =
     !(maximum(kr) > length(A) || minimum(kr) < 1)
 
 
-_checkbounds(A::Operator,kr::Union{Colon,InfRanges},jr::Union{Colon,InfRanges})::Bool = true
+checkbounds(::Type{Bool}, A::Operator,kr::Union{Colon,InfRanges},jr::Union{Colon,InfRanges}) = true
 
-_checkbounds(A::Operator,kr::Union{Colon,InfRanges},jr)::Bool =
+checkbounds(::Type{Bool}, A::Operator,kr::Union{Colon,InfRanges},jr) =
     !(maximum(jr) > size(A,2) || minimum(jr) < 1)
 
-_checkbounds(A::Operator,kr,jr::Union{Colon,InfRanges})::Bool =
+checkbounds(::Type{Bool}, A::Operator,kr,jr::Union{Colon,InfRanges}) =
     !(maximum(kr) > size(A,1)  || minimum(kr) < 1 )
 
-function _checkbounds(A::Operator,kr,jr)::Bool
+function checkbounds(::Type{Bool}, A::Operator,kr,jr)
     (isempty(kr) || isempty(jr)) && return true
     (1 <= minimum(kr) <= maximum(kr) <= size(A,1)) &&
     (1 <= minimum(jr) <= maximum(jr) <= size(A,2))
 end
 
-_checkbounds(A::Operator,K::Block,J::Block)::Bool =
+checkbounds(::Type{Bool}, A::Operator,K::Block,J::Block) =
      1 ≤ first(K.n[1]) ≤ length(blocklengths(rangespace(A))) &&
      1 ≤ first(J.n[1]) ≤ length(blocklengths(domainspace(A)))
 
-_checkbounds(A::Operator,K::BlockRange{1},J::BlockRange{1})::Bool =
+checkbounds(::Type{Bool}, A::Operator,K::BlockRange{1},J::BlockRange{1}) =
     isempty(K) || isempty(J) ||
-        _checkbounds(A, Block(maximum(K.indices[1])), Block(maximum(J.indices[1])))
+        checkbounds(Bool, A, Block(maximum(K.indices[1])), Block(maximum(J.indices[1])))
 
 
 

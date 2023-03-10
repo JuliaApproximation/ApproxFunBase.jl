@@ -290,7 +290,7 @@ end
 function subtractrankone!(A::AbstractVector,B::AbstractVector,X::AbstractMatrix,gridx::Int,gridy::Int)
     checkbounds(B, 1:gridy)
     checkbounds(A, 1:gridx)
-    checkbounds(X, 1:grid, 1:gridy)
+    checkbounds(X, 1:gridx, 1:gridy)
     for j=1:gridy
         @inbounds Bj = B[j]
         @simd for k=1:gridx
