@@ -247,7 +247,7 @@ LowRankFun(f::LowRankFun) = LowRankFun(f,ChebyshevInterval(),ChebyshevInterval()
 
 ## Utilities
 
-function findapproxmax!(f::Function,X::AbstractMatrix,ptsx::AbstractVector,ptsy::Vector,gridx,gridy)
+function findapproxmax!(f::Function,X::AbstractMatrix,ptsx::AbstractVector,ptsy::AbstractVector,gridx,gridy)
     for j=1:gridy
         ptsyj = ptsy[j]
         @simd for k=1:gridx
@@ -259,7 +259,7 @@ function findapproxmax!(f::Function,X::AbstractMatrix,ptsx::AbstractVector,ptsy:
     maxabsf,[ptsx[imptple[1]],ptsy[imptple[2]]]
 end
 
-function findapproxmax!(A::Fun,B::Fun,X::AbstractMatrix,ptsx::Vector,ptsy::Vector,gridx,gridy)
+function findapproxmax!(A::Fun,B::Fun,X::AbstractMatrix,ptsx::AbstractVector,ptsy::AbstractVector,gridx,gridy)
     Ax,By = A.(ptsx),B.(ptsy)
     subtractrankone!(Ax,By,X,gridx,gridy)
     maxabsf,impt = findmaxabs(X)
@@ -267,7 +267,7 @@ function findapproxmax!(A::Fun,B::Fun,X::AbstractMatrix,ptsx::Vector,ptsy::Vecto
     [ptsx[imptple[1]],ptsy[imptple[2]]]
 end
 
-function findcholeskyapproxmax!(f::Function,X::AbstractVector,pts::Vector,grid)
+function findcholeskyapproxmax!(f::Function,X::AbstractVector,pts::AbstractVector,grid)
     @simd for k=1:grid
         @inbounds X[k]+=f(pts[k],pts[k])
     end
@@ -275,7 +275,7 @@ function findcholeskyapproxmax!(f::Function,X::AbstractVector,pts::Vector,grid)
     maxabsf,pts[impt]
 end
 
-function findcholeskyapproxmax!(A::Fun,B::Fun,X::Vector,pts::Vector,grid)
+function findcholeskyapproxmax!(A::Fun,B::Fun,X::AbstractVector,pts::AbstractVector,grid)
     Ax,By = A.(pts),B.(pts)
     subtractrankone!(Ax,By,X,grid)
     maxabsf,impt = findmaxabs(X)
