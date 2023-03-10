@@ -248,6 +248,9 @@ LowRankFun(f::LowRankFun) = LowRankFun(f,ChebyshevInterval(),ChebyshevInterval()
 ## Utilities
 
 function findapproxmax!(f::Function,X::AbstractMatrix,ptsx::AbstractVector,ptsy::AbstractVector,gridx,gridy)
+    checkbounds(ptsy, 1:gridy)
+    checkbounds(ptsx, 1:gridx)
+    checkbounds(X, 1:gridx, 1:gridy)
     for j=1:gridy
         ptsyj = ptsy[j]
         @simd for k=1:gridx
@@ -268,6 +271,8 @@ function findapproxmax!(A::Fun,B::Fun,X::AbstractMatrix,ptsx::AbstractVector,pts
 end
 
 function findcholeskyapproxmax!(f::Function,X::AbstractVector,pts::AbstractVector,grid)
+    checkbounds(pts, 1:grid)
+    checkbounds(X, 1:grid)
     @simd for k=1:grid
         @inbounds X[k]+=f(pts[k],pts[k])
     end
@@ -283,6 +288,9 @@ function findcholeskyapproxmax!(A::Fun,B::Fun,X::AbstractVector,pts::AbstractVec
 end
 
 function subtractrankone!(A::AbstractVector,B::AbstractVector,X::AbstractMatrix,gridx::Int,gridy::Int)
+    checkbounds(B, 1:gridy)
+    checkbounds(A, 1:gridx)
+    checkbounds(X, 1:grid, 1:gridy)
     for j=1:gridy
         @inbounds Bj = B[j]
         @simd for k=1:gridx
@@ -292,6 +300,9 @@ function subtractrankone!(A::AbstractVector,B::AbstractVector,X::AbstractMatrix,
 end
 
 function subtractrankone!(A::AbstractVector,B::AbstractVector,X::AbstractVector,grid::Int)
+    checkbounds(A, 1:grid)
+    checkbounds(B, 1:grid)
+    checkbounds(X, 1:grid)
     @simd for k=1:grid
         @inbounds X[k] -= A[k]*B[k]
     end
