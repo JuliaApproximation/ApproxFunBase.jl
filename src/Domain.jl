@@ -153,7 +153,7 @@ domain(::Number) = AnyDomain()
 rand(d::IntervalOrSegmentDomain,k...) = fromcanonical.(Ref(d),2rand(k...)-1)
 
 
-checkpoints(d::IntervalOrSegmentDomain) = fromcanonical.(Ref(d),[-0.823972,0.01,0.3273484])
+checkpoints(d::IntervalOrSegmentDomain) = fromcanonical.(Ref(d),SVector{3,Float64}(-0.823972,0.01,0.3273484))
 
 ## boundary
 
