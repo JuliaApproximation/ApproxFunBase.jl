@@ -1,8 +1,9 @@
 function CachedOperator(::Type{BandedMatrix},op::Operator;padding::Bool=false)
-    l,u=bandwidths(op)
-    padding && (u+=l)
-    data = BandedMatrix{eltype(op)}(undef, (0,0), (l,u))
-    CachedOperator(op,data,size(data),domainspace(op),rangespace(op),(-l,u),padding)
+    bw = bandwidths(op)
+    l,u = bw
+    padding && (bw = bw .+ (0,l))
+    data = BandedMatrix{eltype(op)}(undef, (0,0), bw)
+    CachedOperator(op,data,size(data),domainspace(op),rangespace(op), bw .* (-1,1),padding)
 end
 
 
