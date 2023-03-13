@@ -95,8 +95,9 @@ Fun(c::Number,d::Space) = c==0 ? c*zeros(prectype(d),d) : c*ones(prectype(d),d)
 function default_Fun(f, d::Space)
     _default_Fun(hasonearg(f) ? f : Base.splat(f), d)
 end
+@noinline warn_maxncoeff() = @warn "Maximum number of coefficients "*string(2^20+1)*" reached in constructing Fun."
 # In _default_Fun, we know that the function takes a single argument
-function _default_Fun(f, d::Space)
+function _default_Fun(@nospecialize(f), d::Space)
     isinf(dimension(d)) || return Fun(f,d,dimension(d))  # use exactly dimension number of sample points
 
     #TODO: reuse function values?
@@ -131,8 +132,7 @@ function _default_Fun(f, d::Space)
         end
     end
 
-    @warn "Maximum number of coefficients "*string(2^20+1)*" reached in constructing Fun."
-
+    warn_maxncoeff()
     Fun(f,d,2^21)
 end
 
