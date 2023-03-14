@@ -899,4 +899,4 @@ diagindrow(S,kr,jr) = bandwidth(S,2)+first(jr)-first(kr)+1
 diagindrow(S::SubOperator) = diagindrow(S,parentindices(S)[1],parentindices(S)[2])
 
 # Conversion between operator types
-Base.convert(::Type{O}, c::Operator) where {O<:Operator} = c isa O ? c : O(c)::O
+convert(::Type{O}, c::Operator) where {O<:Operator} = c isa O ? c : O(c)::O

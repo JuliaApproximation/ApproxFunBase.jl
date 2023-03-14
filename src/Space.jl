@@ -73,6 +73,7 @@ block(S::Space,k) = Block(k)
 
 Space(s::Space) = s
 
+convert(::Type{S}, s::Space) where {S<:Space} = s isa S ? s : S(s)::S
 
 
 abstract type AmbiguousSpace <: Space{AnyDomain,UnsetNumber} end
