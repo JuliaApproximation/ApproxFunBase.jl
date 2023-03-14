@@ -2,6 +2,7 @@
 function CachedOperator(::Type{BandedBlockBandedMatrix}, op::Operator)
     lu = blockbandwidths(op)
     λμ = subblockbandwidths(op)
+    # working on the tuples directly instead of the components helps with type-stability
     data = BandedBlockBandedMatrix{eltype(op)}(undef,
         blocklengths(rangespace(op))[1:0],blocklengths(domainspace(op))[1:0],
         lu, λμ)
