@@ -71,12 +71,13 @@ diagblockshift(op::Operator) = diagblockshift(blocklengths(domainspace(op)),bloc
 
 
 function CachedOperator(::Type{BlockBandedMatrix},op::Operator;padding::Bool=false)
-    l,u=blockbandwidths(op)
-    padding && (u+=l+diagblockshift(op))
-    data=BlockBandedMatrix{eltype(op)}(undef,
-                                        Vector{Int}(), Vector{Int}(),
-                                        (l,u))
-    CachedOperator(op,data,(0,0),domainspace(op),rangespace(op),(-l,u),padding)
+    lu=blockbandwidths(op)
+    l = first(lu)
+    if padding # working on the tuple helps with type-stability
+        lu = lu .+ (0,l+diagblockshift(op))
+    end
+    data = BlockBandedMatrix{eltype(op)}(undef, Int[], Int[], lu)
+    CachedOperator(op,data,(0,0),domainspace(op),rangespace(op),lu .* (-1,1),padding)
 end
 
 
