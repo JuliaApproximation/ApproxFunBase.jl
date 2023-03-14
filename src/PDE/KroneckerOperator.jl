@@ -51,18 +51,22 @@ function promoterangespace(K::KroneckerOperator,rs::TensorSpace)
     KroneckerOperator(A,B,domainspace(K),rs)
 end
 
-
-function convert(::Type{Operator{T}},K::KroneckerOperator) where T<:Number
-    if T == eltype(K)
-        K
-    else
-        ops = map(Operator{T}, K.ops)
-        KroneckerOperator{map(typeof, ops)...,
-            typeof(K.domainspace),typeof(K.rangespace),
-            typeof(K.domaintensorizer),typeof(K.rangetensorizer),T}(ops,
-              K.domainspace,K.rangespace,
-              K.domaintensorizer,K.rangetensorizer)::Operator{T}
-    end
+function KroneckerOperator{S,V,DS,RS,DI,RI,T}(K::KroneckerOperator) where {S,V,DS,RS,DI,RI,T}
+    KroneckerOperator{S,V,DS,RS,DI,RI,T}(
+        strictconvert(Tuple{S,V}, ops),
+        strictconvert(DS, domainspace),
+        strictconvert(RS, rangespace),
+        strictconvert(DI, domaintensorizer),
+        strictconvert(RI, rangetensorizer),
+        )
+end
+function Operator{T}(K::KroneckerOperator) where T<:Number
+    ops = map(Operator{T}, K.ops)
+    KroneckerOperator{map(typeof, ops)...,
+        typeof(K.domainspace),typeof(K.rangespace),
+        typeof(K.domaintensorizer),typeof(K.rangetensorizer),T}(ops,
+          K.domainspace,K.rangespace,
+          K.domaintensorizer,K.rangetensorizer)::Operator{T}
 end
 
 

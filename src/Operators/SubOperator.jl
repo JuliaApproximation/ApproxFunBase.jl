@@ -78,8 +78,16 @@ SubOperator(A,inds,dims) = SubOperator(A,inds,dims,(dims[1]-1,dims[2]-1))
 SubOperator(A,inds) = SubOperator(A,inds,map(length,inds))
 
 
-convert(::Type{Operator{T}},SO::SubOperator) where {T} =
+Operator{T}(SO::SubOperator) where {T} =
     SubOperator(Operator{T}(SO.parent),SO.indexes,SO.dims,SO.bandwidths)::Operator{T}
+function SubOperator{T,B,I,DI,BI}(S::SubOperator) where {T,B,I,DI,BI}
+    SubOperator{T,B,I,DI,BI}(
+        strictconvert(B, S.parent),
+        strictconvert(I, S.indexes),
+        strictconvert(DI, S.dims),
+        strictconvert(BI, S.bandwidths),
+        )
+end
 
 function view(A::Operator,kr::InfRanges,jr::InfRanges)
     @assert isinf(size(A,1)) && isinf(size(A,2))

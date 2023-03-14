@@ -2,6 +2,10 @@ struct ContinuousSpace{T,R,P<:PiecewiseSegment{T}} <: Space{P,R}
     domain::P
 end
 
+function ContinuousSpace{T,R,P}(C::ContinuousSpace) where {T,R,P<:PiecewiseSegment{T}}
+    ContinuousSpace{T,R,P}(strictconvert(P, C.domain))
+end
+
 ContinuousSpace(d::PiecewiseSegment{T}) where {T} =
     ContinuousSpace{T,real(eltype(T)),typeof(d)}(d)
 

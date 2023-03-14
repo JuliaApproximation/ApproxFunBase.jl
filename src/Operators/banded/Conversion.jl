@@ -16,12 +16,12 @@ function ConcreteConversion(a::Space,b::Space)
     ConcreteConversion(T, a, b)
 end
 
-function convert(::Type{Operator{T}}, C::ConcreteConversion) where {T}
-    if T==eltype(C)
-        C
-    else
-        ConcreteConversion(T, C.domainspace,C.rangespace)::Operator{T}
-    end
+function ConcreteConversion{D,R,T}(C::ConcreteConversion) where {D<:Space,R<:Space,T}
+    ConcreteConversion{D,R,T}(strictconvert(D,C.domainspace), strictconvert(R, C.rangetype))
+end
+
+function Operator{T}(C::ConcreteConversion) where {T}
+    ConcreteConversion(T, C.domainspace,C.rangespace)::Operator{T}
 end
 
 domainspace(C::ConcreteConversion)=C.domainspace
@@ -126,15 +126,14 @@ Conversion(A::Space,B::Space,C::Space,D::Space...) =
 
 ==(A::ConversionWrapper,B::ConversionWrapper) = A.op==B.op
 
-
-function convert(::Type{Operator{T}},D::ConversionWrapper) where T
-    if T==eltype(D)
-        D
-    else
-        BO=strictconvert(Operator{T},D.op)
-        d, r = domainspace(D), rangespace(D)
-        ConversionWrapper(d, r, BO)::Operator{T}
-    end
+function ConversionWrapper{D,R,T,O}(C::ConcreteConversion) where {D<:Space,R<:Space,T,O<:Operator{T}}
+    ConversionWrapper{D,R,T,O}(strictconvert(D,C.domainspace), strictconvert(R,C.rangespace),
+        strictconvert(O, C.op))
+end
+function Operator{T}(D::ConversionWrapper) where T
+    BO=strictconvert(Operator{T},D.op)
+    d, r = domainspace(D), rangespace(D)
+    ConversionWrapper(d, r, BO)::Operator{T}
 end
 
 convert(::Type{T}, C::ConversionWrapper) where {T<:Number} = strictconvert(T, C.op)

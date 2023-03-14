@@ -1,6 +1,6 @@
 export ConstantOperator, IdentityOperator, BasisFunctional
 
-struct ConstantOperator{T,DS} <: Operator{T}
+struct ConstantOperator{T,DS<:Space} <: Operator{T}
     λ::T
     space::DS
     ConstantOperator{T,DS}(c::Number,sp::DS) where {T,DS} = new{T,DS}(strictconvert(T,c),sp)
@@ -36,12 +36,11 @@ getindex(C::ConstantOperator,k::Integer,j::Integer) =
 
 ==(C1::ConstantOperator, C2::ConstantOperator) = C1.λ==C2.λ
 
-function convert(::Type{Operator{T}}, C::ConstantOperator) where T
-    if T == eltype(C)
-        C
-    else
-        ConstantOperator{T,typeof(C.space)}(C.λ,C.space)
-    end
+function ConstantOperator{T,DS}(C::ConstantOperator) where {T,DS}
+    ConstantOperator{T,DS}(strictconvert(T, C.λ), strictconvert(DS, C.space))
+end
+function Operator{T}(C::ConstantOperator) where T
+    ConstantOperator{T,typeof(C.space)}(C.λ,C.space)
 end
 
 # zero needs to be different since it can take a space to

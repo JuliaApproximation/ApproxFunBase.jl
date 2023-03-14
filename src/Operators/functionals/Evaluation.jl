@@ -7,7 +7,7 @@ abstract type Evaluation{T}<:Operator{T} end
 @functional Evaluation
 
 # M = leftendpoint/rightendpoint if endpoint
-struct ConcreteEvaluation{S,M,OT,T} <: Evaluation{T}
+struct ConcreteEvaluation{S<:Space,M,OT,T} <: Evaluation{T}
     space::S
     x::M
     order::OT
@@ -45,13 +45,11 @@ Evaluation(x::Union{Number,typeof(leftendpoint),typeof(rightendpoint)},k::Intege
 rangespace(E::ConcreteEvaluation{<:AmbiguousSpace}) = ConstantSpace()
 rangespace(E::ConcreteEvaluation) = ConstantSpace(Point(E.x))
 
-
-function convert(::Type{Operator{T}},E::ConcreteEvaluation) where T
-    if T == eltype(E)
-        E
-    else
-        ConcreteEvaluation{typeof(E.space),typeof(E.x),typeof(E.order),T}(E.space,E.x,E.order)
-    end
+function ConcreteEvaluation{S,M,OT,T}(C::ConcreteEvaluation) where {S<:Space,M,OT,T}
+    ConcreteEvaluation{S,M,OT,T}(strictconvert(S, C.space), strictconvert(M, C.x), strictconvert(OT,C.order))
+end
+function Operator{T}(E::ConcreteEvaluation) where T
+    ConcreteEvaluation{typeof(E.space),typeof(E.x),typeof(E.order),T}(E.space,E.x,E.order)
 end
 
 
@@ -69,12 +67,12 @@ end
 for (dop, fop) in ((:leftendpoint,:first), (:rightendpoint,:last))
     @eval begin
         rangespace(E::ConcreteEvaluation{<:AmbiguousSpace,typeof($dop)}) = UnsetSpace()
-        function rangespace(E::ConcreteEvaluation{<:Any,typeof($dop)})
+        function rangespace(E::ConcreteEvaluation{<:Space,typeof($dop)})
             d = domain(domainspace(E))
             isambiguous(d) && return ConstantSpace()
             return ConstantSpace(Point($dop(d)))
         end
-        function getindex(D::ConcreteEvaluation{<:Any,typeof($dop)},k::Integer)
+        function getindex(D::ConcreteEvaluation{<:Space,typeof($dop)},k::Integer)
             P = prectype(domainspace(D))
             R = eltype(D)
             R($fop(differentiate(Fun(D.space,[zeros(P,k-1);one(P)]),D.order)))
@@ -106,13 +104,12 @@ domainspace(E::Evaluation) = E.space
 promotedomainspace(E::Evaluation,sp::Space) = Evaluation(sp,E.x,E.order)
 
 
-
-function convert(::Type{Operator{T}},E::EvaluationWrapper) where T
-    if T == eltype(E)
-        E
-    else
-        EvaluationWrapper(E.space,E.x,E.order,strictconvert(Operator{T},E.op))::Operator{T}
-    end
+function EvaluationWrapper{S,M,FS,OT,T}(E::EvaluationWrapper) where {S<:Space,M,FS<:Operator,OT,T<:Number}
+    EvaluationWrapper{S,M,FS,OT,T}(strictconvert(S, E.space), strictconvert(M, E.x),
+        strictconvert(OT, E.order), strictconvert(FS, E.op))
+end
+function Operator{T}(E::EvaluationWrapper) where T
+    EvaluationWrapper(E.space,E.x,E.order,strictconvert(Operator{T},E.op))::Operator{T}
 end
 
 ## Convenience routines
@@ -155,7 +152,7 @@ end
 abstract type Dirichlet{S,T} <: Operator{T} end
 
 
-struct ConcreteDirichlet{S,V,T} <: Dirichlet{S,T}
+struct ConcreteDirichlet{S<:Space,V<:Space,T} <: Dirichlet{S,T}
     domainspace::S
     rangespace::V
     order::Int
@@ -166,7 +163,10 @@ ConcreteDirichlet(sp::Space,rs::Space,order) =
 ConcreteDirichlet(sp::Space,order) = ConcreteDirichlet(sp,Space(∂(domain(sp))),order)
 ConcreteDirichlet(sp::Space) = ConcreteDirichlet(sp,0)
 
-convert(::Type{Operator{T}},B::ConcreteDirichlet{S,V}) where {S,V,T} =
+function ConcreteDirichlet{S,V,T}(C::ConcreteDirichlet) where {S<:Space,V<:Space,T}
+    ConcreteDirichlet{S,V,T}(strictconvert(S, C.domainspace), strictconvert(V, C.rangespace), C.order)
+end
+Operator{T}(B::ConcreteDirichlet{S,V}) where {S,V,T} =
     ConcreteDirichlet{S,V,T}(B.domainspace,B.rangespace,B.order)
 
 
@@ -179,7 +179,10 @@ end
 
 DirichletWrapper(B::Operator,λ=0) = DirichletWrapper{typeof(B),eltype(B)}(B,λ)
 
-convert(::Type{Operator{T}},B::DirichletWrapper) where {T} =
+function DirichletWrapper{S,T}(D::DirichletWrapper) where {S,T}
+    DirichletWrapper{S,T}(strictconvert(S, D.op), D.order)
+end
+Operator{T}(B::DirichletWrapper) where {T} =
     DirichletWrapper(Operator{T}(B.op),B.order)::Operator{T}
 
 # Default is to use diffbca

@@ -51,6 +51,10 @@ SumSpace(sp::Tuple) = SumSpace{typeof(sp),domaintype(first(sp)),
                                 mapreduce(rangetype,promote_type,sp)}(sp)
 
 
+function SumSpace{SV,D,R}(S::SumSpace) where {SV,D,R}
+    SumSpace{SV,D,R}(strictconvert(SV, S.spaces))
+end
+
 struct PiecewiseSpace{SV,D<:UnionDomain,R} <: DirectSumSpace{SV,D,R}
     spaces::SV
     PiecewiseSpace{SV,D,R}(dom::AnyDomain) where {SV,D,R} =
@@ -72,7 +76,9 @@ end
 
 PiecewiseSpace(spin::Set) = PiecewiseSpace(collect(spin))
 
-
+function PiecewiseSpace{SV,D,R}(P::PiecewiseSpace) where {SV,D<:UnionDomain,R}
+    PiecewiseSpace{SV,D,R}(strictconvert(SV, P.spaces))
+end
 
 for TYP in (:SumSpace,:PiecewiseSpace)
     @eval begin

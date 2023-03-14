@@ -51,13 +51,11 @@ Multiplication(c::Number) = Multiplication(Fun(c) )
 # This covers right multiplication unless otherwise specified.
 Multiplication(S::Space,f::Fun) = Multiplication(f,S)
 
-
-function convert(::Type{Operator{T}},C::ConcreteMultiplication{S,V}) where {S,V,T}
-    if T==eltype(C)
-        C
-    else
-        ConcreteMultiplication{S,V,T}(Fun{S,T}(C.f),C.space)
-    end
+function ConcreteMultiplication{D,S,T}(C::ConcreteMultiplication) where {D<:Space,S<:Space,T}
+    ConcreteMultiplication{D,S,T}(strictconvert(VFun{D,T}, C.f), strictconvert(S, C.space))
+end
+function Operator{T}(C::ConcreteMultiplication{S,V}) where {S,V,T}
+    ConcreteMultiplication{S,V,T}(Fun{S,T}(C.f),C.space)
 end
 
 domainspace(M::ConcreteMultiplication{D,S,T}) where {D,S,T} = M.space
@@ -113,12 +111,11 @@ domainspace(M::MultiplicationWrapper) = M.space
 
 @wrapper MultiplicationWrapper false
 
-function convert(::Type{Operator{TT}},C::MultiplicationWrapper{S,V,O,T}) where {TT,S,V,O,T}
-    if TT==T
-        C
-    else
-        MultiplicationWrapper(Fun{S,TT}(C.f),Operator{TT}(C.op), C.space)::Operator{TT}
-    end
+function MultiplicationWrapper{D,S,T,O}(M::MultiplicationWrapper) where {D<:Space,S<:Space,T,O<:Operator{T}}
+    MultiplicationWrapper{D,S,T,O}(strictconvert(VFun{D,T}, M.f), strictconvert(O, M.op), strictconvert(S, M.space))
+end
+function Operator{TT}(C::MultiplicationWrapper{S}) where {TT,S}
+    MultiplicationWrapper(Fun{S,TT}(C.f),Operator{TT}(C.op), C.space)::Operator{TT}
 end
 
 

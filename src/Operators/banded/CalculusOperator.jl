@@ -58,26 +58,18 @@ macro calculus_operator(Op)
         $Op(x...) = $DefaultOp(x...)
         $ConcOp(S::Space) = $ConcOp(S,1)
 
-        function Base.convert(::Type{Operator{T}},D::$ConcOp) where T
-            if T==eltype(D)
-                D
-            else
-                $ConcOp{typeof(D.space),typeof(D.order),T}(D.space, D.order)
-            end
+        function Operator{T}(D::$ConcOp) where {T}
+            $ConcOp{typeof(D.space),typeof(D.order),T}(D.space, D.order)
         end
 
         $WrappOp(op::Operator, order = 1, d = domainspace(op), r = rangespace(op)) =
             $WrappOp{typeof(op),typeof(d),typeof(r),typeof(order),eltype(op)}(op,order,d,r)
 
-        function Base.convert(::Type{Operator{T}},D::$WrappOp) where T
-            if T==eltype(D)
-                D
-            else
-                op=ApproxFunBase.strictconvert(Operator{T},D.op)
-                S = domainspace(D)
-                R = rangespace(D)
-                $WrappOp(op,D.order,S,R)::Operator{T}
-            end
+        function Operator{T}(D::$WrappOp) where {T}
+            op=ApproxFunBase.strictconvert(Operator{T},D.op)
+            S = domainspace(D)
+            R = rangespace(D)
+            $WrappOp(op,D.order,S,R)::Operator{T}
         end
 
         ## Routines

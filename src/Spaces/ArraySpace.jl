@@ -26,6 +26,10 @@ ArraySpace(S::Space,n::Integer) = ArraySpace(S,(n,))
 ArraySpace(S::Space,n,m) = ArraySpace(S,(n,m))
 ArraySpace(d::Domain,n...) = ArraySpace(Space(d),n...)
 
+function ArraySpace{S,n,DD,RR,A}(B::ArraySpace) where {S,n,DD,RR,A<:AbstractArray{S,n}}
+    ArraySpace{S,n,DD,RR,A}(strictconvert(A, B.spaces))
+end
+
 Space(sp::AbstractArray{<:Space}) = ArraySpace(sp)
 convert(::Type{A}, sp::ArraySpace) where {A<:Array} = convert(A, sp.spaces)::A
 (::Type{A})(sp::ArraySpace) where {A<:Array} = A(sp.spaces)

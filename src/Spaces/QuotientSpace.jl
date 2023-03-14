@@ -14,6 +14,15 @@ struct QuotientSpace{S,O,D,R} <: Space{D,R}
     end
 end
 
+function QuotientSpace{S,O,D,R}(Q::QuotientSpace) where {S,O,D,R}
+    QuotientSpace{S,O,D,R}(
+        strictconvert(S, Q.space),
+        strictconvert(O, Q.bcs),
+        strictconvert(LU{R,Matrix{R}}, Q.F),
+        strictconvert(Vector{R}, Q.x),
+    )
+end
+
 QuotientSpace(sp::Space{D,R}, bcs::Operator{T}) where {D,R,T} = QuotientSpace{typeof(sp), typeof(bcs), D, promote_type(R, T)}(sp, bcs)
 QuotientSpace(bcs::Operator) = QuotientSpace(domainspace(bcs), bcs)
 
@@ -146,6 +155,24 @@ struct PathologicalQuotientSpace{S,O<:Operator,DD,T,RT} <: Space{DD,T}
         info = Ref{BlasInt}()
         new{S,O,DD,T,RT}(space, bcs, A, x, b, c, U, Σ, VT, work, iwork, rwork, info)
     end
+end
+
+function PathologicalQuotientSpace{S,O,DD,T,RT}(P::PathologicalQuotientSpace) where {S,O<:Operator,DD,T,RT}
+    PathologicalQuotientSpace{S,O,DD,T,RT}(
+        strictconvert(S, P.space),
+        strictconvert(O, P.bcs),
+        strictconvert(Matrix{T}, P.A),
+        strictconvert(Vector{T}, P.x),
+        strictconvert(Vector{T}, P.b),
+        strictconvert(Vector{T}, P.c),
+        strictconvert(Matrix{T}, P.U),
+        strictconvert(Diagonal{T,Vector{T}}, P.Σ),
+        strictconvert(Matrix{T}, P.VT),
+        strictconvert(Vector{T}, P.work),
+        strictconvert(Vector{BlasInt}, P.iwork),
+        strictconvert(Vector{RT}, P.rwork),
+        strictconvert(Ref{BlasInt}, P.info),
+    )
 end
 
 PathologicalQuotientSpace(sp::Space, bcs::Operator) = PathologicalQuotientSpace{typeof(sp), typeof(bcs), domaintype(sp), rangetype(sp), real(rangetype(sp))}(sp, bcs)

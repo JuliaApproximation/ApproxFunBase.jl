@@ -1,8 +1,14 @@
-
 struct SubSpace{DS,IT,DD,RR} <: Space{DD,RR}
     space::DS
     indexes::IT
     SubSpace{DS,IT,DD,RR}(sp::DS,ind::IT) where {DS,IT,DD,RR} = new(sp,ind)
+end
+
+function SubSpace{DS,IT,DD,RR}(S::SubSpace) where {DS,IT,DD,RR}
+    SubSpace{DS,IT,DD,RR}(
+        strictconvert(DS, S.space),
+        strictconvert(IT, S.indexes),
+        )
 end
 
 SubSpace(sp::Space,kr) =

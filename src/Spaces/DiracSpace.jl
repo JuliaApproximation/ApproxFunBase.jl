@@ -7,6 +7,10 @@ for TYP in (:DiracSpace,:PointSpace)
           $TYP{T,D,R}(pts::AbstractVector{T}) where {T,D,R} = new(sort(pts))
         end
 
+        function $TYP{T,D,R}(x::$TYP) where {T,D,R}
+            $TYP{T,D,R}(strictconvert(Vector{T}, x.points))
+        end
+
         function $TYP(points::AbstractVector{T}) where T
             $TYP{eltype(points),UnionDomain{Vector{Point{T}},Point{T}},real(T)}(points)
         end

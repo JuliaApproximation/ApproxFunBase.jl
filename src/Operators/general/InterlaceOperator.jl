@@ -69,7 +69,7 @@ end
 
 ## Interlace operator
 
-struct InterlaceOperator{T,p,DS,RS,DI,RI,BI} <: Operator{T}
+struct InterlaceOperator{T,p,DS<:Space,RS<:Space,DI,RI,BI} <: Operator{T}
     ops::Array{Operator{T},p}
     domainspace::DS
     rangespace::RS
@@ -78,8 +78,8 @@ struct InterlaceOperator{T,p,DS,RS,DI,RI,BI} <: Operator{T}
     bandwidths::BI
 end
 
-const VectorInterlaceOperator = InterlaceOperator{T,1,DS,RS} where {T,DS,RS<:Space{D,R}} where {D,R<:AbstractVector}
-const MatrixInterlaceOperator = InterlaceOperator{T,2,DS,RS} where {T,DS,RS<:Space{D,R}} where {D,R<:AbstractVector}
+const VectorInterlaceOperator = InterlaceOperator{T,1,DS,RS} where {T,DS<:Space,RS<:Space{D,R}} where {D,R<:AbstractVector}
+const MatrixInterlaceOperator = InterlaceOperator{T,2,DS,RS} where {T,DS<:Space,RS<:Space{D,R}} where {D,R<:AbstractVector}
 
 
 function InterlaceOperator(ops::AbstractMatrix{<:Operator},ds::Space,rs::Space)
@@ -195,15 +195,20 @@ end
 InterlaceOperator(ops::AbstractArray) =
     InterlaceOperator(Array{Operator{promote_eltypeof(ops)}, ndims(ops)}(ops))
 
-
-function convert(::Type{Operator{T}},S::InterlaceOperator) where T
-    if T == eltype(S)
-        S
-    else
-        ops = convert(AbstractArray{Operator{T}}, S.ops)
-        InterlaceOperator(ops,domainspace(S),rangespace(S),
-                            S.domaininterlacer,S.rangeinterlacer,S.bandwidths)
-    end
+function InterlaceOperator{T,p,DS,RS,DI,RI,BI}(S::InterlaceOperator) where {T,p,DS<:Space,RS<:Space,DI,RI,BI}
+    InterlaceOperator{T,p,DS,RS,DI,RI,BI}(
+        strictconvert(Array{Operator{T},p}, ops),
+        strictconvert(DS, domainspace),
+        strictconvert(RS, rangespace),
+        strictconvert(DI, domaininterlacer),
+        strictconvert(RI, rangeinterlacer),
+        strictconvert(BI, bandwidths),
+        )
+end
+function Operator{T}(S::InterlaceOperator) where T
+    ops = convert(AbstractArray{Operator{T}}, S.ops)
+    InterlaceOperator(ops,domainspace(S),rangespace(S),
+                        S.domaininterlacer,S.rangeinterlacer,S.bandwidths)
 end
 
 

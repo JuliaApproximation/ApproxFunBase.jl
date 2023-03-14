@@ -29,13 +29,15 @@ function getindex(OF::ConcreteOperatorFunction,k::Integer,j::Integer)
     end
 end
 
-function convert(::Type{Operator{T}},D::ConcreteOperatorFunction) where T
-    if T==eltype(D)
-        D
-    else
-        DopT = strictconvert(Operator{T}, D.op)
-        ConcreteOperatorFunction(DopT, D.f)::Operator{T}
-    end
+function ConcreteOperatorFunction{BT,FF,T}(C::ConcreteOperatorFunction) where {BT<:Operator,FF,T}
+    ConcreteOperatorFunction{BT,FF,T}(
+        strictconvert(BT, C.op),
+        strictconvert(FF, C.f),
+        )
+end
+function Operator{T}(D::ConcreteOperatorFunction) where T
+    DopT = strictconvert(Operator{T}, D.op)
+    ConcreteOperatorFunction(DopT, D.f)::Operator{T}
 end
 
 

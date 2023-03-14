@@ -39,9 +39,12 @@ LowRankOperator(B::AbstractVector,S...) = LowRankOperator(strictconvert(Vector{O
 LowRankOperator(A::Fun,B::Operator) = LowRankOperator([A],[B])
 
 
-convert(::Type{Operator{T}},L::LowRankOperator{S}) where {S,T} =
+function LowRankOperator{S,T}(L::LowRankOperator) where {S,T}
     LowRankOperator{S,T}(strictconvert(Vector{VFun{S,T}},L.U),
                          strictconvert(Vector{Operator{T}},L.V))
+end
+
+Operator{T}(L::LowRankOperator{S}) where {S,T} = LowRankOperator{S,T}(S)
 
 
 datasize(L::LowRankOperator,k) =

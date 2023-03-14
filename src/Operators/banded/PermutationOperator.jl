@@ -1,6 +1,6 @@
 # Creates a operator that permutes rows, in blocks of size
 # length(perm)
-struct PermutationOperator{T,DS,RS} <: Operator{T}
+struct PermutationOperator{T,DS<:Space,RS<:Space} <: Operator{T}
     perm::Vector{Int}
     domainspace::DS
     rangespace::RS
@@ -13,8 +13,10 @@ PermutationOperator(prm) = PermutationOperator(prm, ℓ⁰, ℓ⁰)
 domainspace(P::PermutationOperator) = P.domainspace
 rangespace(P::PermutationOperator) = P.rangespace
 
-
-convert(::Type{Operator{T}},P::PermutationOperator) where {T} =
+function PermutationOperator{T,DS,RS}(P::PermutationOperator) where {T,DS<:Space,RS<:Space}
+    PermutationOperator{T,DS,RS}(P.perm, strictconvert(DS, V.domainspace), strictconvert(RS, V.rangespace))
+end
+Operator{T}(P::PermutationOperator) where {T} =
     PermutationOperator{T}(P.perm, P.domainspace, P.rangespace)
 
 function bandwidths(P::PermutationOperator)
@@ -39,7 +41,7 @@ perm(a::Vector,b::Vector) = multiplyperm(invperm(sortperm(b)),sortperm(a))
 perm(a::Tuple,b::Tuple) = perm(collect(a),collect(b))
 
 
-struct NegateEven{T,DS,RS} <: Operator{T}
+struct NegateEven{T,DS<:Space,RS<:Space} <: Operator{T}
     domainspace::DS
     rangespace::RS
 end
@@ -52,7 +54,10 @@ NegateEven() = NegateEven(ℓ⁰,ℓ⁰)
 domainspace(P::NegateEven) = P.domainspace
 rangespace(P::NegateEven) = P.rangespace
 
-convert(::Type{Operator{T}},P::NegateEven) where {T} =
+function NegateEven{T,DS,RS}(N::NegateEven) where {T,DS<:Space,RS<:Space}
+    NegateEven{T,DS,RS}(strictconvert(DS, N.domainspace), strictconvert(RS, N.rangespace))
+end
+Operator{T}(P::NegateEven) where {T} =
     NegateEven{T}(P.domainspace, P.rangespace)
 
 bandwidths(P::NegateEven) = (0,0)

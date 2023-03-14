@@ -33,15 +33,17 @@ SpaceOperator(o::Operator,s::Space,rs::Space) =
     SpaceOperator{typeof(o),typeof(s),typeof(rs),eltype(o)}(o,s,rs)
 SpaceOperator(o,s) = SpaceOperator(o,s,s)
 
-function convert(::Type{Operator{T}},S::SpaceOperator) where T
-    if T==eltype(S)
-        S
-    else
-        op=strictconvert(Operator{T},S.op)
-        SpaceOperator{typeof(op),typeof(S.domainspace),typeof(S.rangespace),T}(op,S.domainspace,S.rangespace)
-    end
+function Operator{T}(S::SpaceOperator) where T
+    op=strictconvert(Operator{T},S.op)
+    SpaceOperator{typeof(op),typeof(S.domainspace),typeof(S.rangespace),T}(op,S.domainspace,S.rangespace)
 end
-
+function SpaceOperator{O,S,V,T}(J::SpaceOperator) where {O<:Operator,S<:Space,V<:Space,T}
+    SpaceOperator{O,S,V,T}(
+        strictconvert(O, J.op),
+        strictconvert(S, J.domainspace),
+        strictconvert(V, J.rangespace),
+        )
+end
 
 
 # Similar to wrapper, but different domain/domainspace/rangespace
