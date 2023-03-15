@@ -6,7 +6,7 @@ struct LowRankOperator{S<:Space,T} <: AbstractLowRankOperator{T}
     U::Vector{VFun{S,T}}
     V::Vector{Operator{T}}
 
-    function LowRankOperator{S,T}(U::Vector{VFun{S,T}},V::Vector{Operator{T}}) where {S,T}
+    function LowRankOperator{S,T}(U::Vector{VFun{S,T}},V::Vector{Operator{T}}) where {S<:Space,T}
         @assert all(isafunctional,V)
 
         @assert length(U) == length(V)
@@ -39,12 +39,12 @@ LowRankOperator(B::AbstractVector,S...) = LowRankOperator(strictconvert(Vector{O
 LowRankOperator(A::Fun,B::Operator) = LowRankOperator([A],[B])
 
 
-function LowRankOperator{S,T}(L::LowRankOperator) where {S,T}
+function LowRankOperator{S,T}(L::LowRankOperator) where {S<:Space,T}
     LowRankOperator{S,T}(strictconvert(Vector{VFun{S,T}},L.U),
                          strictconvert(Vector{Operator{T}},L.V))
 end
 
-Operator{T}(L::LowRankOperator{S}) where {S,T} = LowRankOperator{S,T}(S)
+Operator{T}(L::LowRankOperator{S}) where {S,T} = LowRankOperator{S,T}(L)
 
 
 datasize(L::LowRankOperator,k) =
