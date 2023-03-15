@@ -40,7 +40,6 @@ end
     end
 
     @testset "issue #94" begin
-        @test ApproxFunBase.real !== Base.real
         @test_throws MethodError ApproxFunBase.real(1,2)
     end
 

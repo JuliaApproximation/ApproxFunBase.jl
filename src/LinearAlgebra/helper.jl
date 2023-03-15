@@ -55,23 +55,18 @@ isapproxinteger(::Integer) = true
 isapproxinteger(x) = isinteger(x) || isapprox(x,round(Int,x))  || isapprox(x+1,round(Int,x+1))
 
 
-# This creates ApproxFunBase.real, ApproxFunBase.eps and ApproxFunBase.dou
-# which we override for default julia types
-real(x...) = Base.real(x...)
 real(::Type{UnsetNumber}) = UnsetNumber
-real(::Type{Array{T,n}}) where {T<:Real,n} = Array{T,n}
-real(::Type{Array{T,n}}) where {T<:Complex,n} = Array{real(T),n}
-real(::Type{SVector{N,T}}) where {N,T<:Real} = SVector{N,T}
-real(::Type{SVector{N,T}}) where {N,T<:Complex} = SVector{N,real(T)}
+# real_eltype(::Type{Array{T,n}}) where {T<:Real,n} = Array{T,n}
+# real_eltype(::Type{Array{T,n}}) where {T<:Complex,n} = Array{real(T),n}
+# real_eltype(::Type{SVector{N,T}}) where {N,T<:Real} = SVector{N,T}
+# real_eltype(::Type{SVector{N,T}}) where {N,T<:Complex} = SVector{N,real(T)}
 
-float(x) = Base.float(x)
-Base.float(::UnsetNumber) = UnsetNumber()
-Base.float(::Type{UnsetNumber}) = UnsetNumber
-float(::Type{Array{T,N}}) where {T,N} = Array{float(T),N}
-float(::Type{SVector{N,T}}) where {T,N} = SVector{N,float(T)}
+float(::UnsetNumber) = UnsetNumber()
+float(::Type{UnsetNumber}) = UnsetNumber
+# float_eltype(::Type{Array{T,N}}) where {T,N} = Array{float(T),N}
+# float_eltype(::Type{SVector{N,T}}) where {T,N} = SVector{N,float(T)}
 
-
-
+# This creates ApproxFunBase.eps, which we override for default julia types
 eps(x...) = Base.eps(x...)
 eps(x) = Base.eps(x)
 
