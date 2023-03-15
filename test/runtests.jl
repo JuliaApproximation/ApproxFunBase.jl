@@ -362,6 +362,9 @@ end
     @testset "type parameter conversion" begin
         C = Conversion(PointSpace(1:3), PointSpace(1:3));
         @test typeof(C)(C) == C
+
+        M = Multiplication(Fun(PointSpace(1:3)), PointSpace(1:3))
+        @test typeof(M)(M) == M
     end
 end
 
