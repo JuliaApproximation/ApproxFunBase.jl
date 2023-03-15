@@ -897,3 +897,6 @@ diagindshift(S::SubOperator) = diagindshift(S,parentindices(S)[1],parentindices(
 #TODO: Remove
 diagindrow(S,kr,jr) = bandwidth(S,2)+first(jr)-first(kr)+1
 diagindrow(S::SubOperator) = diagindrow(S,parentindices(S)[1],parentindices(S)[2])
+
+# Conversion between operator types
+convert(::Type{O}, c::Operator) where {O<:Operator} = c isa O ? c : O(c)::O
