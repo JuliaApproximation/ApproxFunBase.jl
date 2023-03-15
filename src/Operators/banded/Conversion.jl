@@ -126,9 +126,12 @@ Conversion(A::Space,B::Space,C::Space,D::Space...) =
 
 ==(A::ConversionWrapper,B::ConversionWrapper) = A.op==B.op
 
-function ConversionWrapper{D,R,T,O}(C::ConcreteConversion) where {D<:Space,R<:Space,T,O<:Operator{T}}
-    ConversionWrapper{D,R,T,O}(strictconvert(D,C.domainspace), strictconvert(R,C.rangespace),
-        strictconvert(O, C.op))
+function ConversionWrapper{D,R,T,O}(C::ConversionWrapper) where {D<:Space,R<:Space,T,O<:Operator{T}}
+    ConversionWrapper{D,R,T,O}(
+        strictconvert(D,C.domainspace),
+        strictconvert(R,C.rangespace),
+        strictconvert(O, C.op)
+    )
 end
 function Operator{T}(D::ConversionWrapper) where T
     BO=strictconvert(Operator{T},D.op)

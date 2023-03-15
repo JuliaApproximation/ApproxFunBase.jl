@@ -359,6 +359,10 @@ end
         ApproxFunBase.mul_coefficients!(Operator(2I), v)
         @test v ≈ Float64[2i^2 for i in 1:4]
     end
+    @testset "type parameter conversion" begin
+        C = Conversion(PointSpace(1:3), PointSpace(1:3));
+        @test typeof(C)(C) == C
+    end
 end
 
 @testset "RowVector" begin
