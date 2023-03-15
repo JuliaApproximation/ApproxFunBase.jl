@@ -55,16 +55,11 @@ isapproxinteger(::Integer) = true
 isapproxinteger(x) = isinteger(x) || isapprox(x,round(Int,x))  || isapprox(x+1,round(Int,x+1))
 
 
+real(x::UnsetNumber) = x
 real(::Type{UnsetNumber}) = UnsetNumber
-# real_eltype(::Type{Array{T,n}}) where {T<:Real,n} = Array{T,n}
-# real_eltype(::Type{Array{T,n}}) where {T<:Complex,n} = Array{real(T),n}
-# real_eltype(::Type{SVector{N,T}}) where {N,T<:Real} = SVector{N,T}
-# real_eltype(::Type{SVector{N,T}}) where {N,T<:Complex} = SVector{N,real(T)}
 
-float(::UnsetNumber) = UnsetNumber()
+float(x::UnsetNumber) = x
 float(::Type{UnsetNumber}) = UnsetNumber
-# float_eltype(::Type{Array{T,N}}) where {T,N} = Array{float(T),N}
-# float_eltype(::Type{SVector{N,T}}) where {T,N} = SVector{N,float(T)}
 
 # This creates ApproxFunBase.eps, which we override for default julia types
 eps(x...) = Base.eps(x...)
