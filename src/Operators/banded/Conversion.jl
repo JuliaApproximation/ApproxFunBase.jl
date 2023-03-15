@@ -17,7 +17,7 @@ function ConcreteConversion(a::Space,b::Space)
 end
 
 function ConcreteConversion{D,R,T}(C::ConcreteConversion) where {D<:Space,R<:Space,T}
-    ConcreteConversion{D,R,T}(strictconvert(D,C.domainspace), strictconvert(R, C.rangetype))
+    ConcreteConversion{D,R,T}(strictconvert(D,C.domainspace), strictconvert(R, C.rangespace))
 end
 
 function Operator{T}(C::ConcreteConversion) where {T}
