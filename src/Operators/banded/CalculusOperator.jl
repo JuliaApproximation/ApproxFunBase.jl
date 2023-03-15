@@ -18,11 +18,22 @@ macro calculus_operator(Op)
             space::S        # the domain space
             order::OT
         end
+        function $ConcOp{S,OT,T}(C::$ConcOp) where {S<:Space,OT,T}
+            $ConcOp{S,OT,T}(strictconvert(S, C.space), strictconvert(OT, C.order))
+        end
         struct $WrappOp{BT<:Operator,S<:Space,R<:Space,OT,T} <: $Op{S,OT,T}
             op::BT
             order::OT
             domainspace::S
             rangespace::R
+        end
+        function $WrappOp{BT,S,R,OT,T}(C::$WrappOp) where {BT<:Operator,S<:Space,R<:Space,OT,T}
+            $WrappOp{BT,S,R,OT,T}(
+                strictconvert(BT, C.op),
+                strictconvert(OT, C.order),
+                strictconvert(S, C.domainspace),
+                strictconvert(R, C.rangespace),
+            )
         end
 
         ApproxFunBase.@wrapper $WrappOp false false
