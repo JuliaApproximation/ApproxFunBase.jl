@@ -35,9 +35,13 @@ function ConcreteOperatorFunction{BT,FF,T}(C::ConcreteOperatorFunction) where {B
         strictconvert(FF, C.f),
         )
 end
-function Operator{T}(D::ConcreteOperatorFunction) where T
-    DopT = strictconvert(Operator{T}, D.op)
-    ConcreteOperatorFunction(DopT, D.f)::Operator{T}
+change_Fun_cfstype(::Type, x) = x
+change_Fun_cfstype(::Type{T}, f::Fun{<:Any,T}) where {T} = f
+change_Fun_cfstype(::Type{T}, f::Fun) where {T} = T.(f)
+function Operator{T}(C::ConcreteOperatorFunction) where T
+    Cop = strictconvert(Operator{T}, C.op)
+    f = change_Fun_cfstype(T, C.f)
+    ConcreteOperatorFunction(Cop, f)::Operator{T}
 end
 
 

@@ -360,70 +360,60 @@ end
         @test v ≈ Float64[2i^2 for i in 1:4]
     end
     @testset "type parameter conversion" begin
-        C = Conversion(PointSpace(1:3), PointSpace(1:3));
-        @test typeof(C)(C) == C
+        psp = PointSpace(1:3)
+        psp2 = PointSpace(2:4)
+        function test_trivial_constructor_identity(C)
+            @test typeof(C)(C) == C
+            EC = Complex{eltype(C)}
+            O = Operator{EC}(C)
+            @test typeof(O)(O) == O
+            @test eltype(O) == EC
+        end
+        M = Multiplication(Fun(psp), psp)
+        for op in Any[
+            Conversion(psp, psp),
+            M,
+            real(M),
+            PlusOperator([M,M]),
+            TimesOperator([M,M]),
+            2M,
+            ApproxFunBase.SpaceOperator(M, psp2, psp2),
+            M ⊗ M,
+            view(M, 1:3, 1:3),
+            [M; M],
+            ApproxFunBase.HermitianOperator(M),
+            ApproxFunBase.SymmetricOperator(M),
+            M',
+            transpose(M),
+            Operator(2I, psp),
+            ApproxFunBase.ToeplitzOperator([1,2], [2,3]),
+            ApproxFunBase.HankelOperator([1,2,3]),
+            ApproxFunBase.PermutationOperator([2,1]),
+            ApproxFunBase.NegateEven(),
+            OperatorFunction(Multiplication(Fun(psp), psp), Fun(x -> x^2, psp)),
+            ]
 
-        M = Multiplication(Fun(PointSpace(1:3)), PointSpace(1:3))
-        @test typeof(M)(M) == M
+            test_trivial_constructor_identity(op)
+        end
 
-        R = real(M)
-        @test typeof(M)(M) == M
+        function test_fields(Q)
+            Q2 = typeof(Q)(Q)
+            # For some reason (perhaps owing to mutability), this does't satisfy Q == Q2,
+            # so we check the fields
+            @test typeof(Q) == typeof(Q2)
+            @test all(x -> getfield(Q, x) === getfield(Q2, x), fieldnames(typeof(Q)))
+            EC = Complex{eltype(Q)}
+            QC = Operator{EC}(Q)
+            @test eltype(QC) == EC
+        end
 
-        P = PlusOperator([M,M])
-        @test typeof(P)(P) == P
+        for op in Any[
+            qr(M),
+            cache(M),
+            ]
 
-        T = TimesOperator([M,M])
-        @test typeof(T)(T) == T
-
-        cT = 2M
-        @test typeof(cT)(cT) == cT
-
-        Q = qr(M)
-        Q2 = typeof(Q)(Q)
-        # For some reason (perhaps owing to mutability), this does't satisfy Q == Q2,
-        # so we check the fields
-        @test typeof(Q) == typeof(Q2)
-        @test all(x -> getfield(Q, x) === getfield(Q2, x), fieldnames(typeof(Q)))
-
-        Sp = ApproxFunBase.SpaceOperator(M, PointSpace(2:4), PointSpace(2:4))
-        @test typeof(Sp)(Sp) == Sp
-
-        K = Sp ⊗ Sp
-        @test typeof(K)(K) == K
-
-        Sb = view(M, 1:3, 1:3)
-        @test typeof(Sb)(Sb) == Sb
-
-        Intrlc = [M; M]
-        @test typeof(Intrlc)(Intrlc) == Intrlc
-
-        Hrm = ApproxFunBase.HermitianOperator(M)
-        @test typeof(Hrm)(Hrm) == Hrm
-
-        Sym = ApproxFunBase.SymmetricOperator(M)
-        @test typeof(Sym)(Sym) == Sym
-
-        Cch = cache(M)
-        Cch2 = typeof(Cch)(Cch)
-        # For some reason (perhaps owing to mutability), this does't satisfy Cch == Cch2,
-        # so we check the fields
-        @test typeof(Cch) == typeof(Cch2)
-        @test all(x -> getfield(Cch, x) === getfield(Cch2, x), fieldnames(typeof(Cch)))
-
-        Madj = M'
-        @test typeof(Madj)(Madj) == Madj
-
-        Mtr = transpose(M)
-        @test typeof(Mtr)(Mtr) == Mtr
-
-        CnstO = Operator(2I, PointSpace(1:3))
-        @test typeof(CnstO)(CnstO) == CnstO
-
-        Tplz = ApproxFunBase.ToeplitzOperator([1,2], [2,3])
-        @test typeof(Tplz)(Tplz) == Tplz
-
-        Hnkl = ApproxFunBase.HankelOperator([1,2, 3])
-        @test typeof(Hnkl)(Hnkl) == Hnkl
+            test_fields(op)
+        end
     end
 end
 

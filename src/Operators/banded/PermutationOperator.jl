@@ -14,7 +14,7 @@ domainspace(P::PermutationOperator) = P.domainspace
 rangespace(P::PermutationOperator) = P.rangespace
 
 function PermutationOperator{T,DS,RS}(P::PermutationOperator) where {T,DS<:Space,RS<:Space}
-    PermutationOperator{T,DS,RS}(P.perm, strictconvert(DS, V.domainspace), strictconvert(RS, V.rangespace))
+    PermutationOperator{T,DS,RS}(P.perm, strictconvert(DS, P.domainspace), strictconvert(RS, P.rangespace))
 end
 Operator{T}(P::PermutationOperator) where {T} =
     PermutationOperator{T}(P.perm, P.domainspace, P.rangespace)

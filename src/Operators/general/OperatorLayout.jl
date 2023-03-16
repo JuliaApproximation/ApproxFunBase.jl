@@ -9,7 +9,7 @@ struct HermitianOperator{T<:Number,B<:Operator} <: Operator{T}
 end
 
 HermitianOperator(B::Operator{T}, uplo::Symbol=:U) where {T<:Number} = HermitianOperator{T,typeof(B)}(B, char_uplo(uplo))
-Operator{T}(A::HermitianOperator) where {T}=HermitianOperator(strictconvert(Operator{T},A.op), A.uplo)
+Operator{T}(A::HermitianOperator) where {T}=HermitianOperator(strictconvert(Operator{T},A.op), Symbol(A.uplo))
 function HermitianOperator{T,B}(H::HermitianOperator) where {T<:Number,B<:Operator}
     HermitianOperator{T,B}(
         strictconvert(B, H.op),
@@ -48,7 +48,7 @@ struct SymmetricOperator{T<:Number,B<:Operator} <: Operator{T}
 end
 
 SymmetricOperator(B::Operator{T}, uplo::Symbol=:U) where {T<:Number} = SymmetricOperator{T,typeof(B)}(B, char_uplo(uplo))
-Operator{T}(A::SymmetricOperator) where {T}=SymmetricOperator(strictconvert(Operator{T},A.op), A.uplo)
+Operator{T}(A::SymmetricOperator) where {T}=SymmetricOperator(strictconvert(Operator{T},A.op), Symbol(A.uplo))
 function SymmetricOperator{T,B}(S::SymmetricOperator) where {T<:Number,B<:Operator}
     SymmetricOperator{T,B}(
         strictconvert(B, S.op),
