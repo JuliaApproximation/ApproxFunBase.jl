@@ -70,7 +70,7 @@ macro calculus_operator(Op)
         $ConcOp(S::Space) = $ConcOp(S,1)
 
         function Operator{T}(D::$ConcOp) where {T}
-            $ConcOp{typeof(D.space),typeof(D.order),T}(D.space, D.order)
+            $ConcOp{typeof(D.space),typeof(D.order),T}(D)::Operator{T}
         end
 
         $WrappOp(op::Operator, order = 1, d = domainspace(op), r = rangespace(op)) =
@@ -80,7 +80,7 @@ macro calculus_operator(Op)
             op=ApproxFunBase.strictconvert(Operator{T},D.op)
             S = domainspace(D)
             R = rangespace(D)
-            $WrappOp(op,D.order,S,R)::Operator{T}
+            $WrappOp{typeof(op),typeof(S),typeof(R),typeof(D.order),T}(op,D.order,S,R)::Operator{T}
         end
 
         ## Routines
