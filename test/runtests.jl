@@ -368,6 +368,62 @@ end
 
         R = real(M)
         @test typeof(M)(M) == M
+
+        P = PlusOperator([M,M])
+        @test typeof(P)(P) == P
+
+        T = TimesOperator([M,M])
+        @test typeof(T)(T) == T
+
+        cT = 2M
+        @test typeof(cT)(cT) == cT
+
+        Q = qr(M)
+        Q2 = typeof(Q)(Q)
+        # For some reason (perhaps owing to mutability), this does't satisfy Q == Q2,
+        # so we check the fields
+        @test typeof(Q) == typeof(Q2)
+        @test all(x -> getfield(Q, x) === getfield(Q2, x), fieldnames(typeof(Q)))
+
+        Sp = ApproxFunBase.SpaceOperator(M, PointSpace(2:4), PointSpace(2:4))
+        @test typeof(Sp)(Sp) == Sp
+
+        K = Sp ⊗ Sp
+        @test typeof(K)(K) == K
+
+        Sb = view(M, 1:3, 1:3)
+        @test typeof(Sb)(Sb) == Sb
+
+        Intrlc = [M; M]
+        @test typeof(Intrlc)(Intrlc) == Intrlc
+
+        Hrm = ApproxFunBase.HermitianOperator(M)
+        @test typeof(Hrm)(Hrm) == Hrm
+
+        Sym = ApproxFunBase.SymmetricOperator(M)
+        @test typeof(Sym)(Sym) == Sym
+
+        Cch = cache(M)
+        Cch2 = typeof(Cch)(Cch)
+        # For some reason (perhaps owing to mutability), this does't satisfy Cch == Cch2,
+        # so we check the fields
+        @test typeof(Cch) == typeof(Cch2)
+        @test all(x -> getfield(Cch, x) === getfield(Cch2, x), fieldnames(typeof(Cch)))
+
+        Madj = M'
+        @test typeof(Madj)(Madj) == Madj
+
+        Mtr = transpose(M)
+        @test typeof(Mtr)(Mtr) == Mtr
+
+        CnstO = Operator(2I, PointSpace(1:3))
+        @test typeof(CnstO)(CnstO) == CnstO
+
+        Tplz = ApproxFunBase.ToeplitzOperator([1,2], [2,3])
+        @test typeof(Tplz)(Tplz) == Tplz
+
+        Hnkl = ApproxFunBase.HankelOperator([1,2, 3])
+        @test typeof(Hnkl)(Hnkl) == Hnkl
     end
 end
 

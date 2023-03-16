@@ -53,11 +53,11 @@ end
 
 function KroneckerOperator{S,V,DS,RS,DI,RI,T}(K::KroneckerOperator) where {S,V,DS,RS,DI,RI,T}
     KroneckerOperator{S,V,DS,RS,DI,RI,T}(
-        strictconvert(Tuple{S,V}, ops),
-        strictconvert(DS, domainspace),
-        strictconvert(RS, rangespace),
-        strictconvert(DI, domaintensorizer),
-        strictconvert(RI, rangetensorizer),
+        strictconvert(Tuple{S,V}, K.ops),
+        strictconvert(DS, K.domainspace),
+        strictconvert(RS, K.rangespace),
+        strictconvert(DI, K.domaintensorizer),
+        strictconvert(RI, K.rangetensorizer),
         )
 end
 function Operator{T}(K::KroneckerOperator) where T<:Number

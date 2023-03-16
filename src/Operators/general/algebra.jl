@@ -198,8 +198,8 @@ end
 
 function ConstantTimesOperator{T,B}(C::ConstantTimesOperator) where {T<:Number,B<:Operator{T}}
     ConstantTimesOperator{T,B}(
-        strictconvert(T, λ),
-        strictconvert(B, op),
+        strictconvert(T, C.λ),
+        strictconvert(B, C.op),
         )
 end
 function Operator{T}(C::ConstantTimesOperator) where {T}

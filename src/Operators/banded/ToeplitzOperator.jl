@@ -12,10 +12,10 @@ ToeplitzOperator(V::Vector{T},W::Vector{Q}) where {T<:Number,Q<:Number} =
 ToeplitzOperator(V::AbstractVector,W::AbstractVector) =
     ToeplitzOperator(collect(V),collect(W))
 
-function ToeplitzOperator{T}(x::ToeplitzOperator) where {T}
+function ToeplitzOperator{T}(x::ToeplitzOperator) where {T<:Number}
     ToeplitzOperator{T}(strictconvert(Vector{T}, x.negative), strictconvert(Vector{T}, x.nonnegative))
 end
-Operator{TT}(T::ToeplitzOperator) where {TT} =
+Operator{TT}(T::ToeplitzOperator) where {TT<:Number} =
     ToeplitzOperator(strictconvert(Vector{TT},T.negative),strictconvert(Vector{TT},T.nonnegative))
 
 for op in (:(Base.real), :(Base.imag))
@@ -109,8 +109,8 @@ HankelOperator(V::AbstractVector)=HankelOperator(collect(V))
 HankelOperator(f::Fun)=HankelOperator(f.coefficients)
 
 
-HankelOperator{T}(H::HankelOperator) where {T} = HankelOperator{T}(strictconvert(Vector{T}, H.coefficients))
-Operator{TT}(H::HankelOperator) where {TT} = HankelOperator(strictconvert(Vector{TT},H.coefficients))
+HankelOperator{T}(H::HankelOperator) where {T<:Number} = HankelOperator{T}(strictconvert(Vector{T}, H.coefficients))
+Operator{TT}(H::HankelOperator) where {TT<:Number} = HankelOperator(strictconvert(Vector{TT},H.coefficients))
 
 function hankel_getindex(v::AbstractVector,k::Integer,j::Integer)
    if k+j-1 ≤ length(v)

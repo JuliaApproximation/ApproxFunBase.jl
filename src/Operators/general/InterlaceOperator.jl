@@ -197,12 +197,12 @@ InterlaceOperator(ops::AbstractArray) =
 
 function InterlaceOperator{T,p,DS,RS,DI,RI,BI}(S::InterlaceOperator) where {T,p,DS<:Space,RS<:Space,DI,RI,BI}
     InterlaceOperator{T,p,DS,RS,DI,RI,BI}(
-        strictconvert(Array{Operator{T},p}, ops),
-        strictconvert(DS, domainspace),
-        strictconvert(RS, rangespace),
-        strictconvert(DI, domaininterlacer),
-        strictconvert(RI, rangeinterlacer),
-        strictconvert(BI, bandwidths),
+        strictconvert(Array{Operator{T},p}, S.ops),
+        strictconvert(DS, S.domainspace),
+        strictconvert(RS, S.rangespace),
+        strictconvert(DI, S.domaininterlacer),
+        strictconvert(RI, S.rangeinterlacer),
+        strictconvert(BI, S.bandwidths),
         )
 end
 function Operator{T}(S::InterlaceOperator) where T
