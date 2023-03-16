@@ -57,8 +57,18 @@ Caches the entries of an operator, to speed up multiplying a Fun by the operator
 cache(O::Operator;kwds...) = CachedOperator(O;kwds...)
 cache(::Type{MT},O::Operator;kwds...) where {MT<:AbstractMatrix} = CachedOperator(MT,O;kwds...)
 
-convert(::Type{Operator{T}},S::CachedOperator{T}) where {T} = S
-convert(::Type{Operator{T}},S::CachedOperator) where {T} =
+function CachedOperator{T,DM,M,DS,RS,BI}(C::CachedOperator) where {T<:Number,DM<:AbstractMatrix,M<:Operator,DS,RS,BI}
+    CachedOperator{T,DM,M,DS,RS,BI}(
+        strictconvert(M, C.op),
+        strictconvert(DM, C.data),
+        C.datasize,
+        strictconvert(DS, C.domainspace),
+        strictconvert(RS, C.rangespace),
+        strictconvert(BI, C.bandwidths),
+        C.padding,
+    )
+end
+Operator{T}(S::CachedOperator) where {T} =
     CachedOperator(strictconvert(Operator{T}, S.op),strictconvert(AbstractMatrix{T}, S.data),
                     S.datasize,S.domainspace,S.rangespace,S.bandwidths)
 

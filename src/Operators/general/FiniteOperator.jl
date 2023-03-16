@@ -16,7 +16,14 @@ FiniteOperator(M::AbstractMatrix{<:Number},ds::Space,rs::Space) =
 FiniteOperator(M::AbstractMatrix{<:Number}) =
     FiniteOperator(M,EuclideanSpace(size(M,2)),EuclideanSpace(size(M,1)))
 
-convert(::Type{Operator{T}},F::FiniteOperator) where {T} =
+function FiniteOperator{AT,T,DS,RS}(F::FiniteOperator) where {AT<:AbstractMatrix,T<:Number,DS,RS}
+    FiniteOperator{AT,T,DS,RS}(
+        strictconvert(AT, F.matrix),
+        strictconvert(DS, F.domainspace),
+        strictconvert(RS, F.rangespace),
+        )
+end
+Operator{T}(F::FiniteOperator) where {T} =
     FiniteOperator(strictconvert(AbstractMatrix{T},F.matrix),F.domainspace,F.rangespace)::Operator{T}
 
 ==(A::FiniteOperator, B::FiniteOperator) = A.matrix == B.matrix && A.domainspace == B.domainspace && A.rangespace == B.rangespace

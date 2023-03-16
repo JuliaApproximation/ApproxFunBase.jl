@@ -20,9 +20,12 @@ function LowRankPertOperator(Bin::Operator,Lin::LowRankOperator)
 end
 
 
-
-convert(::Type{Operator{T}},L::LowRankPertOperator) where {T} =
-    LowRankPertOperator(Operator{T}(L.op),Operator{T}(L.pert))::Operator{T}
+function LowRankPertOperator{OO,LR,T}(L::LowRankPertOperator) where {OO,LR,T}
+    LowRankPertOperator{OO,LR,T}(strictconvert(OO, L.op), strictconvert(LR, L.pert))
+end
+function Operator{T}(L::LowRankPertOperator) where {T}
+    LowRankPertOperator(Operator{T}(L.op),Operator{T}(L.pert))
+end
 convert(::Type{Operator},V::AbstractVector{OT}) where {OT<:Operator}=LowRankPertOperator(V)
 
 

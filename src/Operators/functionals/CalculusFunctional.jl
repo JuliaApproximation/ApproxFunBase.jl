@@ -11,7 +11,7 @@ macro calculus_functional(Op)
     WrappOp = Symbol(Op, :Wrapper)
     return esc(quote
         abstract type $Op{SSS,TTT} <: ApproxFunBase.CalculusFunctional{SSS,TTT} end
-        struct $ConcOp{S,T} <: $Op{S,T}
+        struct $ConcOp{S<:Space,T} <: $Op{S,T}
             domainspace::S
         end
         struct $WrappOp{BT<:Operator,S<:Space,T} <: $Op{S,T}
@@ -30,9 +30,11 @@ macro calculus_functional(Op)
 
         ApproxFunBase.promotedomainspace(::$Op,sp::Space) = $Op(sp)
 
-
-        Base.convert(::Type{Operator{T}},Σ::$ConcOp) where {T} =
-            (T==eltype(Σ) ? Σ : $ConcOp{typeof(Σ.domainspace),T}(Σ.domainspace))::Operator{T}
+        function $ConcOp{S,T}(C::$ConcOp) where {S<:Space,T}
+            $ConcOp{S,T}(strictconvert(S, C.domainspace))
+        end
+        Operator{T}(Σ::$ConcOp) where {T} =
+            $ConcOp{typeof(Σ.domainspace),T}(Σ.domainspace)::Operator{T}
 
         ApproxFunBase.domain(Σ::$ConcOp) = domain(Σ.domainspace)
         ApproxFunBase.domainspace(Σ::$ConcOp) = Σ.domainspace
@@ -43,9 +45,11 @@ macro calculus_functional(Op)
         $WrappOp(op::Operator) =
             $WrappOp{typeof(op),typeof(domainspace(op)),eltype(op)}(op)
 
-
-        Base.convert(::Type{Operator{T}},Σ::$WrappOp) where {T} =
-            (T==eltype(Σ) ? Σ : $WrappOp(strictconvert(Operator{T},Σ.op)))::Operator{T}
+        function $WrappOp{BT,S,T}(W::$WrappOp) where {BT<:Operator,S<:Space,T}
+            $WrappOp{BT,S,T}(strictconvert(BT, W.op))
+        end
+        Operator{T}(Σ::$WrappOp) where {T} =
+            $WrappOp(strictconvert(Operator{T},Σ.op))::Operator{T}
     end)
 end
 

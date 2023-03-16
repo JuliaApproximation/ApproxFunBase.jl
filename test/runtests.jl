@@ -359,6 +359,62 @@ end
         ApproxFunBase.mul_coefficients!(Operator(2I), v)
         @test v ≈ Float64[2i^2 for i in 1:4]
     end
+    @testset "type parameter conversion" begin
+        psp = PointSpace(1:3)
+        psp2 = PointSpace(2:4)
+        function test_trivial_constructor_identity(C)
+            @test typeof(C)(C) == C
+            EC = Complex{eltype(C)}
+            O = Operator{EC}(C)
+            @test typeof(O)(O) == O
+            @test eltype(O) == EC
+        end
+        M = Multiplication(Fun(psp), psp)
+        for op in Any[
+            Conversion(psp, psp),
+            M,
+            real(M),
+            PlusOperator([M,M]),
+            TimesOperator([M,M]),
+            2M,
+            ApproxFunBase.SpaceOperator(M, psp2, psp2),
+            M ⊗ M,
+            view(M, 1:3, 1:3),
+            [M; M],
+            ApproxFunBase.HermitianOperator(M),
+            ApproxFunBase.SymmetricOperator(M),
+            M',
+            transpose(M),
+            Operator(2I, psp),
+            ApproxFunBase.ToeplitzOperator([1,2], [2,3]),
+            ApproxFunBase.HankelOperator([1,2,3]),
+            ApproxFunBase.PermutationOperator([2,1]),
+            ApproxFunBase.NegateEven(),
+            OperatorFunction(Multiplication(Fun(psp), psp), Fun(x -> x^2, psp)),
+            ]
+
+            test_trivial_constructor_identity(op)
+        end
+
+        function test_fields(Q)
+            Q2 = typeof(Q)(Q)
+            # For some reason (perhaps owing to mutability), this does't satisfy Q == Q2,
+            # so we check the fields
+            @test typeof(Q) == typeof(Q2)
+            @test all(x -> getfield(Q, x) === getfield(Q2, x), fieldnames(typeof(Q)))
+            EC = Complex{eltype(Q)}
+            QC = Operator{EC}(Q)
+            @test eltype(QC) == EC
+        end
+
+        for op in Any[
+            qr(M),
+            cache(M),
+            ]
+
+            test_fields(op)
+        end
+    end
 end
 
 @testset "RowVector" begin

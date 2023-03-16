@@ -9,7 +9,13 @@ struct HermitianOperator{T<:Number,B<:Operator} <: Operator{T}
 end
 
 HermitianOperator(B::Operator{T}, uplo::Symbol=:U) where {T<:Number} = HermitianOperator{T,typeof(B)}(B, char_uplo(uplo))
-convert(::Type{Operator{T}},A::HermitianOperator) where {T}=HermitianOperator(strictconvert(Operator{T},A.op), A.uplo)
+Operator{T}(A::HermitianOperator) where {T}=HermitianOperator(strictconvert(Operator{T},A.op), Symbol(A.uplo))
+function HermitianOperator{T,B}(H::HermitianOperator) where {T<:Number,B<:Operator}
+    HermitianOperator{T,B}(
+        strictconvert(B, H.op),
+        H.uplo
+        )
+end
 
 domainspace(P::HermitianOperator)=domainspace(P.op)
 rangespace(P::HermitianOperator)=rangespace(P.op)
@@ -42,7 +48,13 @@ struct SymmetricOperator{T<:Number,B<:Operator} <: Operator{T}
 end
 
 SymmetricOperator(B::Operator{T}, uplo::Symbol=:U) where {T<:Number} = SymmetricOperator{T,typeof(B)}(B, char_uplo(uplo))
-convert(::Type{Operator{T}},A::SymmetricOperator) where {T}=SymmetricOperator(strictconvert(Operator{T},A.op), A.uplo)
+Operator{T}(A::SymmetricOperator) where {T}=SymmetricOperator(strictconvert(Operator{T},A.op), Symbol(A.uplo))
+function SymmetricOperator{T,B}(S::SymmetricOperator) where {T<:Number,B<:Operator}
+    SymmetricOperator{T,B}(
+        strictconvert(B, S.op),
+        S.uplo,
+        )
+end
 
 domainspace(P::SymmetricOperator)=domainspace(P.op)
 rangespace(P::SymmetricOperator)=rangespace(P.op)
@@ -74,7 +86,10 @@ struct AdjointOperator{T<:Number,B<:Operator} <: Operator{T}
 end
 
 AdjointOperator(B::Operator{T}) where {T<:Number}=AdjointOperator{T,typeof(B)}(B)
-convert(::Type{Operator{T}},A::AdjointOperator) where {T}=AdjointOperator(strictconvert(Operator{T},A.op))
+Operator{T}(A::AdjointOperator) where {T}=AdjointOperator(strictconvert(Operator{T},A.op))
+function AdjointOperator{T,B}(A::AdjointOperator) where {T<:Number,B<:Operator}
+    AdjointOperator{T,B}(strictconvert(B, A.op))
+end
 
 domainspace(P::AdjointOperator)=rangespace(P.op)
 rangespace(P::AdjointOperator)=domainspace(P.op)
@@ -97,7 +112,10 @@ struct TransposeOperator{T<:Number,B<:Operator} <: Operator{T}
 end
 
 TransposeOperator(B::Operator{T}) where {T<:Number}=TransposeOperator{T,typeof(B)}(B)
-convert(::Type{Operator{T}},A::TransposeOperator) where {T}=TransposeOperator(strictconvert(Operator{T},A.op))
+Operator{T}(A::TransposeOperator) where {T}=TransposeOperator(strictconvert(Operator{T},A.op))
+function TransposeOperator{T,B}(A::TransposeOperator) where {T<:Number,B<:Operator}
+    TransposeOperator{T,B}(strictconvert(B, A.op))
+end
 
 domainspace(P::TransposeOperator)=rangespace(P.op)
 rangespace(P::TransposeOperator)=domainspace(P.op)

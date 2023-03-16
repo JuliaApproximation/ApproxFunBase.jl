@@ -10,8 +10,10 @@ for TYP in (:ReverseOrientation,:Reverse)
         end
 
         $WRAP(op::Operator) = $WRAP{typeof(op),eltype(op)}(op)
-        convert(::Type{Operator{T}},op::$TYP) where {T} = $TYP{T}()
-        convert(::Type{Operator{T}},op::$WRAP) where {T} = $WRAP(Operator{T}(op.op))::Operator{T}
+        $TYP{T}(op::$TYP) where {T} = $TYP{T}()
+        Operator{T}(op::$TYP) where {T} = $TYP{T}()
+        $WRAP{OS,T}(op::$WRAP) where {OS,T} = $WRAP{OS,T}(strictconvert(OS,op))
+        Operator{T}(op::$WRAP) where {T} = $WRAP(Operator{T}(op.op))::Operator{T}
 
         @wrapper $WRAP
     end

@@ -18,11 +18,22 @@ macro calculus_operator(Op)
             space::S        # the domain space
             order::OT
         end
+        function $ConcOp{S,OT,T}(C::$ConcOp) where {S<:Space,OT,T}
+            $ConcOp{S,OT,T}(strictconvert(S, C.space), strictconvert(OT, C.order))
+        end
         struct $WrappOp{BT<:Operator,S<:Space,R<:Space,OT,T} <: $Op{S,OT,T}
             op::BT
             order::OT
             domainspace::S
             rangespace::R
+        end
+        function $WrappOp{BT,S,R,OT,T}(C::$WrappOp) where {BT<:Operator,S<:Space,R<:Space,OT,T}
+            $WrappOp{BT,S,R,OT,T}(
+                strictconvert(BT, C.op),
+                strictconvert(OT, C.order),
+                strictconvert(S, C.domainspace),
+                strictconvert(R, C.rangespace),
+            )
         end
 
         ApproxFunBase.@wrapper $WrappOp false false
@@ -58,26 +69,18 @@ macro calculus_operator(Op)
         $Op(x...) = $DefaultOp(x...)
         $ConcOp(S::Space) = $ConcOp(S,1)
 
-        function Base.convert(::Type{Operator{T}},D::$ConcOp) where T
-            if T==eltype(D)
-                D
-            else
-                $ConcOp{typeof(D.space),typeof(D.order),T}(D.space, D.order)
-            end
+        function Operator{T}(D::$ConcOp) where {T}
+            $ConcOp{typeof(D.space),typeof(D.order),T}(D)::Operator{T}
         end
 
         $WrappOp(op::Operator, order = 1, d = domainspace(op), r = rangespace(op)) =
             $WrappOp{typeof(op),typeof(d),typeof(r),typeof(order),eltype(op)}(op,order,d,r)
 
-        function Base.convert(::Type{Operator{T}},D::$WrappOp) where T
-            if T==eltype(D)
-                D
-            else
-                op=ApproxFunBase.strictconvert(Operator{T},D.op)
-                S = domainspace(D)
-                R = rangespace(D)
-                $WrappOp(op,D.order,S,R)::Operator{T}
-            end
+        function Operator{T}(D::$WrappOp) where {T}
+            op=ApproxFunBase.strictconvert(Operator{T},D.op)
+            S = domainspace(D)
+            R = rangespace(D)
+            $WrappOp{typeof(op),typeof(S),typeof(R),typeof(D.order),T}(op,D.order,S,R)::Operator{T}
         end
 
         ## Routines

@@ -8,6 +8,7 @@ struct OneHotVector{T} <: AbstractVector{T}
 		new{T}(n, len)
 	end
 end
+OneHotVector{T}(v::OneHotVector) where {T} = OneHotVector{T}(v.n, v.len)
 OneHotVector(n, len = n) = OneHotVector{Float64}(n, len)
 Base.size(v::OneHotVector) = (v.len,)
 Base.length(v::OneHotVector) = v.len

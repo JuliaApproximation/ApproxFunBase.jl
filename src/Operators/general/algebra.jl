@@ -21,6 +21,18 @@ struct PlusOperator{T,BW,SZ,O<:Operator{T},BBW,SBBW} <: Operator{T}
     end
 end
 
+function PlusOperator{T,BW,SZ,O,BBW,SBBW}(P::PlusOperator) where {T,BW,SZ,O<:Operator{T},BBW,SBBW}
+    PlusOperator{T,BW,SZ,O,BBW,SBBW}(
+        strictconvert(Vector{O}, P.ops),
+        strictconvert(BW, P.bandwidths),
+        strictconvert(SZ, P.sz),
+        strictconvert(BBW, P.blockbandwidths),
+        strictconvert(SBBW, P.subblockbandwidths),
+        P.isbandedblockbanded,
+        P.israggedbelow,
+        )
+end
+
 bandwidthsmax(ops, f=bandwidths) = mapreduce(f, (t1, t2) -> max.(t1, t2), ops, init=(-720, -720)) #= approximate (-∞,-∞) =#
 
 function PlusOperator(ops::Vector{O}, args...) where {O<:Operator}
@@ -56,17 +68,13 @@ _convertops(::Type{Operator{T}}, ops) where {T} =
     map(x -> strictconvert(Operator{T}, x), ops)
 _convertops(::Type{Operator{T}}, ops::Vector{Operator{S}}) where {T,S} =
     Operator{T}[strictconvert(Operator{T}, op) for op in ops]
-function convert(::Type{Operator{T}}, P::PlusOperator) where {T}
-    if T == eltype(P)
-        P
-    else
-        ops = P.ops
-        PlusOperator(eltype(ops) <: Operator{T} ? ops :
-                     _convertops(Operator{T}, ops),
-            bandwidths(P), size(P), blockbandwidths(P),
-            subblockbandwidths(P), isbandedblockbanded(P),
-            israggedbelow(P))::Operator{T}
-    end
+function Operator{T}(P::PlusOperator) where {T}
+    ops = P.ops
+    PlusOperator(eltype(ops) <: Operator{T} ? ops :
+                 _convertops(Operator{T}, ops),
+        bandwidths(P), size(P), blockbandwidths(P),
+        subblockbandwidths(P), isbandedblockbanded(P),
+        israggedbelow(P))::Operator{T}
 end
 
 function promoteplus(opsin, sz=size(first(opsin)))
@@ -188,14 +196,15 @@ for OP in (:promotedomainspace, :promoterangespace), SP in (:UnsetSpace, :Space)
     @eval $OP(C::ConstantTimesOperator, k::$SP) = ConstantTimesOperator(C.λ, $OP(C.op, k))
 end
 
-
-function convert(::Type{Operator{T}}, C::ConstantTimesOperator) where {T}
-    if T == eltype(C)
-        C
-    else
-        op = strictconvert(Operator{T}, C.op)
-        ConstantTimesOperator(T(C.λ)::T, op)::Operator{T}
-    end
+function ConstantTimesOperator{T,B}(C::ConstantTimesOperator) where {T<:Number,B<:Operator{T}}
+    ConstantTimesOperator{T,B}(
+        strictconvert(T, C.λ),
+        strictconvert(B, C.op),
+        )
+end
+function Operator{T}(C::ConstantTimesOperator) where {T}
+    op = strictconvert(Operator{T}, C.op)
+    ConstantTimesOperator(T(C.λ)::T, op)::Operator{T}
 end
 
 getindex(P::ConstantTimesOperator, k::Integer...) =
@@ -256,6 +265,18 @@ struct TimesOperator{T,BW,SZ,O<:Operator{T},BBW,SBBW} <: Operator{T}
     end
 end
 
+function TimesOperator{T,BW,SZ,O,BBW,SBBW}(TO::TimesOperator) where {T,BW,SZ,O<:Operator{T},BBW,SBBW}
+    TimesOperator{T,BW,SZ,O,BBW,SBBW}(
+        strictconvert(Vector{O}, TO.ops),
+        strictconvert(BW, TO.bandwidths),
+        strictconvert(SZ, TO.sz),
+        strictconvert(BBW, TO.blockbandwidths),
+        strictconvert(SBBW, TO.subblockbandwidths),
+        TO.isbandedblockbanded,
+        TO.israggedbelow,
+        )
+end
+
 const PlusOrTimesOp = Union{PlusOperator,TimesOperator}
 
 bandwidthssum(P, f=bandwidths) = mapreduce(f, (t1, t2) -> t1 .+ t2, P, init=(0, 0))
@@ -292,17 +313,13 @@ end
 
 ==(A::TimesOperator, B::TimesOperator) = A.ops == B.ops
 
-function convert(::Type{Operator{T}}, P::TimesOperator) where {T}
-    if T == eltype(P)
-        P
-    else
-        ops = P.ops
-        TimesOperator(eltype(ops) <: Operator{T} ? ops :
-                      _convertops(Operator{T}, ops),
-            bandwidths(P), size(P), blockbandwidths(P),
-            subblockbandwidths(P), isbandedblockbanded(P),
-            israggedbelow(P))::Operator{T}
-    end
+function Operator{T}(P::TimesOperator) where {T}
+    ops = P.ops
+    TimesOperator(eltype(ops) <: Operator{T} ? ops :
+                  _convertops(Operator{T}, ops),
+        bandwidths(P), size(P), blockbandwidths(P),
+        subblockbandwidths(P), isbandedblockbanded(P),
+        israggedbelow(P))::Operator{T}
 end
 
 

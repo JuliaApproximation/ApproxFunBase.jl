@@ -4,7 +4,10 @@ struct ReOperator{O,T} <: Operator{T}
 end
 
 ReOperator(op)=ReOperator{typeof(op),real(eltype(op))}(op)
-convert(::Type{Operator{T}},R::ReOperator) where {T} = ReOperator{typeof(R.op),T}(R.op)
+Operator{T}(R::ReOperator) where {T} = ReOperator{typeof(R.op),T}(R.op)
+function ReOperator{O,T}(R::ReOperator) where {O,T}
+    ReOperator{O,T}(strictconvert(O, R.op))
+end
 
 @wrapperstructure ReOperator
 @wrapperspaces ReOperator

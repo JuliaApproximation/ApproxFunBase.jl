@@ -3,6 +3,10 @@ struct SplineSpace{order,T,R,P<:PiecewiseSegment} <: Space{P,R}
     domain::P
 end
 
+function SplineSpace{order,T,R,P}(S::SplineSpace) where {order,T,R,P<:PiecewiseSegment}
+    SplineSpace{order,T,R,P}(strictconvert(P, S.domain))
+end
+
 SplineSpace{m,T,R}(d::PiecewiseSegment{T}) where {m,T,R} = SplineSpace{m,T,R,typeof(d)}(d)
 
 SplineSpace{m,T}(d::PiecewiseSegment{T}) where {m,T} = SplineSpace{m,T,real(eltype(T))}(d)

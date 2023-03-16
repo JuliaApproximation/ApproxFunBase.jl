@@ -7,8 +7,14 @@ end
 QROperator(R::CachedOperator,H::AbstractArray,ncs::Int) =
     QROperator{typeof(R),typeof(H),eltype(H)}(R,H,ncs)
 
-
-convert(::Type{Operator{T}},QR::QROperator) where {T} =
+function QROperator{CO,MT,T}(Q::QROperator) where {CO,MT,T}
+    QROperator{CO,MT,T}(
+        strictconvert(CO, Q.R_cache),
+        strictconvert(MT, Q.H),
+        Q.ncols,
+        )
+end
+Operator{T}(QR::QROperator) where {T} =
     QROperator(strictconvert(Operator{T},QR.R_cache), strictconvert(AbstractArray{T}, QR.H),QR.ncols)
 
 qr(QR::QROperator) = QR

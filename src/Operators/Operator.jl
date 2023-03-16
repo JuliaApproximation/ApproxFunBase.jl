@@ -900,3 +900,5 @@ diagindrow(S::SubOperator) = diagindrow(S,parentindices(S)[1],parentindices(S)[2
 
 # Conversion between operator types
 convert(::Type{O}, c::Operator) where {O<:Operator} = c isa O ? c : O(c)::O
+convert(::Type{Operator{T}}, c::Operator{S}) where {S,T} = c isa Operator{T} ? c : Operator{T}(c)::Operator{T}
+Operator(A::Operator) = A
