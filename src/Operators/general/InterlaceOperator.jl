@@ -81,22 +81,28 @@ end
 const VectorInterlaceOperator = InterlaceOperator{T,1,DS,RS} where {T,DS,RS<:Space{D,R}} where {D,R<:AbstractVector}
 const MatrixInterlaceOperator = InterlaceOperator{T,2,DS,RS} where {T,DS,RS<:Space{D,R}} where {D,R<:AbstractVector}
 
+@static if VERSION >= v"1.8"
+    Base.@constprop :aggressive interlace_bandwidths(args...) = _interlace_bandwidths(args...)
+else
+    interlace_bandwidths(args...) = _interlace_bandwidths(args...)
+end
 
-function InterlaceOperator(ops::AbstractMatrix{<:Operator},ds::Space,rs::Space)
+@inline function _interlace_bandwidths(ops::AbstractMatrix{<:Operator},
+            ds, rs, allbanded = all(isbanded,ops))
     # calculate bandwidths TODO: generalize
     p=size(ops,1)
     dsi = interlacer(ds)
     rsi = interlacer(rs)
 
-    if size(ops,2) == p && all(isbanded,ops) &&# only support blocksize (1,) for now
+    if size(ops,2) == p && allbanded &&# only support blocksize (1,) for now
             all(i->isa(i,AbstractFill) && getindex_value(i) == 1, dsi.blocks) &&
             all(i->isa(i,AbstractFill) && getindex_value(i) == 1, rsi.blocks)
 
         l,u = 0,0
-        for k=1:p,j=1:p
+        for k=axes(ops,1), j=axes(ops,2)
             l=max(l,p*bandwidth(ops[k,j],1)+k-j)
         end
-        for k=1:p,j=1:p
+        for k=axes(ops,1), j=axes(ops,2)
             u=max(u,p*bandwidth(ops[k,j],2)+j-k)
         end
     elseif p == 1 && size(ops,2) == 2 && size(ops[1],2) == 1
@@ -105,20 +111,14 @@ function InterlaceOperator(ops::AbstractMatrix{<:Operator},ds::Space,rs::Space)
     else
         l,u = (1-dimension(rs),dimension(ds)-1)  # not banded
     end
-
-    MT = Matrix{Operator{promote_eltypeof(ops)}}
-    opsm = strictconvert(MT, ops)
-    InterlaceOperator(opsm,ds,rs,
-                        cache(dsi),
-                        cache(rsi),
-                        (l,u))
+    l,u
 end
 
-
-function InterlaceOperator(ops::VectorOrTupleOfOp, ds::Space, rs::Space)
+@inline function _interlace_bandwidths(ops::VectorOrTupleOfOp,
+            ds, rs, allbanded = all(isbanded,ops))
     # calculate bandwidths
     p=size(ops,1)
-    if all(isbanded,ops)
+    if allbanded
         l,u = 0,0
         #TODO: this code assumes an interlace strategy that might not be right
         for k=1:p
@@ -130,13 +130,33 @@ function InterlaceOperator(ops::VectorOrTupleOfOp, ds::Space, rs::Space)
     else
         l,u = (1-dimension(rs),dimension(ds)-1)  # not banded
     end
+    l,u
+end
+
+function InterlaceOperator(ops::AbstractMatrix{<:Operator}, ds::Space, rs::Space,
+        bw = interlace_bandwidths(ops, ds, rs))
+
+    dsi = interlacer(ds)
+    rsi = interlacer(rs)
+
+    MT = Matrix{Operator{promote_eltypeof(ops)}}
+    opsm = strictconvert(MT, ops)
+    InterlaceOperator(opsm,ds,rs,
+                        cache(dsi),
+                        cache(rsi),
+                        bw)
+end
+
+
+function InterlaceOperator(ops::VectorOrTupleOfOp, ds::Space, rs::Space,
+        bw = interlace_bandwidths(ops, ds, rs))
 
     VT = Vector{Operator{promote_eltypeof(ops)}}
     opsv = strictconvert(VT, convert_vector(ops))
     InterlaceOperator(opsv,ds,rs,
                         cache(BlockInterlacer(tuple(blocklengths(ds)))),
                         cache(interlacer(rs)),
-                        (l,u))
+                        bw)
 end
 
 interlace_domainspace(ops::AbstractMatrix, ::Type{NoSpace}) = domainspace(ops)
