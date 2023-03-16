@@ -365,6 +365,9 @@ end
 
         M = Multiplication(Fun(PointSpace(1:3)), PointSpace(1:3))
         @test typeof(M)(M) == M
+
+        R = real(M)
+        @test typeof(M)(M) == M
     end
 end
 
