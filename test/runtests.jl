@@ -2,6 +2,8 @@ using ApproxFunBase
 using ApproxFunBase: ∞
 using Aqua
 using BandedMatrices
+using BlockArrays
+using BlockBandedMatrices
 using DomainSets
 using FillArrays
 using InfiniteArrays
