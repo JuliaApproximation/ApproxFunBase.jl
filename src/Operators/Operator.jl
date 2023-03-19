@@ -765,7 +765,7 @@ function BlockBandedMatrix(S::Operator)
 end
 
 function default_BlockMatrix(S::Operator)
-    ret = PseudoBlockArray(zeros(size(S)),
+    ret = PseudoBlockArray(zeros(eltype(S), size(S)),
                         AbstractVector{Int}(blocklengths(rangespace(S))),
                         AbstractVector{Int}(blocklengths(domainspace(S))))
     ret .= S
