@@ -14,7 +14,7 @@ for TYP in (:PiecewiseSpace,:ArraySpace)
         end
         function interlace_choosedomainspace(ops,rs::$TYP)
             @assert length(ops) == length(rs)
-            # this ensures correct dispatch for unino
+            # this ensures correct dispatch for union
             sps = Array{Space}(
                 filter(x->!isambiguous(x),map((op,s)->choosedomainspace(op,s),ops,rs)))
             if isempty(sps)
@@ -222,25 +222,33 @@ end
 #TODO: do in @calculus_operator?
 
 for (Op,OpWrap) in ((:Derivative,:DerivativeWrapper),(:Integral,:IntegralWrapper))
+    _Op = Symbol(:_, Op)
     @eval begin
-        function $Op(S::PiecewiseSpace, k::Number)
+        @inline function $_Op(S::PiecewiseSpace, k::Number)
             assert_integer(k)
             t = map(s->$Op(s,k),components(S))
             D = Diagonal(convert_vector_or_svector(t))
             O = InterlaceOperator(D, PiecewiseSpace)
             $OpWrap(O,k)
         end
-        function $Op(S::ArraySpace, k::Number)
+        @inline function $_Op(S::ArraySpace, k::Number)
             assert_integer(k)
             ops = map(s->$Op(s,k),S)
             RS = ArraySpace(reshape(map(rangespace, ops), size(S)))
             O = InterlaceOperator(Diagonal(ops), S, RS)
             $OpWrap(O,k)
         end
+        @static if VERSION >= v"1.8"
+            Base.@constprop :aggressive $Op(s::PiecewiseSpace, k::Number) = $_Op(s, k)
+            Base.@constprop :aggressive $Op(s::ArraySpace, k::Number) = $_Op(s, k)
+        else
+            $Op(s::PiecewiseSpace, k::Number) = $_Op(s, k)
+            $Op(s::ArraySpace, k::Number) = $_Op(s, k)
+        end
     end
 end
 
-function Derivative(S::SumSpace, k::Number)
+@inline function _Derivative(S::SumSpace, k::Number)
     assert_integer(k)
     # we want to map before we decompose, as the map may introduce
     # mixed bases.
@@ -252,6 +260,12 @@ function Derivative(S::SumSpace, k::Number)
     else
         DefaultDerivative(S,k)
     end
+end
+
+@static if VERSION >= v"1.8"
+    Base.@constprop :aggressive Derivative(s::SumSpace, k::Number) = _Derivative(s, k)
+else
+    Derivative(s::SumSpace, k::Number) = _Derivative(s, k)
 end
 
 choosedomainspace(M::CalculusOperator{UnsetSpace},sp::SumSpace)=mapreduce(s->choosedomainspace(M,s),union,sp.spaces)
