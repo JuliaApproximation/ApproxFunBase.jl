@@ -139,40 +139,19 @@ function InterlaceOperator(ops::VectorOrTupleOfOp, ds::Space, rs::Space)
                         (l,u))
 end
 
-function InterlaceOperator(opsin::AbstractMatrix{<:Operator})
+interlace_domainspace(ops::AbstractMatrix, ::Type{NoSpace}) = domainspace(ops)
+interlace_domainspace(ops::AbstractMatrix, ::Type{DS}) where {DS} = DS(components(domainspace(ops)))
+interlace_rangespace(ops::AbstractMatrix, ::Type{NoSpace}) = rangespace(@view ops[:,1])
+interlace_rangespace(ops::RowVector, ::Type{NoSpace}) = rangespace(ops[1])
+interlace_rangespace(ops::AbstractMatrix, ::Type{RS}) where {RS} = RS(rangespace(@view ops[:,1]).spaces)
+interlace_rangespace(ops::RowVector, ::Type{RS}) where {RS} = RS(rangespace(ops[1]))
+
+function InterlaceOperator(opsin::AbstractMatrix{<:Operator},
+        ds::Type{DS}=NoSpace,rs::Type{RS}=ds) where {DS<:Space,RS<:Space}
     isempty(opsin) && throw(ArgumentError("Cannot create InterlaceOperator from empty Matrix"))
     ops=promotespaces(opsin)
-    InterlaceOperator(ops,domainspace(ops),rangespace(ops[:,1]))
+    InterlaceOperator(ops, interlace_domainspace(ops, DS), interlace_rangespace(ops, RS))
 end
-
-function InterlaceOperator(opsin::AbstractMatrix{<:Operator},::Type{DS},::Type{RS}) where {DS<:Space,RS<:Space}
-    isempty(opsin) && throw(ArgumentError("Cannot create InterlaceOperator from empty Matrix"))
-    ops=promotespaces(opsin)
-    InterlaceOperator(ops,DS(components(domainspace(ops))),RS(rangespace(@view ops[:,1]).spaces))
-end
-
-
-function InterlaceOperator(opsin::RowVector{<:Operator})
-    isempty(opsin) && throw(ArgumentError("Cannot create InterlaceOperator from empty Matrix"))
-
-    ops=promotespaces(opsin)
-    InterlaceOperator(ops,domainspace(ops),rangespace(ops[1]))
-end
-
-function InterlaceOperator(opsin::RowVector{<:Operator},::Type{DS},::Type{RS}) where {DS<:Space,RS<:Space}
-    isempty(opsin) && throw(ArgumentError("Cannot create InterlaceOperator from empty Matrix"))
-    ops=promotespaces(opsin)
-    InterlaceOperator(ops,DS(components(domainspace(ops))),rangespace(ops[1]))
-end
-
-
-
-
-InterlaceOperator(opsin::AbstractMatrix{<:Operator},::Type{DS}) where {DS<:Space} =
-    InterlaceOperator(opsin,DS,DS)
-
-InterlaceOperator(opsin::AbstractMatrix,S...) =
-    InterlaceOperator(Matrix{Operator{promote_eltypeof(opsin)}}(promotespaces(opsin)),S...)
 
 function InterlaceOperator(opsin::AbstractVector{<:Operator})
     ops = convert_vector(promotedomainspace(opsin))
@@ -192,8 +171,8 @@ else
     end
 end
 
-InterlaceOperator(ops::AbstractArray) =
-    InterlaceOperator(Array{Operator{promote_eltypeof(ops)}, ndims(ops)}(ops))
+InterlaceOperator(ops::AbstractArray, ds=NoSpace, rs=ds) =
+    InterlaceOperator(Array{Operator{promote_eltypeof(ops)}, ndims(ops)}(ops), ds, rs)
 
 
 function convert(::Type{Operator{T}},S::InterlaceOperator) where T
