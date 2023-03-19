@@ -3,7 +3,7 @@ Core functionality of ApproxFun
 
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaApproximation.github.io/ApproxFun.jl/stable)
 [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://JuliaApproximation.github.io/ApproxFun.jl/latest)
-[![Build Status](https://github.com/JuliaApproximation/ClassicalOrthogonalPolynomials.jl/workflows/CI/badge.svg)](https://github.com/JuliaApproximation/ApproxFunBase.jl/actions)
+[![CI](https://github.com/JuliaApproximation/ApproxFunBase.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/JuliaApproximation/ApproxFunBase.jl/actions/workflows/ci.yml)
 [![IntegrationTest](https://github.com/JuliaApproximation/ApproxFunBase.jl/actions/workflows/downstream.yml/badge.svg)](https://github.com/JuliaApproximation/ApproxFunBase.jl/actions/workflows/downstream.yml)
 [![codecov](https://codecov.io/gh/JuliaApproximation/ApproxFunBase.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaApproximation/ApproxFunBase.jl)
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
