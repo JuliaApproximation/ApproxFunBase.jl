@@ -359,6 +359,21 @@ end
         ApproxFunBase.mul_coefficients!(Operator(2I), v)
         @test v ≈ Float64[2i^2 for i in 1:4]
     end
+    @testset "Matrix types" begin
+        F = Multiplication(Fun(PointSpace(1:3)), PointSpace(1:3))
+        function test_matrices(F)
+            A = AbstractMatrix(F)
+            @test Matrix(F) == BandedMatrix(F) == BlockBandedMatrix(F) == ApproxFunBase.RaggedMatrix(F) == A
+            DefBlk = ApproxFunBase.default_BlockMatrix(F)
+            DefBBlk = ApproxFunBase.default_BlockBandedMatrix(F)
+            DefB = ApproxFunBase.default_BandedMatrix(F)
+            DefM = ApproxFunBase.default_Matrix(F)
+            DefR = ApproxFunBase.default_RaggedMatrix(F)
+            @test DefBlk == DefBBlk == DefB == DefM == DefR == A
+        end
+        test_matrices(F)
+        test_matrices(im*F)
+    end
 end
 
 @testset "RowVector" begin
