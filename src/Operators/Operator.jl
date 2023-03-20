@@ -733,20 +733,32 @@ copyto!(dest::AbstractMatrix, src::Operator) = copyto!(dest, AbstractMatrix(src)
 
 # this is for operators that implement copy via axpy!
 
-BandedMatrix(::Type{Zeros}, V::Operator) = BandedMatrix(Zeros{eltype(V)}(size(V)), bandwidths(V))
-Matrix(::Type{Zeros}, V::Operator) = Matrix(Zeros{eltype(V)}(size(V)))
-BandedBlockBandedMatrix(::Type{Zeros}, V::Operator) =
+function BandedMatrix(::Type{Zeros}, V::Operator)
+    all(isfinite, size(V)) || throw(ArgumentError("operator must be finite"))
+    BandedMatrix(Zeros{eltype(V)}(size(V)), bandwidths(V))
+end
+function Matrix(::Type{Zeros}, V::Operator)
+    all(isfinite, size(V)) || throw(ArgumentError("operator must be finite"))
+    Matrix(Zeros{eltype(V)}(size(V)))
+end
+function BandedBlockBandedMatrix(::Type{Zeros}, V::Operator)
+    all(isfinite, size(V)) || throw(ArgumentError("operator must be finite"))
     BandedBlockBandedMatrix(Zeros{eltype(V)}(size(V)),
                             blocklengths(rangespace(V)), blocklengths(domainspace(V)),
                             blockbandwidths(V), subblockbandwidths(V))
-BlockBandedMatrix(::Type{Zeros}, V::Operator) =
+end
+function BlockBandedMatrix(::Type{Zeros}, V::Operator)
+    all(isfinite, size(V)) || throw(ArgumentError("operator must be finite"))
     BlockBandedMatrix(Zeros{eltype(V)}(size(V)),
                       AbstractVector{Int}(blocklengths(rangespace(V))),
                        AbstractVector{Int}(blocklengths(domainspace(V))),
                       blockbandwidths(V))
-RaggedMatrix(::Type{Zeros}, V::Operator) =
+end
+function RaggedMatrix(::Type{Zeros}, V::Operator)
+    all(isfinite, size(V)) || throw(ArgumentError("operator must be finite"))
     RaggedMatrix(Zeros{eltype(V)}(size(V)),
                  Int[max(0,colstop(V,j)) for j=1:size(V,2)])
+end
 
 
 convert_axpy!(::Type{MT}, S::Operator) where {MT <: AbstractMatrix} =

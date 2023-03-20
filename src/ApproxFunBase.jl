@@ -72,7 +72,7 @@ import BandedMatrices: bandrange, inbands_setindex!, bandwidth,
               colstart, colstop, colrange, rowstart, rowstop, rowrange,
               bandwidths, _BandedMatrix, BandedMatrix, isbanded
 
-import BlockArrays: blocksize, block, blockaxes, blockindex
+import BlockArrays: blocksize, block, blockaxes, blockindex, blocklengths
 import BlockBandedMatrices: blockbandwidth, blockbandwidths, blockcolstop,
               blockcolrange, blockcolstart, blockrowstop, blockrowstart,
               subblockbandwidth, subblockbandwidths, _BlockBandedMatrix,
