@@ -62,13 +62,13 @@ KroneckerOperator(K::KroneckerOperator) = K
 KroneckerOperator(T::TimesOperator) = mapfoldr(op -> KroneckerOperator(op), *, T.ops)
 
 function promotedomainspace(K::KroneckerOperator,ds::TensorSpace)
-    A = (i->promoterangespace(K.ops[i], ds.spaces[i]) for i=1:length(K.ops))
-    range = reduce(⊗, [rangespace(a) for a∈A])
-    KroneckerOperator(A,ds,range)
+    A = ntuple(i->promotedomainspace(K.ops[i], ds.spaces[i]), length(K.ops))
+    rs = reduce(⊗, [rangespace(a) for a∈A])
+    KroneckerOperator(A,ds,rs)
 end
 
 function promoterangespace(K::KroneckerOperator,rs::TensorSpace)
-    A = (i->promoterangespace(K.ops[i], rs.spaces[i]) for i=1:length(K.ops))
+    A = ntuple(i->promoterangespace(K.ops[i], rs.spaces[i]), length(K.ops))
     KroneckerOperator(A,domainspace(K),rs)
 end
 
