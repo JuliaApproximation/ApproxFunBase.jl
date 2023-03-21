@@ -37,8 +37,6 @@ Base.size(A::RaggedMatrix) = (A.m,length(A.cols)-1)
 colstart(A::RaggedMatrix,j::Integer) = 1
 colstop(A::RaggedMatrix,j::Integer) = min(A.cols[j+1]-A.cols[j],size(A,1))
 
-Base.IndexStyle(::Type{RM}) where {RM<:RaggedMatrix} = IndexCartesian()
-
 @inline function incol(A, k, j, ind = A.cols[j]+k-1)
     ind < A.cols[j+1]
 end
