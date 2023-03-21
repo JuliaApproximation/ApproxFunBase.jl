@@ -87,22 +87,40 @@ else
     interlace_bandwidths(args...) = _interlace_bandwidths(args...)
 end
 
-@inline function _interlace_bandwidths(ops::AbstractMatrix{<:Operator}, ds, rs, allbanded = all(isbanded,ops))
+__interlace_ops_bandwidths(ops::AbstractMatrix) = bandwidths.(ops)
+__interlace_ops_bandwidths(ops::Diagonal) = bandwidths.(parent(ops))
+function __interlace_bandwidths_square(ops::AbstractMatrix, bw = __interlace_ops_bandwidths(ops))
+    p=size(ops,1)
+    l,u = 0,0
+    for k=axes(ops,1), j=axes(ops,2)
+        opbw = bw[k,j]
+        l = max(l, p*opbw[1]+k-j)
+        u = max(u, p*opbw[2]+j-k)
+    end
+    l,u
+end
+function __interlace_bandwidths_square(ops::Diagonal, bw = __interlace_ops_bandwidths(ops))
+    p=size(ops,1)
+    l,u = 0,0
+    for k=axes(ops,1)
+        opbw = bw[k]
+        l = max(l, p*opbw[1])
+        u = max(u, p*opbw[2])
+    end
+    l,u
+end
+
+@inline function _interlace_bandwidths(ops::AbstractMatrix{<:Operator}, ds, rs,
+        allbanded = all(isbanded,ops), bw = allbanded ? __interlace_ops_bandwidths(ops) : nothing)
     p=size(ops,1)
     dsi = interlacer(ds)
     rsi = interlacer(rs)
 
-    if size(ops,2) == p && allbanded &&# only support blocksize (1,) for now
+    if size(ops,2) == p && allbanded && # only support blocksize (1,) for now
             all(i->isa(i,AbstractFill) && getindex_value(i) == 1, dsi.blocks) &&
             all(i->isa(i,AbstractFill) && getindex_value(i) == 1, rsi.blocks)
 
-        p=size(ops,1)
-        l,u = 0,0
-        for k=axes(ops,1), j=axes(ops,2)
-            opbw = bandwidths(ops[k,j])
-            l = max(l, p*opbw[1]+k-j)
-            u = max(u, p*opbw[2]+j-k)
-        end
+        l,u = __interlace_bandwidths_square(ops, bw)
     elseif p == 1 && size(ops,2) == 2 && size(ops[1],2) == 1
         # special case for example
         l,u = max(bandwidth(ops[1],1),bandwidth(ops[2],1)-1),bandwidth(ops[2],2)+1

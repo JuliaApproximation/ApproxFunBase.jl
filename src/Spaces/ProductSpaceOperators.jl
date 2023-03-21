@@ -226,10 +226,11 @@ _spacename(::PiecewiseSpace) = PiecewiseSpace
 
 function InterlaceOperator_Diagonal(t, S)
     allbanded = all(isbanded, t)
+    opbw = map(bandwidths, t)
     ds, rs = S, _spacename(S)(map(rangespace, t))
     D = Diagonal(convert_vector_or_svector(t))
-    bw = interlace_bandwidths(D, ds, rs, allbanded)
-    InterlaceOperator(D, ds, rs, bandwidths = bw)
+    iopbw = interlace_bandwidths(D, ds, rs, allbanded, opbw)
+    InterlaceOperator(D, ds, rs, bandwidths = iopbw)
 end
 
 for (Op,OpWrap) in ((:Derivative,:DerivativeWrapper),(:Integral,:IntegralWrapper))
