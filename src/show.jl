@@ -158,7 +158,7 @@ function show(io::IO,ss::PiecewiseSpace)
     end
     show(io,s[1])
     for sp in s[2:end]
-        print(io,"⨄")
+        print(io," ⨄ ")
         show(io,sp)
     end
     if length(s) == 1
