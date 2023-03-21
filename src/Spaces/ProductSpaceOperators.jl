@@ -299,7 +299,8 @@ function Multiplication(f::Fun{<:PiecewiseSpace}, sp::PiecewiseSpace)
     p=perm(domain(f).domains,domain(sp).domains)  # sort f
     vf=components(f)[p]
     t = map(Multiplication,vf,sp.spaces)
-    O = InterlaceOperator_Diagonal(t, sp)
+    D = Diagonal(convert_vector_or_svector(t))
+    O = InterlaceOperator(D, PiecewiseSpace)
     MultiplicationWrapper(f, O)
 end
 
