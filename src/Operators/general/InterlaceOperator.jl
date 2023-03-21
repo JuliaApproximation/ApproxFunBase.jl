@@ -81,7 +81,13 @@ end
 const VectorInterlaceOperator = InterlaceOperator{T,1,DS,RS} where {T,DS,RS<:Space{D,R}} where {D,R<:AbstractVector}
 const MatrixInterlaceOperator = InterlaceOperator{T,2,DS,RS} where {T,DS,RS<:Space{D,R}} where {D,R<:AbstractVector}
 
-function interlace_bandwidth(ops::AbstractMatrix{<:Operator}, ds, rs, allbanded = all(isbanded,ops))
+@static if VERSION >= v"1.8"
+    Base.@constprop :aggressive interlace_bandwidths(args...) = _interlace_bandwidths(args...)
+else
+    interlace_bandwidths(args...) = _interlace_bandwidths(args...)
+end
+
+@inline function _interlace_bandwidths(ops::AbstractMatrix{<:Operator}, ds, rs, allbanded = all(isbanded,ops))
     p=size(ops,1)
     dsi = interlacer(ds)
     rsi = interlacer(rs)
@@ -90,12 +96,12 @@ function interlace_bandwidth(ops::AbstractMatrix{<:Operator}, ds, rs, allbanded 
             all(i->isa(i,AbstractFill) && getindex_value(i) == 1, dsi.blocks) &&
             all(i->isa(i,AbstractFill) && getindex_value(i) == 1, rsi.blocks)
 
+        p=size(ops,1)
         l,u = 0,0
-        for k=1:p,j=1:p
-            l=max(l,p*bandwidth(ops[k,j],1)+k-j)
-        end
-        for k=1:p,j=1:p
-            u=max(u,p*bandwidth(ops[k,j],2)+j-k)
+        for k=axes(ops,1), j=axes(ops,2)
+            opbw = bandwidths(ops[k,j])
+            l = max(l, p*opbw[1]+k-j)
+            u = max(u, p*opbw[2]+j-k)
         end
     elseif p == 1 && size(ops,2) == 2 && size(ops[1],2) == 1
         # special case for example
@@ -109,7 +115,7 @@ end
 
 function InterlaceOperator(ops::AbstractMatrix{<:Operator},ds::Space,rs::Space;
         # calculate bandwidths TODO: generalize
-        bandwidths = interlace_bandwidth(ops, ds, rs))
+        bandwidths = interlace_bandwidths(ops, ds, rs))
 
     dsi = interlacer(ds)
     rsi = interlacer(rs)
@@ -122,16 +128,16 @@ function InterlaceOperator(ops::AbstractMatrix{<:Operator},ds::Space,rs::Space;
                         bandwidths)
 end
 
-function interlace_bandwidth(ops::VectorOrTupleOfOp, ds, rs, allbanded = all(isbanded, ops))
+@inline function _interlace_bandwidths(ops::VectorOrTupleOfOp, ds, rs, allbanded = all(isbanded, ops))
     p=size(ops,1)
+    ax1 = first(axes(ops))
     if allbanded
         l,u = 0,0
         #TODO: this code assumes an interlace strategy that might not be right
-        for k=1:p
-            l=max(l,p*bandwidth(ops[k],1)+k-1)
-        end
-        for k=1:p
-            u=max(u,p*bandwidth(ops[k],2)+1-k)
+        for k in ax1
+            opbw = bandwidths(ops[k])
+            l = max(l, p*opbw[1]+k-1)
+            u = max(u, p*opbw[2]+1-k)
         end
     else
         l,u = (1-dimension(rs),dimension(ds)-1)  # not banded
@@ -141,7 +147,7 @@ end
 
 function InterlaceOperator(ops::VectorOrTupleOfOp, ds::Space, rs::Space;
         # calculate bandwidths
-        bandwidths = interlace_bandwidth(ops, ds, rs))
+        bandwidths = interlace_bandwidths(ops, ds, rs))
 
     VT = Vector{Operator{promote_eltypeof(ops)}}
     opsv = strictconvert(VT, convert_vector(ops))
@@ -160,7 +166,7 @@ interlace_rangespace(ops::RowVector, ::Type{RS}) where {RS} = RS(rangespace(ops[
 
 function InterlaceOperator(opsin::AbstractMatrix{<:Operator},
         ds::Type{DS}=NoSpace,rs::Type{RS}=ds) where {DS<:Space,RS<:Space}
-    isempty(opsin) && throw(ArgumentError("Cannot create InterlaceOperator from empty Matrix"))
+    isempty(opsin) && throw(ArgumentError("Cannot create InterlaceOperator from an empty matrix"))
     ops=promotespaces(opsin)
     InterlaceOperator(ops, interlace_domainspace(ops, DS), interlace_rangespace(ops, RS))
 end

@@ -221,14 +221,24 @@ end
 
 #TODO: do in @calculus_operator?
 
+_spacename(::SumSpace) = SumSpace
+_spacename(::PiecewiseSpace) = PiecewiseSpace
+
+function InterlaceOperator_Diagonal(t, S)
+    allbanded = all(isbanded, t)
+    ds, rs = S, _spacename(S)(map(rangespace, t))
+    D = Diagonal(convert_vector_or_svector(t))
+    bw = interlace_bandwidths(D, ds, rs, allbanded)
+    InterlaceOperator(D, ds, rs, bandwidths = bw)
+end
+
 for (Op,OpWrap) in ((:Derivative,:DerivativeWrapper),(:Integral,:IntegralWrapper))
     _Op = Symbol(:_, Op)
     @eval begin
         @inline function $_Op(S::PiecewiseSpace, k::Number)
             assert_integer(k)
             t = map(s->$Op(s,k),components(S))
-            D = Diagonal(convert_vector_or_svector(t))
-            O = InterlaceOperator(D, PiecewiseSpace)
+            O = InterlaceOperator_Diagonal(t, S)
             $OpWrap(O,k)
         end
         @inline function $_Op(S::ArraySpace, k::Number)
@@ -254,8 +264,7 @@ end
     # mixed bases.
     if typeof(canonicaldomain(S))==typeof(domain(S))
         t = map(s->Derivative(s,k),components(S))
-        D = Diagonal(convert_vector_or_svector(t))
-        O = InterlaceOperator(D, SumSpace)
+        O = InterlaceOperator_Diagonal(t, S)
         DerivativeWrapper(O,k)
     else
         DefaultDerivative(S,k)
