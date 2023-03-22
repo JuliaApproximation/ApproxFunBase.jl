@@ -176,9 +176,8 @@ end
 
 # Grow cached interlace operator
 
-function resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},
-                              InterlaceOperator{T,1,DS,RS,DI,RI,BI}},
-           n::Integer,::Colon) where {T<:Number,DS,RS,DI,RI,BI}
+function resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},<:InterlaceOperator{T,1}},
+        n::Integer,::Colon) where {T<:Number}
     if n ≤ co.datasize[1]
         return co
     end
@@ -211,9 +210,8 @@ end
 
 
 
-function resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},
-                              InterlaceOperator{T,2,DS,RS,DI,RI,BI}},
-           n::Integer,::Colon) where {T<:Number,DS,RS,DI,RI,BI}
+function resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},<:InterlaceOperator{T,2}},
+        n::Integer,::Colon) where {T<:Number}
     if n ≤ co.datasize[1]
         return co
     end
@@ -259,14 +257,12 @@ function resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},
 end
 
 
-resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},
-                              InterlaceOperator{T,1,DS,RS,DI,RI,BI}},
-n::Integer,m::Integer) where {T<:Number,DS,RS,DI,RI,BI} = resizedata!(co,max(n,m+bandwidth(co.data.bands,1)),:)
+resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},<:InterlaceOperator{T,1}},
+    n::Integer,m::Integer) where {T<:Number} = resizedata!(co,max(n,m+bandwidth(co.data.bands,1)),:)
 
 
-resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},
-                               InterlaceOperator{T,2,DS,RS,DI,RI,BI}},
-n::Integer,m::Integer) where {T<:Number,DS,RS,DI,RI,BI} = resizedata!(co,max(n,m+bandwidth(co.data.bands,1)),:)
+resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},<:InterlaceOperator{T,2}},
+    n::Integer,m::Integer) where {T<:Number} = resizedata!(co,max(n,m+bandwidth(co.data.bands,1)),:)
 
 
 
