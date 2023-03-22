@@ -229,7 +229,10 @@ _spacename(::PiecewiseSpace) = PiecewiseSpace
     opbw = map(bandwidths, t)
     D = Diagonal(convert_vector_or_svector(t))
     iopbw = interlace_bandwidths(D, ds, rs, allbanded, opbw)
-    InterlaceOperator(D, ds, rs, bandwidths = iopbw)
+    iopbbw = bandwidthsmax(t, blockbandwidths)
+    irb = all(israggedbelow, t)
+    InterlaceOperator(D, ds, rs,
+        bandwidths = iopbw, blockbandwidths = iopbbw, israggedbelow = irb)
 end
 
 for (Op,OpWrap) in ((:Derivative,:DerivativeWrapper),(:Integral,:IntegralWrapper))
