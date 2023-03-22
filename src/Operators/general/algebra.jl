@@ -32,7 +32,7 @@ function PlusOperator{ET}(ops::Vector{O},
     bbw::Tuple{Any,Any}=bandwidthsmax(ops, blockbandwidths),
     sbbw::Tuple{Any,Any}=bandwidthsmax(ops, subblockbandwidths),
     ibbb::Bool=all(isbandedblockbanded, ops),
-    irb::Bool=all(israggedbelow, ops)::Bool,
+    irb::Bool=all(israggedbelow, ops),
     ) where {ET,O<:Operator{ET}}
 
     PlusOperator{ET,typeof(bw),typeof(sz),O,typeof(bbw),typeof(sbbw)}(
