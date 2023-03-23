@@ -160,7 +160,9 @@ end
 end
 
 @testset "AlmostBandedMatrix" begin
-    @inferred (B -> B.bands)(ApproxFunBase.AlmostBandedMatrix{Float64}(Zeros(4,4), (1,1), 2))
+    A = ApproxFunBase.AlmostBandedMatrix{Float64}(Zeros(4,4), (1,1), 2)
+    sz = @inferred size(A)
+    @test sz == (4,4)
 end
 
 @testset "DiracDelta sampling" begin
