@@ -159,6 +159,16 @@ end
     @test ApproxFunBase.blockbandwidths(FiniteOperator([1 2; 3 4],S,S)) == (0,0)
 end
 
+@testset "AlmostBandedMatrix" begin
+    A = ApproxFunBase.AlmostBandedMatrix{Float64}(Zeros(4,4), (1,1), 2)
+    sz = @inferred size(A)
+    @test sz == (4,4)
+    @test convert(AbstractArray{Float64}, A) == A
+    AInt = convert(AbstractArray{Int}, A)
+    @test AInt isa AbstractArray{Int}
+    @test AInt == A
+end
+
 @testset "DiracDelta sampling" begin
     δ = 0.3DiracDelta(0.1) + 3DiracDelta(2.3)
     Random.seed!(0)

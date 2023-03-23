@@ -176,7 +176,7 @@ end
 
 # Grow cached interlace operator
 
-function resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},<:InterlaceOperator{T,1}},
+function resizedata!(co::CachedOperator{T,<:AlmostBandedMatrix{T},<:InterlaceOperator{T,1}},
         n::Integer,::Colon) where {T<:Number}
     if n ≤ co.datasize[1]
         return co
@@ -210,7 +210,7 @@ end
 
 
 
-function resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},<:InterlaceOperator{T,2}},
+function resizedata!(co::CachedOperator{T,<:AlmostBandedMatrix{T},<:InterlaceOperator{T,2}},
         n::Integer,::Colon) where {T<:Number}
     if n ≤ co.datasize[1]
         return co
@@ -257,11 +257,11 @@ function resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},<:InterlaceOpera
 end
 
 
-resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},<:InterlaceOperator{T,1}},
+resizedata!(co::CachedOperator{T,<:AlmostBandedMatrix{T},<:InterlaceOperator{T,1}},
     n::Integer,m::Integer) where {T<:Number} = resizedata!(co,max(n,m+bandwidth(co.data.bands,1)),:)
 
 
-resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},<:InterlaceOperator{T,2}},
+resizedata!(co::CachedOperator{T,<:AlmostBandedMatrix{T},<:InterlaceOperator{T,2}},
     n::Integer,m::Integer) where {T<:Number} = resizedata!(co,max(n,m+bandwidth(co.data.bands,1)),:)
 
 
@@ -273,16 +273,14 @@ resizedata!(co::CachedOperator{T,AlmostBandedMatrix{T},<:InterlaceOperator{T,2}}
 ## QR
 
 
-function QROperator(R::CachedOperator{T,AlmostBandedMatrix{T}}) where T
+function QROperator(R::CachedOperator{T,<:AlmostBandedMatrix{T}}) where T
     M = R.data.bands.l+1   # number of diag+subdiagonal bands
     H = Matrix{T}(undef,M,100)
     QROperator(R,H,0)
 end
 
 
-function resizedata!(QR::QROperator{CachedOperator{T,AlmostBandedMatrix{T},
-                                                  MM,DS,RS,BI}},
-         ::Colon,col) where {T,MM,DS,RS,BI}
+function resizedata!(QR::QROperator{<:CachedOperator{T,<:AlmostBandedMatrix{T}}}, ::Colon, col) where {T}
     if col ≤ QR.ncols
         return QR
     end
@@ -346,9 +344,7 @@ end
 
 # BLAS versions, requires BlasFloat
 
-function resizedata!(QR::QROperator{CachedOperator{T,AlmostBandedMatrix{T},
-                                       MM,DS,RS,BI}},
-::Colon,col) where {T<:BlasFloat,MM,DS,RS,BI}
+function resizedata!(QR::QROperator{<:CachedOperator{T,<:AlmostBandedMatrix{T}}}, ::Colon, col) where {T<:BlasFloat}
     if col ≤ QR.ncols
         return QR
     end
@@ -417,8 +413,9 @@ end
 ## back substitution
 # loop to avoid ambiguity with AbstractTRiangular
 for ArrTyp in (:AbstractVector, :AbstractMatrix)
-    @eval function ldiv!(U::UpperTriangular{T, SubArray{T, 2, AlmostBandedMatrix{T}, Tuple{UnitRange{Int}, UnitRange{Int}}, false}},
-                       u::$ArrTyp{T}) where T
+    @eval function ldiv!(U::UpperTriangular{T,<:SubArray{T, 2, <:AlmostBandedMatrix{T}, NTuple{2,UnitRange{Int}}, false}},
+                u::$ArrTyp{T}) where T
+
         n = size(u,1)
         n == size(U,1) || throw(DimensionMismatch())
 
