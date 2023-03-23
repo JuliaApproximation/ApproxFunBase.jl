@@ -2,14 +2,14 @@
 
 
 
-struct AlmostBandedMatrix{T} <: AbstractMatrix{T}
-    bands::BandedMatrix{T}
+struct AlmostBandedMatrix{T,B<:BandedMatrix{T}} <: AbstractMatrix{T}
+    bands::B
     fill::LowRankMatrix{T}
     function AlmostBandedMatrix{T}(bands::BandedMatrix{T}, fill::LowRankMatrix{T}) where T
         if size(bands) ≠ size(fill)
             error("Data and fill must be compatible size")
         end
-        new{T}(bands,fill)
+        new{T,typeof(bands)}(bands,fill)
     end
 end
 
@@ -33,8 +33,6 @@ end
 
 
 size(A::AlmostBandedMatrix) = size(A.bands)
-Base.IndexStyle(::Type{ABM}) where {ABM<:AlmostBandedMatrix} =
-    IndexCartesian()
 
 
 function getindex(B::AlmostBandedMatrix,k::Integer,j::Integer)
