@@ -78,6 +78,13 @@ struct InterlaceOperator{T,p,DS,RS,DI,RI,BI,BBW} <: Operator{T}
     bandwidths::BI
     blockbandwidths::BBW
     israggedbelow::Bool
+
+    function InterlaceOperator(ops::Array{Operator{T},p}, ds::DS, rs::RS, dsi::DI, rsi::RI, bw::BI,
+        blockbandwidths::BBW = bandwidthsmax(ops, blockbandwidths),
+        israggedbelow::Bool = all(israggedbelow, ops)) where {T,p,DS,RS,DI,RI,BI,BBW}
+
+        new{T,p,DS,RS,DI,RI,BI,BBW}(ops, ds, rs, dsi, rsi, bw, blockbandwidths, israggedbelow)
+    end
 end
 
 const VectorInterlaceOperator = InterlaceOperator{T,1,DS,RS} where {T,DS,RS<:Space{D,R}} where {D,R<:AbstractVector}

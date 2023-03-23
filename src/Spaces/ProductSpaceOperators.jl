@@ -162,10 +162,19 @@ function Conversion(a::SumSpace, b::Space)
     end
 
     m=zeros(Operator{promote_type(prectype(a), prectype(b))},1,length(a.spaces))
-    for n=1:length(a.spaces)
-        m[1,n]=Conversion(a.spaces[n],b)
-    end
-    return ConversionWrapper(InterlaceOperator(m, a, b, cache(interlacer(a)), cache(BlockInterlacer((Fill(1,∞),))), (1-dimension(b),dimension(a)-1)))
+    ops = map(x -> Conversion(x,b), a.spaces)
+    copyto!(m, ops)
+    bbw = bandwidthsmax(ops, blockbandwidths)
+    irb = any(israggedbelow, ops)
+    return ConversionWrapper(
+        InterlaceOperator(m, a, b,
+            cache(interlacer(a)),
+            cache(BlockInterlacer((Fill(1,∞),))),
+            (1-dimension(b),dimension(a)-1),
+            bbw,
+            irb,
+        )
+    )
 end
 
 
