@@ -672,12 +672,12 @@ conv(x::AbstractFill, y::AbstractFill) = DSP.conv(x, y)
 # TODO: cache sums
 
 
-struct BlockInterlacer{DMS<:Tuple}
+struct BlockInterlacer{DMS<:Tuple{Vararg{AbstractVector{Int}}}}
     blocks::DMS
 end
 
 
-const TrivialInterlacer{d} = BlockInterlacer{<:NTuple{d,Ones}}
+const TrivialInterlacer{d} = BlockInterlacer{<:NTuple{d,Ones{Int}}}
 
 BlockInterlacer(v::AbstractVector) = BlockInterlacer(Tuple(v))
 
