@@ -137,9 +137,9 @@ Base.ndims(::Operator) = 2
 
 
 ## bandrange and indexrange
-isbandedbelow(A::Operator) = isfinite(bandwidth(A,1))
-isbandedabove(A::Operator) = isfinite(bandwidth(A,2))
-isbanded(A::Operator) = isbandedbelow(A) && isbandedabove(A)
+isbandedbelow(A::Operator) = isfinite(bandwidth(A,1))::Bool
+isbandedabove(A::Operator) = isfinite(bandwidth(A,2))::Bool
+isbanded(A::Operator) = all(isfinite, bandwidths(A))::Bool
 
 
 isbandedblockbandedbelow(_) = false
@@ -178,11 +178,11 @@ end
 # assume dense blocks
 subblockbandwidths(K::Operator) = maximum(blocklengths(rangespace(K)))-1, maximum(blocklengths(domainspace(K)))-1
 
-isblockbandedbelow(A) = isfinite(blockbandwidth(A,1))
-isblockbandedabove(A) = isfinite(blockbandwidth(A,2))
-isblockbanded(A::Operator) = isblockbandedbelow(A) && isblockbandedabove(A)
+isblockbandedbelow(A::Operator) = isfinite(blockbandwidth(A,1))::Bool
+isblockbandedabove(A::Operator) = isfinite(blockbandwidth(A,2))::Bool
+isblockbanded(A::Operator) = all(isfinite, blockbandwidths(A))::Bool
 
-israggedbelow(A::Operator) = isbandedbelow(A) || isbandedblockbanded(A) || isblockbandedbelow(A)
+israggedbelow(A::Operator) = isbandedbelow(A)::Bool || isbandedblockbanded(A)::Bool || isblockbandedbelow(A)::Bool
 
 
 blockbandwidth(K::Operator, k::Integer) = blockbandwidths(K)[k]

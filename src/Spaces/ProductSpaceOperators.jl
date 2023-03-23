@@ -162,10 +162,19 @@ function Conversion(a::SumSpace, b::Space)
     end
 
     m=zeros(Operator{promote_type(prectype(a), prectype(b))},1,length(a.spaces))
-    for n=1:length(a.spaces)
-        m[1,n]=Conversion(a.spaces[n],b)
-    end
-    return ConversionWrapper(InterlaceOperator(m, a, b, cache(interlacer(a)), cache(BlockInterlacer((Fill(1,∞),))), (1-dimension(b),dimension(a)-1)))
+    ops = map(x -> Conversion(x,b), a.spaces)
+    copyto!(m, ops)
+    bbw = bandwidthsmax(ops, blockbandwidths)
+    irb = any(israggedbelow, ops)
+    return ConversionWrapper(
+        InterlaceOperator(m, a, b,
+            cache(interlacer(a)),
+            cache(BlockInterlacer((Fill(1,∞),))),
+            (1-dimension(b),dimension(a)-1),
+            bbw,
+            irb,
+        )
+    )
 end
 
 
@@ -229,7 +238,10 @@ _spacename(::PiecewiseSpace) = PiecewiseSpace
     opbw = map(bandwidths, t)
     D = Diagonal(convert_vector_or_svector(t))
     iopbw = interlace_bandwidths(D, ds, rs, allbanded, opbw)
-    InterlaceOperator(D, ds, rs, bandwidths = iopbw)
+    iopbbw = bandwidthsmax(t, blockbandwidths)
+    irb = all(israggedbelow, t)
+    InterlaceOperator(D, ds, rs,
+        bandwidths = iopbw, blockbandwidths = iopbbw, israggedbelow = irb)
 end
 
 for (Op,OpWrap) in ((:Derivative,:DerivativeWrapper),(:Integral,:IntegralWrapper))

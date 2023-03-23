@@ -21,7 +21,7 @@ struct PlusOperator{T,BW,SZ,O<:Operator{T},BBW,SBBW} <: Operator{T}
     end
 end
 
-bandwidthsmax(ops, f=bandwidths) = mapreduce(f, (t1, t2) -> max.(t1, t2), ops, init=(-720, -720)) #= approximate (-∞,-∞) =#
+bandwidthsmax(ops, f=bandwidths) = mapfoldl(f, (t1, t2) -> max.(t1, t2), ops, init=(-720, -720)) #= approximate (-∞,-∞) =#
 
 function PlusOperator(ops::Vector{O}, args...) where {O<:Operator}
     PlusOperator{eltype(O)}(ops, args...)

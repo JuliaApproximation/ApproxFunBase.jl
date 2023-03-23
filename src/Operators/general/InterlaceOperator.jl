@@ -69,13 +69,22 @@ end
 
 ## Interlace operator
 
-struct InterlaceOperator{T,p,DS,RS,DI,RI,BI} <: Operator{T}
+struct InterlaceOperator{T,p,DS,RS,DI,RI,BI,BBW} <: Operator{T}
     ops::Array{Operator{T},p}
     domainspace::DS
     rangespace::RS
     domaininterlacer::DI
     rangeinterlacer::RI
     bandwidths::BI
+    blockbandwidths::BBW
+    israggedbelow::Bool
+
+    function InterlaceOperator(ops::Array{Operator{T},p}, ds::DS, rs::RS, dsi::DI, rsi::RI, bw::BI,
+        blockbandwidths::BBW = bandwidthsmax(ops, blockbandwidths),
+        israggedbelow::Bool = all(israggedbelow, ops)) where {T,p,DS,RS,DI,RI,BI,BBW}
+
+        new{T,p,DS,RS,DI,RI,BI,BBW}(ops, ds, rs, dsi, rsi, bw, blockbandwidths, israggedbelow)
+    end
 end
 
 const VectorInterlaceOperator = InterlaceOperator{T,1,DS,RS} where {T,DS,RS<:Space{D,R}} where {D,R<:AbstractVector}
@@ -133,7 +142,9 @@ end
 
 function InterlaceOperator(ops::AbstractMatrix{<:Operator},ds::Space,rs::Space;
         # calculate bandwidths TODO: generalize
-        bandwidths = interlace_bandwidths(ops, ds, rs))
+        bandwidths = interlace_bandwidths(ops, ds, rs),
+        blockbandwidths = bandwidthsmax(ops, blockbandwidths),
+        israggedbelow = all(israggedbelow, ops))
 
     dsi = interlacer(ds)
     rsi = interlacer(rs)
@@ -143,7 +154,9 @@ function InterlaceOperator(ops::AbstractMatrix{<:Operator},ds::Space,rs::Space;
     InterlaceOperator(opsm,ds,rs,
                         cache(dsi),
                         cache(rsi),
-                        bandwidths)
+                        bandwidths,
+                        blockbandwidths,
+                        israggedbelow)
 end
 
 @inline function _interlace_bandwidths(ops::VectorOrTupleOfOp, ds, rs, allbanded = all(isbanded, ops))
@@ -165,14 +178,18 @@ end
 
 function InterlaceOperator(ops::VectorOrTupleOfOp, ds::Space, rs::Space;
         # calculate bandwidths
-        bandwidths = interlace_bandwidths(ops, ds, rs))
+        bandwidths = interlace_bandwidths(ops, ds, rs),
+        blockbandwidths = bandwidthsmax(ops, blockbandwidths),
+        israggedbelow = all(israggedbelow, ops))
 
     VT = Vector{Operator{promote_eltypeof(ops)}}
     opsv = strictconvert(VT, convert_vector(ops))
     InterlaceOperator(opsv,ds,rs,
                         cache(BlockInterlacer(tuple(blocklengths(ds)))),
                         cache(interlacer(rs)),
-                        bandwidths)
+                        bandwidths,
+                        blockbandwidths,
+                        israggedbelow)
 end
 
 interlace_domainspace(ops::AbstractMatrix, ::Type{NoSpace}) = domainspace(ops)
@@ -217,7 +234,8 @@ function convert(::Type{Operator{T}},S::InterlaceOperator) where T
     else
         ops = convert(AbstractArray{Operator{T}}, S.ops)
         InterlaceOperator(ops,domainspace(S),rangespace(S),
-                            S.domaininterlacer,S.rangeinterlacer,S.bandwidths)
+                            S.domaininterlacer,S.rangeinterlacer,S.bandwidths,
+                            S.blockbandwidths, S.israggedbelow)
     end
 end
 
@@ -226,11 +244,7 @@ end
 #TODO: More efficient to save bandwidth
 bandwidths(M::InterlaceOperator) = M.bandwidths
 
-blockbandwidths(M::InterlaceOperator) =
-    (mapreduce(op->blockbandwidth(op,1),max,M.ops),
-     mapreduce(op->blockbandwidth(op,2),max,M.ops))
-
-isblockbanded(M::InterlaceOperator) = all(isblockbanded,M.ops)
+blockbandwidths(M::InterlaceOperator) = M.blockbandwidths
 
 function blockcolstop(M::InterlaceOperator,J::Integer)
     if isblockbandedbelow(M)
@@ -262,7 +276,7 @@ function colstop(M::InterlaceOperator, j::Integer)
     end
 end
 
-israggedbelow(M::InterlaceOperator) = all(israggedbelow,M.ops)
+israggedbelow(M::InterlaceOperator) = M.israggedbelow
 
 getindex(op::InterlaceOperator,k::Integer,j::Integer) =
     error("Higher tensor InterlaceOperators not supported")
