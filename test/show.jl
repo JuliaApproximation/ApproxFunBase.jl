@@ -67,4 +67,10 @@
 			@test startswith(s, "ConstantOperator")
 		end
 	end
+	@testset "Iterators" begin
+		B = ApproxFunBase.BlockInterlacer((Ones(2), Ones(2)))
+		@test repr(B) == "ApproxFunBase.BlockInterlacer((Ones(2), Ones(2)))"
+		C = cache(B)
+		@test contains(repr(C), "Cached " * repr(B))
+	end
 end

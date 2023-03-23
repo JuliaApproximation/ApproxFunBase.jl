@@ -689,7 +689,7 @@ length(b::BlockInterlacer) = mapreduce(sum,+,b.blocks)
 
 Base.IteratorSize(::Type{BlockInterlacer{T}}) where {T} = _IteratorSize(T)
 
-Base.show(io::IO, B::BlockInterlacer) = print(io, "BlockInterlacer(", B.blocks, ")")
+Base.show(io::IO, B::BlockInterlacer) = print(io, BlockInterlacer, "(", B.blocks, ")")
 
 # the state is always (whichblock,curblock,cursubblock,curcoefficients)
 # start(it::BlockInterlacer) = (1,1,map(start,it.blocks),ntuple(zero,length(it.blocks)))
