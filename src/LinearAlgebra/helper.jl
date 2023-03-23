@@ -537,6 +537,10 @@ end
 CachedIterator{T,IT}(it::IT, state) where {T,IT} = CachedIterator{T,IT}(it,T[],state,0)
 CachedIterator(it::IT) where IT = CachedIterator{eltype(it),IT}(it, ())
 
+function Base.show(io::IO, c::CachedIterator)
+    print(io, "Cached ", c.iterator, " with ", c.length, " stored elements, and state = ", c.state)
+end
+
 function resize!(it::CachedIterator{T},n::Integer) where {T}
     m = it.length
     if n > m
@@ -684,6 +688,8 @@ dimension(b::BlockInterlacer,k) = sum(b.blocks[k])
 length(b::BlockInterlacer) = mapreduce(sum,+,b.blocks)
 
 Base.IteratorSize(::Type{BlockInterlacer{T}}) where {T} = _IteratorSize(T)
+
+Base.show(io::IO, B::BlockInterlacer) = print(io, "BlockInterlacer(", B.blocks, ")")
 
 # the state is always (whichblock,curblock,cursubblock,curcoefficients)
 # start(it::BlockInterlacer) = (1,1,map(start,it.blocks),ntuple(zero,length(it.blocks)))
