@@ -85,19 +85,24 @@ end
 
 ## Adaptive constructor selector
 
-function LowRankFun(fin::Function,dx::Space,dy::Space;
-                    method::Symbol=:standard,tolerance::Union{Symbol,Tuple{Symbol,Number}}=:relative,
-                    retmax::Bool=false,gridx::Integer=64,gridy::Integer=64,maxrank::Integer=100)
-    f = dynamic(fin)
+function LowRankFun(f::Function, dx::Space, dy::Space;
+                    method::Symbol=:standard,
+                    tolerance::Union{Symbol,Tuple{Symbol,Number}}=:relative,
+                    retmax::Bool=false,
+                    gridx::Integer=64,
+                    gridy::Integer=64,
+                    maxrank::Integer=100,
+                    )
+
     if method == :standard
-        F,maxabsf=standardLowRankFun(f,dx,dy;tolerance=tolerance,gridx=gridx,gridy=gridy,maxrank=maxrank)
+        F,maxabsf=standardLowRankFun(f, dx, dy; tolerance, gridx, gridy, maxrank)
     elseif method == :Cholesky
         @assert domain(dx) == domain(dy)
+            G,maxabsf = CholeskyLowRankFun(f, dx; tolerance, grid=max(gridx,gridy), maxrank)
         if dx == dy
-            F,maxabsf=CholeskyLowRankFun(f,dx;tolerance=tolerance,grid=max(gridx,gridy),maxrank=maxrank)
+            F = G
         else
-            G,maxabsf=CholeskyLowRankFun(f,dx;tolerance=tolerance,grid=max(gridx,gridy),maxrank=maxrank)
-            F=LowRankFun(copy(G.A),map(b->Fun(b,dy),G.B))
+            F = LowRankFun(copy(G.A), map(b->Fun(b,dy),G.B))
         end
     end
     retmax ? (F,maxabsf) : F
@@ -105,7 +110,13 @@ end
 
 ## Standard adaptive construction
 
-function standardLowRankFun(f::Function,dx::Space,dy::Space;tolerance::Union{Symbol,Tuple{Symbol,Number}}=:relative,gridx::Integer=64,gridy::Integer=64,maxrank::Integer=100)
+function standardLowRankFun(f::Function, dx::Space, dy::Space;
+        tolerance::Union{Symbol,Tuple{Symbol,Number}}=:relative,
+        gridx::Integer=64,
+        gridy::Integer=64,
+        maxrank::Integer=100
+        )
+
     xy = checkpoints(dx⊗dy)
     T = promote_type(eltype(f(first(xy)...)),prectype(dx),prectype(dy))
 
@@ -166,7 +177,11 @@ end
 
 ## Adaptive Cholesky decomposition, when f is Hermitian positive (negative) definite
 
-function CholeskyLowRankFun(f::Function,dx::Space;tolerance::Union{Symbol,Tuple{Symbol,Number}}=:relative,grid::Integer=64,maxrank::Integer=100)
+function CholeskyLowRankFun(f::Function,dx::Space;
+        tolerance::Union{Symbol,Tuple{Symbol,Number}}=:relative,
+        grid::Integer=64,
+        maxrank::Integer=100)
+
     xy = checkpoints(dx⊗dx)
     T = promote_type(eltype(f(first(xy)...)),prectype(dx))
 
@@ -216,20 +231,22 @@ function CholeskyLowRankFun(f::Function,dx::Space;tolerance::Union{Symbol,Tuple{
         chop!(a,tol10)
     end
     @warn "Maximum rank of " * string(maxrank) * " reached"
-    return LowRankFun(A,B),maxabsf
+    return LowRankFun(A,B), maxabsf
 end
 
 
 ## Construction via TensorSpaces and ProductDomains
 
-LowRankFun(f::Function,S::TensorSpace{SV,DD,RR};kwds...) where {SV,DD<:EuclideanDomain{2},RR} =
-    LowRankFun(dynamic(f),factor(S,1),factor(S,2);kwds...)
-LowRankFun(f::Function,dx::Domain,dy::Domain;kwds...) =
-    LowRankFun(dynamic(f),Space(dx),Space(dy);kwds...)
-LowRankFun(f::Function,d::ProductDomain;kwds...) =
-    LowRankFun(dynamic(f),factors(d)...;kwds...)
+LowRankFun(f::Function, S::TensorSpace{SV,DD,RR}; kwds...) where {SV,DD<:EuclideanDomain{2},RR} =
+    LowRankFun(f, factor(S,1), factor(S,2); kwds...)
 
-LowRankFun(f::Function;kwds...) = LowRankFun(dynamic(f),ChebyshevInterval(),ChebyshevInterval();kwds...)
+LowRankFun(f::Function, dx::Domain, dy::Domain;kwds...) =
+    LowRankFun(f, Space(dx), Space(dy); kwds...)
+
+LowRankFun(f::Function, d::ProductDomain; kwds...) =
+    LowRankFun(f, factors(d)...; kwds...)
+
+LowRankFun(f::Function; kwds...) = LowRankFun(f,ChebyshevInterval(),ChebyshevInterval();kwds...)
 
 ## Construction from values
 
