@@ -36,10 +36,8 @@ julia> f(0.1, 0.2) ≈ 0.3
 true
 ```
 """
-function Fun(fin::Function)
-    f = dynamic(fin)
-
-    if hasnumargs(f,1)
+function Fun(f::Function)
+    if hasonearg(f)
         # check for tuple
         try
             f(0)

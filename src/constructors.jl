@@ -68,7 +68,7 @@ end
 
 default_Fun(f,d::Space,n::Integer) = default_Fun(f,d,n,Val(!hasonearg(f)))
 
-Fun(f,d::Space,n::Integer) = default_Fun(dynamic(f),d,n)
+Fun(f,d::Space,n::Integer) = default_Fun(f,d,n)
 
 # the following is to avoid ambiguity
 # Fun(f::Fun,d) should be equivalent to Fun(x->f(x),d)
@@ -76,14 +76,14 @@ Fun(f::Fun,d::Space) = Fun(d,coefficients(f,d))
 Fun(f::Fun,::Type{T}) where {T<:Space} = Fun(f,T(domain(f)))
 
 
-Fun(f,T::Type) = Fun(dynamic(f),T())
-Fun(f,T::Type,n::Integer) = Fun(dynamic(f),T(),n)
+Fun(f,T::Type) = Fun(f,T())
+Fun(f,T::Type,n::Integer) = Fun(f,T(),n)
 
 Fun(f::AbstractVector,d::Domain) = Fun(f,Space(d))
 Fun(d::Domain,f::AbstractVector) = Fun(Space(d),f)
 
 
-Fun(f,d::Domain,n) = Fun(dynamic(f),Space(d),n)
+Fun(f,d::Domain,n) = Fun(f,Space(d),n)
 
 
 # We do zero special since zero exists even when one doesn't
@@ -172,7 +172,7 @@ ones(::Type{T}, S::Space) where {T<:Number} = Fun(x->one(T),S)
 function Fun(::typeof(identity), d::Domain)
     cd=canonicaldomain(d)
     if typeof(d) == typeof(cd)
-        Fun(dynamic(x->x),d) # fall back to constructor, can't use `identity` as that creates a loop
+        Fun(x->x, d) # fall back to constructor, can't use `identity` as that creates a loop
     else
         # this allows support for singularities, that the constructor doesn't
         sf=fromcanonical(d,Fun(identity,cd))
@@ -222,7 +222,7 @@ julia> f(0.1) == (0.1)^2
 true
 ```
 """
-Fun(f, d::Space) = default_Fun(dynamic(f), d)
+Fun(f, d::Space) = default_Fun(f, d)
 
 # this supports expanding a Fun to a larger or smaller domain.
 # we take the union and then intersection to get at any singularities
