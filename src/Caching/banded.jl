@@ -42,9 +42,7 @@ function QROperator(R::CachedOperator{T,<:BandedMatrix{T}}) where T
 end
 
 
-function resizedata!(QR::QROperator{<:CachedOperator{T,<:BandedMatrix{T},
-                                                  MM,DS,RS,BI}},
-         ::Colon,col) where {T,MM,DS,RS,BI}
+function resizedata!(QR::QROperator{<:CachedOperator{T,<:BandedMatrix{T}}}, ::Colon, col) where {T}
     if col ≤ QR.ncols
         return QR
     end
@@ -92,63 +90,6 @@ end
 
 
 # BLAS versions, requires BlasFloat
-
-
-
-function resizedata!(QR::QROperator{<:CachedOperator{T,<:BandedMatrix{T},
-                                       MM,DS,RS,BI}},
-                     ::Colon,col) where {T<:BlasFloat,MM,DS,RS,BI}
-    if col ≤ QR.ncols
-        return QR
-    end
-
-    col = min(col, size(QR,2))
-
-    MO=QR.R_cache
-    W=QR.H
-
-    R=MO.data
-    M=R.l+1   # number of diag+subdiagonal bands
-
-    if col+M-1 ≥ MO.datasize[1]
-        resizedata!(MO,(col+M-1)+100,:)  # double the last rows
-    end
-
-    if col > size(W,2)
-        W=QR.H=unsafe_resize!(W,:,2col)
-    end
-
-    m,n=size(R)
-    w=pointer(W)
-    r=pointer(R.data)
-    sz=sizeof(T)
-    st=stride(R.data,2)
-    stw=stride(W,2)
-
-    for k=QR.ncols+1:col
-        v=r+sz*(R.u + (k-1)*st)    # diagonal entry
-        wp=w+stw*sz*(k-1)          # k-th column of W
-        BLAS.blascopy!(M,v,1,wp,1)
-        W[1,k]+= flipsign(BLAS.nrm2(M,wp,1),W[1,k])
-        normalize!(M,wp)
-
-        for j=k:k+R.u
-            v=r+sz*(R.u + (k-1)*st + (j-k)*(st-1))
-            dt = dot(M,wp,1,v,1)
-            BLAS.axpy!(M,-2*dt,wp,1,v,1)
-        end
-
-        for j=k+R.u+1:k+R.u+M-1
-            p=j-k-R.u
-            v=r+sz*((j-1)*st)  # shift down each time
-            dt = dot(M-p,wp+p*sz,1,v,1)
-            BLAS.axpy!(M-p,-2*dt,wp+p*sz,1,v,1)
-        end
-    end
-    QR.ncols=col
-    QR
-end
-
 
 ## back substitution
 # loop to avoid ambiguity with AbstractTRiangular

@@ -320,8 +320,7 @@ function resizedata!(QR::QROperator{<:CachedOperator{T,<:AlmostBandedMatrix{T}}}
             wp2=view(wp,p+1:M)
             dt = dot(wp2,v)
             for ℓ=k:k+p-1
-                @inbounds dt = muladd(conj(W[ℓ-k+1,k]),
-                                    unsafe_getindex(MO.data.fill,ℓ,j),dt)
+                dt = muladd(conj(W[ℓ-k+1,k]), MO.data.fill[ℓ,j], dt)
             end
             axpy!(-2*dt,wp2,v)
         end
@@ -337,80 +336,6 @@ function resizedata!(QR::QROperator{<:CachedOperator{T,<:AlmostBandedMatrix{T}}}
     QR.ncols = col
     QR
 end
-
-
-
-# BLAS versions, requires BlasFloat
-
-function resizedata!(QR::QROperator{<:CachedOperator{T,<:AlmostBandedMatrix{T}}}, ::Colon, col) where {T<:BlasFloat}
-    if col ≤ QR.ncols
-        return QR
-    end
-
-    MO = QR.R_cache
-    W = QR.H
-
-    R = MO.data.bands
-    M = R.l+1   # number of diag+subdiagonal bands
-
-    if col+M-1 ≥ MO.datasize[1]
-        resizedata!(MO,(col+M-1)+100,:)  # double the last rows
-    end
-
-    if col > size(W,2)
-        W = QR.H = unsafe_resize!(W,:,2col)
-    end
-
-    F = MO.data.fill.U
-
-    m,n = size(R)
-    f = firstindex(F)
-    w = firstindex(W)
-    r = firstindex(R.data)
-    st = stride(R.data,2)
-    stw = stride(W,2)
-
-    for k = QR.ncols+1:col
-        v = r+(R.u + (k-1)*st)    # diagonal entry
-        wp = w+stw*(k-1)          # k-th column of W
-        WM = view(W, range(wp, length=M))
-        copyto!(W, wp, R.data, v, M)
-        n_ = norm(WM)
-        W[1,k] += flipsign(n_, W[1,k])
-        normalize!(WM)
-
-        for j = k:k+R.u
-            v = r+(R.u + (k-1)*st + (j-k)*(st-1))
-            RM = view(R.data, range(v, length=M))
-            dt = dot(WM, RM)
-            axpy!(-2*dt, WM, RM)
-        end
-
-        for j = k+R.u+1:k+R.u+M-1
-            p = j-k-R.u
-            v = r+((j-1)*st)  # shift down each time
-            WMmp = view(W, range(wp+p, length=M-p))
-            RMmp = view(R.data, range(v, length=M-p))
-            dt = dot(WMmp, RMmp)
-            for ℓ=k:k+p-1
-                dt = muladd(conj(W[ℓ-k+1,k]), MO.data.fill[ℓ,j], dt)
-            end
-            axpy!(-2*dt, WMmp, RMmp)
-        end
-
-        fp = f+(k-1)
-        fst = stride(F,2)
-        for j = 1:size(F,2)
-            v = fp+fst*(j-1)   # the k,jth entry of F
-            FM = view(F, range(v, length=M))
-            dt = dot(WM, FM)
-            axpy!(-2*dt,WM,FM)
-        end
-    end
-    QR.ncols = col
-    QR
-end
-
 
 ## back substitution
 # loop to avoid ambiguity with AbstractTRiangular
