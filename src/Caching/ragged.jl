@@ -206,7 +206,7 @@ end
 
 ## back substitution
 for ArrTyp in (:AbstractVector, :AbstractMatrix)
-    @eval function ldiv!(U::UpperTriangular{T, SubArray{T, 2, RaggedMatrix{T}, Tuple{UnitRange{Int}, UnitRange{Int}}, false}},
+    @eval function ldiv!(U::UpperTriangular{T, SubArray{T, 2, RaggedMatrix{T}, NTuple{2,UnitRange{Int}}, false}},
                              u::$ArrTyp{T}) where T
         n = size(u,1)
         n == size(U,1) || throw(DimensionMismatch())
