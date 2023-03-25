@@ -15,7 +15,7 @@ dotu(f::AbstractVector{N},g::AbstractVector{T}) where {N<:Real,T<:Number} = dot(
 
 
 normalize!(w::AbstractVector) = rmul!(w,inv(norm(w)))
-normalize!(w::Vector{T}) where {T<:BlasFloat} = normalize!(length(w),w)
+normalize!(w::Vector{T}) where {T<:BlasFloat} = normalize!(w)
 normalize!(n,w::Union{Vector{T},Ptr{T}}) where {T<:Union{Float64,Float32}} =
     BLAS.scal!(n,inv(BLAS.nrm2(n,w,1)),w,1)
 normalize!(n,w::Union{Vector{T},Ptr{T}}) where {T<:Union{ComplexF64,ComplexF32}} =
