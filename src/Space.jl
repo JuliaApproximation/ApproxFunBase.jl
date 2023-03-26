@@ -40,6 +40,8 @@ rangetype(::Space{D,R}) where {D,R} = R
 rangetype(::Type{Space{D,R}}) where {D,R} = R
 rangetype(::Type{FT}) where {FT<:Space} = rangetype(supertype(FT))
 
+Base.broadcastable(S::Space) = Ref(S)
+
 domaindimension(sp::Space) = dimension(domain(sp))
 """
     dimension(s::Space)
