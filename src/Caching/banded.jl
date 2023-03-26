@@ -47,6 +47,8 @@ function resizedata!(QR::QROperator{<:CachedOperator{T,<:BandedMatrix{T}}}, ::Co
         return QR
     end
 
+    col = min(col, size(QR,2))
+
     MO=QR.R_cache
     W=QR.H
 
@@ -87,9 +89,6 @@ function resizedata!(QR::QROperator{<:CachedOperator{T,<:BandedMatrix{T}}}, ::Co
     QR.ncols=col
     QR
 end
-
-
-# BLAS versions, requires BlasFloat
 
 ## back substitution
 # loop to avoid ambiguity with AbstractTRiangular
