@@ -189,6 +189,15 @@ using LinearAlgebra
         @testset "call spaces" begin
             @test PointSpace(1:4)(3, 4) == 1
         end
+
+        @testset "Broadcasting" begin
+            f1 = x -> x
+            f2 = x -> x^2
+            sp = PointSpace(1:3)
+            fs = Fun.((f1, f2), sp)
+            @test fs[1] == Fun(f1, sp)
+            @test fs[2] == Fun(f2, sp)
+        end
     end
 
     @testset "DiracSpace" begin
