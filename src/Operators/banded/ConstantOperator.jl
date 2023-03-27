@@ -60,9 +60,22 @@ for op in (:+,:-)
     @eval ($op)(A::ConstantOperator,B::ConstantOperator) = ConstantOperator($op(A.λ,B.λ))
 end
 
-mul_coefficients(A::ConstantOperator, b) = A.λ * b
-mul_coefficients!(A::ConstantOperator, b) = b .*= A.λ
-
+function mul_coefficients(A::ConstantOperator, b)
+    λ = A.λ
+    if isone(λ)
+        T = promote_type(typeof(λ), eltype(b))
+        convert(AbstractVector{T}, b)
+    else
+        A.λ * b
+    end
+end
+function mul_coefficients!(A::ConstantOperator, b)
+    λ = A.λ
+    if !isone(λ)
+        b .*= λ
+    end
+    return b
+end
 
 ## Basis Functional
 
