@@ -18,6 +18,8 @@ const VectorSpace{S,DD,RR,A<:AbstractVector{S}} = ArraySpace{S,1,DD,RR,A}
 const MatrixSpace{S,DD,RR,A<:AbstractMatrix{S}} = ArraySpace{S,2,DD,RR,A}
 
 #TODO: Think through domain/domaindominsion
+ArraySpace(sp::AbstractArray{SS,N}) where {D,R,SS<:Space{D,R},N} =
+    ArraySpace{SS,N,D,R,typeof(sp)}(sp)
 ArraySpace(sp::AbstractArray{SS,N}, f = first(sp)) where {SS<:Space,N} =
     ArraySpace{SS,N,domaintype(f),mapreduce(rangetype,promote_type,sp),typeof(sp)}(sp)
 ArraySpace(S::Space,::Val{n}) where {n} = ArraySpace(@SArray fill(S,n...))
@@ -57,7 +59,7 @@ iterate(f::Fun{<:ArraySpace}) = iterate(components(f))
 
 
 Base.reshape(AS::ArraySpace,k...) = ArraySpace(reshape(AS.spaces,k...))
-dimension(AS::ArraySpace) = mapreduce(dimension,+,AS.spaces)
+dimension(AS::ArraySpace) = mapreduce(dimension,+,AS.spaces,init=0)
 
 # TODO: union domain
 domain(AS::ArraySpace) = domain(AS.spaces[1])
