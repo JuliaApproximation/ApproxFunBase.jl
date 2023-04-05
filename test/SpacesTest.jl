@@ -345,5 +345,10 @@ using LinearAlgebra
         a = @inferred space(rand(2,2))
         b = @inferred space(@SArray rand(2,2))
         @test a == b
+
+        # empty array space
+        A = ApproxFunBase.ArraySpace(empty!([PointSpace(1:3)]))
+        @test length(A) == 0
+        @test ApproxFunBase.dimension(A) == 0
     end
 end
