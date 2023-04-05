@@ -63,9 +63,7 @@ end
 QROperator(R::CachedOperator{T,RaggedMatrix{T}}) where {T} =
     QROperator(R,RaggedMatrix{T}(undef,0,Int[]),0)
 
-function resizedata!(QR::QROperator{CachedOperator{T,RaggedMatrix{T},
-                                                  MM,DS,RS,BI}},
-         ::Colon,col) where {T,MM,DS,RS,BI}
+function resizedata!(QR::QROperator{<:CachedOperator{T,RaggedMatrix{T}}}, ::Colon, col) where {T}
     if col ≤ QR.ncols
         return QR
     end
@@ -80,24 +78,24 @@ function resizedata!(QR::QROperator{CachedOperator{T,RaggedMatrix{T},
         # apply previous Householders to new columns of R
         for J=1:QR.ncols
             wp=view(W,1:colstop(W,J),J)
-            for j=m+1:MO.datasize[2]
-                kr=J:J+length(wp)-1
-                v=view(MO.data,kr,j)
-                dt=dot(wp,v)
-                axpy!(-2*dt,wp,v)
+            for j = m+1:MO.datasize[2]
+                kr = J:J+length(wp)-1
+                v = view(MO.data,kr,j)
+                dt = dot(wp,v)
+                axpy!(-2dt, wp, v)
             end
         end
     end
 
 
     if col > size(W,2)
-        m=size(W,2)
+        m = size(W,2)
         resize!(W.cols,col+101)
 
         for j=m+1:col+100
-            cs=colstop(MO.data,j)
-            W.cols[j+1]=W.cols[j] + cs-j+1
-            W.m=max(W.m,cs-j+1)
+            cs = colstop(MO.data,j)
+            W.cols[j+1] = W.cols[j] + cs-j+1
+            W.m = max(W.m,cs-j+1)
         end
 
         resize!(W.data,W.cols[end]-1)
@@ -106,102 +104,21 @@ function resizedata!(QR::QROperator{CachedOperator{T,RaggedMatrix{T},
     for k=QR.ncols+1:col
         cs = colstop(MO.data,k)
         W[1:cs-k+1,k] = view(MO.data,k:cs,k) # diagonal and below
-        wp=view(W,1:cs-k+1,k)
-        W[1,k]+= flipsign(norm(wp),W[1,k])
+        wp = view(W,1:cs-k+1,k)
+        W[1,k] += flipsign(norm(wp),W[1,k])
         normalize!(wp)
 
         # scale rows entries
-        kr=k:k+length(wp)-1
+        kr = k:k+length(wp)-1
         for j=k:MO.datasize[2]
-            v=view(MO.data,kr,j)
-            dt=dot(wp,v)
-            axpy!(-2*dt,wp,v)
+            v = view(MO.data,kr,j)
+            dt = dot(wp,v)
+            axpy!(-2dt, wp, v)
         end
     end
     QR.ncols=col
     QR
 end
-
-
-# BLAS versions, requires BlasFloat
-
-
-function resizedata!(QR::QROperator{CachedOperator{T,RaggedMatrix{T},
-                                       MM,DS,RS,BI}},
-::Colon,col) where {T<:BlasFloat,MM,DS,RS,BI}
-    if col ≤ QR.ncols
-        return QR
-    end
-
-    MO=QR.R_cache
-    W=QR.H
-
-    sz=sizeof(T)
-
-    w=pointer(W.data)
-    R=MO.data
-    r=pointer(R.data)
-
-    if col > MO.datasize[2]
-        m = MO.datasize[2]
-        resizedata!(MO,:,col+100)  # last rows plus a bunch more
-
-        R=MO.data
-        r=pointer(R.data)
-
-        # apply previous Householders to new columns of R
-        for k=1:QR.ncols
-            M=colstop(W,k)  # length of wp
-            wp=w+(W.cols[k]-1)*sz  # shift by first index of col J
-
-            for j=m+1:MO.datasize[2]
-                v=r+(R.cols[j]+k-2)*sz
-                dt=dot(M,wp,1,v,1)
-                BLAS.axpy!(M,-2*dt,wp,1,v,1)
-            end
-        end
-    end
-
-
-    if col > size(W,2)
-        m=size(W,2)
-        resize!(W.cols,col+101)
-
-        for j=m+1:col+100
-            cs=colstop(R,j)
-            q_len=cs-j+1  # number of entries in j-th column manipulated
-            @assert q_len > 0   # Otherwise, diagonal is not included
-            W.cols[j+1]=W.cols[j] + q_len
-            W.m=max(W.m,q_len)
-        end
-
-        resize!(W.data,W.cols[end]-1)
-        w=pointer(W.data)
-    end
-
-    for k=QR.ncols+1:col
-        cs= colstop(R,k)
-        M=cs-k+1
-
-        v=r+sz*(R.cols[k]+k-2)    # diagonal entry of R
-        wp=w+sz*(W.cols[k]-1)          # k-th column of W
-        BLAS.blascopy!(M,v,1,wp,1)
-        W.data[W.cols[k]] += flipsign(BLAS.nrm2(M,wp,1),W.data[W.cols[k]])
-        normalize!(M,wp)
-
-        # scale rows entries
-        for j=k:MO.datasize[2]
-            v=r+(R.cols[j]+k-2)*sz
-            dt=dot(M,wp,1,v,1)
-            BLAS.axpy!(M,-2*dt,wp,1,v,1)
-        end
-    end
-    QR.ncols=col
-    QR
-end
-
-
-
 
 
 ## back substitution
