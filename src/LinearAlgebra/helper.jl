@@ -355,42 +355,61 @@ function interlace(v::Union{Vector{Any},Tuple})
     interlace(b)
 end
 
-function interlace(a::AbstractVector{S},b::AbstractVector{V}) where {S<:Number,V<:Number}
-    na=length(a);nb=length(b)
-    T=promote_type(S,V)
-    if nb≥na
-        ret=zeros(T,2nb)
-        ret[1:2:1+2*(na-1)]=a
-        ret[2:2:end]=b
-        ret
-    else
-        ret=zeros(T,2na-1)
-        ret[1:2:end]=a
-        if !isempty(b)
-            ret[2:2:2+2*(nb-1)]=b
-        end
-        ret
-    end
-end
+initvector(::Type{T}, n) where {T<:Number} = zeros(T, n)
+initvector(::Type{T}, n) where {T} = Vector{T}(undef, n)
 
-function interlace(a::AbstractVector,b::AbstractVector)
-    na=length(a);nb=length(b)
-    T=promote_type(eltype(a),eltype(b))
-    if nb≥na
-        ret=Vector{T}(undef, 2nb)
-        ret[1:2:1+2*(na-1)]=a
-        ret[2:2:end]=b
-        ret
-    else
-        ret=Vector{T}(undef, 2na-1)
-        ret[1:2:end]=a
-        if !isempty(b)
-            ret[2:2:2+2*(nb-1)]=b
-        end
-        ret
-    end
-end
+function interlace(a::AbstractVector, b::AbstractVector, (ncomponents_a, ncomponents_b) = (1,1))
+    T=promote_type(eltype(a), eltype(b))
 
+    # we pad the arrays first to ensure that the leading blocks are full,
+    # that is if the space corresponding to a is (S1 ⊕ S2) and that for b is S3,
+    # and a = [1,2,3] and b = [5,6,7,8], the resulting coefficients would be
+    # [1,2, 5, 3,0, 6, 0,0, 7, 0,0, 8], so a is padded to [1,2,3,0,0,0,0,0]
+    # Second example: if a = [1,2,3] and b = [5,6], the result would be
+    # [1,2, 5, 3,0, 6], so a is padded to [1,2,3,0]
+    # Third example: if a = [1,2,3] and b = [5], the result would be
+    # [1,2, 5, 3]. In this case there is no padding in either a or b
+    # Fourth example: if a = [1,2,3,4,11,12] and b = [5], the result would be
+    # [1,2, 5, 3,4, 0, 11,12]. In this case, b is padded to [5,0]
+
+    nblk_a, ra = divrem(length(a), ncomponents_a)
+    nblk_a += !iszero(ra)
+    pad_a = pad(a, ncomponents_a * nblk_a)
+    nblk_b, rb = divrem(length(b), ncomponents_b)
+    nblk_b += !iszero(rb)
+    pad_b = pad(b, ncomponents_b * nblk_b)
+
+    if nblk_b >= nblk_a
+        pad_a = pad(pad_a, ncomponents_a * nblk_b)
+        nblk_a = nblk_b
+    elseif nblk_a - 1 > nblk_b
+        pad_b = pad(pad_b, ncomponents_b * (nblk_a-1))
+        nblk_b = nblk_a-1
+    end
+
+    blksz_a = Fill(ncomponents_a, nblk_a)
+    aPBlk = PseudoBlockArray(pad_a, blksz_a)
+    blksz_b = Fill(ncomponents_b, nblk_b)
+    bPBkl = PseudoBlockArray(pad_b, blksz_b)
+
+    nblk_ret = nblk_a + nblk_b
+    blksz_ret = zeros(Int, nblk_ret)
+    blksz_ret[1:2:end] = blksz_a
+    blksz_ret[2:2:end] = blksz_b
+    nret = sum(blksz_ret)
+    ret = initvector(T, nret)
+    retPBlk = PseudoBlockArray(ret, blksz_ret)
+
+    @views begin
+        for (ind, i) in enumerate(1:2:nblk_ret)
+            retPBlk[Block(i)] = aPBlk[Block(ind)]
+        end
+        for (ind, i) in enumerate(2:2:nblk_ret)
+            retPBlk[Block(i)] = bPBkl[Block(ind)]
+        end
+    end
+    resize!(ret, findlast(!iszero, ret))
+end
 
 ### In-place O(n) interlacing
 
