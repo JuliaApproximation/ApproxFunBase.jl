@@ -372,20 +372,17 @@ function interlace(a::AbstractVector, b::AbstractVector, (ncomponents_a, ncompon
     # Fourth example: if a = [1,2,3,4,11,12] and b = [5], the result would be
     # [1,2, 5, 3,4, 0, 11,12]. In this case, b is padded to [5,0]
 
-    nblk_a, ra = divrem(length(a), ncomponents_a)
-    nblk_a += !iszero(ra)
-    pad_a = pad(a, ncomponents_a * nblk_a)
-    nblk_b, rb = divrem(length(b), ncomponents_b)
-    nblk_b += !iszero(rb)
-    pad_b = pad(b, ncomponents_b * nblk_b)
+    nblk_a = cld(length(a), ncomponents_a)
+    nblk_b = cld(length(b), ncomponents_b)
 
     if nblk_b >= nblk_a
-        pad_a = pad(pad_a, ncomponents_a * nblk_b)
         nblk_a = nblk_b
     elseif nblk_a - 1 > nblk_b
-        pad_b = pad(pad_b, ncomponents_b * (nblk_a-1))
         nblk_b = nblk_a-1
     end
+
+    pad_a = pad(a, ncomponents_a * nblk_a)
+    pad_b = pad(b, ncomponents_b * nblk_b)
 
     blksz_a = Fill(ncomponents_a, nblk_a)
     aPBlk = PseudoBlockArray(pad_a, blksz_a)
