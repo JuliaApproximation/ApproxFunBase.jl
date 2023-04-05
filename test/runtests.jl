@@ -31,6 +31,18 @@ end
 
         @test ApproxFunBase.interlace(collect(6:10),collect(1:5)) == ApproxFunBase.interlace!(collect(1:10),0)
         @test ApproxFunBase.interlace(collect(1:5),collect(6:10)) == ApproxFunBase.interlace!(collect(1:10),1)
+
+        # if one or more space is a SumSpace, we need to interlace blocks
+        @test ApproxFunBase.interlace([1,2,3], [5,6,7,8], (2,1)) == [1,2, 5, 3,0, 6, 0,0, 7, 0,0, 8]
+        @test ApproxFunBase.interlace([1,2,3], [5,6], (2,1)) == [1,2, 5, 3,0, 6]
+        @test ApproxFunBase.interlace([1,2,3], [5], (2,1)) == [1,2, 5, 3]
+        @test ApproxFunBase.interlace([1,2,3,4,11,12], [5], (2,1)) == [1,2, 5, 3,4, 0, 11,12]
+
+        @test ApproxFunBase.interlace([1,2,3], [5,6,7,8], (1,2)) == [1, 5,6, 2, 7,8, 3]
+        @test ApproxFunBase.interlace([1,2,3], [5,6], (1,2)) == [1, 5,6, 2, 0,0, 3]
+        @test ApproxFunBase.interlace([1,2,3], [5], (1,2)) == [1, 5,0, 2, 0,0, 3]
+
+        @test ApproxFunBase.interlace([1,2,3], [5,6,7,8], (2,2)) == [1,2, 5,6, 3,0, 7,8]
     end
 
     @testset "Iterators" begin

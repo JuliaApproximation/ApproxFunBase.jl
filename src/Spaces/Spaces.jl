@@ -8,7 +8,12 @@ include("QuotientSpace.jl")
 
 
 ⊕(A::Space,B::Space) = domainscompatible(A,B) ? SumSpace(A,B) : PiecewiseSpace(A,B)
-⊕(f::Fun,g::Fun) = Fun(space(f) ⊕ space(g), interlace(coefficients(f),coefficients(g)))
+function ⊕(f::Fun,g::Fun)
+    S1 = space(f)
+    S2 = space(g)
+    nc = map(ncomponents, (S1,S2))
+    Fun(S1 ⊕ S2, interlace(coefficients(f),coefficients(g), nc))
+end
 
 ⊕(f::Fun,g::Fun,h::Fun...) = ⊕((f ⊕ g), h...)
 
