@@ -310,7 +310,7 @@ function resizedata!(QR::QROperator{<:CachedOperator{T,<:AlmostBandedMatrix{T}}}
             dind = R.u+1+k-j
             v = view(R.data,dind:dind+M-1,j)
             dt = dot(wp,v)
-            axpy!(-2*dt,wp,v)
+            axpy!(-2dt,wp,v)
         end
 
         # scale banded/filled entries
@@ -320,87 +320,17 @@ function resizedata!(QR::QROperator{<:CachedOperator{T,<:AlmostBandedMatrix{T}}}
             wp2=view(wp,p+1:M)
             dt = dot(wp2,v)
             for ℓ=k:k+p-1
-                @inbounds dt = muladd(conj(W[ℓ-k+1,k]),
-                                    unsafe_getindex(MO.data.fill,ℓ,j),dt)
+                dt = muladd(conj(W[ℓ-k+1,k]), MO.data.fill[ℓ,j], dt)
             end
-            axpy!(-2*dt,wp2,v)
+            axpy!(-2dt,wp2,v)
         end
 
         # scale filled entries
 
-        for j = 1:size(F,2)
+        for j = axes(F,2)
             v = view(F,k:k+M-1,j) # the k,jth entry of F
             dt = dot(wp,v)
-            axpy!(-2*dt,wp,v)
-        end
-    end
-    QR.ncols = col
-    QR
-end
-
-
-
-# BLAS versions, requires BlasFloat
-
-function resizedata!(QR::QROperator{<:CachedOperator{T,<:AlmostBandedMatrix{T}}}, ::Colon, col) where {T<:BlasFloat}
-    if col ≤ QR.ncols
-        return QR
-    end
-
-    MO = QR.R_cache
-    W = QR.H
-
-    R = MO.data.bands
-    M = R.l+1   # number of diag+subdiagonal bands
-
-    if col+M-1 ≥ MO.datasize[1]
-        resizedata!(MO,(col+M-1)+100,:)  # double the last rows
-    end
-
-    if col > size(W,2)
-        W = QR.H = unsafe_resize!(W,:,2col)
-    end
-
-    F = MO.data.fill.U
-
-    f = pointer(F)
-    m,n = size(R)
-    w = pointer(W)
-    r = pointer(R.data)
-    sz = sizeof(T)
-    st = stride(R.data,2)
-    stw = stride(W,2)
-
-    for k = QR.ncols+1:col
-        v = r+sz*(R.u + (k-1)*st)    # diagonal entry
-        wp = w+stw*sz*(k-1)          # k-th column of W
-        BLAS.blascopy!(M,v,1,wp,1)
-        W[1,k]+= flipsign(BLAS.nrm2(M,wp,1),W[1,k])
-        normalize!(M,wp)
-
-        for j = k:k+R.u
-            v = r+sz*(R.u + (k-1)*st + (j-k)*(st-1))
-            dt = dot(M,wp,1,v,1)
-            BLAS.axpy!(M,-2*dt,wp,1,v,1)
-        end
-
-        for j = k+R.u+1:k+R.u+M-1
-            p = j-k-R.u
-            v = r+sz*((j-1)*st)  # shift down each time
-            dt = dot(M-p,wp+p*sz,1,v,1)
-            for ℓ=k:k+p-1
-                @inbounds dt = muladd(conj(W[ℓ-k+1,k]),
-                                    unsafe_getindex(MO.data.fill,ℓ,j),dt)
-            end
-            BLAS.axpy!(M-p,-2*dt,wp+p*sz,1,v,1)
-        end
-
-        fp = f+(k-1)*sz
-        fst = stride(F,2)
-        for j = 1:size(F,2)
-            v = fp+fst*(j-1)*sz   # the k,jth entry of F
-            dt = dot(M,wp,1,v,1)
-            BLAS.axpy!(M,-2*dt,wp,1,v,1)
+            axpy!(-2dt,wp,v)
         end
     end
     QR.ncols = col
