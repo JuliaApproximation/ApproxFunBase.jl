@@ -300,7 +300,7 @@ function resizedata!(QR::QROperator{<:CachedOperator{T,<:AlmostBandedMatrix{T}}}
     F = MO.data.fill.U
 
     for k = QR.ncols+1:col
-        W[:,k] = view(R.data,R.u+1:R.u+R.l+1,k) # diagonal and below
+        W[:,k] = view(R.data, (R.u+1).+(0:R.l), k) # diagonal and below
         wp = view(W,:,k)
         W[1,k]+= flipsign(norm(wp),W[1,k])
         normalize!(wp)
@@ -308,18 +308,18 @@ function resizedata!(QR::QROperator{<:CachedOperator{T,<:AlmostBandedMatrix{T}}}
         # scale banded entries
         for j = k:k+R.u
             dind = R.u+1+k-j
-            v = view(R.data,dind:dind+M-1,j)
+            v = view(R.data, range(dind, length=M), j)
             dt = dot(wp,v)
             axpy!(-2dt,wp,v)
         end
 
         # scale banded/filled entries
-        for j = k+R.u+1:k+R.u+M-1
+        for j = (k+R.u).+(1:M-1)
             p = j-k-R.u
             v = view(R.data,1:M-p,j)  # shift down each time
             wp2=view(wp,p+1:M)
             dt = dot(wp2,v)
-            for ℓ=k:k+p-1
+            for ℓ in range(k, length=p)
                 dt = muladd(conj(W[ℓ-k+1,k]), MO.data.fill[ℓ,j], dt)
             end
             axpy!(-2dt,wp2,v)
@@ -341,7 +341,7 @@ end
 ## back substitution
 # loop to avoid ambiguity with AbstractTRiangular
 for ArrTyp in (:AbstractVector, :AbstractMatrix)
-    @eval function ldiv!(U::UpperTriangular{T,<:SubArray{T, 2, <:AlmostBandedMatrix{T}, NTuple{2,UnitRange{Int}}, false}},
+    @eval function ldiv!(U::UpperTriangular{T,<:SubArray{T, 2, <:AlmostBandedMatrix{T}, NTuple{2,UnitRange{Int}}}},
                 u::$ArrTyp{T}) where T
 
         n = size(u,1)
@@ -360,7 +360,7 @@ for ArrTyp in (:AbstractVector, :AbstractMatrix)
 
         pk = zeros(T,nbc)
 
-        for c = 1:size(u,2)
+        for c = axes(u,2)
             fill!(pk,zero(T))
 
             # before we get to filled rows

@@ -64,7 +64,7 @@ function resizedata!(QR::QROperator{<:CachedOperator{T,<:BandedMatrix{T}}}, ::Co
     end
 
     for k=QR.ncols+1:col
-        W[:,k] = view(R.data,R.u+1:R.u+R.l+1,k) # diagonal and below
+        W[:,k] = view(R.data, (R.u+1).+(0:R.l), k) # diagonal and below
         wp=view(W,:,k)
         W[1,k]+= flipsign(norm(wp),W[1,k])
         normalize!(wp)
@@ -72,13 +72,13 @@ function resizedata!(QR::QROperator{<:CachedOperator{T,<:BandedMatrix{T}}}, ::Co
         # scale banded entries
         for j=k:k+R.u
             dind=R.u+1+k-j
-            v=view(R.data,dind:dind+M-1,j)
+            v=view(R.data, range(dind, length=M), j)
             dt=dot(wp,v)
             axpy!(-2dt,wp,v)
         end
 
         # scale banded/filled entries
-        for j=k+R.u+1:k+R.u+M-1
+        for j = (k+R.u).+(1:M-1)
             p=j-k-R.u
             v=view(R.data,1:M-p,j)  # shift down each time
             wp2=view(wp,p+1:M)
@@ -94,7 +94,7 @@ end
 ## back substitution
 # loop to avoid ambiguity with AbstractTRiangular
 for ArrTyp in (:AbstractVector, :AbstractMatrix, :StridedVector)
-    @eval function ldiv!(U::UpperTriangular{T, <:SubArray{T, 2, <:BandedMatrix{T}, NTuple{2,UnitRange{Int}}, false}},
+    @eval function ldiv!(U::UpperTriangular{T, <:SubArray{T, 2, <:BandedMatrix{T}, NTuple{2,UnitRange{Int}}}},
                              u::$ArrTyp{T}) where T
         n = size(u,1)
         n == size(U,1) || throw(DimensionMismatch())
@@ -107,8 +107,8 @@ for ArrTyp in (:AbstractVector, :AbstractMatrix, :StridedVector)
 
         b=bandwidth(A,2)
 
-        for c=1:size(u,2)
-            for k=n:-1:1
+        for c=axes(u,2)
+            for k=reverse(axes(u,1))
                 @simd for j=k+1:min(n,k+b)
                     @inbounds u[k,c] = muladd(-A.data[k-j+A.u+1,j],u[j,c],u[k,c])
                 end
