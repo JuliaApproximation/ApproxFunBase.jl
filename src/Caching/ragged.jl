@@ -109,7 +109,7 @@ function resizedata!(QR::QROperator{<:CachedOperator{T,RaggedMatrix{T}}}, ::Colo
         normalize!(wp)
 
         # scale rows entries
-        kr = k:k+length(wp)-1
+        kr = range(k, length=length(wp))
         for j=k:MO.datasize[2]
             v = view(MO.data,kr,j)
             dt = dot(wp,v)
@@ -123,7 +123,7 @@ end
 
 ## back substitution
 for ArrTyp in (:AbstractVector, :AbstractMatrix)
-    @eval function ldiv!(U::UpperTriangular{T, SubArray{T, 2, RaggedMatrix{T}, NTuple{2,UnitRange{Int}}, false}},
+    @eval function ldiv!(U::UpperTriangular{T, <:SubArray{T, 2, RaggedMatrix{T}, NTuple{2,UnitRange{Int}}}},
                              u::$ArrTyp{T}) where T
         n = size(u,1)
         n == size(U,1) || throw(DimensionMismatch())
