@@ -254,7 +254,7 @@ function resizedata!(QR::QROperator{<:CachedOperator{T,BlockBandedMatrix{T}}}, :
          κ, ξ = blockindex.(bi)
 
          st = bs.block_strides[J1]  # the stride of the matrix
-         shft = bs.block_starts[K1,J1]-1 + st*(ξ-1) + κ-1 # the index of the pointer to the j, j entry
+         shft = bs.block_starts[K1,J1]-1 + st*(ξ-1) + κ-1 # the linear index of the j, j entry
 
 
          K_CS = Int(blockcolstop(R, Block(J1))) # last row in J-th blockcolumn
@@ -286,7 +286,7 @@ function resizedata!(QR::QROperator{<:CachedOperator{T,BlockBandedMatrix{T}}}, :
 
          for J = J1+1:min(K1+u,J_end)
              st = bs.block_strides[J]
-             shft = bs.block_starts[K1,J] + κ-2 # the index of the pointer to the j, j entry
+             shft = bs.block_starts[K1,J] + κ-2 # the linear index of the j, j entry
              for ξ_2 = axes(bs.axes[2][Block(J)],1)
                  # we now apply I-2v*v' in place
                  RM = view(R.data, shft + st*(ξ_2-1) .+ (1:M))

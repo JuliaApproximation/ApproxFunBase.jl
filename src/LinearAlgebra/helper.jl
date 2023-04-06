@@ -237,6 +237,7 @@ function pad(v::AbstractVector,n::Integer,m::Integer)
 end
 
 function pad(A::AbstractMatrix,n::Integer,m::Integer)
+    Base.require_one_based_indexing(A)
     T=eltype(A)
 	if n <= size(A,1) && m <= size(A,2)
         A[1:n,1:m]
