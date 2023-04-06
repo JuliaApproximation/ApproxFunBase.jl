@@ -198,14 +198,10 @@ QROperator(R::CachedOperator{T,BlockBandedMatrix{T}}) where {T} =
 # end
 
 # always resize by column
-resizedata!(QR::QROperator{CachedOperator{T,BlockBandedMatrix{T},
-                               MM,DS,RS,BI}},
-                     ::Colon, col::Int) where {T,MM,DS,RS,BI} =
+resizedata!(QR::QROperator{<:CachedOperator{T,BlockBandedMatrix{T}}}, ::Colon, col::Int) where {T} =
     resizedata!(QR, :, block(domainspace(QR.R_cache),col))
 
-function resizedata!(QR::QROperator{CachedOperator{T,BlockBandedMatrix{T},
-                               MM,DS,RS,BI}},
-                     ::Colon, COL::Block) where {T<:BlasFloat,MM,DS,RS,BI}
+function resizedata!(QR::QROperator{<:CachedOperator{T,BlockBandedMatrix{T}}}, ::Colon, COL::Block) where {T<:BlasFloat}
      MO = QR.R_cache
      W = QR.H
      R = MO.data
@@ -227,7 +223,6 @@ function resizedata!(QR::QROperator{CachedOperator{T,BlockBandedMatrix{T},
      K_end = Int(blockcolstop(MO, Block(J_col)))  # last row block in last column
      J_end = Int(blockrowstop(MO, Block(K_end)))  # QR will affect up to this column
      j_end = blockstop(domainspace(MO), Block(J_end))  # we need to resize up this column
-     sz = sizeof(T)
 
      if j_end ≥ MO.datasize[2]
          # add columns up to column rs, which is last column affected by QR
@@ -249,12 +244,11 @@ function resizedata!(QR::QROperator{CachedOperator{T,BlockBandedMatrix{T},
          resize!(W.data, W.cols[end]-1)
      end
 
-     w = pointer(W.data)
-     r = pointer(R.data)
+     ri = firstindex(R.data)
 
      bs = R.block_sizes
 
-     for j =QR.ncols+1 : col   # first column of block
+     for j = QR.ncols+1 : col   # first column of block
          bi = findblockindex.(bs.axes, (j, j)) # converts from global indices to block indices
          K1, J1 = Int.(block.(bi))  # this is the diagonal block corresponding to j
          κ, ξ = blockindex.(bi)
@@ -267,25 +261,27 @@ function resizedata!(QR::QROperator{CachedOperator{T,BlockBandedMatrix{T},
          k_end = last(bs.axes[1][Block(K_CS)])
 
          w_j = W.cols[j]  # the data index  for the j-th column of W
-         wp = w+sz*(w_j-1)          # j-th column of W
 
          M = k_end - j + 1 # the number of entries we are diagonalizing. we know the stride tells us the total number of rows
 
-         BLAS.blascopy!(M, r+sz*shft, 1, wp, 1) # copy the column into W
+         WM = view(W.data, range(w_j, length=M))
+         RM = view(R.data, range(ri + shft, length=M))
 
+         copyto!(WM, RM)
 
          # we need to scale the first entry and then normalize
-         W.data[w_j] += flipsign(BLAS.nrm2(M,wp,1), W.data[w_j])
-         normalize!(M, wp)
+         W.data[w_j] += flipsign(norm(WM), W.data[w_j])
+         normalize!(WM)
 
          # scale rest of columns in first block
          # for ξ_2 = 2:
 
          for ξ_2 = ξ:length(bs.axes[2][Block(J1)])
              # we now apply I-2v*v' in place
-             r_sh = r+sz*(shft + st*(ξ_2-ξ)) # the pointer the (j,ξ_2)-th entry
-             dt = dot(M, wp, 1, r_sh, 1)
-             BLAS.axpy!(M, -2*dt, wp, 1, r_sh ,1)
+             rish = ri + shft + st*(ξ_2-ξ)
+             RM = view(R.data, range(rish, length=M))
+             dt = dot(WM, RM)
+             axpy!(-2dt, WM, RM)
          end
 
          for J = J1+1:min(K1+u,J_end)
@@ -293,25 +289,9 @@ function resizedata!(QR::QROperator{CachedOperator{T,BlockBandedMatrix{T},
              shft = bs.block_starts[K1,J] + κ-2 # the index of the pointer to the j, j entry
              for ξ_2 = axes(bs.axes[2][Block(J)],1)
                  # we now apply I-2v*v' in place
-                 # r_sh = r+sz*(shft + st*(ξ_2-1)) # the pointer the (j,ξ_2)-th entry
-
-                 # TODO: remove these debugging statement
-                 # @assert w_j-1 + M ≤ length(W.data)
-                 # @assert shft + st*(ξ_2-1) + M ≤ length(R.data)
-                 # @assert 0 ≤ w_j-1
-                 # if ! (0 ≤ shft + st*(ξ_2-1))
-                 #     @show shft, st, ξ_2, l, u
-                 #     @show κ, bs.block_starts[K1,J]
-                 #     @show K1, J
-                 #     @show MO.op
-                 # end
-                 # dt = dot(M, wp, 1, r_sh, 1)
-                 # BLAS.axpy!(M, -2*dt, wp, 1, r_sh ,1)
-
-                 dt = dot(view(W.data, w_j:w_j+M-1) ,
-                                    view(R.data, shft + st*(ξ_2-1) +1:shft + st*(ξ_2-1) +M))
-                 axpy!(-2*dt, view(W.data, w_j:w_j+M-1) ,
-                                    view(R.data, shft + st*(ξ_2-1) +1:shft + st*(ξ_2-1) +M))
+                 RM = view(R.data, shft + st*(ξ_2-1) .+ (1:M))
+                 dt = dot(WM, RM)
+                 axpy!(-2dt, WM, RM)
              end
          end
      end

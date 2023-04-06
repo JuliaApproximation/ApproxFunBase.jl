@@ -184,10 +184,10 @@ function mulpars(Ac::Adjoint{T,<:QROperatorQ{QROperator{RR,RaggedMatrix{T},T},T}
         end
 
         wp=view(H,cr,k)
-        yp=view(Y,k-1+(cr))
+        yp=view(Y, (k-1) .+ cr)
 
         dt=dot(wp,yp)
-        axpy!(-2*dt,wp,yp)
+        axpy!(-2dt,wp,yp)
         k+=1
     end
     nz = findlast(!iszero, Y)
@@ -244,7 +244,7 @@ function mulpars(Ac::Adjoint{T,<:QROperatorQ{QROperator{RR,RaggedMatrix{T},T},T}
         yp=y+sz*(k-1)
 
         dt = dot(M,wp,1,yp,1)
-        BLAS.axpy!(M,-2*dt,wp,1,yp,1)
+        BLAS.axpy!(M,-2dt,wp,1,yp,1)
         k+=1
     end
     nz = findlast(!iszero, Y)
