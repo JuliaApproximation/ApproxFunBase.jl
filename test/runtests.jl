@@ -121,6 +121,8 @@ end
         v = [1,2,3,4,5]
         ApproxFunBase.negateeven!(v)
         @test v == [1,-2,3,-4,5]
+        ApproxFunBase.negateeven!(v)
+        @test v == [1,2,3,4,5]
     end
 
     # TODO: Tensorizer tests
