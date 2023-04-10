@@ -108,6 +108,21 @@ end
 
     @test @inferred(ApproxFunBase.flipsign(2, 0im)) == 2
 
+    @testset "mindotu" begin
+        @test ApproxFunBase.mindotu(Float64[1,2], Float64[1,2,3]) == sum([1,2] .* [1,2])
+        @test ApproxFunBase.mindotu([1,2], [1,2,3]) == sum([1,2] .* [1,2])
+        @test ApproxFunBase.mindotu(ComplexF64[1+im,2+4im], Float64[1,2,3]) == sum([1+im,2+4im] .* [1,2])
+        @test ApproxFunBase.mindotu(Float64[1,2,3], ComplexF64[1+im,2+4im]) == sum([1+im,2+4im] .* [1,2])
+        @test ApproxFunBase.mindotu(ComplexF64[1+2im,2+5im,3+2im], ComplexF64[1+im,2+4im]) ==
+            sum(ComplexF64[1+2im,2+5im] .* ComplexF64[1+im,2+4im])
+    end
+
+    @testset "negateeven!" begin
+        v = [1,2,3,4,5]
+        ApproxFunBase.negateeven!(v)
+        @test v == [1,-2,3,-4,5]
+    end
+
     # TODO: Tensorizer tests
 end
 

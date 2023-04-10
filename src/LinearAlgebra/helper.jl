@@ -11,7 +11,7 @@ import Base: chop
 dotu(f::StridedVector{T}, g::StridedVector{T}) where {T<:Union{ComplexF32,ComplexF64}} =
     BLAS.dotu(f,g)
 dotu(f::AbstractVector{<:Complex}, g::AbstractVector{<:Real}) = dot(conj(f),g)
-dotu(f::AbstractVector{N}, g::AbstractVector{T}) where {N<:Real,T<:Real} = dot(f,g)
+dotu(f::AbstractVector{<:Real}, g::AbstractVector{<:Real}) = dot(f,g)
 function dotu(f::AbstractVector{<:Number}, g::AbstractVector{<:Number})
     Base.require_one_based_indexing(f)
     axes(f) == axes(g) || throw(ArgumentError("vectors must have the same indices"))
@@ -136,9 +136,8 @@ end
 
 function negateeven!(x::AbstractVector)
     Base.require_one_based_indexing(x)
-    @inbounds @simd for k = 2:2:length(x)
-        x[k] *= -1
-    end
+    v = view(x, 2:2:length(x))
+    v .*= -1
     x
 end
 
