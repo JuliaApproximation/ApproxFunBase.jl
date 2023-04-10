@@ -8,10 +8,15 @@ import Base: chop
 @inline dot(M::Int,a::Ptr{T},incx::Int,b::Ptr{T},incy::Int) where {T<:Union{ComplexF64,ComplexF32}} =
     BLAS.dotc(M,a,incx,b,incy)
 
-dotu(f::StridedVector{T},g::StridedVector{T}) where {T<:Union{ComplexF32,ComplexF64}} =
+dotu(f::StridedVector{T}, g::StridedVector{T}) where {T<:Union{ComplexF32,ComplexF64}} =
     BLAS.dotu(f,g)
-dotu(f::AbstractVector{Complex{Float64}},g::AbstractVector{N}) where {N<:Real} = dot(conj(f),g)
-dotu(f::AbstractVector{N},g::AbstractVector{T}) where {N<:Real,T<:Number} = dot(f,g)
+dotu(f::AbstractVector{<:Complex}, g::AbstractVector{<:Real}) = dot(conj(f),g)
+dotu(f::AbstractVector{<:Real}, g::AbstractVector{<:Real}) = dot(f,g)
+function dotu(f::AbstractVector{<:Number}, g::AbstractVector{<:Number})
+    Base.require_one_based_indexing(f)
+    axes(f) == axes(g) || throw(ArgumentError("vectors must have the same indices"))
+    mapreduce(*, +, f, g)
+end
 
 
 normalize!(w::AbstractVector) = rmul!(w,inv(norm(w)))
@@ -100,8 +105,8 @@ end
 scal!(n::Integer,cst::BlasFloat,ret::DenseArray{T},k::Integer) where {T<:BlasFloat} =
     BLAS.scal!(n,strictconvert(T,cst),ret,k)
 
-function scal!(n::Integer,cst::Number,ret::AbstractArray,k::Integer)
-    @assert k*n ≤ length(ret)
+@inline function scal!(n::Integer,cst::Number,ret::AbstractArray,k::Integer)
+    @boundscheck checkbounds(ret, 1:(k*(n-1)+1))
     @simd for j=1:k:k*(n-1)+1
         @inbounds ret[j] *= cst
     end
@@ -115,6 +120,7 @@ scal!(cst::Number,v::AbstractArray) = scal!(length(v),cst,v,1)
 # Helper routines
 
 function reverseeven!(x::AbstractVector)
+    Base.require_one_based_indexing(x)
     n = length(x)
     if iseven(n)
         @inbounds @simd for k=2:2:n÷2
@@ -129,14 +135,15 @@ function reverseeven!(x::AbstractVector)
 end
 
 function negateeven!(x::AbstractVector)
-    @inbounds @simd for k = 2:2:length(x)
-        x[k] *= -1
-    end
+    Base.require_one_based_indexing(x)
+    v = view(x, 2:2:length(x))
+    v .*= -1
     x
 end
 
 #checkerboard, same as applying negativeeven! to all rows then all columns
 function negateeven!(X::AbstractMatrix)
+    Base.require_one_based_indexing(X)
     for j = 1:2:size(X,2)
         @inbounds @simd for k = 2:2:size(X,1)
             X[k,j] *= -1
@@ -155,21 +162,15 @@ const alternatesign! = negateeven!
 alternatesign(v::AbstractVector) = alternatesign!(copy(v))
 
 function alternatingsum(v::AbstractVector)
-    ret = zero(eltype(v))
-    s = 1
-    @inbounds for k=1:length(v)
-        ret+=s*v[k]
-        s*=-1
-    end
-
-    ret
+    sum(((a,b),) -> a*b, zip(v, Iterators.cycle((1,-1))))
 end
 
 # Sum Hadamard product of vectors up to minimum over lengths
 function mindotu(a::AbstractVector,b::AbstractVector)
-    ret,m = zero(promote_type(eltype(a),eltype(b))),min(length(a),length(b))
-    @inbounds @simd for i=m:-1:1 ret += a[i]*b[i] end
-    ret
+    Base.require_one_based_indexing(a)
+    Base.require_one_based_indexing(b)
+    m = min(length(a), length(b))
+    dotu(view(a, 1:m), view(b, 1:m))
 end
 
 
@@ -240,25 +241,20 @@ function pad(A::AbstractMatrix,n::Integer,m::Integer)
     Base.require_one_based_indexing(A)
     T=eltype(A)
 	if n <= size(A,1) && m <= size(A,2)
-        A[1:n,1:m]
-	elseif n==0 || m==0
-	   Matrix{T}(undef,n,m)  #fixes weird julia bug when T==None
+        strictconvert(Matrix{T}, A[1:n,1:m])
     else
         ret = Matrix{T}(undef,n,m)
         minn=min(n,size(A,1))
         minm=min(m,size(A,2))
-        for k=1:minn,j=1:minm
-            @inbounds ret[k,j]=A[k,j]
-        end
-        for k=minn+1:n,j=1:minm
-            @inbounds ret[k,j]=zero(T)
-        end
-        for k=1:n,j=minm+1:m
-            @inbounds ret[k,j]=zero(T)
-        end
-        for k=minn+1:n,j=minm+1:m
-            @inbounds ret[k,j]=zero(T)
-        end
+
+        cinds = CartesianIndices((1:minn, 1:minm))
+        copyto!(ret, cinds, A, cinds)
+
+        cinds = CartesianIndices((minn+1:n, 1:minm))
+        ret[cinds] .= zero(T)
+
+        cinds = CartesianIndices((axes(ret,1), minm+1:m))
+        ret[cinds] .= zero(T)
 
         ret
 	end
