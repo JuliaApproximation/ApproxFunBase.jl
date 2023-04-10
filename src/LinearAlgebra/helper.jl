@@ -260,6 +260,13 @@ function pad(A::AbstractMatrix,n::Integer,m::Integer)
 	end
 end
 
+function pad(A::BandedMatrix, n::Integer, m::Integer)
+    B = BandedMatrix{eltype(A)}(undef, (n,m), bandwidths(A))
+    copyto!(B.data, A.data)
+    B.data[length(A.data)+1:end] .= 0
+    return B
+end
+
 pad(A::AbstractMatrix,::Colon,m::Integer) = pad(A,size(A,1),m)
 pad(A::AbstractMatrix,n::Integer,::Colon) = pad(A,n,size(A,2))
 
@@ -534,7 +541,7 @@ Base.isless(x::PosInfinity, y::Block{1}) = isless(x, Int(y))
 
 
 
-pad!(A::BandedMatrix,n,::Colon) = pad!(A,n,n+A.u)  # Default is to get all columns
+pad(A::BandedMatrix,n,::Colon) = pad(A,n,n+A.u)  # Default is to get all columns
 columnrange(A,row::Integer) = max(1,row-bandwidth(A,1)):row+bandwidth(A,2)
 
 

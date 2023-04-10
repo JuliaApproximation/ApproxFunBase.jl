@@ -49,8 +49,8 @@ function setindex!(B::AlmostBandedMatrix,v,k::Integer,j::Integer)
 end
 
 
-function pad!(B::AlmostBandedMatrix,n::Integer,m::Integer)
-    pad!(B.bands,n,m)
-    pad!(B.fill,n,m)
-    B
+function pad(B::AlmostBandedMatrix,n::Integer,m::Integer)
+    bands = pad(B.bands,n,m)
+    fill = pad(B.fill,n,m)
+    AlmostBandedMatrix(bands, fill)
 end

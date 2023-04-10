@@ -86,6 +86,7 @@ function Fun(sp::Space,v::AbstractVector{Any})
     end
 end
 
+Fun(f::Fun) = f # Fun of Fun should be like a conversion
 
 hasnumargs(f::Fun,k) = k == 1 || domaindimension(f) == k  # all funs take a single argument as a SVector
 

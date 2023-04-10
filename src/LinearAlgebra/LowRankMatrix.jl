@@ -34,12 +34,12 @@ end
 
 # constructors
 
-function pad!(L::LowRankMatrix,n::Integer,::Colon)
-    L.U=pad(L.U,n,:)
-    L
+function pad(L::LowRankMatrix,n::Integer,::Colon)
+    U = pad(L.U, n, :)
+    LowRankMatrix(U, L.V)
 end
-function pad!(L::LowRankMatrix,::Colon,m::Integer)
-    L.V=pad(L.V,m,:)
-    L
+function pad(L::LowRankMatrix,::Colon,m::Integer)
+    V = pad(L.V,m,:)
+    LowRankMatrix(L.U, V)
 end
-pad!(L::LowRankMatrix,n::Integer,m::Integer) = pad!(pad!(L,n,:),:,m)
+pad(L::LowRankMatrix,n::Integer,m::Integer) = pad(pad(L,n,:),:,m)
