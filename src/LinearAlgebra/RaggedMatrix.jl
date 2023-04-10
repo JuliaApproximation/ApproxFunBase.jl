@@ -37,7 +37,7 @@ size(A::RaggedMatrix) = (A.m,length(A.cols)-1)
 colstart(A::RaggedMatrix,j::Integer) = 1
 colstop(A::RaggedMatrix,j::Integer) = min(A.cols[j+1]-A.cols[j],size(A,1))
 
-@inline function incol(A, k, j, ind = A.cols[j]+k-1)
+Base.@propagate_inbounds function incol(A, k, j, ind = A.cols[j]+k-1)
     ind < A.cols[j+1]
 end
 
@@ -129,8 +129,8 @@ function RaggedMatrix{T}(A::AbstractMatrix, colns::AbstractVector{Int}) where T
     Base.require_one_based_indexing(A)
     Base.require_one_based_indexing(colns)
     ret = RaggedMatrix{T}(undef, size(A,1), colns)
-    (length(colns) == size(A,2) && all(in(axes(A,1)), colns)) ||
-        throw(ArgumentError("column stops incompatible with input matrix"))
+    (length(colns) == size(A,2) && all(<=(size(A,1)), colns)) ||
+        throw(ArgumentError("column stops $colns incompatible with input matrix of size $(size(A))"))
     for j in axes(A,2), k = 1:colns[j]
         @inbounds incols_setindex!(ret, A[k,j], k, j)
     end
@@ -153,7 +153,7 @@ function mul!(y::Vector, A::RaggedMatrix, b::Vector)
     end
     T=eltype(y)
     fill!(y,zero(T))
-    for j=1:m
+    for j in axes(A,2)
         kr=A.cols[j]:A.cols[j+1]-1
         axpy!(b[j],view(A.data,kr),view(y,1:length(kr)))
     end
@@ -178,8 +178,8 @@ function axpy!(a, X::RaggedMatrix, Y::RaggedMatrix)
                 end
             end
             cs = min(Xn,Yn)
-            axpy!(a,view(X.data,X.cols[j]:X.cols[j]+cs-1),
-                         view(Y.data,Y.cols[j]:Y.cols[j]+cs-1))
+            axpy!(a, view(X.data, range(X.cols[j], length=cs)),
+                     view(Y.data, range(Y.cols[j], length=cs)))
         end
     end
     Y
@@ -252,7 +252,7 @@ function mul!(Y::RaggedMatrix,A::RaggedMatrix,B::RaggedMatrix)
         end
 
         if col > colstop(Y,j)
-            throw(BoundsError())
+            throw(BoundsError(Y, (col,j)))
         end
     end
 
