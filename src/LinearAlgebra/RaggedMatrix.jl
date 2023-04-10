@@ -49,7 +49,7 @@ Base.@propagate_inbounds function incols_setindex!(A::RaggedMatrix, v, k::Int, j
     A
 end
 
-@inline function getindex(A::RaggedMatrix,k::Int,j::Int)
+Base.@propagate_inbounds function getindex(A::RaggedMatrix,k::Int,j::Int)
     @boundscheck if k>size(A,1) || k < 1 || j>size(A,2) || j < 1
         throw(BoundsError(A,(k,j)))
     end
@@ -62,7 +62,7 @@ end
     end
 end
 
-@inline function setindex!(A::RaggedMatrix,v,k::Int,j::Int)
+Base.@propagate_inbounds function setindex!(A::RaggedMatrix,v,k::Int,j::Int)
     @boundscheck if k>size(A,1) || k < 1 || j>size(A,2) || j < 1
         throw(BoundsError(A,(k,j)))
     end
