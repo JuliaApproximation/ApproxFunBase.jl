@@ -1,7 +1,7 @@
 # FiniteRange gives the nonzero entries in a row/column
 struct FiniteRange end
 
-getindex(A::AbstractMatrix,::Type{FiniteRange},j::Integer) = A[1:colstop(A,j),j]
+getindex(A::AbstractMatrix,::Type{FiniteRange},j::Integer) = A[colrange(A,j),j]
 getindex(A::AbstractMatrix,k::Integer,::Type{FiniteRange}) = A[k,1:rowstop(A,k)]
 
 const ⤓ = FiniteRange
@@ -32,40 +32,48 @@ RaggedMatrix{T}(::UndefInitializer, m::Int, colns::AbstractVector{Int}) where {T
     RaggedMatrix(Vector{T}(undef, sum(colns)),Int[1;1 .+ cumsum(colns)],m)
 
 
-Base.size(A::RaggedMatrix) = (A.m,length(A.cols)-1)
+size(A::RaggedMatrix) = (A.m,length(A.cols)-1)
 
 colstart(A::RaggedMatrix,j::Integer) = 1
 colstop(A::RaggedMatrix,j::Integer) = min(A.cols[j+1]-A.cols[j],size(A,1))
 
-@inline function incol(A, k, j, ind = A.cols[j]+k-1)
+Base.@propagate_inbounds function incol(A, k, j, ind = A.cols[j]+k-1)
     ind < A.cols[j+1]
 end
 
-function getindex(A::RaggedMatrix,k::Int,j::Int)
-    if k>size(A,1) || k < 1 || j>size(A,2) || j < 1
+Base.@propagate_inbounds function incols_getindex(A::RaggedMatrix, k::Int, j::Int, ind = A.cols[j]+k-1)
+    A.data[ind]
+end
+Base.@propagate_inbounds function incols_setindex!(A::RaggedMatrix, v, k::Int, j::Int, ind = A.cols[j]+k-1)
+    A.data[ind] = v
+    A
+end
+
+Base.@propagate_inbounds function getindex(A::RaggedMatrix,k::Int,j::Int)
+    @boundscheck if k>size(A,1) || k < 1 || j>size(A,2) || j < 1
         throw(BoundsError(A,(k,j)))
     end
 
     ind = A.cols[j]+k-1
     if incol(A, k, j, ind)
-        A.data[ind]
+        incols_getindex(A, k, j, ind)
     else
         zero(eltype(A))
     end
 end
 
-function Base.setindex!(A::RaggedMatrix,v,k::Int,j::Int)
-    if k>size(A,1) || k < 1 || j>size(A,2) || j < 1
+Base.@propagate_inbounds function setindex!(A::RaggedMatrix,v,k::Int,j::Int)
+    @boundscheck if k>size(A,1) || k < 1 || j>size(A,2) || j < 1
         throw(BoundsError(A,(k,j)))
     end
 
     ind = A.cols[j]+k-1
     if incol(A, k, j, ind)
-        A.data[ind]=v
+        incols_setindex!(A, v, k, j, ind)
     elseif v ≠ 0
-        throw(BoundsError(A,(k,j)))
+        throw(ArgumentError("Can't set index $((k,j)) of a RaggedMatrix to a non-zero value"))
     end
-    v
+    A
 end
 
 convert(::Type{RaggedMatrix{T}}, R::RaggedMatrix{T}) where T = R
@@ -75,40 +83,32 @@ convert(::Type{RaggedMatrix{T}}, R::RaggedMatrix) where T =
 
 
 function convert(::Type{Matrix{T}}, A::RaggedMatrix) where T
-    ret = zeros(T,size(A,1),size(A,2))
-    for j=1:size(A,2)
-        ret[1:colstop(A,j),j] = view(A,1:colstop(A,j),j)
+    ret = zeros(T, size(A))
+    @inbounds for j in axes(A,2), k in colrange(A,j)
+        v = incols_getindex(A, k, j)
+        ret[k,j] = v
     end
     ret
 end
 
 convert(::Type{Matrix}, A::RaggedMatrix) = Matrix{eltype(A)}(A)
 
-function convert(::Type{RaggedMatrix{T}}, B::BandedMatrix) where T
-    l = bandwidth(B,1)
-    ret = RaggedMatrix(Zeros{T}(size(B)), Int[colstop(B,j) for j=1:size(B,2)])
-    for j=1:size(B,2),k=colrange(B,j)
-        ret[k,j] = B[k,j]
-    end
-    ret
-end
-
 convert(::Type{RaggedMatrix}, B::BandedMatrix) = RaggedMatrix{eltype(B)}(B)
 
 function convert(::Type{RaggedMatrix{T}}, B::AbstractMatrix) where T
-    ret = RaggedMatrix(Zeros{T}(size(B)), Int[colstop(B,j) for j=1:size(B,2)])
-    for j=1:size(B,2), k=colrange(B,j)
-        ret[k,j] = B[k,j]
+    ret = RaggedMatrix(Zeros{T}(size(B)), Int[colstop(B,j) for j=axes(B,2)])
+    @inbounds for j in axes(B,2), k in colrange(B,j)
+        incols_setindex!(ret, B[k,j], k, j)
     end
     ret
 end
 
-convert(::Type{RaggedMatrix}, B::AbstractMatrix) = RaggedMatrix{eltype(B)}(B)
+convert(::Type{RaggedMatrix}, B::AbstractMatrix) = strictconvert(RaggedMatrix{eltype(B)}, B)
 
 RaggedMatrix(B::AbstractMatrix) = strictconvert(RaggedMatrix, B)
 RaggedMatrix{T}(B::AbstractMatrix) where T = strictconvert(RaggedMatrix{T}, B)
 
-Base.similar(B::RaggedMatrix,::Type{T}) where {T} = RaggedMatrix(similar(B.data, T),copy(B.cols),B.m)
+similar(B::RaggedMatrix,::Type{T}) where {T} = RaggedMatrix(similar(B.data, T),copy(B.cols),B.m)
 
 for (op,bop) in ((:(Base.rand), :rrand),)
     @eval begin
@@ -126,9 +126,13 @@ function RaggedMatrix{T}(Z::Zeros, colns::AbstractVector{Int}) where {T}
 end
 
 function RaggedMatrix{T}(A::AbstractMatrix, colns::AbstractVector{Int}) where T
+    Base.require_one_based_indexing(A)
+    Base.require_one_based_indexing(colns)
     ret = RaggedMatrix{T}(undef, size(A,1), colns)
-    @inbounds for j = 1:length(colns), k = 1:colns[j]
-        ret[k,j] = A[k,j]
+    (length(colns) == size(A,2) && all(<=(size(A,1)), colns)) ||
+        throw(ArgumentError("column stops $colns incompatible with input matrix of size $(size(A))"))
+    for j in axes(A,2), k = 1:colns[j]
+        @inbounds incols_setindex!(ret, A[k,j], k, j)
     end
     ret
 end
@@ -149,7 +153,7 @@ function mul!(y::Vector, A::RaggedMatrix, b::Vector)
     end
     T=eltype(y)
     fill!(y,zero(T))
-    for j=1:m
+    for j in axes(A,2)
         kr=A.cols[j]:A.cols[j+1]-1
         axpy!(b[j],view(A.data,kr),view(y,1:length(kr)))
     end
@@ -165,7 +169,7 @@ function axpy!(a, X::RaggedMatrix, Y::RaggedMatrix)
     if X.cols == Y.cols
         axpy!(a,X.data,Y.data)
     else
-        for j = 1:size(X,2)
+        for j = axes(X,2)
             Xn = colstop(X,j)
             Yn = colstop(Y,j)
             if Xn > Yn  # check zeros otherwise
@@ -174,8 +178,8 @@ function axpy!(a, X::RaggedMatrix, Y::RaggedMatrix)
                 end
             end
             cs = min(Xn,Yn)
-            axpy!(a,view(X.data,X.cols[j]:X.cols[j]+cs-1),
-                         view(Y.data,Y.cols[j]:Y.cols[j]+cs-1))
+            axpy!(a, view(X.data, range(X.cols[j], length=cs)),
+                     view(Y.data, range(Y.cols[j], length=cs)))
         end
     end
     Y
@@ -196,7 +200,7 @@ function axpy!(a,X::RaggedMatrix,
     ksh = first(parentindices(Y)[1]) - 1  # how much to shift
     jsh = first(parentindices(Y)[2]) - 1  # how much to shift
 
-    for j=1:size(X,2)
+    for j=axes(X,2)
         cx=colstop(X,j)
         cy=colstop(Y,j)
         if cx > cy
@@ -205,7 +209,7 @@ function axpy!(a,X::RaggedMatrix,
                     throw(BoundsError("Trying to add a non-zero to a zero."))
                 end
             end
-            kr = X.cols[j]:X.cols[j]+cy-1
+            kr = range(X.cols[j], length=cy)
         else
             kr = X.cols[j]:X.cols[j+1]-1
         end
@@ -222,7 +226,7 @@ end
 function *(A::RaggedMatrix,B::RaggedMatrix)
     cols = zeros(Int,size(B,2))
     T = promote_type(eltype(A),eltype(B))
-    for j=1:size(B,2),k=1:colstop(B,j)
+    for j=axes(B,2),k=colrange(B,j)
         cols[j] = max(cols[j],colstop(A,k))
     end
 
@@ -232,23 +236,23 @@ end
 function unsafe_mul!(Y::RaggedMatrix,A::RaggedMatrix,B::RaggedMatrix)
     fill!(Y.data,0)
 
-    for j=1:size(B,2),k=1:colstop(B,j)
-        axpy!(B[k,j], view(A,1:colstop(A,k),k),
-            view(Y.data,Y.cols[j] .- 1 .+ (1:colstop(A,k))))
+    for j=axes(B,2),k=colrange(B,j)
+        axpy!(B[k,j], view(A,colrange(A,k),k),
+            view(Y.data,Y.cols[j] .- 1 .+ (colrange(A,k))))
     end
 
     Y
 end
 
 function mul!(Y::RaggedMatrix,A::RaggedMatrix,B::RaggedMatrix)
-    for j=1:size(B,2)
+    for j=axes(B,2)
         col = 0
-        for k=1:colstop(B,j)
+        for k=colrange(B,j)
             col = max(col,colstop(A,k))
         end
 
         if col > colstop(Y,j)
-            throw(BoundsError())
+            throw(BoundsError(Y, (col,j)))
         end
     end
 
