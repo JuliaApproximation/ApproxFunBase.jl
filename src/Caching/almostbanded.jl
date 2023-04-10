@@ -181,7 +181,7 @@ function resizedata!(co::CachedOperator{T,<:AlmostBandedMatrix{T},<:InterlaceOpe
     end
 
     (l,u)=bandwidths(co.data.bands)
-    pad!(co.data,n,n+u)
+    co.data = pad(co.data, n, n+u)
 
     r = rank(co.data.fill)
     ind = findfirst(op->isinf(size(op,1)),co.op.ops)
@@ -227,8 +227,7 @@ function resizedata!(co::CachedOperator{T,<:AlmostBandedMatrix{T},<:InterlaceOpe
     p = length(d∞)
 
     (l,u)=bandwidths(co.data.bands)
-    pad!(co.data,n,n+u)
-    co.data
+    co.data = pad(co.data,n,n+u)
     # r is number of extra rows, ncols is number of extra columns
     r = rank(co.data.fill)
     ncols = mapreduce(d->isfinite(d) ? d : 0,+,ddims)
@@ -286,12 +285,14 @@ function resizedata!(QR::QROperator{<:CachedOperator{T,<:AlmostBandedMatrix{T}}}
     MO = QR.R_cache
     W = QR.H
 
-    R = MO.data.bands
-    M = R.l+1   # number of diag+subdiagonal bands
+    Rl, Ru = bandwidths(MO.data.bands)
+    M = Rl + 1   # number of diag+subdiagonal bands
 
     if col+M-1 ≥ MO.datasize[1]
         resizedata!(MO,(col+M-1)+100,:)  # double the last rows
     end
+
+    R = MO.data.bands # has to be accessed after the resizedata!
 
     if col > size(W,2)
         W = QR.H = unsafe_resize!(W,:,2col)
@@ -300,22 +301,22 @@ function resizedata!(QR::QROperator{<:CachedOperator{T,<:AlmostBandedMatrix{T}}}
     F = MO.data.fill.U
 
     for k = QR.ncols+1:col
-        W[:,k] = view(R.data, (R.u+1).+(0:R.l), k) # diagonal and below
+        W[:,k] = view(R.data, (Ru+1).+(0:Rl), k) # diagonal and below
         wp = view(W,:,k)
         W[1,k]+= flipsign(norm(wp),W[1,k])
         normalize!(wp)
 
         # scale banded entries
-        for j = k:k+R.u
-            dind = R.u+1+k-j
+        for j = k:k+Ru
+            dind = Ru+1+k-j
             v = view(R.data, range(dind, length=M), j)
             dt = dot(wp,v)
             axpy!(-2dt,wp,v)
         end
 
         # scale banded/filled entries
-        for j = (k+R.u).+(1:M-1)
-            p = j-k-R.u
+        for j = (k+Ru).+(1:M-1)
+            p = j-k-Ru
             v = view(R.data,1:M-p,j)  # shift down each time
             wp2=view(wp,p+1:M)
             dt = dot(wp2,v)
