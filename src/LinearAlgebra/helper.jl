@@ -163,14 +163,7 @@ const alternatesign! = negateeven!
 alternatesign(v::AbstractVector) = alternatesign!(copy(v))
 
 function alternatingsum(v::AbstractVector)
-    ret = zero(eltype(v))
-    s = 1
-    for vk in v
-        ret += s * vk
-        s*=-1
-    end
-
-    ret
+    sum(((a,b),) -> a*b, zip(v, Iterators.cycle((1,-1))))
 end
 
 # Sum Hadamard product of vectors up to minimum over lengths
