@@ -56,8 +56,8 @@ function mulpars(Ac::Adjoint{T,<:QROperatorQ{QROperator{RR,Matrix{T},T},T}},
 
     if M == 1  # diagonal scaling, avoid growing
         ret = inplace isa Val{true} ? B : similar(B)
-        @simd for k in eachindex(ret)
-            @inbounds ret[k]=(1-2H[1,k]^2)*B[k]
+        for k in eachindex(ret)
+            ret[k]=(1-2H[1,k]^2)*B[k]
         end
         return ret
     end

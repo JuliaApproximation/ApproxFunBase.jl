@@ -134,11 +134,11 @@ for ArrTyp in (:AbstractVector, :AbstractMatrix)
 
         A = parent(V)
 
-        for c=1:size(u,2)
-            for k=n:-1:1
-                @inbounds ck = A.cols[k]
-                @inbounds u[k,c] /= A.data[ck+k-1]
-                axpy!(-u[k,c], view(A.data,ck:ck+k-2), view(u,1:k-1,c))
+        for c=axes(u,2)
+            for k=reverse(axes(u,1))
+                ck = A.cols[k]
+                u[k,c] /= A.data[ck+k-1]
+                axpy!(-u[k,c], view(A.data, range(ck, length=k-1)), view(u,1:k-1,c))
             end
         end
         u
