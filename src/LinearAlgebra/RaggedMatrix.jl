@@ -6,7 +6,7 @@ getindex(A::AbstractMatrix,k::Integer,::Type{FiniteRange}) = A[k,1:rowstop(A,k)]
 
 const ⤓ = FiniteRange
 
-mutable struct RaggedMatrix{T} <: AbstractMatrix{T}
+struct RaggedMatrix{T} <: AbstractMatrix{T}
     data::Vector{T} # a Vector of non-zero entries
     cols::Vector{Int} # a Vector specifying the first index of each column
     m::Int #Number of rows
