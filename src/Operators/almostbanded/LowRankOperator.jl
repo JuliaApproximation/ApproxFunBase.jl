@@ -2,11 +2,11 @@ export AbstractLowRankOperator, LowRankOperator
 
 abstract type AbstractLowRankOperator{T} <: Operator{T} end
 
-struct LowRankOperator{S<:Space,T} <: AbstractLowRankOperator{T}
+struct LowRankOperator{S<:Space,T,O<:Operator{T}} <: AbstractLowRankOperator{T}
     U::Vector{VFun{S,T}}
-    V::Vector{Operator{T}}
+    V::Vector{O}
 
-    function LowRankOperator{S,T}(U::Vector{VFun{S,T}},V::Vector{Operator{T}}) where {S,T}
+    function LowRankOperator{S,T}(U::Vector{VFun{S,T}}, V::Vector{O}) where {S,T,O<:Operator{T}}
         @assert all(isafunctional,V)
 
         @assert length(U) == length(V)
@@ -19,19 +19,18 @@ struct LowRankOperator{S<:Space,T} <: AbstractLowRankOperator{T}
         for k=2:length(U)
             @assert space(U[k])==rs
         end
-        new{S,T}(U,V)
+        new{S,T,O}(U,V)
     end
 end
 
 
 
-LowRankOperator(U::Vector{VFun{S,T}},V::Vector{Operator{T}}) where {S,T} = LowRankOperator{S,T}(U,V)
-LowRankOperator(U::Vector{VFun{S,T1}},V::Vector{Operator{T2}}) where {S,T1,T2} =
-    LowRankOperator(strictconvert(Vector{VFun{S,promote_type(T1,T2)}},U),
-                    strictconvert(Vector{Operator{promote_type(T1,T2)}},V))
-LowRankOperator(U::Vector{FF},V::Vector{FT}) where {FF<:Fun,FT<:Operator} =
-    LowRankOperator(U,strictconvert(Vector{Operator{eltype(FT)}},V))
-
+LowRankOperator(U::Vector{VFun{S,T}}, V::Vector{<:Operator{T}}) where {S,T} = LowRankOperator{S,T}(U,V)
+function LowRankOperator(U::Vector{VFun{S,T1}}, V::Vector{<:Operator}) where {S,T1}
+    T2 = eltype(eltype(v))
+    T = promote_type(T1,T2)
+    LowRankOperator(strictconvert(Vector{VFun{S,T}},U), map(Operator{T}, V))
+end
 
 
 LowRankOperator(B::AbstractVector,S...) = LowRankOperator(strictconvert(Vector{Operator{Float64}},B),S...)
@@ -54,11 +53,11 @@ rangespace(L::LowRankOperator) = space(first(L.U))
 promoterangespace(L::LowRankOperator,sp::Space) = LowRankOperator(map(u->Fun(u,sp),L.U),L.V)
 promotedomainspace(L::LowRankOperator,sp::Space) = LowRankOperator(L.U,map(v->promotedomainspace(v,sp),L.V))
 
-function Base.getindex(L::LowRankOperator,k::Integer,j::Integer)
+function Base.getindex(L::LowRankOperator, k::Integer,j::Integer)
     ret=zero(eltype(L))
-    for p=1:length(L.U)
-        if k≤ncoefficients(L.U[p])
-            ret+=L.U[p].coefficients[k]*L.V[p][j]
+    for p in eachindex(L.U)
+        if k ≤ ncoefficients(L.U[p])
+            ret += coefficient(L.U[p], k) * L.V[p][j]
         end
     end
     ret
