@@ -37,7 +37,7 @@ function resizedata!(B::CachedOperator{T,RaggedMatrix{T}},::Colon,n::Integer) wh
         end
 
         pad!(B.data.data,B.data.cols[n+1]-1)
-        B.data.m = K
+        B.data = RaggedMatrix(B.data.data, B.data.cols, K)
 
         jr=B.datasize[2]+1:n
         kr=1:K
@@ -52,7 +52,7 @@ end
 
 function resizedata!(B::CachedOperator{T,RaggedMatrix{T}},n::Integer,m::Integer) where T<:Number
     resizedata!(B,:,m)
-    B.data.m = max(B.data.m,n)   # make sure we have at least n rows
+    B.data = RaggedMatrix(B.data.data, B.data.cols, max(B.data.m,n))   # make sure we have at least n rows
 
     B
 end
@@ -79,7 +79,7 @@ function resizedata!(QR::QROperator{<:CachedOperator{T,RaggedMatrix{T}}}, ::Colo
         for J=1:QR.ncols
             wp=view(W,1:colstop(W,J),J)
             for j = m+1:MO.datasize[2]
-                kr = J:J+length(wp)-1
+                kr = range(J, length=length(wp))
                 v = view(MO.data,kr,j)
                 dt = dot(wp,v)
                 axpy!(-2dt, wp, v)
@@ -92,11 +92,13 @@ function resizedata!(QR::QROperator{<:CachedOperator{T,RaggedMatrix{T}}}, ::Colo
         m = size(W,2)
         resize!(W.cols,col+101)
 
+        Wm = W.m
         for j=m+1:col+100
             cs = colstop(MO.data,j)
             W.cols[j+1] = W.cols[j] + cs-j+1
-            W.m = max(W.m,cs-j+1)
+            Wm = max(Wm, cs-j+1)
         end
+        W = RaggedMatrix(W.data, W.cols, Wm)
 
         resize!(W.data,W.cols[end]-1)
     end
