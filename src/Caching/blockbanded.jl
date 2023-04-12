@@ -201,7 +201,7 @@ QROperator(R::CachedOperator{T,BlockBandedMatrix{T}}) where {T} =
 resizedata!(QR::QROperator{<:CachedOperator{T,BlockBandedMatrix{T}}}, ::Colon, col::Int) where {T} =
     resizedata!(QR, :, block(domainspace(QR.R_cache),col))
 
-function resizedata!(QR::QROperator{<:CachedOperator{T,BlockBandedMatrix{T}}}, ::Colon, COL::Block) where {T}
+function resizedata!(QR::QROperator{<:CachedOperator{T,BlockBandedMatrix{T}}, <:RaggedMatrix}, ::Colon, COL::Block) where {T}
      MO = QR.R_cache
      W = QR.H
      R = MO.data

@@ -63,7 +63,7 @@ end
 QROperator(R::CachedOperator{T,RaggedMatrix{T}}) where {T} =
     QROperator(R,RaggedMatrix{T}(undef,0,Int[]),0)
 
-function resizedata!(QR::QROperator{<:CachedOperator{T,RaggedMatrix{T}}}, ::Colon, col) where {T}
+function resizedata!(QR::QROperator{<:CachedOperator{T,RaggedMatrix{T}}, <:RaggedMatrix}, ::Colon, col) where {T}
     if col ≤ QR.ncols
         return QR
     end
