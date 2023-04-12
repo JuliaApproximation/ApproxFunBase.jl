@@ -174,7 +174,6 @@ function mindotu(a::AbstractVector,b::AbstractVector)
 end
 
 
-# efficiently resize a Matrix.  Note it doesn't change the input ptr
 function unsafe_resize!(W::AbstractMatrix,::Colon,m::Integer)
     if m == size(W,2)
         W
