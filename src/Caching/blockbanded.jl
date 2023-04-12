@@ -201,7 +201,7 @@ QROperator(R::CachedOperator{T,BlockBandedMatrix{T}}) where {T} =
 resizedata!(QR::QROperator{<:CachedOperator{T,BlockBandedMatrix{T}}}, ::Colon, col::Int) where {T} =
     resizedata!(QR, :, block(domainspace(QR.R_cache),col))
 
-function resizedata!(QR::QROperator{<:CachedOperator{T,BlockBandedMatrix{T}}}, ::Colon, COL::Block) where {T<:BlasFloat}
+function resizedata!(QR::QROperator{<:CachedOperator{T,BlockBandedMatrix{T}}}, ::Colon, COL::Block) where {T}
      MO = QR.R_cache
      W = QR.H
      R = MO.data
@@ -235,13 +235,16 @@ function resizedata!(QR::QROperator{<:CachedOperator{T,BlockBandedMatrix{T}}}, :
          m = size(W,2)
          resize!(W.cols, 2col+1)
 
+         Wm = W.m
          for j=m+1:2col
              cs = blockstop(rangespace(MO), blockcolstop(MO, block(domainspace(MO),j)))
              W.cols[j+1]=W.cols[j] + cs-j+1
-             W.m=max(W.m,cs-j+1)
+             Wm=max(Wm,cs-j+1)
          end
 
          resize!(W.data, W.cols[end]-1)
+         W = RaggedMatrix(W.data, W.cols, Wm)
+         QR.H = W
      end
 
      ri = firstindex(R.data)
