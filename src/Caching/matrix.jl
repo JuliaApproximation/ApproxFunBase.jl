@@ -11,12 +11,8 @@ function resizedata!(B::CachedOperator{T,Matrix{T}},n::Integer,m::Integer) where
 
     # this does nothing if already in dimensions
     N,M=size(B.data)
-    if n > N && m > M
-        B.data = unsafe_resize!(B.data,n,m)
-    elseif n > N
-        B.data = unsafe_resize!(B.data,n,:)
-    elseif m > M
-        B.data = unsafe_resize!(B.data,:,m)
+    if !(n < N && m < M)
+        B.data = unsafe_resize!(B.data,max(n,N),max(m,M))
     end
 
     if n ≤ B.datasize[1] && m ≤ B.datasize[2]
