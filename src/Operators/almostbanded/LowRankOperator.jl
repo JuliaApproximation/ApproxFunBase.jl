@@ -32,10 +32,7 @@ function LowRankOperator(U::Vector{VFun{S,T1}}, V::Vector{<:Operator}) where {S,
     LowRankOperator(strictconvert(Vector{VFun{S,T}},U), map(Operator{T}, V))
 end
 
-
-LowRankOperator(B::AbstractVector,S...) = LowRankOperator(map(Operator{Float64} ,B), S...)
-
-LowRankOperator(A::Fun,B::Operator) = LowRankOperator([A],[B])
+LowRankOperator(A::Fun, B::Operator) = LowRankOperator([A], [B])
 
 
 function convert(::Type{Operator{T}},L::LowRankOperator{S}) where {S,T}
@@ -57,9 +54,9 @@ promotedomainspace(L::LowRankOperator,sp::Space) = LowRankOperator(L.U,map(v->pr
 
 function Base.getindex(L::LowRankOperator, k::Integer,j::Integer)
     ret=zero(eltype(L))
-    for p in eachindex(L.U)
-        if k ≤ ncoefficients(L.U[p])
-            ret += coefficient(L.U[p], k) * L.V[p][j]
+    for (p, LUp) in enumerate(L.U)
+        if k ≤ ncoefficients(LUp)
+            ret += coefficient(LUp, k) * L.V[p][j]
         end
     end
     ret
