@@ -240,7 +240,7 @@ function splice_times(ops)
     newops
 end
 
-struct TimesOperator{T,BW,SZ,O<:Operator{T},BBW,SBBW} <: Operator{T}
+struct TimesOperator{T,BW,SZ,O<:Operator{T},BBW,SBBW,D} <: Operator{T}
     ops::Vector{O}
     bandwidths::BW
     sz::SZ
@@ -249,19 +249,21 @@ struct TimesOperator{T,BW,SZ,O<:Operator{T},BBW,SBBW} <: Operator{T}
     isbandedblockbanded::Bool
     israggedbelow::Bool
     isafunctional::Bool
+    domainspace::D
 
     Base.@constprop :aggressive function TimesOperator{T,BW,SZ,O,BBW,SBBW}(ops::Vector{O}, bw::BW,
             sz::SZ, bbw::BBW, sbbw::SBBW,
-            ibbb::Bool, irb::Bool, isaf::Bool;
-            anytimesop = any(x -> x isa TimesOperator, ops)) where {T,O<:Operator{T},BW,SZ,BBW,SBBW}
+            ibbb::Bool, irb::Bool, isaf::Bool, dsp::D;
+            anytimesop = any(x -> x isa TimesOperator, ops)) where {T,O<:Operator{T},BW,SZ,BBW,SBBW,D}
 
+        dsp == domainspace(ops[end]) || throw(ArgumentError("incompatible domainspace"))
         # check compatible
         check_times(ops)
 
         # remove TimesOperators buried inside ops
         newops = anytimesop ? splice_times(ops) : ops
 
-        new{T,BW,SZ,O,BBW,SBBW}(newops, bw, sz, bbw, sbbw, ibbb, irb, isaf)
+        new{T,BW,SZ,O,BBW,SBBW,D}(newops, bw, sz, bbw, sbbw, ibbb, irb, isaf, dsp)
     end
 end
 
@@ -280,11 +282,12 @@ function TimesOperator(ops::AbstractVector{O},
         sbbw::Tuple{Any,Any}=bandwidthssum(subblockbandwidths, ops),
         ibbb::Bool=all(isbandedblockbanded, ops),
         irb::Bool=all(israggedbelow, ops),
-        isaf::Bool = sz[1] == 1 && isconstspace(rangespace(first(ops)));
+        isaf::Bool = sz[1] == 1 && isconstspace(rangespace(first(ops))),
+        dsp = domainspace(last(ops));
         anytimesop = any(x -> x isa TimesOperator, ops),
         ) where {O<:Operator}
     TimesOperator{eltype(O),typeof(bw),typeof(sz),O,typeof(bbw),typeof(sbbw)}(
-        convert_vector(ops), bw, sz, bbw, sbbw, ibbb, irb, isaf; anytimesop)
+        convert_vector(ops), bw, sz, bbw, sbbw, ibbb, irb, isaf, dsp; anytimesop)
 end
 
 _extractops(A::TimesOperator, ::typeof(*)) = A.ops
@@ -300,8 +303,9 @@ function TimesOperator(A::Operator, Bs::Operator...)
     bwsum = bandwidthssum(bandwidths, ops)
     bbwsum = bandwidthssum(blockbandwidths, ops)
     subbbwsum = bandwidthssum(subblockbandwidths, ops)
+    dsp = domainspace(last(ops))
     TimesOperator(convert_vector(v), bwsum, sz,
-        bbwsum, subbbwsum, ibbb, irb, isaf;
+        bbwsum, subbbwsum, ibbb, irb, isaf, dsp;
         anytimesop)
 end
 
@@ -317,7 +321,8 @@ function convert(::Type{Operator{T}}, P::TimesOperator) where {T}
                       _convertops(Operator{T}, ops),
             bandwidths(P), size(P), blockbandwidths(P),
             subblockbandwidths(P), isbandedblockbanded(P),
-            israggedbelow(P), P.isafunctional, anytimesop = false)::Operator{T}
+            israggedbelow(P), P.isafunctional, domainspace(P),
+            anytimesop = false)::Operator{T}
     end
 end
 
@@ -330,7 +335,7 @@ Base.@constprop :aggressive function promotetimes(opsin,
     sz = _timessize(ops)
     isaf = sz[1] == 1 && isconstspace(rangespace(first(ops)))
     anytimesop = any(x -> x isa TimesOperator, ops)
-    TimesOperator(convert_vector(ops), bw, sz, bbw, sbbw, ibbb, irb, isaf; anytimesop)
+    TimesOperator(convert_vector(ops), bw, sz, bbw, sbbw, ibbb, irb, isaf, dsp; anytimesop)
 end
 maybenarroweltype(::AbstractVector{Operator{T}}) where {T} = Operator{T}
 maybenarroweltype(opsin) = mapreduce(operatortype, promote_type, opsin)
@@ -384,7 +389,8 @@ end
     end
 end
 
-domainspace(P::PlusOrTimesOp) = domainspace(last(P.ops))
+domainspace(P::PlusOperator) = domainspace(last(P.ops))
+domainspace(T::TimesOperator) = T.domainspace
 rangespace(P::PlusOrTimesOp) = rangespace(first(P.ops))
 
 domain(P::TimesOperator) = commondomain(P.ops)

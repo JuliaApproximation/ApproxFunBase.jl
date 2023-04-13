@@ -295,9 +295,10 @@ end
             f = Fun(sp, coeff)
             for sp2 in Any[(), (sp,)]
                 M = Multiplication(f, sp2...)
-                a = (M * M) * M
-                b = M * (M * M)
+                a = TimesOperator(M, M) * M
+                b = M * TimesOperator(M, M)
                 @test a == b
+                @test (@inferred domainspace(a)) == domainspace(M)
                 @test bandwidths(a) == bandwidths(b)
             end
             M = Multiplication(Fun(PointSpace(1:3)))
