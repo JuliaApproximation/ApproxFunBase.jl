@@ -245,6 +245,9 @@ end
                 @test a == b
                 @test bandwidths(a) == bandwidths(b)
             end
+            M = Multiplication(Fun(PointSpace(1:3)))
+            M2 = M : PointSpace(1:3)
+            @test size(M * M2) == (3,3)
             @testset "unwrap TimesOperator" begin
                 M = Multiplication(f)
                 for ops in (Operator{Float64}[M, M * M], Operator{Float64}[M*M, M])
