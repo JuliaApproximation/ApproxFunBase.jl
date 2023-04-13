@@ -10,7 +10,7 @@ struct LowRankPertOperator{OO,LR,T} <: Operator{T}
 end
 
 function LowRankPertOperator(Bin::Operator,Lin::LowRankOperator)
-    B,L2=promotedomainspace([Bin,Lin])
+    B,L2=promotedomainspace((Bin,Lin))
     rsp=rangespace(B)  # use rangespace of B because LowRankOperator only
                         # needs convert, and its unlikely that the rangespaces
                         # will be inferred from L
