@@ -238,7 +238,7 @@ struct TimesOperator{T,BW,SZ,O<:Operator{T},BBW,SBBW} <: Operator{T}
         # check compatible
         for k = 1:length(ops)-1
             size(ops[k], 2) == size(ops[k+1], 1) || throw(ArgumentError("incompatible operator sizes"))
-            spacescompatible(domainspace(ops[k]), rangespace(ops[k+1])) || throw(ArgumentError("imcompatible spaces at index $k"))
+            spacescompatible(domainspace(ops[k]), rangespace(ops[k+1])) || throw(ArgumentError("incompatible spaces at index $k"))
         end
 
         # remove TimesOperators buried inside ops
@@ -313,12 +313,12 @@ else
 end
 @inline function _promotetimes(opsin,
     dsp=domainspace(last(opsin)),
-    sz=_timessize(opsin),
     anytimesop=true)
 
     @assert length(opsin) > 1 "need at least 2 operators"
     ops, bw, bbw, sbbw, ibbb, irb = __promotetimes(opsin, dsp, anytimesop)
-    TimesOperator(ops, bw, sz, bbw, sbbw, ibbb, irb)
+    sz = _timessize(ops)
+    TimesOperator(convert_vector(ops), bw, sz, bbw, sbbw, ibbb, irb)
 end
 function __promotetimes(opsin, dsp, anytimesop)
     ops = Vector{Operator{promote_eltypeof(opsin)}}(undef, 0)
@@ -341,7 +341,7 @@ function __promotetimes(opsin, dsp, anytimesop)
     all(israggedbelow, ops)
 end
 @inline function _op_bws(op)
-    [op], bandwidths(op), blockbandwidths(op),
+    (op,), bandwidths(op), blockbandwidths(op),
     subblockbandwidths(op), isbandedblockbanded(op),
     israggedbelow(op)
 end
@@ -364,7 +364,7 @@ end
         op2_dsp = op2:dsp
         op1_dsp = op1:rangespace(op2_dsp)
         ops = (op1_dsp, op2_dsp)
-        return [ops...], bandwidthssum(ops),
+        return ops, bandwidthssum(ops),
             bandwidthssum(ops, blockbandwidths),
             bandwidthssum(ops, subblockbandwidths),
             all(isbandedblockbanded, ops),
@@ -600,8 +600,7 @@ function A_mul_B(A::Operator, B::Operator; dspB=domainspace(B), rspA=rangespace(
     elseif isconstop(B)
         promotedomainspace(strictconvert(Number, B) * A, dspB)
     else
-        promotetimes(collateops(*, A, B),
-            dspB, _timessize((A, B)), false)
+        promotetimes(collateops(*, A, B), dspB, false)
     end
 end
 
