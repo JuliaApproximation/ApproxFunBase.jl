@@ -33,14 +33,16 @@ function LowRankOperator(U::Vector{VFun{S,T1}}, V::Vector{<:Operator}) where {S,
 end
 
 
-LowRankOperator(B::AbstractVector,S...) = LowRankOperator(strictconvert(Vector{Operator{Float64}},B),S...)
+LowRankOperator(B::AbstractVector,S...) = LowRankOperator(map(Operator{Float64} ,B), S...)
 
 LowRankOperator(A::Fun,B::Operator) = LowRankOperator([A],[B])
 
 
-convert(::Type{Operator{T}},L::LowRankOperator{S}) where {S,T} =
+function convert(::Type{Operator{T}},L::LowRankOperator{S}) where {S,T}
+    L isa Operator{T} && return L
     LowRankOperator{S,T}(strictconvert(Vector{VFun{S,T}},L.U),
-                         strictconvert(Vector{Operator{T}},L.V))
+                         map(Operator{T}, L.V))
+end
 
 
 datasize(L::LowRankOperator,k) =
