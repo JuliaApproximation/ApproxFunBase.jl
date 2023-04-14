@@ -418,6 +418,13 @@ end
         test_matrices(F)
         test_matrices(im*F)
     end
+    @testset "SpaceOperator" begin
+        # somewhat contrived test
+        sp = PointSpace(1:3)
+        M = Multiplication(Fun(sp)) # no spaces attached, so size is undefined (infinite by default)
+        S = ApproxFunBase.SpaceOperator(M, sp, sp)
+        @test size(S) == (3,3)
+    end
 end
 
 @testset "RowVector" begin

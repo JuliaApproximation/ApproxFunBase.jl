@@ -492,19 +492,31 @@ haswrapperstructure(_) = false
 # not necessarily the same entries
 #
 #  Ex: c*op or real(op)
-macro wrapperstructure(Wrap)
-    v1 = map((:(ApproxFunBase.bandwidths),:(LinearAlgebra.stride),
-                 :(ApproxFunBase.isbandedblockbanded),:(ApproxFunBase.isblockbanded),
-                 :(ApproxFunBase.israggedbelow),:(Base.size),:(ApproxFunBase.isbanded),
-                 :(ApproxFunBase.blockbandwidths),:(ApproxFunBase.subblockbandwidths),
-                 :(LinearAlgebra.issymmetric))) do func
+macro wrapperstructure(Wrap, forwardsize = true)
+    fns = [:(ApproxFunBase.bandwidths),:(LinearAlgebra.stride),
+             :(ApproxFunBase.isbandedblockbanded),:(ApproxFunBase.isblockbanded),
+             :(ApproxFunBase.israggedbelow),:(ApproxFunBase.isbanded),
+             :(ApproxFunBase.blockbandwidths),:(ApproxFunBase.subblockbandwidths),
+             :(LinearAlgebra.issymmetric)]
+
+    if forwardsize
+        fns = [fns; :(Base.size)]
+    end
+
+    v1 = map(fns) do func
 
         :($func(D::$Wrap) = $func(D.op))
     end
 
-    v2 = map((:(ApproxFunBase.bandwidth),:(ApproxFunBase.colstart),:(ApproxFunBase.colstop),
-                     :(ApproxFunBase.rowstart),:(ApproxFunBase.rowstop),:(ApproxFunBase.blockbandwidth),
-                     :(Base.size),:(ApproxFunBase.subblockbandwidth))) do func
+    fns2 = [:(ApproxFunBase.bandwidth),:(ApproxFunBase.colstart),:(ApproxFunBase.colstop),
+             :(ApproxFunBase.rowstart),:(ApproxFunBase.rowstop),:(ApproxFunBase.blockbandwidth),
+             :(ApproxFunBase.subblockbandwidth)]
+
+    if forwardsize
+        fns2 = [fns2; :(Base.size)]
+    end
+
+    v2 = map(fns2) do func
         quote
              $func(D::$Wrap,k::Integer) = $func(D.op,k)
              $func(A::$Wrap,i::ApproxFunBase.PosInfinity) = ℵ₀ # $func(A.op,i) | see PR #42
@@ -525,7 +537,7 @@ end
 # use this for wrapper operators that have the same entries but
 # not necessarily the same spaces
 #
-macro wrappergetindex(Wrap)
+macro wrappergetindex(Wrap, forwardsize = true)
     v = map((:(ApproxFunBase.BandedMatrix),:(ApproxFunBase.RaggedMatrix),
                 :Matrix,:Vector,:AbstractVector)) do TYP
         quote
@@ -602,7 +614,7 @@ macro wrappergetindex(Wrap)
             end
         end
 
-        ApproxFunBase.@wrapperstructure($Wrap) # structure is automatically inherited
+        ApproxFunBase.@wrapperstructure($Wrap, $forwardsize) # structure is automatically inherited
     end
 
     esc(ret)
