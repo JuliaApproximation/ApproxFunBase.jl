@@ -23,5 +23,5 @@ end
 # assume that the basis label starts at zero
 function basisfunction(sp, oneindex)
 	oneindex >= 0 || throw(ArgumentError("index to set to one must be non-negative, received $oneindex"))
-	Fun(sp, _OneElement(oneindex, oneindex))
+	Fun(sp, _OneElement{Float64}(oneindex, oneindex))
 end
