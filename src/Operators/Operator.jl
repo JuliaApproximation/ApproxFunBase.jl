@@ -110,9 +110,9 @@ blocksize(A::Operator,k) = k==1 ? length(blocklengths(rangespace(A))) : length(b
 blocksize(A::Operator) = (blocksize(A,1),blocksize(A,2))
 
 
-Base.size(A::Operator) = (size(A,1),size(A,2))
-Base.size(A::Operator,k::Integer) = k==1 ? dimension(rangespace(A)) : dimension(domainspace(A))
-Base.length(A::Operator) = size(A,1) * size(A,2)
+size(A::Operator) = (size(A,1),size(A,2))
+size(A::Operator,k::Integer) = k==1 ? dimension(rangespace(A)) : dimension(domainspace(A))
+length(A::Operator) = size(A,1) * size(A,2)
 
 
 # used to compute "end" for last index

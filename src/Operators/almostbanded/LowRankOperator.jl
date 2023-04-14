@@ -51,7 +51,7 @@ rangespace(L::LowRankOperator) = space(first(L.U))
 promoterangespace(L::LowRankOperator,sp::Space) = LowRankOperator(map(u->Fun(u,sp),L.U),L.V)
 promotedomainspace(L::LowRankOperator,sp::Space) = LowRankOperator(L.U,map(v->promotedomainspace(v,sp),L.V))
 
-function Base.getindex(L::LowRankOperator, k::Integer,j::Integer)
+function getindex(L::LowRankOperator, k::Integer,j::Integer)
     ret=zero(eltype(L))
     for (p, LUp) in enumerate(L.U)
         if k ≤ ncoefficients(LUp)

@@ -357,9 +357,9 @@ DefiniteLineIntegral(sp::PiecewiseSpace) =
 
 ## TensorSpace of two PiecewiseSpaces
 
-Base.getindex(d::TensorSpace{Tuple{PWS1,PWS2}},i::Integer,j::Integer) where {PWS1<:PiecewiseSpace,PWS2<:PiecewiseSpace} =
+getindex(d::TensorSpace{Tuple{PWS1,PWS2}},i::Integer,j::Integer) where {PWS1<:PiecewiseSpace,PWS2<:PiecewiseSpace} =
     d[1][i]⊗d[2][j]
-Base.getindex(d::TensorSpace{Tuple{PWS1,PWS2}},i::AbstractRange,j::AbstractRange) where {PWS1<:PiecewiseSpace,PWS2<:PiecewiseSpace} =
+getindex(d::TensorSpace{Tuple{PWS1,PWS2}},i::AbstractRange,j::AbstractRange) where {PWS1<:PiecewiseSpace,PWS2<:PiecewiseSpace} =
     PiecewiseSpace(d[1][i])⊗PiecewiseSpace(d[2][j])
 
 ## ProductFun

@@ -425,18 +425,18 @@ function mul_coefficients(A::SubOperator{T,KKO,NTuple{2,UnitRange{Int}}}, b) whe
     M*pad(b, size(M,2))
 end
 
-Base.getindex(A::KroneckerOperator, B::MultivariateFun) = A[Fun(B)]
-function Base.getindex(K::KroneckerOperator, f::LowRankFun)
+getindex(A::KroneckerOperator, B::MultivariateFun) = A[Fun(B)]
+function getindex(K::KroneckerOperator, f::LowRankFun)
     op1, op2 = K.ops
     sum(zip(f.A, f.B)) do (A,B)
         op1[A] ⊗ op2[B]
     end
 end
-Base.getindex(K::KroneckerOperator, B::ProductFun) = K[LowRankFun(B)]
+getindex(K::KroneckerOperator, B::ProductFun) = K[LowRankFun(B)]
 
 for F in [:MultivariateFun, :ProductFun, :LowRankFun]
     for O in WrapperList
-        @eval Base.getindex(K::$O{<:KroneckerOperator}, f::$F) = K.op[f]
+        @eval getindex(K::$O{<:KroneckerOperator}, f::$F) = K.op[f]
         @eval (*)(A::$O{<:KroneckerOperator}, B::$F) = A.op * B
         @eval (*)(A::$F, B::$O{<:KroneckerOperator}) = A * B.op
     end
