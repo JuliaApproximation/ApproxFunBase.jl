@@ -58,7 +58,7 @@ getindex(f::ArraySpace,k...) = Space(component(f,k...))
 iterate(f::Fun{<:ArraySpace}) = iterate(components(f))
 
 
-Base.reshape(AS::ArraySpace,k...) = ArraySpace(reshape(AS.spaces,k...))
+reshape(AS::ArraySpace,k...) = ArraySpace(reshape(AS.spaces,k...))
 dimension(AS::ArraySpace) = mapreduce(dimension,+,AS.spaces,init=0)
 
 # TODO: union domain
@@ -112,14 +112,14 @@ repeat(A::ArraySpace,n,m) = ArraySpace(repeat(A.spaces,n,m))
 
 component(A::MatrixSpace,k::Integer,j::Integer) = A.spaces[k,j]
 
-Base.getindex(f::Fun{DSS},k::Integer) where {DSS<:ArraySpace} = component(f,k)
+getindex(f::Fun{DSS},k::Integer) where {DSS<:ArraySpace} = component(f,k)
 
 
-Base.getindex(f::Fun{<:MatrixSpace},k::Integer,j::Integer) =
+getindex(f::Fun{<:MatrixSpace},k::Integer,j::Integer) =
     f[k+stride(f,2)*(j-1)]
 
-Base.getindex(f::Fun{DSS},kj::CartesianIndex{1}) where {DSS<:ArraySpace} = f[kj[1]]
-Base.getindex(f::Fun{DSS},kj::CartesianIndex{2}) where {DSS<:ArraySpace} = f[kj[1],kj[2]]
+getindex(f::Fun{DSS},kj::CartesianIndex{1}) where {DSS<:ArraySpace} = f[kj[1]]
+getindex(f::Fun{DSS},kj::CartesianIndex{2}) where {DSS<:ArraySpace} = f[kj[1],kj[2]]
 
 
 function Fun(A::AbstractMatrix{<:Fun{<:VectorSpace{S},V,VV}}) where {S,V,VV}
@@ -189,7 +189,7 @@ function choosedomainspace(A::VectorInterlaceOperator, sp::ArraySpace)
 end
 
 
-Base.reshape(f::Fun{AS},k...) where {AS<:ArraySpace} = Fun(reshape(space(f),k...),f.coefficients)
+reshape(f::Fun{AS},k...) where {AS<:ArraySpace} = Fun(reshape(space(f),k...),f.coefficients)
 
 Base.diff(f::Fun{AS,T},n...) where {AS<:ArraySpace,T} = Fun(diff(Array(f),n...))
 

@@ -73,7 +73,7 @@ blockbandwidths(C::CachedOperator{T,BM,M}) where {T<:Number,BM<:BandedMatrix,M<:
 @wrapperstructure CachedOperator
 
 
-@propagate_inbounds function Base.getindex(B::CachedOperator,k::Integer,j::Integer)
+@propagate_inbounds function getindex(B::CachedOperator,k::Integer,j::Integer)
     resizedata!(B,k,j)
     if k ≤ size(B.data,1) && j ≤ size(B.data,2)
         B.data[k,j]
@@ -82,7 +82,7 @@ blockbandwidths(C::CachedOperator{T,BM,M}) where {T<:Number,BM<:BandedMatrix,M<:
     end
 end
 
-function Base.getindex(B::CachedOperator,k::AbstractRange,j::AbstractRange)
+function getindex(B::CachedOperator,k::AbstractRange,j::AbstractRange)
     if !isempty(k) && !isempty(j)
         resizedata!(B,maximum(k),maximum(j))
         B.data[k,j]
@@ -91,7 +91,7 @@ function Base.getindex(B::CachedOperator,k::AbstractRange,j::AbstractRange)
     end
 end
 
-function Base.getindex(B::CachedOperator,k::Integer)
+function getindex(B::CachedOperator,k::Integer)
     if size(B,1)==1
         B[1,k]
     elseif size(B,2)==1
@@ -101,12 +101,12 @@ function Base.getindex(B::CachedOperator,k::Integer)
     end
 end
 
-@propagate_inbounds function Base.setindex!(B::CachedOperator,v,k,j)
+@propagate_inbounds function setindex!(B::CachedOperator,v,k,j)
     resizedata!(B,k,j)
     B.data[k,j] = v
 end
 
-@propagate_inbounds function Base.setindex!(B::CachedOperator,v,k::Integer)
+@propagate_inbounds function setindex!(B::CachedOperator,v,k::Integer)
     if size(B,1)==1
         B[1,k] = v
     elseif size(B,2)==1
