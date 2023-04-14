@@ -84,6 +84,25 @@ end
                 @test pad(a, 2) == @view(a[1:2])
             end
         end
+
+        @testset "BandedMatrix" begin
+            B = BandedMatrix(0=>[1:4;])
+            B11 = pad(B, 1, 1)
+            @test B11 isa BandedMatrix
+            @test B11 == BandedMatrix(0=>[1])
+            B16 = pad(B, 1, 6)
+            @test B16 isa BandedMatrix
+            @test B16 == BandedMatrix((0=>[1],), (1,6), (0,0))
+            B61 = pad(B, 6, 1)
+            @test B61 isa BandedMatrix
+            @test B61 == BandedMatrix((0=>[1],), (6,1), (0,0))
+            B66 = pad(B, 6, 6)
+            @test B66 isa BandedMatrix
+            @test B66 == BandedMatrix(0=>[1:4;0;0])
+            B23 = pad(B, 2, 3)
+            @test B23 isa BandedMatrix
+            @test B23 == BandedMatrix((0=>[1,2],), (2,3), (0,0))
+        end
     end
     @testset "nocat" begin
         D = Derivative()

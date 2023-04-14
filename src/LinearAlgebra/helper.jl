@@ -261,7 +261,7 @@ end
 
 function pad(A::BandedMatrix, n::Integer, m::Integer)
     B = BandedMatrix{eltype(A)}(undef, (n,m), bandwidths(A))
-    copyto!(B.data, A.data)
+    copyto!(B.data, firstindex(B.data), A.data, firstindex(A.data), min(length(A.data), length(B.data)))
     B.data[length(A.data)+1:end] .= 0
     return B
 end
