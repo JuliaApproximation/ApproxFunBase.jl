@@ -46,7 +46,7 @@ end
 
 # Similar to wrapper, but different domain/domainspace/rangespace
 
-@wrappergetindex SpaceOperator
+@wrappergetindex SpaceOperator false
 
 # SpaceOperator can change blocks, so we need to override this
 getindex(A::SpaceOperator,KR::BlockRange, JR::BlockRange) = defaultgetindex(A,KR,JR)
