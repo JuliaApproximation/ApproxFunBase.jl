@@ -471,6 +471,7 @@ promotedomainspace(A::InterlaceOperator{T,1},sp::Space) where {T} =
 
 
 interlace(A::AbstractArray{<:Operator}) = InterlaceOperator(A)
+interlace(A::Tuple{Operator,Vararg{Operator}}) = InterlaceOperator(A)
 
 const OperatorTypes = Union{Operator,Fun,Number,UniformScaling}
 
