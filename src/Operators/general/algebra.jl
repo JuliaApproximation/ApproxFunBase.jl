@@ -221,7 +221,22 @@ axpy!(α, S::SubOperator{T,OP}, A::AbstractMatrix) where {T,OP<:ConstantTimesOpe
 
 
 
+function check_times(ops)
+    for k = 1:length(ops)-1
+        size(ops[k], 2) == size(ops[k+1], 1) || throw(ArgumentError("incompatible operator sizes"))
+        spacescompatible(domainspace(ops[k]), rangespace(ops[k+1])) || throw(ArgumentError("incompatible spaces at index $k"))
+    end
+    return nothing
+end
 
+function splice_times(ops)
+    timesinds = findall(x -> isa(x, TimesOperator), ops)
+    newops = copy(ops)
+    for ind in timesinds
+        splice!(newops, ind, ops[ind].ops)
+    end
+    newops
+end
 
 struct TimesOperator{T,BW,SZ,O<:Operator{T},BBW,SBBW} <: Operator{T}
     ops::Vector{O}
@@ -231,28 +246,36 @@ struct TimesOperator{T,BW,SZ,O<:Operator{T},BBW,SBBW} <: Operator{T}
     subblockbandwidths::SBBW
     isbandedblockbanded::Bool
     israggedbelow::Bool
+    isafunctional::Bool
 
-    function TimesOperator{T,BW,SZ,O,BBW,SBBW}(ops::Vector{O}, bw::BW,
-        sz::SZ, bbw::BBW, sbbw::SBBW,
-        ibbb::Bool, irb::Bool) where {T,O<:Operator{T},BW,SZ,BBW,SBBW}
-        # check compatible
-        for k = 1:length(ops)-1
-            size(ops[k], 2) == size(ops[k+1], 1) || throw(ArgumentError("incompatible operator sizes"))
-            spacescompatible(domainspace(ops[k]), rangespace(ops[k+1])) || throw(ArgumentError("incompatible spaces at index $k"))
+    @static if VERSION >= v"1.8"
+        Base.@constprop :aggressive function TimesOperator{T,BW,SZ,O,BBW,SBBW}(ops::Vector{O}, bw::BW,
+                sz::SZ, bbw::BBW, sbbw::SBBW,
+                ibbb::Bool, irb::Bool, isaf::Bool;
+                anytimesop = any(x -> x isa TimesOperator, ops)) where {T,O<:Operator{T},BW,SZ,BBW,SBBW}
+
+            # check compatible
+            check_times(ops)
+
+            # remove TimesOperators buried inside ops
+            newops = anytimesop ? splice_times(ops) : ops
+
+            new{T,BW,SZ,O,BBW,SBBW}(newops, bw, sz, bbw, sbbw, ibbb, irb, isaf)
         end
+    else
+        function TimesOperator{T,BW,SZ,O,BBW,SBBW}(ops::Vector{O}, bw::BW,
+                sz::SZ, bbw::BBW, sbbw::SBBW,
+                ibbb::Bool, irb::Bool, isaf::Bool;
+                anytimesop = any(x -> x isa TimesOperator, ops)) where {T,O<:Operator{T},BW,SZ,BBW,SBBW}
 
-        # remove TimesOperators buried inside ops
-        timesinds = findall(x -> isa(x, TimesOperator), ops)
-        if !isempty(timesinds)
-            newops = copy(ops)
-            for ind in timesinds
-                splice!(newops, ind, ops[ind].ops)
-            end
-        else
-            newops = ops
+            # check compatible
+            check_times(ops)
+
+            # remove TimesOperators buried inside ops
+            newops = anytimesop ? splice_times(ops) : ops
+
+            new{T,BW,SZ,O,BBW,SBBW}(newops, bw, sz, bbw, sbbw, ibbb, irb, isaf)
         end
-
-        new{T,BW,SZ,O,BBW,SBBW}(newops, bw, sz, bbw, sbbw, ibbb, irb)
     end
 end
 
@@ -273,9 +296,11 @@ function TimesOperator(ops::AbstractVector{O},
         sbbw::Tuple{Any,Any}=bandwidthssum(ops, subblockbandwidths),
         ibbb::Bool=all(isbandedblockbanded, ops),
         irb::Bool=all(israggedbelow, ops),
+        isaf::Bool = sz[1] == 1 && isconstspace(rangespace(first(ops)));
+        anytimesop = any(x -> x isa TimesOperator, ops),
         ) where {O<:Operator}
     TimesOperator{eltype(O),typeof(bw),typeof(sz),O,typeof(bbw),typeof(sbbw)}(
-        convert_vector(ops), bw, sz, bbw, sbbw, ibbb, irb)
+        convert_vector(ops), bw, sz, bbw, sbbw, ibbb, irb, isaf; anytimesop)
 end
 
 _extractops(A::TimesOperator, ::typeof(*)) = A.ops
@@ -284,9 +309,13 @@ function TimesOperator(A::Operator, B::Operator)
     v = collateops(*, A, B)
     ibbb = all(isbandedblockbanded, (A, B))
     irb = all(israggedbelow, (A, B))
-    TimesOperator(convert_vector(v), _bandwidthssum(A, B), _timessize((A, B)),
+    sz = _timessize((A, B))
+    isaf = sz[1] == 1 && isconstspace(rangespace(A))
+    anytimesop = any(x -> x isa TimesOperator, (A,B))
+    TimesOperator(convert_vector(v), _bandwidthssum(A, B), sz,
         _bandwidthssum(A, B, blockbandwidths),
-        _bandwidthssum(A, B, subblockbandwidths), ibbb, irb)
+        _bandwidthssum(A, B, subblockbandwidths), ibbb, irb, isaf;
+        anytimesop)
 end
 
 
@@ -301,7 +330,7 @@ function convert(::Type{Operator{T}}, P::TimesOperator) where {T}
                       _convertops(Operator{T}, ops),
             bandwidths(P), size(P), blockbandwidths(P),
             subblockbandwidths(P), isbandedblockbanded(P),
-            israggedbelow(P))::Operator{T}
+            israggedbelow(P), P.isafunctional, anytimesop = false)::Operator{T}
     end
 end
 
@@ -318,7 +347,9 @@ end
     @assert length(opsin) > 1 "need at least 2 operators"
     ops, bw, bbw, sbbw, ibbb, irb = __promotetimes(opsin, dsp, anytimesop)
     sz = _timessize(ops)
-    TimesOperator(convert_vector(ops), bw, sz, bbw, sbbw, ibbb, irb)
+    isaf = sz[1] == 1 && isconstspace(rangespace(first(ops)))
+    anytimesop = any(x -> x isa TimesOperator, ops)
+    TimesOperator(convert_vector(ops), bw, sz, bbw, sbbw, ibbb, irb, isaf; anytimesop)
 end
 function __promotetimes(opsin, dsp, anytimesop)
     ops = Vector{Operator{promote_eltypeof(opsin)}}(undef, 0)
@@ -387,6 +418,8 @@ subblockbandwidths(P::PlusOrTimesOp) = P.subblockbandwidths
 isbandedblockbanded(P::PlusOrTimesOp) = P.isbandedblockbanded
 
 israggedbelow(P::PlusOrTimesOp) = P.israggedbelow
+
+isafunctional(T::TimesOperator) = T.isafunctional
 
 Base.stride(P::TimesOperator) = mapreduce(stride, gcd, P.ops)
 
@@ -577,6 +610,7 @@ for OP in (:(adjoint), :(transpose))
         reverse(blockbandwidths(A)),
         reverse(subblockbandwidths(A)),
         isbandedblockbanded(A),
+        anytimesop = false,
         )
 end
 
