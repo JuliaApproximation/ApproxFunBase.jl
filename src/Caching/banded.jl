@@ -72,7 +72,7 @@ function resizedata!(QR::QROperator{<:CachedOperator{T,<:BandedMatrix{T}}}, ::Co
         normalize!(wp)
 
         # scale banded entries
-        for j=k:k+Ru
+        for j=k.+(0:Ru)
             dind=Ru+1+k-j
             v=view(R.data, range(dind, length=M), j)
             dt=dot(wp,v)
