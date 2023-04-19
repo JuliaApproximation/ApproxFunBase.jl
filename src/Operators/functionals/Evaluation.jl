@@ -128,11 +128,11 @@ lneumann(d) = ldiffbc(d,1)
 rneumann(d) = rdiffbc(d,1)
 
 
-ivp(d,k) = Operator{prectype(d)}[ldiffbc(d,i) for i=0:k-1]
-bvp(d,k) = vcat(Operator{prectype(d)}[ldiffbc(d,i) for i=0:div(k,2)-1],
-                Operator{prectype(d)}[rdiffbc(d,i) for i=0:div(k,2)-1])
+ivp(d,k) = [ldiffbc(d,i) for i=0:k-1]
+bvp(d,k) = vcat([ldiffbc(d,i) for i=0:div(k,2)-1],
+                [rdiffbc(d,i) for i=0:div(k,2)-1])
 
-periodic(d,k) = Operator{prectype(d)}[Evaluation(d,leftendpoint,i)-Evaluation(d,rightendpoint,i) for i=0:k]
+periodic(d,k) = [Evaluation(d,leftendpoint,i)-Evaluation(d,rightendpoint,i) for i=0:k]
 
 # shorthand for second order
 ivp(d) = ivp(d,2)
