@@ -307,7 +307,7 @@ function resizedata!(QR::QROperator{<:CachedOperator{T,<:AlmostBandedMatrix{T}}}
         normalize!(wp)
 
         # scale banded entries
-        for j = k:k+Ru
+        for j = k.+(0:Ru)
             dind = Ru+1+k-j
             v = view(R.data, range(dind, length=M), j)
             dt = dot(wp,v)
@@ -329,7 +329,7 @@ function resizedata!(QR::QROperator{<:CachedOperator{T,<:AlmostBandedMatrix{T}}}
         # scale filled entries
 
         for j = axes(F,2)
-            v = view(F,k:k+M-1,j) # the k,jth entry of F
+            v = view(F, range(k,length=M), j) # the k,jth entry of F
             dt = dot(wp,v)
             axpy!(-2dt,wp,v)
         end
