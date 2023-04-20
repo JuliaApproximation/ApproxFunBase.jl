@@ -647,9 +647,9 @@ end
 
 # we override maxspace instead of maxspace_rule to avoid
 # domainscompatible check.
-for OP in (:maxspace, :(union))
+for OP in (:maxspace,:(union))
     @eval begin
-        $OP(A::ConstantSpace, B::ConstantSpace) = ConstantSpace(domain(A) ∪ domain(B))
+        $OP(A::ConstantSpace{<:Any,R1}, B::ConstantSpace{<:Any,R2}) where {R1,R2} = ConstantSpace(promote_type(R1,R2), domain(A) ∪ domain(B))
     end
 end
 
