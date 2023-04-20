@@ -647,12 +647,9 @@ end
 
 # we override maxspace instead of maxspace_rule to avoid
 # domainscompatible check.
-for OP in (:maxspace,:(union))
+for OP in (:maxspace, :(union))
     @eval begin
-        $OP(A::ConstantSpace{AnyDomain},B::ConstantSpace{AnyDomain}) = A
-        $OP(A::ConstantSpace{AnyDomain},B::ConstantSpace) = B
-        $OP(A::ConstantSpace,B::ConstantSpace{AnyDomain}) = A
-        $OP(A::ConstantSpace,B::ConstantSpace) = ConstantSpace(domain(A) ∪ domain(B))
+        $OP(A::ConstantSpace, B::ConstantSpace) = ConstantSpace(domain(A) ∪ domain(B))
     end
 end
 
