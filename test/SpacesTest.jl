@@ -1,6 +1,6 @@
 using ApproxFunBase
 using Test
-using ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, SVector, checkpoints
+using ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, SVector, checkpoints, AnyDomain
 using StaticArrays
 using BandedMatrices: rowrange, colrange, BandedMatrix
 using LinearAlgebra
@@ -303,6 +303,11 @@ using LinearAlgebra
         @test g > f
         @test g >= f
         @test 1 < f < 3
+
+        @test maxspace(ConstantSpace(Point(1)), ConstantSpace(Point(2))) == ConstantSpace(Point(1) ∪ Point(2))
+        @test maxspace(ConstantSpace(Point(1)), ConstantSpace(AnyDomain())) == ConstantSpace(Point(1))
+        @test maxspace(ConstantSpace(AnyDomain()), ConstantSpace(Point(2))) == ConstantSpace(Point(2))
+        @test maxspace(ConstantSpace(AnyDomain()), ConstantSpace(AnyDomain())) == ConstantSpace(AnyDomain())
     end
 
     @testset "promotion" begin
