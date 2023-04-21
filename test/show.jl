@@ -52,6 +52,10 @@
 
 		f = Fun(ApproxFunBase.ArraySpace([ConstantSpace(0..1)]), [3])
 		@test contains(repr(f), repr(f(0)))
+
+		f = Fun(1, ConstantSpace(Point(3)))
+		@test contains(repr(f), repr(Point(3)))
+		@test contains(repr(f), repr(1))
 	end
 	@testset "Operator" begin
 		@testset "QuotientSpace" begin
