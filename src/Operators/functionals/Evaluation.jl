@@ -9,6 +9,8 @@ evaluation_point(C::Evaluation) = C.x
 
 @enum Boundary RightEndPoint=1 LeftEndPoint=-1
 
+isleftendpoint(_) = false
+isrightendpoint(_) = false
 isleftendpoint(::typeof(leftendpoint)) = true
 isrightendpoint(::typeof(rightendpoint)) = true
 isrightendpoint(x::Boundary) = x == RightEndPoint

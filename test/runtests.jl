@@ -669,9 +669,13 @@ end
 
 @testset "Evaluation left/rightendpoint" begin
     @test ApproxFunBase.isleftendpoint(ApproxFunBase.LeftEndPoint)
+    @test !ApproxFunBase.isrightendpoint(ApproxFunBase.LeftEndPoint)
     @test ApproxFunBase.isrightendpoint(ApproxFunBase.RightEndPoint)
+    @test !ApproxFunBase.isleftendpoint(ApproxFunBase.RightEndPoint)
     @test ApproxFunBase.isleftendpoint(leftendpoint)
+    @test !ApproxFunBase.isrightendpoint(leftendpoint)
     @test ApproxFunBase.isrightendpoint(rightendpoint)
+    @test !ApproxFunBase.isleftendpoint(rightendpoint)
 end
 
 @time include("ETDRK4Test.jl")
