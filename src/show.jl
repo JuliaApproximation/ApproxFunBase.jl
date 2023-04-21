@@ -10,9 +10,13 @@ function show(io::IO, f::Fun)
     print(io,")")
 end
 
+evalconst(f, ::AnyDomain) = f(0.0)
+evalconst(f, d) = f(leftendpoint(d))
+evalconst(f, d::Point) = f(d)
+
 function show(io::IO,f::Fun{<:Union{ConstantSpace, ArraySpace{<:ConstantSpace}}})
     d = domain(f)
-    print(io, f(d isa AnyDomain ? 0.0 : leftendpoint(d)))
+    print(io, evalconst(f, domain(f)))
     print(io, d isa AnyDomain ? " anywhere" : " on " * string(d))
 end
 
