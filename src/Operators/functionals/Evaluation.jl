@@ -47,7 +47,7 @@ const EvalPtType = Union{Number,SpecialEvalPtType}
 error_space(d::Space) = error("Override Evaluation for $(typeof(d))")
 error_space(d) = nothing
 
-Evaluation(d::Space,x::EvalPtType,k::Integer=0) = Evaluation(d,x,k)
+Evaluation(d::Space,x::EvalPtType) = Evaluation(d,x,0)
 Evaluation(::Type{T},d,n...) where {T} = (error_space(d); Evaluation(T,Space(d),n...))
 Evaluation(d,n...) = (error_space(d); Evaluation(Space(d),n...))
 Evaluation(x::EvalPtType,k::Integer=0) = Evaluation(UnsetSpace(),x,k)
