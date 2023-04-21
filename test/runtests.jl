@@ -667,5 +667,12 @@ end
     @test collect(it) == collect(b)
 end
 
+@testset "Evaluation left/rightendpoint" begin
+    @test ApproxFunBase.isleftendpoint(ApproxFunBase.LeftEndPoint)
+    @test ApproxFunBase.isrightendpoint(ApproxFunBase.RightEndPoint)
+    @test ApproxFunBase.isleftendpoint(leftendpoint)
+    @test ApproxFunBase.isrightendpoint(rightendpoint)
+end
+
 @time include("ETDRK4Test.jl")
 include("show.jl")

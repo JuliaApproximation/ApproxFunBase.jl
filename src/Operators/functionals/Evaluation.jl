@@ -5,6 +5,14 @@ export Evaluation,ivp,bvp,Dirichlet,Neumann
 abstract type Evaluation{T}<:Operator{T} end
 
 @functional Evaluation
+evaluation_point(C::Evaluation) = C.x
+
+@enum Boundary RightEndPoint=1 LeftEndPoint=-1
+
+isleftendpoint(::typeof(leftendpoint)) = true
+isrightendpoint(::typeof(rightendpoint)) = true
+isrightendpoint(x::Boundary) = x == RightEndPoint
+isleftendpoint(x::Boundary) = x == LeftEndPoint
 
 # M = leftendpoint/rightendpoint if endpoint
 struct ConcreteEvaluation{S,M,OT,T} <: Evaluation{T}
@@ -33,17 +41,27 @@ end
 
 Evaluation(sp::Space,x,order) = Evaluation(rangetype(sp),sp,x,order)
 
-Evaluation(d::Space,x::Union{Number,typeof(leftendpoint),typeof(rightendpoint)}) = Evaluation(d,x,0)
-Evaluation(::Type{T},d::Space,n...) where {T} = error("Override Evaluation for $(typeof(d))")
-Evaluation(::Type{T},d,n...) where {T} = Evaluation(T,Space(d),n...)
-Evaluation(S::Space,n...) = error("Override Evaluation for $(typeof(S))")
-Evaluation(d,n...) = Evaluation(Space(d),n...)
-Evaluation(x::Union{Number,typeof(leftendpoint),typeof(rightendpoint)}) = Evaluation(UnsetSpace(),x,0)
-Evaluation(x::Union{Number,typeof(leftendpoint),typeof(rightendpoint)},k::Integer) =
-    Evaluation(UnsetSpace(),x,k)
+const SpecialEvalPtType = Union{typeof(leftendpoint),typeof(rightendpoint),Boundary}
+const EvalPtType = Union{Number,SpecialEvalPtType}
 
-rangespace(E::ConcreteEvaluation{<:AmbiguousSpace}) = ConstantSpace()
-rangespace(E::ConcreteEvaluation) = ConstantSpace(Point(E.x))
+error_space(d::Space) = error("Override Evaluation for $(typeof(d))")
+error_space(d) = nothing
+
+Evaluation(d::Space,x::EvalPtType) = Evaluation(d,x,0)
+Evaluation(::Type{T},d,n...) where {T} = (error_space(d); Evaluation(T,Space(d),n...))
+Evaluation(d,n...) = (error_space(d); Evaluation(Space(d),n...))
+Evaluation(x::EvalPtType,k::Integer=0) = Evaluation(UnsetSpace(),x,k)
+
+_rangespace_eval(E::ConcreteEvaluation, ::AmbiguousSpace, ::SpecialEvalPtType) = UnsetSpace()
+_rangespace_eval(E::ConcreteEvaluation, ::AmbiguousSpace, ::Any) = ConstantSpace()
+_rangespace_eval(E::ConcreteEvaluation, ::Space, ::Any) = ConstantSpace(Point(E.x))
+function _rangespace_eval(E::ConcreteEvaluation, ::Space, ::SpecialEvalPtType)
+    d = domain(domainspace(E))
+    isambiguous(d) && return ConstantSpace()
+    dop = boundaryfn(E.x)
+    return ConstantSpace(Point(dop(d)))
+end
+rangespace(E::ConcreteEvaluation) = _rangespace_eval(E, E.space, evaluation_point(E))
 
 
 function convert(::Type{Operator{T}},E::ConcreteEvaluation) where T
@@ -57,31 +75,22 @@ end
 
 
 ## default getindex
+_eval(f, x) = f(x)
+_eval(f, x::SpecialEvalPtType) = boundaryevalfn(x)(f)
 function getindex(D::ConcreteEvaluation,k::Integer)
     T = prectype(domainspace(D))
     f = Fun(D.space, [zeros(T,k-1); one(T)])
     df = differentiate(f,D.order)
-    v = df(D.x)
+    v = _eval(df, D.x)
     strictconvert(eltype(D), v)
 end
 
-#special leftendpoint/rightendpoint overrides
-for (dop, fop) in ((:leftendpoint,:first), (:rightendpoint,:last))
-    @eval begin
-        rangespace(E::ConcreteEvaluation{<:AmbiguousSpace,typeof($dop)}) = UnsetSpace()
-        function rangespace(E::ConcreteEvaluation{<:Any,typeof($dop)})
-            d = domain(domainspace(E))
-            isambiguous(d) && return ConstantSpace()
-            return ConstantSpace(Point($dop(d)))
-        end
-        function getindex(D::ConcreteEvaluation{<:Any,typeof($dop)},k::Integer)
-            P = prectype(domainspace(D))
-            R = eltype(D)
-            R($fop(differentiate(Fun(D.space,[zeros(P,k-1);one(P)]),D.order)))
-        end
-    end
-end
-
+boundaryfn(x::typeof(rightendpoint)) = x
+boundaryfn(x::typeof(leftendpoint)) = x
+boundaryfn(x::Boundary) = isleftendpoint(x) ? leftendpoint : rightendpoint
+boundaryevalfn(::typeof(rightendpoint)) = last
+boundaryevalfn(::typeof(leftendpoint)) = first
+boundaryevalfn(x::Boundary) = isleftendpoint(x) ? first : last
 
 
 
@@ -132,7 +141,7 @@ ivp(d,k) = [ldiffbc(d,i) for i=0:k-1]
 bvp(d,k) = vcat([ldiffbc(d,i) for i=0:div(k,2)-1],
                 [rdiffbc(d,i) for i=0:div(k,2)-1])
 
-periodic(d,k) = [Evaluation(d,leftendpoint,i)-Evaluation(d,rightendpoint,i) for i=0:k]
+periodic(d,k) = [ldiffbc(d,i) - rdiffbc(d,i) for i=0:k]
 
 # shorthand for second order
 ivp(d) = ivp(d,2)
