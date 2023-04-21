@@ -761,8 +761,8 @@ function isapprox(f::Fun,g::Fun;
     end
 end
 
-isapprox(f::Fun, g::Number) = f ≈ g*ones(space(f))
-isapprox(g::Number, f::Fun) = g*ones(space(f)) ≈ f
+isapprox(f::Fun, g::Number; kw...) = isapprox(f, g*ones(space(f)); kw...)
+isapprox(g::Number, f::Fun; kw...) = isapprox(g*ones(space(f)), f; kw...)
 
 
 isreal(f::Fun{<:RealSpace,<:Real}) = true

@@ -678,5 +678,10 @@ end
     @test !ApproxFunBase.isleftendpoint(rightendpoint)
 end
 
+@testset "Fun isapprox with kw" begin
+    @test isapprox(Fun(1), 1, atol=1e-10)
+    @test isapprox(1, Fun(1), atol=1e-10)
+end
+
 @time include("ETDRK4Test.jl")
 include("show.jl")
