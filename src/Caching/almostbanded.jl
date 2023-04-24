@@ -4,8 +4,8 @@ function CachedOperator(intop::InterlaceOperator{T,1};padding::Bool = false) whe
     ds = domainspace(intop)
     rs = rangespace(intop)
 
-    ind = findall(op->isinf(size(op,1)), intop.ops)
-    if length(ind) ≠ 1  || !isbanded(intop.ops[ind[1]])  # is almost banded
+    ind = findall(op->isinf(size(op,1))::Bool, intop.ops)
+    if length(ind) ≠ 1  || !isbanded(intop.ops[ind[1]])::Bool  # is almost banded
         return default_CachedOperator(intop; padding)
     end
     i = ind[1]
