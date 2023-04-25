@@ -224,7 +224,8 @@ axpy!(α, S::SubOperator{T,OP}, A::AbstractMatrix) where {T,OP<:ConstantTimesOpe
 function check_times(ops)
     for k = 1:length(ops)-1
         size(ops[k], 2) == size(ops[k+1], 1) || throw(ArgumentError("incompatible operator sizes"))
-        spacescompatible(domainspace(ops[k]), rangespace(ops[k+1])) || throw(ArgumentError("incompatible spaces at index $k"))
+        spacescompatible(domainspace(ops[k]), rangespace(ops[k+1])) ||
+            throw(ArgumentError("incompatible spaces at index $k, received $(domainspace(ops[k])) and $(rangespace(ops[k+1]))"))
     end
     return nothing
 end
@@ -768,7 +769,8 @@ function promotedomainspace(P::TimesOperator, sp::Space, cursp::Space)
     if sp == cursp
         P
     elseif length(P.ops) == 2
-        P.ops[1] * promotedomainspace(P.ops[end], sp)
+        A = promotedomainspace(P.ops[end], sp)
+        promotedomainspace(P.ops[1], rangespace(A)) * A
     else
         promotetimes([P.ops[1:end-1]; promotedomainspace(P.ops[end], sp)], sp)
     end
