@@ -499,3 +499,8 @@ component(sp::TensorSpace{Tuple{S1,S2}},k::Integer) where {S1,S2<:DirectSumSpace
 
 component(sp::TensorSpace{Tuple{S1,S2}},k::Integer,j::Integer) where {S1<:DirectSumSpace,S2<:DirectSumSpace} =
     component(factor(sp,1),k) ⊗ component(factor(sp,2),j)
+
+# Normalized space
+normalizedspace(S::DirectSumSpace) = mapreduce(normalizedspace, ⊕, components(S))
+normalizedspace(S::SumSpace) = SumSpace(map(normalizedspace, components(S)))
+normalizedspace(S::PiecewiseSpace) = _PiecewiseSpace(map(normalizedspace, components(S)))
