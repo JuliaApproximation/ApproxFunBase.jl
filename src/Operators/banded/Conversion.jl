@@ -1,4 +1,4 @@
-export Conversion
+export Conversion, Conversion_normalizedspace
 
 abstract type Conversion{T}<:Operator{T} end
 
@@ -71,19 +71,27 @@ Assumed to be false by default.
 """
 hasconcreteconversion_canonical(@nospecialize(sp), @nospecialize(Valfwdback)) = false
 
-function Conversion_maybeconcrete(sp, csp, v::Val{:forward})
+function Conversion_maybeconcrete(sp, csp, v::Union{Val{:forward}, Val{:backward}})
+    t = v isa Val{:forward} ? (sp, csp) : (csp, sp)
     if hasconcreteconversion_canonical(sp, v)
-        ConcreteConversion(sp,csp)
+        ConcreteConversion(t...)
     else
-        Conversion(sp,csp)
+        Conversion(t...)
     end
 end
-function Conversion_maybeconcrete(sp, csp, v::Val{:backward})
-    if hasconcreteconversion_canonical(sp, v)
-        ConcreteConversion(csp,sp)
-    else
-        Conversion(csp,sp)
-    end
+
+"""
+    Conversion_normalizedspace(S::Space, direction::Val{:forward} = Val(:forward))
+
+Return `Conversion(S, normalizedspace(S))`. This may be concretely inferred for orthogonal polynomial spaces.
+
+    Conversion_normalizedspace(S::Space, ::Val{:backward})
+
+Return `Conversion(normalizedspace(S), S)`. This may be concretely inferred for orthogonal polynomial spaces.
+"""
+function Conversion_normalizedspace(S::Space, v::Union{Val{:forward}, Val{:backward}} = Val(:forward))
+    vflip = v isa Val{:forward} ? Val(:backward) : Val(:forward)
+    Conversion_maybeconcrete(normalizedspace(S), S, vflip)
 end
 
 """
