@@ -104,6 +104,8 @@ export pad!, pad, chop!, sample,
 export .., Interval, ChebyshevInterval, leftendpoint, rightendpoint
 export endpoints, cache
 
+export normalize
+
 import Base: oneto
 
 # assert that the conversion succeeds. This helps with inference as well as sanity

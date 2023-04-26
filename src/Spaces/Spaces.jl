@@ -199,3 +199,21 @@ end
 
 include("HeavisideSpace.jl")
 include("DiracSpace.jl")
+
+"""
+    normalize(S::Space)
+
+Return a normalized space (or a direct sum of such spaces) over `domain(S)`.
+For polynomial spaces, this corresponds to normalized polynomials over the same domain.
+For a `DirectSumSpace`, this returns a direct sum over normalized spaces.
+
+# Examples
+```jldoctest
+julia> normalize(Chebyshev(0..1))
+NormalizedChebyshev(0..1)
+
+julia> normalize(Chebyshev() + Legendre())
+NormalizedChebyshev() ⊕ NormalizedLegendre()
+```
+"""
+normalize
