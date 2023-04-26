@@ -43,7 +43,7 @@ import LinearAlgebra: BlasInt, BlasFloat, norm, ldiv!, mul!, det, cross,
               qr, qr!, rank, isdiag, istril, istriu, issymmetric,
               Tridiagonal, diagm, diagm_container, factorize,
               nullspace, Hermitian, Symmetric, adjoint, transpose, char_uplo,
-              axpy!
+              axpy!, eigvals
 
 import SparseArrays: blockdiag
 
@@ -151,6 +151,7 @@ include("Operators/Operator.jl")
 include("Caching/caching.jl")
 include("PDE/PDE.jl")
 include("Spaces/Spaces.jl")
+include("eigen.jl")
 include("hacks.jl")
 include("testing.jl")
 include("specialfunctions.jl")
