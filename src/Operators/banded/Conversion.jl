@@ -86,6 +86,9 @@ function Conversion_maybeconcrete(sp, csp, v::Val{:backward})
     end
 end
 
+Conversion_tonormalizedspace(S::Space) = Conversion_maybeconcrete(normalizedspace(S), S, Val(:backward))
+Conversion_fromnormalizedspace(S::Space) = Conversion_maybeconcrete(normalizedspace(S), S, Val(:forward))
+
 """
     Conversion(fromspace::Space, tospace::Space)
 
