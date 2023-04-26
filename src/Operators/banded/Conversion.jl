@@ -71,23 +71,17 @@ Assumed to be false by default.
 """
 hasconcreteconversion_canonical(@nospecialize(sp), @nospecialize(Valfwdback)) = false
 
-function Conversion_maybeconcrete(sp, csp, v::Val{:forward})
+function Conversion_maybeconcrete(sp, csp, v::Union{Val{:forward}, Val{:backward}})
+    t = v isa Val{:forward} ? (sp, csp) : (csp, sp)
     if hasconcreteconversion_canonical(sp, v)
-        ConcreteConversion(sp,csp)
+        ConcreteConversion(t...)
     else
-        Conversion(sp,csp)
-    end
-end
-function Conversion_maybeconcrete(sp, csp, v::Val{:backward})
-    if hasconcreteconversion_canonical(sp, v)
-        ConcreteConversion(csp,sp)
-    else
-        Conversion(csp,sp)
+        Conversion(t...)
     end
 end
 
 """
-    Conversion_normalizedspace(S::Space, ::Val{:forward})
+    Conversion_normalizedspace(S::Space, direction::Val{:forward} = Val(:forward))
 
 Return `Conversion(S, normalizedspace(S))`. This may be concretely inferred for orthogonal polynomial spaces.
 
@@ -97,7 +91,7 @@ Return `Conversion(normalizedspace(S), S)`. This may be concretely inferred for 
 
 # Examples
 ```jldoctest
-julia> Conversion_normalizedspace(Chebyshev(), Val(:forward))
+julia> Conversion_normalizedspace(Chebyshev())
 ConcreteConversion : Chebyshev() → NormalizedChebyshev()
  1.77245   ⋅        ⋅        ⋅        ⋅        ⋅        ⋅        ⋅        ⋅        ⋅       ⋅
   ⋅       1.25331   ⋅        ⋅        ⋅        ⋅        ⋅        ⋅        ⋅        ⋅       ⋅
@@ -126,7 +120,7 @@ ConcreteConversion : NormalizedChebyshev() → Chebyshev()
   ⋅        ⋅         ⋅         ⋅         ⋅         ⋅         ⋅         ⋅         ⋅         ⋅        ⋱
 ```
 """
-function Conversion_normalizedspace(S::Space, v::Union{Val{:forward}, Val{:backward}})
+function Conversion_normalizedspace(S::Space, v::Union{Val{:forward}, Val{:backward}} = Val(:forward))
     vflip = v isa Val{:forward} ? Val(:backward) : Val(:forward)
     Conversion_maybeconcrete(normalizedspace(S), S, vflip)
 end
