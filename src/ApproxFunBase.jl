@@ -104,7 +104,7 @@ export pad!, pad, chop!, sample,
 export .., Interval, ChebyshevInterval, leftendpoint, rightendpoint
 export endpoints, cache
 
-export normalize
+export normalizedspace
 
 import Base: oneto
 
