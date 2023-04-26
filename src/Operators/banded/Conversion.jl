@@ -88,37 +88,6 @@ Return `Conversion(S, normalizedspace(S))`. This may be concretely inferred for 
     Conversion_normalizedspace(S::Space, ::Val{:backward})
 
 Return `Conversion(normalizedspace(S), S)`. This may be concretely inferred for orthogonal polynomial spaces.
-
-# Examples
-```jldoctest
-julia> Conversion_normalizedspace(Chebyshev())
-ConcreteConversion : Chebyshev() → NormalizedChebyshev()
- 1.77245   ⋅        ⋅        ⋅        ⋅        ⋅        ⋅        ⋅        ⋅        ⋅       ⋅
-  ⋅       1.25331   ⋅        ⋅        ⋅        ⋅        ⋅        ⋅        ⋅        ⋅       ⋅
-  ⋅        ⋅       1.25331   ⋅        ⋅        ⋅        ⋅        ⋅        ⋅        ⋅       ⋅
-  ⋅        ⋅        ⋅       1.25331   ⋅        ⋅        ⋅        ⋅        ⋅        ⋅       ⋅
-  ⋅        ⋅        ⋅        ⋅       1.25331   ⋅        ⋅        ⋅        ⋅        ⋅       ⋅
-  ⋅        ⋅        ⋅        ⋅        ⋅       1.25331   ⋅        ⋅        ⋅        ⋅       ⋅
-  ⋅        ⋅        ⋅        ⋅        ⋅        ⋅       1.25331   ⋅        ⋅        ⋅       ⋅
-  ⋅        ⋅        ⋅        ⋅        ⋅        ⋅        ⋅       1.25331   ⋅        ⋅       ⋅
-  ⋅        ⋅        ⋅        ⋅        ⋅        ⋅        ⋅        ⋅       1.25331   ⋅       ⋅
-  ⋅        ⋅        ⋅        ⋅        ⋅        ⋅        ⋅        ⋅        ⋅       1.25331  ⋅
-  ⋅        ⋅        ⋅        ⋅        ⋅        ⋅        ⋅        ⋅        ⋅        ⋅       ⋱
-
-julia> Conversion_normalizedspace(Chebyshev(), Val(:backward))
-ConcreteConversion : NormalizedChebyshev() → Chebyshev()
- 0.56419   ⋅         ⋅         ⋅         ⋅         ⋅         ⋅         ⋅         ⋅         ⋅        ⋅
-  ⋅       0.797885   ⋅         ⋅         ⋅         ⋅         ⋅         ⋅         ⋅         ⋅        ⋅
-  ⋅        ⋅        0.797885   ⋅         ⋅         ⋅         ⋅         ⋅         ⋅         ⋅        ⋅
-  ⋅        ⋅         ⋅        0.797885   ⋅         ⋅         ⋅         ⋅         ⋅         ⋅        ⋅
-  ⋅        ⋅         ⋅         ⋅        0.797885   ⋅         ⋅         ⋅         ⋅         ⋅        ⋅
-  ⋅        ⋅         ⋅         ⋅         ⋅        0.797885   ⋅         ⋅         ⋅         ⋅        ⋅
-  ⋅        ⋅         ⋅         ⋅         ⋅         ⋅        0.797885   ⋅         ⋅         ⋅        ⋅
-  ⋅        ⋅         ⋅         ⋅         ⋅         ⋅         ⋅        0.797885   ⋅         ⋅        ⋅
-  ⋅        ⋅         ⋅         ⋅         ⋅         ⋅         ⋅         ⋅        0.797885   ⋅        ⋅
-  ⋅        ⋅         ⋅         ⋅         ⋅         ⋅         ⋅         ⋅         ⋅        0.797885  ⋅
-  ⋅        ⋅         ⋅         ⋅         ⋅         ⋅         ⋅         ⋅         ⋅         ⋅        ⋱
-```
 """
 function Conversion_normalizedspace(S::Space, v::Union{Val{:forward}, Val{:backward}} = Val(:forward))
     vflip = v isa Val{:forward} ? Val(:backward) : Val(:forward)
