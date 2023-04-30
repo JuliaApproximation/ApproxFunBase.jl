@@ -92,8 +92,6 @@ function pruneeigs(λ,V,ds,tolerance)
     retλ,retV
 end
 
-export bandmatrices_eigen, SymmetricEigensystem, SkewSymmetricEigensystem
-
 abstract type EigenSystem end
 
 """
