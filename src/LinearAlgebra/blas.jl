@@ -1,6 +1,4 @@
-import LinearAlgebra.BLAS: @blasfunc
-const libblas = VERSION < v"1.8" ? LinearAlgebra.BLAS.libblas : "libblastrampoline"
-const liblapack = VERSION < v"1.8" ? LinearAlgebra.LAPACK.liblapack : "libblastrampoline"
+import LinearAlgebra.BLAS: @blasfunc, libblas, liblapack
 
 # Level 2
 ## mv
