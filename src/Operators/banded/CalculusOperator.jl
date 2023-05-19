@@ -30,35 +30,35 @@ macro calculus_operator(Op)
         ApproxFunBase.rangespace(A::$WrappOp) = A.rangespace
 
         ## Constructors
-        $ConcOp(sp::Space,k) = $ConcOp{typeof(sp),typeof(k),ApproxFunBase.prectype(sp)}(sp,k)
+        $ConcOp(sp::ApproxFunBase.Space,k) = $ConcOp{typeof(sp),typeof(k),ApproxFunBase.prectype(sp)}(sp,k)
 
         $Op(sp::ApproxFunBase.UnsetSpace,k) = $ConcOp(sp,k)
         $Op(sp::ApproxFunBase.UnsetSpace,k::Number) = $ConcOp(sp,k)
         $Op(sp::ApproxFunBase.UnsetSpace,k::Real) = $ConcOp(sp,k)
         $Op(sp::ApproxFunBase.UnsetSpace,k::Integer) = $ConcOp(sp,k)
 
-        function $DefaultOp(sp::Space, k)
+        function $DefaultOp(sp::ApproxFunBase.Space, k)
             csp=ApproxFunBase.canonicalspace(sp)
             if ApproxFunBase.conversion_type(csp,sp)==csp   # Conversion(sp,csp) is not banded, or sp==csp
                error("Implement $(string($Op))($(string(sp)),$k)")
             end
             O = $Op(csp,k)
-            C = Conversion_maybeconcrete(sp, csp, Val(:forward))
+            C = ApproxFunBase.Conversion_maybeconcrete(sp, csp, Val(:forward))
             Top = ApproxFunBase.TimesOperator([O,C])
-            $WrappOp(Top, sp, k, rangespace(O))
+            $WrappOp(Top, sp, k, ApproxFunBase.rangespace(O))
         end
 
-        $DefaultOp(d,k) = $Op(Space(d),k)
+        $DefaultOp(d,k) = $Op(ApproxFunBase.Space(d),k)
 
         $DefaultOp(sp) = $Op(sp,1)
-        $DefaultOp() = $Op(UnsetSpace())
-        $DefaultOp(k::Number) = $Op(UnsetSpace(),k)
-        $DefaultOp(k::Vector) = $Op(UnsetSpace(),k)
+        $DefaultOp() = $Op(ApproxFunBase.UnsetSpace())
+        $DefaultOp(k::Number) = $Op(ApproxFunBase.UnsetSpace(),k)
+        $DefaultOp(k::AbstractVector) = $Op(ApproxFunBase.UnsetSpace(),k)
 
         $Op(x...) = $DefaultOp(x...)
-        $ConcOp(S::Space) = $ConcOp(S,1)
+        $ConcOp(S::ApproxFunBase.Space) = $ConcOp(S,1)
 
-        function Base.convert(::Type{Operator{T}},D::$ConcOp) where T
+        function Base.convert(::Type{ApproxFunBase.Operator{T}},D::$ConcOp) where T
             if T==eltype(D)
                 D
             else
@@ -66,35 +66,35 @@ macro calculus_operator(Op)
             end
         end
 
-        $WrappOp(op::Operator, order = 1, d = domainspace(op), r = rangespace(op)) =
+        $WrappOp(op::ApproxFunBase.Operator, order = 1, d = domainspace(op), r = rangespace(op)) =
             $WrappOp{typeof(op),typeof(d),typeof(r),typeof(order),eltype(op)}(op,order,d,r)
 
-        function Base.convert(::Type{Operator{T}},D::$WrappOp) where T
+        function Base.convert(::Type{ApproxFunBase.Operator{T}},D::$WrappOp) where T
             if T==eltype(D)
                 D
             else
-                op=ApproxFunBase.strictconvert(Operator{T},D.op)
-                S = domainspace(D)
-                R = rangespace(D)
-                $WrappOp(op,D.order,S,R)::Operator{T}
+                op=ApproxFunBase.strictconvert(ApproxFunBase.Operator{T},D.op)
+                S = ApproxFunBase.domainspace(D)
+                R = ApproxFunBase.rangespace(D)
+                $WrappOp(op,D.order,S,R)::ApproxFunBase.Operator{T}
             end
         end
 
         ## Routines
         ApproxFunBase.domainspace(D::$ConcOp) = D.space
 
-        Base.getindex(::$ConcOp{UnsetSpace,OT,T},k::Integer,j::Integer) where {OT,T} =
+        Base.getindex(::$ConcOp{ApproxFunBase.UnsetSpace,OT,T},k::Integer,j::Integer) where {OT,T} =
             error("Spaces cannot be inferred for operator")
 
-        ApproxFunBase.rangespace(D::$ConcOp{UnsetSpace,T}) where {T} = UnsetSpace()
+        ApproxFunBase.rangespace(D::$ConcOp{ApproxFunBase.UnsetSpace,T}) where {T} = UnsetSpace()
 
         #promoting domain space is allowed to change range space
         # for integration, we fall back on existing conversion for now
-        ApproxFunBase.promotedomainspace(D::$Op,sp::UnsetSpace) = D
+        ApproxFunBase.promotedomainspace(D::$Op, sp::ApproxFunBase.UnsetSpace) = D
 
 
-        function ApproxFunBase.promotedomainspace(D::$Op,sp::Space)
-            if isambiguous(domain(sp))
+        function ApproxFunBase.promotedomainspace(D::$Op, sp::ApproxFunBase.Space)
+            if ApproxFunBase.isambiguous(domain(sp))
                 $Op(typeof(sp)(domain(D)),D.order)
             else
                 $Op(sp,D.order)
