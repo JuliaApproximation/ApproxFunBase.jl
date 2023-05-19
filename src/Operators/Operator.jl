@@ -539,7 +539,7 @@ end
 #
 macro wrappergetindex(Wrap, forwardsize = true)
     v = map((:(ApproxFunBase.BandedMatrix),:(ApproxFunBase.RaggedMatrix),
-                :Matrix,:Vector,:AbstractVector)) do TYP
+                :(Base.Matrix),:(Base.Vector),:(Base.AbstractVector))) do TYP
         quote
             $TYP(P::ApproxFunBase.SubOperator{T,OP}) where {T,OP<:$Wrap} =
                 $TYP(view(parent(P).op,P.indexes[1],P.indexes[2]))
@@ -560,7 +560,7 @@ macro wrappergetindex(Wrap, forwardsize = true)
         Base.getindex(OP::$Wrap,k::Colon, j::ApproxFunBase.InfRanges) = view(OP, k, j)
         Base.getindex(OP::$Wrap,k::Colon, j::Colon) = view(OP, k, j)
 
-        axpy!(α,P::ApproxFunBase.SubOperator{T,OP},A::AbstractMatrix) where {T,OP<:$Wrap} =
+        LinearAlgebra.axpy!(α,P::ApproxFunBase.SubOperator{T,OP},A::AbstractMatrix) where {T,OP<:$Wrap} =
             ApproxFunBase.unwrap_axpy!(α,P,A)
 
         ApproxFunBase.mul_coefficients(A::$Wrap,b) = ApproxFunBase.mul_coefficients(A.op,b)
@@ -569,7 +569,7 @@ macro wrappergetindex(Wrap, forwardsize = true)
         ApproxFunBase.mul_coefficients(A::ApproxFunBase.SubOperator{T,OP},b) where {T,OP<:$Wrap} =
             ApproxFunBase.mul_coefficients(view(parent(A).op,S.indexes[1],S.indexes[2]),b)
 
-        isdiag(W::$Wrap) = isdiag(W.op)
+        LinearAlgebra.isdiag(W::$Wrap) = isdiag(W.op)
 
         # fast converts to banded matrices would be based on indices, not blocks
         function ApproxFunBase.BandedMatrix(S::ApproxFunBase.SubOperator{T,OP,NTuple{2,ApproxFunBase.BlockRange1}}) where {T,OP<:$Wrap}
