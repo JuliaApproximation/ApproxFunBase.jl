@@ -689,16 +689,11 @@ end
 /(B::Operator, c::Number) = B * inv(c)
 /(B::Operator, c::Fun) = B * inv(c)
 
-
-
-
-
 ## Operations
 for mulcoeff in [:mul_coefficients, :mul_coefficients!]
     @eval begin
         function $mulcoeff(A::Operator, b)
-            n = size(b, 1)
-            ret = n > 0 ? $mulcoeff(view(A, FiniteRange, 1:n), b) : b
+            mulcoeff_maybeconvert($mulcoeff, A, b)
         end
 
         function $mulcoeff(A::TimesOperator, b)
@@ -712,6 +707,18 @@ for mulcoeff in [:mul_coefficients, :mul_coefficients!]
     end
 end
 
+function _mulcoeff_maybeconvert(f::F, A, b) where {F}
+    n = size(b, 1)
+    n > 0 ? f(view(A, FiniteRange, 1:n), b) : b
+end
+
+mulcoeff_maybeconvert(f, A, b) = _mulcoeff_maybeconvert(f, A, b)
+
+function mulcoeff_maybeconvert(f::typeof(mul_coefficients), A, b::Vector)
+    v = _mulcoeff_maybeconvert(f, A, b)
+    T = promote_type(eltype(A), eltype(b))
+    convert(Vector{T}, v)
+end
 
 function *(A::Operator, b)
     ds = domainspace(A)
