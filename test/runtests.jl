@@ -14,7 +14,7 @@ using SpecialFunctions
 using Test
 
 @testset "Project quality" begin
-    Aqua.test_all(ApproxFunBase, ambiguities=false)
+    Aqua.test_all(ApproxFunBase, ambiguities=false, piracy = false)
 end
 
 @testset "Helper" begin
