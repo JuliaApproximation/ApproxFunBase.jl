@@ -698,7 +698,7 @@ for mulcoeff in [:mul_coefficients, :mul_coefficients!]
     @eval begin
         function $mulcoeff(A::Operator, b)
             n = size(b, 1)
-            ret = n > 0 ? $mulcoeff(view(A, FiniteRange, 1:n), b) : b
+            ret = n > 0 ? oftype(b, $mulcoeff(view(A, FiniteRange, 1:n), b)) : b
         end
 
         function $mulcoeff(A::TimesOperator, b)
