@@ -692,7 +692,7 @@ end
 
 
 function _mulcoeff_maybeconvert(f::F, A, b, n) where {F}
-    n > 0 ? f(view(A, FiniteRange, 1:n)) : b
+    n > 0 ? f(view(A, FiniteRange, 1:n), b) : b
 end
 function mulcoeff_maybeconvert(f, A, b, n)
     _mulcoeff_maybeconvert(f, A, b, n)
