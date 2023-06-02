@@ -691,14 +691,23 @@ end
 
 
 
-
+function _mulcoeff_maybeconvert(f::F, A, b, n) where {F}
+    n > 0 ? f(view(A, FiniteRange, 1:n)) : b
+end
+function mulcoeff_maybeconvert(f, A, b, n)
+    _mulcoeff_maybeconvert(f, A, b, n)
+end
+function mulcoeff_maybeconvert(f, A, b::Vector, n)
+    v = _mulcoeff_maybeconvert(f, A, b, n)
+    oftype(b, v)
+end
 
 ## Operations
 for mulcoeff in [:mul_coefficients, :mul_coefficients!]
     @eval begin
         function $mulcoeff(A::Operator, b)
             n = size(b, 1)
-            ret = n > 0 ? oftype(b, $mulcoeff(view(A, FiniteRange, 1:n), b)) : b
+            mulcoeff_maybeconvert($mulcoeff, A, b, n)
         end
 
         function $mulcoeff(A::TimesOperator, b)
