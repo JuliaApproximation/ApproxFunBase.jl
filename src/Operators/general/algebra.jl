@@ -699,7 +699,8 @@ function mulcoeff_maybeconvert(f, A, b, n)
 end
 function mulcoeff_maybeconvert(f, A, b::Vector, n)
     v = _mulcoeff_maybeconvert(f, A, b, n)
-    oftype(b, v)
+    T = promote_type(eltype(A), eltype(b))
+    convert(Vector{T}, v)
 end
 
 ## Operations
