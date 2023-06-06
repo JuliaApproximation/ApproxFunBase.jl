@@ -44,6 +44,56 @@ Base.show(io::IO, N::PrintShow) = print(io, N.c)
 
 show(io::IO, B::Operator; kw...) = summary(io, B)
 
+struct CharLinedMatrix{T,A<:AbstractMatrix{T}} <: AbstractMatrix{Union{T,PrintShow}}
+    arr :: A
+    sz :: NTuple{2,Bool}
+end
+Base.size(A::CharLinedMatrix) = size(A.arr) .+ A.sz
+
+function Base.getindex(C::CharLinedMatrix, k::Int, j::Int)
+    BM = C.arr
+    if j in axes(BM,2) && k in axes(BM,1)
+        return C.arr[k,j]
+    end
+    sz1, sz2 = size(C)
+    if isbanded(BM) && all(C.sz)
+        bw1, bw2 = bandwidths(BM)
+        if k in max(1,sz1-bw2):sz1+min(0,bw1) && j == sz2
+            PrintShow('⋱')
+        elseif k == sz1 && j in max(1,sz2-bw1):sz2+min(0,bw2)
+            PrintShow('⋱')
+        else
+            PrintShow('⋅')
+        end
+    elseif all(C.sz)
+        if k == 1 && j == sz2
+            PrintShow('⋯')
+        elseif k in 2:sz1 && j == sz2
+            PrintShow('⋱')
+        elseif k == sz1 && j == 1
+            PrintShow('⋮')
+        elseif k == sz1 && j in 2:sz2
+            PrintShow('⋱')
+        end
+    elseif C.sz[1]
+        if k == sz1 && j in 1:sz2
+            PrintShow('⋮')
+        end
+    elseif C.sz[2]
+        if k in 1:sz1 && j == sz2
+            PrintShow('⋯')
+        end
+    end
+end
+
+function Base.replace_in_print_matrix(C::CharLinedMatrix, k::Integer, j::Integer, s::AbstractString)
+    if CartesianIndex(k,j) in CartesianIndices(C.arr)
+        Base.replace_in_print_matrix(C.arr, k, j, s)
+    else
+        s
+    end
+end
+
 function show(io::IO, mimetype::MIME"text/plain", @nospecialize(B::Operator); header::Bool=true)
     header && summary(io, B)
     dsp = domainspace(B)
@@ -52,75 +102,12 @@ function show(io::IO, mimetype::MIME"text/plain", @nospecialize(B::Operator); he
 
     iocompact = haskey(io, :compact) ? io : IOContext(io, :compact => true)
 
-    if !isambiguous(domainspace(B)) && (eltype(B) <: Number)
+    if !isambiguous(domainspace(B)) && eltype(B) <: Number
         println(io)
-        if isbanded(B) && isinf(sz1_B) && isinf(sz2_B)
-            BM=B[1:10,1:10]
-
-            M=Matrix{Union{eltype(B), PrintShow}}(undef,11,11)
-            fill!(M,PrintShow('⋅'))
-            for j = 1:size(BM,2),k = colrange(BM,j)
-                M[k,j]=BM[k,j]
-            end
-
-            for k=max(1,11-bandwidth(B,2)):11
-                M[k,end]=PrintShow('⋱')
-            end
-            for j=max(1,11-bandwidth(B,1)):10
-                M[end,j]=PrintShow('⋱')
-            end
-
-            print_array(iocompact, M)
-        elseif isinf(sz1_B) && isinf(sz2_B)
-            BM=B[1:10,1:10]
-
-            M=Matrix{Union{eltype(B), PrintShow}}(undef,11,11)
-            for I in CartesianIndices(axes(BM))
-                M[I]=BM[Tuple(I)...] # not certain if indexing with CartesianIndex is implemented
-            end
-
-            M[1,end]=PrintShow('⋯')
-            M[end,1]=PrintShow('⋮')
-
-            for k=2:11
-                M[k,end]=PrintShow('⋱')
-            end
-            for k=2:11
-                M[end,k]=PrintShow('⋱')
-            end
-
-            print_array(iocompact, M)
-        elseif isinf(sz1_B)
-            sz2int = Int(sz2_B)::Int
-            BM=B[1:10,1:sz2int]
-
-            M=Matrix{Union{eltype(B), PrintShow}}(undef,11,sz2int)
-            for I in CartesianIndices(axes(BM))
-                M[I]=BM[Tuple(I)...]
-            end
-            for k=1:sz2int
-                M[end,k]=PrintShow('⋮')
-            end
-
-            print_array(iocompact, M)
-        elseif isinf(sz2_B)
-            sz1int = Int(sz1_B)::Int
-            BM=B[1:sz1int,1:10]
-
-            M=Matrix{Union{eltype(B), PrintShow}}(undef,sz1int,11)
-            for I in CartesianIndices(axes(BM))
-                M[I]=BM[Tuple(I)...]
-            end
-            for k=1:sz1int
-                M[k,end]=PrintShow('⋯')
-            end
-
-            print_array(iocompact, M)
-        else
-            sz1int = Int(sz1_B)::Int
-            sz2int = Int(sz2_B)::Int
-            print_array(iocompact, AbstractMatrix(B)[1:sz1int,1:sz2int])
-        end
+        sz1 = min(size(B,1),10)::Int
+        sz2 = min(size(B,2),10)::Int
+        C = CharLinedMatrix(B[1:sz1, 1:sz2], isinf.(size(B)))
+        print_array(iocompact, C)
     end
 end
 
