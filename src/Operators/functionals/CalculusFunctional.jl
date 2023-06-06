@@ -16,36 +16,39 @@ macro calculus_functional(Op)
         end
         struct $WrappOp{BT<:Operator,S<:Space,T} <: $Op{S,T}
             op::BT
+            domainspace::S
         end
 
-        ApproxFunBase.@wrapper $WrappOp
-
+        ApproxFunBase.@wrapper $WrappOp false false
+        ApproxFunBase.domainspace(A::$WrappOp) = A.domainspace
 
         # We expect the operator to be real/complex if the basis is real/complex
-        $ConcOp(dsp::Space) = $ConcOp{typeof(dsp),ApproxFunBase.prectype(dsp)}(dsp)
+        $ConcOp(dsp::ApproxFunBase.Space) = $ConcOp{typeof(dsp),ApproxFunBase.prectype(dsp)}(dsp)
 
-        $Op() = $Op(UnsetSpace())
+        $Op() = $Op(ApproxFunBase.UnsetSpace())
         $Op(dsp) = $ConcOp(dsp)
-        $Op(d::Domain) = $Op(Space(d))
+        $Op(d::ApproxFunBase.Domain) = $Op(ApproxFunBase.Space(d))
 
-        ApproxFunBase.promotedomainspace(::$Op,sp::Space) = $Op(sp)
+        ApproxFunBase.promotedomainspace(::$Op,sp::ApproxFunBase.Space) = $Op(sp)
 
 
-        Base.convert(::Type{Operator{T}},Σ::$ConcOp) where {T} =
-            (T==eltype(Σ) ? Σ : $ConcOp{typeof(Σ.domainspace),T}(Σ.domainspace))::Operator{T}
+        Base.convert(::Type{ApproxFunBase.Operator{T}},Σ::$ConcOp) where {T} =
+            (T==eltype(Σ) ? Σ : $ConcOp{typeof(Σ.domainspace),T}(Σ.domainspace))::ApproxFunBase.Operator{T}
 
-        ApproxFunBase.domain(Σ::$ConcOp) = domain(Σ.domainspace)
+        ApproxFunBase.domain(Σ::$ConcOp) = ApproxFunBase.domain(Σ.domainspace)
         ApproxFunBase.domainspace(Σ::$ConcOp) = Σ.domainspace
 
         Base.getindex(::$ConcOp{ApproxFunBase.UnsetSpace},kr::AbstractRange) =
             error("Spaces cannot be inferred for operator")
 
-        $WrappOp(op::Operator) =
-            $WrappOp{typeof(op),typeof(domainspace(op)),eltype(op)}(op)
+        $WrappOp(op::ApproxFunBase.Operator, dsp = ApproxFunBase.domainspace(op)) =
+            $WrappOp{typeof(op),typeof(dsp),eltype(op)}(op, dsp)
 
 
-        Base.convert(::Type{Operator{T}},Σ::$WrappOp) where {T} =
-            (T==eltype(Σ) ? Σ : $WrappOp(strictconvert(Operator{T},Σ.op)))::Operator{T}
+        function Base.convert(::Type{ApproxFunBase.Operator{T}},Σ::$WrappOp) where {T}
+            T==eltype(Σ) && return Σ
+            $WrappOp(ApproxFunBase.strictconvert(ApproxFunBase.Operator{T},Σ.op))::ApproxFunBase.Operator{T}
+        end
     end)
 end
 
@@ -63,7 +66,10 @@ function DefiniteIntegral(sp::Space)
         # try using `Integral`
         Q = Integral(sp)
         rsp = rangespace(Q)
-        DefiniteIntegralWrapper((Evaluation(rsp,rightendpoint)-Evaluation(rsp,leftendpoint))*Q)
+        TE = eltype(Evaluation(rsp,rightendpoint))
+        A = (Evaluation(rsp,rightendpoint)-Evaluation(rsp,leftendpoint)) * Q
+        S = SpaceOperator(A, sp, ConstantSpace(promote_type(TE, eltype(Q))))
+        DefiniteIntegralWrapper(S)
     else
         # try mapping to canonical domain
         M = Multiplication(fromcanonicalD(sp),setcanonicaldomain(sp))
