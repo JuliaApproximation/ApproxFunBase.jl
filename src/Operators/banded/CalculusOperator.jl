@@ -189,7 +189,7 @@ end
 ## Map to canonical
 @inline function _DefaultDerivative(sp::Space, k::Number)
     assert_integer(k)
-    if typeof(canonicaldomain(sp)).name==typeof(domain(sp)).name
+    if nameof(typeof(canonicaldomain(sp))) == nameof(typeof(domain(sp)))
         # this is the normal default constructor
         csp=canonicalspace(sp)
         if conversion_type(csp,sp)==csp   # Conversion(sp,csp) is not banded, or sp==csp
@@ -219,22 +219,29 @@ end
 end
 
 @static if VERSION >= v"1.8"
-    Base.@constprop :aggressive DefaultDerivative(sp::Space, k::Number) =
-        _DefaultDerivative(sp, k)
+    for f in (:DefaultDerivative, :DefaultIntegral)
+        _f = Symbol(:_, f)
+        @eval Base.@constprop :aggressive $f(sp::Space, k::Number) = $_f(sp, k)
+    end
 else
-    DefaultDerivative(sp::Space, k::Number) = _DefaultDerivative(sp, k)
+    for f in (:DefaultDerivative, :DefaultIntegral)
+        _f = Symbol(:_, f)
+        @eval $f(sp::Space, k::Number) = $_f(sp, k)
+    end
 end
 
-function DefaultIntegral(sp::Space, k::Number)
+@inline function _DefaultIntegral(sp::Space, k::Number)
     assert_integer(k)
-    if typeof(canonicaldomain(sp)).name==typeof(domain(sp)).name
+    if nameof(typeof(canonicaldomain(sp))) == nameof(typeof(domain(sp)))
         # this is the normal default constructor
         csp=canonicalspace(sp)
         if conversion_type(csp,sp)==csp   # Conversion(sp,csp) is not banded, or sp==csp
             # we require that Integral is overridden
             error("Implement Integral($(string(sp)),$k)")
         end
-        IntegralWrapper(TimesOperator([Integral(csp,k),Conversion(sp,csp)]),k)
+        Ik = Integral(csp,k)
+        C = Conversion_maybeconcrete(sp, csp, Val(:forward))
+        IntegralWrapper(TimesOperator(Ik, C), k, sp, rangespace(Ik))
     elseif k > 1
         Q=Integral(sp,1)
         IntegralWrapper(TimesOperator(Integral(rangespace(Q),k-1),Q),k)
