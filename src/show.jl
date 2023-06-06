@@ -12,7 +12,7 @@ end
 
 evalconst(f, ::AnyDomain) = f(0.0)
 evalconst(f, d) = f(leftendpoint(d))
-evalconst(f, d::Point) = f(d)
+evalconst(f, d::Union{Point, UnionDomain{<:Any, <:Tuple{Point, Vararg{Point}}}}) = f(d)
 
 function show(io::IO,f::Fun{<:Union{ConstantSpace, ArraySpace{<:ConstantSpace}}})
     d = domain(f)
