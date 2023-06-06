@@ -51,6 +51,7 @@ end
 Base.size(A::CharLinedMatrix) = size(A.arr) .+ A.sz
 
 function Base.getindex(C::CharLinedMatrix, k::Int, j::Int)
+    @boundscheck checkbounds(C, k, j)
     BM = C.arr
     if j in axes(BM,2) && k in axes(BM,1)
         return C.arr[k,j]
