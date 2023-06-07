@@ -192,7 +192,7 @@ end
     if nameof(typeof(canonicaldomain(sp))) == nameof(typeof(domain(sp)))
         # this is the normal default constructor
         csp=canonicalspace(sp)
-        if conversion_type(csp,sp)==csp   # Conversion(sp,csp) is not banded, or sp==csp
+        if sp == csp || !hasconversion(sp,csp)   # Conversion(sp,csp) is not banded, or sp==csp
            error("Implement Derivative(", sp, ",", k,")")
         end
         D = Derivative(csp,k)
@@ -235,7 +235,7 @@ end
     if nameof(typeof(canonicaldomain(sp))) == nameof(typeof(domain(sp)))
         # this is the normal default constructor
         csp=canonicalspace(sp)
-        if conversion_type(csp,sp)==csp   # Conversion(sp,csp) is not banded, or sp==csp
+        if sp == csp || !hasconversion(sp,csp) # Conversion(sp,csp) is not banded, or sp==csp
             # we require that Integral is overridden
             error("Implement Integral($(string(sp)),$k)")
         end
