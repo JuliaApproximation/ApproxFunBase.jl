@@ -47,6 +47,7 @@ show(io::IO, B::Operator; kw...) = summary(io, B)
 struct CharLinedMatrix{T,A<:AbstractMatrix{T}} <: AbstractMatrix{Union{T,PrintShow}}
     arr :: A
     sz :: NTuple{2,Bool}
+    isbanded :: Bool
 end
 Base.size(A::CharLinedMatrix) = size(A.arr) .+ A.sz
 
@@ -57,7 +58,7 @@ function Base.getindex(C::CharLinedMatrix, k::Int, j::Int)
         return C.arr[k,j]
     end
     sz1, sz2 = size(C)
-    if isbanded(BM) && all(C.sz)
+    if C.isbanded && all(C.sz)
         bw1, bw2 = bandwidths(BM)
         if k in max(1,sz1-bw2):sz1+min(0,bw1) && j == sz2
             PrintShow('⋱')
@@ -107,7 +108,7 @@ function show(io::IO, mimetype::MIME"text/plain", @nospecialize(B::Operator); he
         println(io)
         sz1 = min(size(B,1),10)::Int
         sz2 = min(size(B,2),10)::Int
-        C = CharLinedMatrix(B[1:sz1, 1:sz2], isinf.(size(B)))
+        C = CharLinedMatrix(B[1:sz1, 1:sz2], isinf.(size(B)), isbanded(B))
         print_array(iocompact, C)
     end
 end
