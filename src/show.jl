@@ -98,18 +98,12 @@ end
 
 function show(io::IO, mimetype::MIME"text/plain", @nospecialize(B::Operator); header::Bool=true)
     header && summary(io, B)
-    dsp = domainspace(B)
-
-    sz1_B, sz2_B = size(B)
-
-    iocompact = haskey(io, :compact) ? io : IOContext(io, :compact => true)
 
     if !isambiguous(domainspace(B)) && eltype(B) <: Number
         println(io)
-        sz1 = min(size(B,1),10)::Int
-        sz2 = min(size(B,2),10)::Int
+        sz1, sz2 = min.(size(B), 10)
         C = CharLinedMatrix(B[1:sz1, 1:sz2], isinf.(size(B)), isbanded(B))
-        print_array(iocompact, C)
+        print_array(io, C)
     end
 end
 
