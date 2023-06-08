@@ -33,7 +33,7 @@ subblockbandwidths(::ConstantOperator) = 0,0
 getindex(C::ConstantOperator,k::Integer,j::Integer) =
     k==j ? eltype(C)(C.λ) : zero(eltype(C))
 
-function BandedMatrix(S::SubOperator{T, <:ConstantOperator{T}}) where {T}
+function BandedMatrix(S::SubOperator{T, <:ConstantOperator{T}, NTuple{2,UnitRange{Int}}}) where {T}
     # only one band will be populated
     bw = bandwidth(S,2)
     C = parent(S)
