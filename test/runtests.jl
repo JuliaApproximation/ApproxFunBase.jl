@@ -425,6 +425,20 @@ end
         ApproxFunBase.mul_coefficients!(Operator(2I), v)
         @test v ≈ Float64[2i^2 for i in 1:4]
     end
+    @testset "ConstantOperator" begin
+        C = ConstantOperator(3.0, PointSpace(1:4))
+        @test isdiag(C)
+        @testset "BandedMatrix" begin
+            B = C[2:4, 1:3]
+            @test B == ApproxFunBase.default_BandedMatrix(view(C, 2:4, 1:3))
+
+            B = C[1:4, 1:4]
+            @test B == ApproxFunBase.default_BandedMatrix(view(C, 1:4, 1:4))
+
+            B = C[4:4, 4:4]
+            @test B == ApproxFunBase.default_BandedMatrix(view(C, 4:4, 4:4))
+        end
+    end
     @testset "Matrix types" begin
         F = Multiplication(Fun(PointSpace(1:3)), PointSpace(1:3))
         function test_matrices(F)

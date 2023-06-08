@@ -33,6 +33,15 @@ subblockbandwidths(::ConstantOperator) = 0,0
 getindex(C::ConstantOperator,k::Integer,j::Integer) =
     k==j ? eltype(C)(C.λ) : zero(eltype(C))
 
+function BandedMatrix(S::SubOperator{T, <:ConstantOperator{T}}) where {T}
+    # only one band will be populated
+    bw = bandwidth(S,2)
+    C = parent(S)
+    n = convert(Number, C)
+    B = BandedMatrix{T}(undef, size(S), bandwidths(S))
+    B[band(bw)] .= n
+    B
+end
 
 ==(C1::ConstantOperator, C2::ConstantOperator) = C1.λ==C2.λ
 
