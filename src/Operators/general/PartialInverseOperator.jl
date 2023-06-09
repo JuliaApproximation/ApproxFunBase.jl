@@ -1,7 +1,7 @@
 export PartialInverseOperator
 
 """
-    PartialInverseOperator(O::Operator, bandwidths = (0,ℵ₀))
+    PartialInverseOperator(O::Operator, bandwidths = (0, Infinities.ℵ₀))
 
 Return an approximate estimate for `inv(O)`, such that `PartialInverseOperator(O) * O` is banded, and
 is approximately `I` up to a bandwidth that is one less than the sum of the bandwidths
