@@ -1,37 +1,37 @@
 export PartialInverseOperator
 
 """
-    PartialInverseOperator(O::Operator, bandwidths = bandwidths(O))
+    PartialInverseOperator(O::Operator, bandwidths = (0,ℵ₀))
 
 Return an approximate estimate for `inv(O)`, such that `PartialInverseOperator(O) * O` is banded, and
 is approximately `I` up to a bandwidth that is one less than the sum of the bandwidths
 of `O` and `PartialInverseOperator(O)`.
 
 !!! note
-    Only upper triangular operators are supported as of now.
+    Only upper-triangular operators are supported as of now.
 
 # Examples
 
 ```jldoctest
 julia> C = Conversion(Chebyshev(), Ultraspherical(1));
 
-julia> P = PartialInverseOperator(C); # default bandwidth = (0,2)
+julia> P = PartialInverseOperator(C); # default bandwidth
 
 julia> P * C
 TimesOperator : Chebyshev() → Chebyshev()
- 1.0  0.0  0.0  0.0  -0.5    ⋅     ⋅     ⋅     ⋅     ⋅   ⋅
-  ⋅   1.0  0.0  0.0   0.0  -1.0    ⋅     ⋅     ⋅     ⋅   ⋅
-  ⋅    ⋅   1.0  0.0   0.0   0.0  -1.0    ⋅     ⋅     ⋅   ⋅
-  ⋅    ⋅    ⋅   1.0   0.0   0.0   0.0  -1.0    ⋅     ⋅   ⋅
-  ⋅    ⋅    ⋅    ⋅    1.0   0.0   0.0   0.0  -1.0    ⋅   ⋅
-  ⋅    ⋅    ⋅    ⋅     ⋅    1.0   0.0   0.0   0.0  -1.0  ⋅
-  ⋅    ⋅    ⋅    ⋅     ⋅     ⋅    1.0   0.0   0.0   0.0  ⋱
-  ⋅    ⋅    ⋅    ⋅     ⋅     ⋅     ⋅    1.0   0.0   0.0  ⋱
-  ⋅    ⋅    ⋅    ⋅     ⋅     ⋅     ⋅     ⋅    1.0   0.0  ⋱
-  ⋅    ⋅    ⋅    ⋅     ⋅     ⋅     ⋅     ⋅     ⋅    1.0  ⋱
-  ⋅    ⋅    ⋅    ⋅     ⋅     ⋅     ⋅     ⋅     ⋅     ⋅   ⋱
+ 1.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  ⋯
+  ⋅   1.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  ⋱
+  ⋅    ⋅   1.0  0.0  0.0  0.0  0.0  0.0  0.0  0.0  ⋱
+  ⋅    ⋅    ⋅   1.0  0.0  0.0  0.0  0.0  0.0  0.0  ⋱
+  ⋅    ⋅    ⋅    ⋅   1.0  0.0  0.0  0.0  0.0  0.0  ⋱
+  ⋅    ⋅    ⋅    ⋅    ⋅   1.0  0.0  0.0  0.0  0.0  ⋱
+  ⋅    ⋅    ⋅    ⋅    ⋅    ⋅   1.0  0.0  0.0  0.0  ⋱
+  ⋅    ⋅    ⋅    ⋅    ⋅    ⋅    ⋅   1.0  0.0  0.0  ⋱
+  ⋅    ⋅    ⋅    ⋅    ⋅    ⋅    ⋅    ⋅   1.0  0.0  ⋱
+  ⋅    ⋅    ⋅    ⋅    ⋅    ⋅    ⋅    ⋅    ⋅   1.0  ⋱
+  ⋮    ⋱    ⋱    ⋱    ⋱    ⋱    ⋱    ⋱    ⋱    ⋱   ⋱
 
-julia> P = PartialInverseOperator(C, (0, 4)); # increase the upper bandwidth
+julia> P = PartialInverseOperator(C, (0, 4)); # specify an upper bandwidth
 
 julia> P * C
 TimesOperator : Chebyshev() → Chebyshev()
@@ -58,7 +58,7 @@ function PartialInverseOperator(CO::CachedOperator{T},bandwidths) where T<:Numbe
     return PartialInverseOperator{T,typeof(CO),typeof(bandwidths)}(CO,bandwidths)
 end
 
-function PartialInverseOperator(B::Operator, bandwidths = bandwidths(B))
+function PartialInverseOperator(B::Operator, bandwidths = (0,ℵ₀))
     PartialInverseOperator(cache(B), bandwidths)
 end
 
