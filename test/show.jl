@@ -78,7 +78,7 @@
 			p  = [1+1e-8];
 			M = Multiplication(Fun(PointSpace(p)), PointSpace(p));
 			s = sprint(show, MIME"text/plain"(), M)
-			@test "FiniteOperator : PointSpace([1.00000001]) → PointSpace([1.00000001])\n 1.00000001"
+			@test s == "FiniteOperator : PointSpace([1.00000001]) → PointSpace([1.00000001])\n 1.00000001"
 			p  = [1+1e-8, 2+1e-8];
 			M = Multiplication(Fun(PointSpace(p)), PointSpace(p));
 			s = sprint(show, MIME"text/plain"(), M)
