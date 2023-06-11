@@ -99,6 +99,10 @@ end
 function show(io::IO, mimetype::MIME"text/plain", @nospecialize(B::Operator); header::Bool=true)
     header && summary(io, B)
 
+    if !haskey(io, :compact) && size(B, 2) > 1
+        io = IOContext(io, :compact => true)
+    end
+
     if !isambiguous(domainspace(B)) && eltype(B) <: Number
         println(io)
         sz1, sz2 = min.(size(B), 10)
