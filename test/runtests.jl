@@ -379,6 +379,13 @@ end
                 @test B[I] ≈ S[Tuple(I)...]
             end
         end
+        @testset "mul_coefficients" begin
+            sp1 = PointSpace(1:3)
+            sp2 = PointSpace(2:4)
+            S = ApproxFunBase.SpaceOperator(Conversion(sp1, sp1), sp2, sp2)
+            @test mul_coefficients(view(S, 1:3, 1:3), [1.0, 1.0, 1.0]) == [1.0, 1.0]
+            @test mul_coefficients(view(S, Block(1), Block(1)), [1.0, 1.0, 1.0]) == [1.0, 1.0]
+        end
     end
     @testset "conversion to a matrix" begin
         M = Multiplication(Fun(identity, PointSpace(1:3)))
