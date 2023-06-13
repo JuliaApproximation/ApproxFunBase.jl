@@ -424,6 +424,11 @@ end
         @test g ≈ f
         ApproxFunBase.mul_coefficients!(Operator(2I), v)
         @test v ≈ Float64[2i^2 for i in 1:4]
+
+        C = Conversion(PointSpace(1:4), PointSpace(1:4))
+        M = Multiplication(Fun(PointSpace(1:4)), PointSpace(1:4))
+        M2 = @inferred C * M * C
+        @test M2 * f ≈ M * f
     end
     @testset "ConstantOperator" begin
         C = ConstantOperator(3.0, PointSpace(1:4))
