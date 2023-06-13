@@ -379,14 +379,16 @@ function mul_coefficients(A::SubOperator{<:Any,<:Any,NTuple{2,UnitRange{Int}}}, 
     if size(A,2) == length(b)
         AbstractMatrix(A)*b
     else
-        view(A,:,1:length(b))*b
+        AbstractMatrix(view(A,:,1:length(b)))*b
     end
 end
-function mul_coefficients!(A::SubOperator{<:Any,<:Any,NTuple{2,UnitRange{Int}}}, b)
+function mul_coefficients!(A::SubOperator{<:Any,<:Any,NTuple{2,UnitRange{Int}}}, b,
+        temp = similar(b, promote_type(eltype(A), eltype(b)), size(A,1)))
     if size(A,2) == length(b)
-        mul!(b, AbstractMatrix(A), b)
+        mul!(temp, AbstractMatrix(A), b)
     else
-        mul!(b, view(A,:,1:length(b)), b)
+        mul!(temp, AbstractMatrix(view(A,:,1:length(b))), b)
     end
+    b .= temp
     return b
 end

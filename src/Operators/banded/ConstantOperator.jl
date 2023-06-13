@@ -78,7 +78,7 @@ function mul_coefficients(A::ConstantOperator, b)
         A.λ * b
     end
 end
-function mul_coefficients!(A::ConstantOperator, b)
+function mul_coefficients!(A::ConstantOperator, b, args...)
     λ = A.λ
     if !isone(λ)
         b .*= λ
