@@ -189,6 +189,8 @@ end
 view(V::SubOperator, kr, jr) = view(V.parent,reindex(V,parentindices(V),(kr,jr))...)
 view(V::SubOperator,kr::InfRanges,jr::InfRanges) = view(V.parent,reindex(V,parentindices(V),(kr,jr))...)
 
+view(A::SubOperator,::Colon,jr) = view(A,1:size(A,1),jr)
+
 bandwidths(S::SubOperator) = S.bandwidths
 function colstop(S::SubOperator{<:Any,<:Any,NTuple{2,UnitRange{Int}}},j::Integer)
     cs = colstop(parent(S),parentindices(S)[2][j])
