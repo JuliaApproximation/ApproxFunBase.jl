@@ -282,19 +282,14 @@ end
 
 const PlusOrTimesOp = Union{PlusOperator,TimesOperator}
 
-bandwidthssum(P, f=bandwidths) = mapreduce(f, (t1, t2) -> t1 .+ t2, P, init=(0, 0))
-_bandwidthssum(A::Operator, B::Operator, f=bandwidths) = __bandwidthssum(f(A), f(B))
-__bandwidthssum(A::NTuple{2,InfiniteCardinal{0}}, B::NTuple{2,InfiniteCardinal{0}}) = A
-__bandwidthssum(A::NTuple{2,InfiniteCardinal{0}}, B) = A
-__bandwidthssum(A, B::NTuple{2,InfiniteCardinal{0}}) = B
-__bandwidthssum(A, B) = reduce((t1, t2) -> t1 .+ t2, (A, B), init=(0, 0))
+bandwidthssum(f, ops) = mapfoldl(f, (t1, t2) -> t1 .+ t2, ops, init=(0, 0))
 
 _timessize(ops) = (size(first(ops), 1), size(last(ops), 2))
 function TimesOperator(ops::AbstractVector{O},
-        bw::Tuple{Any,Any}=bandwidthssum(ops),
+        bw::Tuple{Any,Any}=bandwidthssum(bandwidths, ops),
         sz::Tuple{Any,Any}=_timessize(ops),
-        bbw::Tuple{Any,Any}=bandwidthssum(ops, blockbandwidths),
-        sbbw::Tuple{Any,Any}=bandwidthssum(ops, subblockbandwidths),
+        bbw::Tuple{Any,Any}=bandwidthssum(blockbandwidths, ops),
+        sbbw::Tuple{Any,Any}=bandwidthssum(subblockbandwidths, ops),
         ibbb::Bool=all(isbandedblockbanded, ops),
         irb::Bool=all(israggedbelow, ops),
         isaf::Bool = sz[1] == 1 && isconstspace(rangespace(first(ops)));
@@ -306,16 +301,19 @@ end
 
 _extractops(A::TimesOperator, ::typeof(*)) = A.ops
 
-function TimesOperator(A::Operator, B::Operator)
-    v = collateops(*, A, B)
-    ibbb = all(isbandedblockbanded, (A, B))
-    irb = all(israggedbelow, (A, B))
-    sz = _timessize((A, B))
+function TimesOperator(A::Operator, Bs::Operator...)
+    ops = (A, Bs...)
+    v = collateops(*, ops...)
+    ibbb = all(isbandedblockbanded, ops)
+    irb = all(israggedbelow, ops)
+    sz = _timessize(ops)
     isaf = sz[1] == 1 && isconstspace(rangespace(A))
-    anytimesop = any(x -> x isa TimesOperator, (A,B))
-    TimesOperator(convert_vector(v), _bandwidthssum(A, B), sz,
-        _bandwidthssum(A, B, blockbandwidths),
-        _bandwidthssum(A, B, subblockbandwidths), ibbb, irb, isaf;
+    anytimesop = any(x -> x isa TimesOperator, ops)
+    bwsum = bandwidthssum(bandwidths, ops)
+    bbwsum = bandwidthssum(blockbandwidths, ops)
+    subbbwsum = bandwidthssum(subblockbandwidths, ops)
+    TimesOperator(convert_vector(v), bwsum, sz,
+        bbwsum, subbbwsum, ibbb, irb, isaf;
         anytimesop)
 end
 
@@ -368,8 +366,8 @@ function __promotetimes(opsin, dsp, anytimesop)
             end
         end
     end
-    reverse!(ops), bandwidthssum(ops), bandwidthssum(ops, blockbandwidths),
-    bandwidthssum(ops, subblockbandwidths), all(isbandedblockbanded, ops),
+    reverse!(ops), bandwidthssum(bandwidths, ops), bandwidthssum(blockbandwidths, ops),
+    bandwidthssum(subblockbandwidths, ops), all(isbandedblockbanded, ops),
     all(israggedbelow, ops)
 end
 @inline function _op_bws(op)
@@ -396,9 +394,9 @@ end
         op2_dsp = op2:dsp
         op1_dsp = op1:rangespace(op2_dsp)
         ops = (op1_dsp, op2_dsp)
-        return ops, bandwidthssum(ops),
-            bandwidthssum(ops, blockbandwidths),
-            bandwidthssum(ops, subblockbandwidths),
+        return ops, bandwidthssum(bandwidths, ops),
+            bandwidthssum(blockbandwidths, ops),
+            bandwidthssum(subblockbandwidths, ops),
             all(isbandedblockbanded, ops),
             all(israggedbelow, ops)
     end
@@ -652,6 +650,10 @@ end
     isconstop(A) ? promoterangespace(strictconvert(Number, A) * B, rangespace(A)) : TimesOperator(A, B)
 *(A::Conversion, B::Operator) =
     isconstop(B) ? promotedomainspace(strictconvert(Number, B) * A, domainspace(B)) : TimesOperator(A, B)
+
+function *(A::Conversion, B::Operator, C::Conversion)
+    TimesOperator(A, B, C)
+end
 
 @inline function ^(A::Operator, p::Integer)
     p < 0 && return ^(inv(A), -p)
