@@ -47,7 +47,7 @@ end
 \(A::Operator,B::MatrixFun;kwds...) = \(A,Array(B);kwds...)
 
 ldiv_coefficients(A::Operator,b;kwds...) = ldiv_coefficients(qr(A),b;kwds...)
-ldiv_coefficients!(A::Operator,b;kwds...) = ldiv_coefficients!(qr(A),b;kwds...)
+ldiv_coefficients!(A::Operator,b,args...;kwds...) = ldiv_coefficients!(qr(A),b,args...;kwds...)
 
 \(A::Operator,B::Operator) = TimesOperator(inv(A),B)
 

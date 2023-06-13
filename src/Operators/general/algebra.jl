@@ -694,14 +694,14 @@ end
 ## Operations
 for mulcoeff in [:mul_coefficients, :mul_coefficients!]
     @eval begin
-        function $mulcoeff(A::Operator, b)
-            mulcoeff_maybeconvert($mulcoeff, A, b)
+        function $mulcoeff(A::Operator, b, args...)
+            mulcoeff_maybeconvert($mulcoeff, A, b, args...)
         end
 
-        function $mulcoeff(A::TimesOperator, b)
+        function $mulcoeff(A::TimesOperator, b, args...)
             ret = b
             for k = length(A.ops):-1:1
-                ret = $mulcoeff(A.ops[k], ret)
+                ret = $mulcoeff(A.ops[k], ret, args...)
             end
 
             ret
@@ -709,12 +709,12 @@ for mulcoeff in [:mul_coefficients, :mul_coefficients!]
     end
 end
 
-function _mulcoeff_maybeconvert(f::F, A, b) where {F}
+function _mulcoeff_maybeconvert(f::F, A, b, args...) where {F}
     n = size(b, 1)
-    n > 0 ? f(view(A, FiniteRange, 1:n), b) : b
+    n > 0 ? f(view(A, FiniteRange, 1:n), b, args...) : b
 end
 
-mulcoeff_maybeconvert(f, A, b) = _mulcoeff_maybeconvert(f, A, b)
+mulcoeff_maybeconvert(args...) = _mulcoeff_maybeconvert(args...)
 
 function mulcoeff_maybeconvert(f::typeof(mul_coefficients), A, b::Vector)
     v = _mulcoeff_maybeconvert(f, A, b)

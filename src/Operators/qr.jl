@@ -143,14 +143,18 @@ det(A::Operator) = det(qr(A))
 
 mul_coefficients(At::Transpose{T,<:QROperatorQ{T}},B::AbstractVector{T}) where {T<:Real} = parent(At)'*B
 mul_coefficients(At::Transpose{T,<:QROperatorQ{T}},B::AbstractMatrix{T}) where {T<:Real} = parent(At)'*B
-mul_coefficients!(At::Transpose{T,<:QROperatorQ{T}},B::AbstractVector{T}) where {T<:Real} = mul!(B, parent(At)', B)
-mul_coefficients!(At::Transpose{T,<:QROperatorQ{T}},B::AbstractMatrix{T}) where {T<:Real} = mul!(B, parent(At)', B)
+function mul_coefficients!(At::Transpose{T,<:QROperatorQ{T}},B::AbstractVector{T},args...) where {T<:Real}
+    mul_coefficients!(parent(At)', B, args...)
+end
+function mul_coefficients!(At::Transpose{T,<:QROperatorQ{T}},B::AbstractMatrix{T},args...) where {T<:Real}
+    mul_coefficients!(parent(At)', B, args...)
+end
 
 function mul_coefficients(Ac::Adjoint{T,<:QROperatorQ{<:Any,T}},B::AbstractVector{T};
             tolerance=eps(eltype(Ac))/10,maxlength=1000000) where {T}
     mulpars(Ac,B,tolerance,maxlength)
 end
-function mul_coefficients!(Ac::Adjoint{T,<:QROperatorQ{<:Any,T}},B::AbstractVector{T};
+function mul_coefficients!(Ac::Adjoint{T,<:QROperatorQ{<:Any,T}},B::AbstractVector{T}, args...;
             tolerance=eps(eltype(Ac))/10,maxlength=1000000) where {T}
     mulpars(Ac,B,tolerance,maxlength,Val(true))
 end
@@ -171,7 +175,7 @@ end
 
 
 ldiv_coefficients(A::QROperatorQ, B; opts...) = mul_coefficients(A', B; opts...)
-ldiv_coefficients!(A::QROperatorQ, B; opts...) = mul_coefficients!(A', B; opts...)
+ldiv_coefficients!(A::QROperatorQ, B, args...; opts...) = mul_coefficients!(A', B, args...; opts...)
 \(A::QROperatorQ, B::Fun; opts...) = *(A', B; opts...)
 
 
@@ -187,7 +191,7 @@ function ldiv_coefficients(R::QROperatorR, b::AbstractVector)
     U = uppertriangularview!(R, length(b))
     U \ b
 end
-function ldiv_coefficients!(R::QROperatorR, b::AbstractVector)
+function ldiv_coefficients!(R::QROperatorR, b::AbstractVector, args...)
     U = uppertriangularview!(R, length(b))
     ldiv!(U, b)
 end
@@ -226,8 +230,8 @@ ldiv_coefficients(QR::QROperator{<:Any,<:Any,<:Complex}, b::AbstractVector{<:Rea
     ldiv_coefficients(QR, Vector{eltype(QR)}(b);kwds...)
 
 # fallback methods that may not be very efficient
-function ldiv_coefficients!(QR::QROperator{<:Any,<:Any,<:Real}, b::AbstractVector{<:Number}; kwds...)
-    ldiv_coefficients!(convert(Operator{eltype(b)}, QR), b)
+function ldiv_coefficients!(QR::QROperator{<:Any,<:Any,<:Real}, b::AbstractVector{<:Number}, args...; kwds...)
+    ldiv_coefficients!(convert(Operator{eltype(b)}, QR), b, args...; kwds...)
 end
 
 \(A::QROperator,b::Fun;kwds...) =
