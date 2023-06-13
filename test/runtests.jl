@@ -373,11 +373,20 @@ end
             f = Fun(PointSpace(1:10))
             M = Multiplication(f, space(f))
             T = TimesOperator([M,M])
-            S = view(T, 1:2:7, 1:2:7)
-            B = BandedMatrix(S)
-            for I in CartesianIndices(B)
-                @test B[I] ≈ S[Tuple(I)...]
+            for S in (view(T, 1:2:7, 1:2:7), view(M, :, 1:3), view(M, 1:3, :))
+                B = BandedMatrix(S)
+                for I in CartesianIndices(B)
+                    @test B[I] ≈ S[Tuple(I)...]
+                end
             end
+        end
+        @testset "mul_coefficients" begin
+            sp1 = PointSpace(1:3)
+            sp2 = PointSpace(2:4)
+            S = ApproxFunBase.SpaceOperator(Conversion(sp1, sp1), sp2, sp2)
+            v = [1.0, 2.0, 2.0]
+            @test mul_coefficients(view(S, axes(S)...), v) == v
+            @test mul_coefficients(view(S, Block(1), Block(1)), v) == v
         end
     end
     @testset "conversion to a matrix" begin
