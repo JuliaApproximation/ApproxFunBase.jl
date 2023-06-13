@@ -700,8 +700,10 @@ for mulcoeff in [:mul_coefficients, :mul_coefficients!]
 
         function $mulcoeff(A::TimesOperator, b, args...)
             ret = b
+            # we call mulcoeff_maybeconvert to improve type-inference
+            # in case b is a Vector
             for k = length(A.ops):-1:1
-                ret = $mulcoeff(A.ops[k], ret, args...)
+                ret = mulcoeff_maybeconvert($mulcoeff, A.ops[k], ret, args...)
             end
 
             ret
@@ -719,7 +721,7 @@ mulcoeff_maybeconvert(args...) = _mulcoeff_maybeconvert(args...)
 function mulcoeff_maybeconvert(f::typeof(mul_coefficients), A, b::Vector)
     v = _mulcoeff_maybeconvert(f, A, b)
     T = promote_type(eltype(A), eltype(b))
-    convert(Vector{T}, v)
+    strictconvert(Vector{T}, v)
 end
 
 function *(A::Operator, b)
