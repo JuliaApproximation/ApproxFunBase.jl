@@ -569,7 +569,7 @@ macro wrappergetindex(Wrap, forwardsize = true)
         ApproxFunBase.mul_coefficients(A::ApproxFunBase.SubOperator{T,OP},b) where {T,OP<:$Wrap} =
             ApproxFunBase.mul_coefficients(view(parent(A).op,A.indexes[1],A.indexes[2]),b)
 
-        LinearAlgebra.isdiag(W::$Wrap) = isdiag(W.op)
+        LinearAlgebra.isdiag(W::$Wrap) = LinearAlgebra.isdiag(W.op)
 
         # fast converts to banded matrices would be based on indices, not blocks
         function ApproxFunBase.BandedMatrix(S::ApproxFunBase.SubOperator{T,OP,NTuple{2,ApproxFunBase.BlockRange1}}) where {T,OP<:$Wrap}
@@ -585,39 +585,37 @@ macro wrappergetindex(Wrap, forwardsize = true)
 
         # if the spaces change, then we need to be smarter
         function ApproxFunBase.BlockBandedMatrix(S::ApproxFunBase.SubOperator{T,OP}) where {T,OP<:$Wrap}
-            P = parent(S)
-            if ApproxFunBase.blocklengths(domainspace(P)) === ApproxFunBase.blocklengths(domainspace(P.op)) &&
-                    ApproxFunBase.blocklengths(rangespace(P)) === ApproxFunBase.blocklengths(rangespace(P.op))
-                ApproxFunBase.BlockBandedMatrix(view(parent(S).op,S.indexes[1],S.indexes[2]))
-            else
-                ApproxFunBase.default_BlockBandedMatrix(S)
-            end
+            ApproxFunBase._blockmaybebandedmatrix(S,
+                ApproxFunBase.BlockBandedMatrix,
+                ApproxFunBase.default_BlockBandedMatrix)
         end
 
         function ApproxFunBase.PseudoBlockMatrix(S::ApproxFunBase.SubOperator{T,OP}) where {T,OP<:$Wrap}
-            P = parent(S)
-            if ApproxFunBase.blocklengths(domainspace(P)) === ApproxFunBase.blocklengths(domainspace(P.op)) &&
-                    ApproxFunBase.blocklengths(rangespace(P)) === ApproxFunBase.blocklengths(rangespace(P.op))
-                ApproxFunBase.PseudoBlockMatrix(view(parent(S).op,S.indexes[1],S.indexes[2]))
-            else
-                ApproxFunBase.default_blockmatrix(S)
-            end
+            ApproxFunBase._blockmaybebandedmatrix(S,
+                ApproxFunBase.PseudoBlockMatrix,
+                ApproxFunBase.default_blockmatrix)
         end
 
         function ApproxFunBase.BandedBlockBandedMatrix(S::ApproxFunBase.SubOperator{T,OP}) where {T,OP<:$Wrap}
-            P = parent(S)
-            if ApproxFunBase.blocklengths(domainspace(P)) === ApproxFunBase.blocklengths(domainspace(P.op)) &&
-                    ApproxFunBase.blocklengths(rangespace(P)) === ApproxFunBase.blocklengths(rangespace(P.op))
-                ApproxFunBase.BandedBlockBandedMatrix(view(parent(S).op,S.indexes[1],S.indexes[2]))
-            else
-                ApproxFunBase.default_BandedBlockBandedMatrix(S)
-            end
+            ApproxFunBase._blockmaybebandedmatrix(S,
+                ApproxFunBase.BandedBlockBandedMatrix,
+                ApproxFunBase.default_BandedBlockBandedMatrix)
         end
 
         ApproxFunBase.@wrapperstructure($Wrap, $forwardsize) # structure is automatically inherited
     end
 
     esc(ret)
+end
+
+function _blockmaybebandedmatrix(S, f::T, fdef::D) where {T,D}
+    P = parent(S)
+    if ApproxFunBase.blocklengths(domainspace(P)) === ApproxFunBase.blocklengths(domainspace(P.op)) &&
+            ApproxFunBase.blocklengths(rangespace(P)) === ApproxFunBase.blocklengths(rangespace(P.op))
+        f(view(parent(S).op,S.indexes[1],S.indexes[2]))
+    else
+        fdef(S)
+    end
 end
 
 # use this for wrapper operators that have the same spaces but
