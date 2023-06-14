@@ -593,7 +593,7 @@ macro wrappergetindex(Wrap, forwardsize = true)
         function ApproxFunBase.PseudoBlockMatrix(S::ApproxFunBase.SubOperator{T,OP}) where {T,OP<:$Wrap}
             ApproxFunBase._blockmaybebandedmatrix(S,
                 ApproxFunBase.PseudoBlockMatrix,
-                ApproxFunBase.default_blockmatrix)
+                ApproxFunBase.default_BlockMatrix)
         end
 
         function ApproxFunBase.BandedBlockBandedMatrix(S::ApproxFunBase.SubOperator{T,OP}) where {T,OP<:$Wrap}
