@@ -475,6 +475,13 @@ end
         S = ApproxFunBase.SpaceOperator(M, sp, sp)
         @test size(S) == (3,3)
     end
+    @testset "mul_coefficients" begin
+        C = Conversion(PointSpace(1:4), PointSpace(1:4))
+        M = Multiplication(Fun(PointSpace(1:4)), PointSpace(1:4))
+        T = C * M * C
+        v = @inferred mul_coefficients(T, Float64[1:4;])
+        @test v == Float64[1:4;].^2
+    end
 end
 
 @testset "RowVector" begin
