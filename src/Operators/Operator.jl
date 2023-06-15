@@ -109,10 +109,11 @@ end
 blocksize(A::Operator,k) = k==1 ? length(blocklengths(rangespace(A))) : length(blocklengths(domainspace(A)))
 blocksize(A::Operator) = (blocksize(A,1),blocksize(A,2))
 
-
+# operators need to define size(A, k::Integer)
 size(A::Operator) = (size(A,1),size(A,2))
-size(A::Operator,k::Integer) = k==1 ? dimension(rangespace(A)) : dimension(domainspace(A))
 length(A::Operator) = size(A,1) * size(A,2)
+
+size(A::Operator,k::Integer) = opsize(A, k)
 
 
 # used to compute "end" for last index
@@ -139,50 +140,25 @@ Base.ndims(::Operator) = 2
 ## bandrange and indexrange
 isbandedbelow(A::Operator) = isfinite(bandwidth(A,1))::Bool
 isbandedabove(A::Operator) = isfinite(bandwidth(A,2))::Bool
-isbanded(A::Operator) = all(isfinite, bandwidths(A))::Bool
+isbanded(A::Operator) = opisbanded(A)
 
 
 isbandedblockbandedbelow(_) = false
 isbandedblockbandedabove(_) = false
 
-isbandedblockbanded(A::Operator) = isbandedblockbandedabove(A) && isbandedblockbandedbelow(A)
+isbandedblockbanded(A::Operator) = opisbandedblockbanded(A::Operator)
 
 
-# this should be determinable at compile time
-#TODO: I think it can be generalized to the case when the domainspace
-# blocklengths == rangespace blocklengths, in which case replace the definition
-# of p with maximum(blocklength(domainspace(A)))
-function blockbandwidths(A::Operator)
-    hastrivialblocks(A) && return bandwidths(A)
-
-    if hasconstblocks(A)
-        a,b = bandwidths(A)
-        p = getindex_value(blocklengths(domainspace(A)))
-        return (-fld(-a,p),-fld(-b,p))
-    end
-
-    #TODO: Generalize to finite dimensional
-    if size(A,2) == 1
-        rs = rangespace(A)
-
-        if hasconstblocks(rs)
-            a = bandwidth(A,1)
-            p = getindex_value(blocklengths(rs))
-            return (-fld(-a,p),0)
-        end
-    end
-
-    return (length(blocklengths(rangespace(A)))-1,length(blocklengths(domainspace(A)))-1)
-end
+blockbandwidths(A::Operator) = opblockbandwidths(A::Operator)
 
 # assume dense blocks
-subblockbandwidths(K::Operator) = maximum(blocklengths(rangespace(K)))-1, maximum(blocklengths(domainspace(K)))-1
+subblockbandwidths(K::Operator) = opsubblockbandwidths(K::Operator)
 
 isblockbandedbelow(A::Operator) = isfinite(blockbandwidth(A,1))::Bool
 isblockbandedabove(A::Operator) = isfinite(blockbandwidth(A,2))::Bool
-isblockbanded(A::Operator) = all(isfinite, blockbandwidths(A))::Bool
+isblockbanded(A::Operator) = opisblockbanded(A::Operator)
 
-israggedbelow(A::Operator) = isbandedbelow(A)::Bool || isbandedblockbanded(A)::Bool || isblockbandedbelow(A)::Bool
+israggedbelow(A::Operator) = opisraggedbelow(A)
 
 
 blockbandwidth(K::Operator, k::Integer) = blockbandwidths(K)[k]
@@ -197,9 +173,7 @@ bandwidth(A::Operator, k::Integer) = bandwidths(A)[k]
 Return the bandwidth of `op` in the form `(l,u)`, where `l ≥ 0` represents
 the number of subdiagonals and `u ≥ 0` represents the number of superdiagonals.
 """
-bandwidths(A::Operator) = (size(A,1)-1,size(A,2)-1)
-bandwidths(A::Operator, k::Integer) = bandwidths(A)[k]
-
+bandwidths(A::Operator) = opbandwidths(A)
 
 
 ## Strides
@@ -208,8 +182,7 @@ bandwidths(A::Operator, k::Integer) = bandwidths(A)[k]
 # A diagonal operator has essentially infinite stride
 # which we represent by a factorial, so that
 # the gcd with any number < 10 is the number
-stride(A::Operator) =
-    isdiag(A) ? factorial(10) : 1
+stride(A::Operator) = opstride(A::Operator)
 
 isdiag(A::Operator) = bandwidths(A)==(0,0)
 istriu(A::Operator) = bandwidth(A, 1) <= 0
@@ -486,35 +459,104 @@ end
 # Convenience for wrapper ops
 unwrap_axpy!(α,P,A) = axpy!(α,view(parent(P).op,P.indexes[1],P.indexes[2]),A)
 iswrapper(_) = false
-haswrapperstructure(_) = false
+
+haswrapperstructure(@nospecialize(::Type)) = false
+haswrapperstructure(x::Operator) = haswrapperstructure(typeof(x))
+
+@traitdef HasWrapperStructure{X}
+@traitimpl HasWrapperStructure{X} <- haswrapperstructure(X)
+
+# Forward various structure query functions to the parent for wrappers
+
+@traitfn opbandwidths(A::X) where {X; !HasWrapperStructure{X}} =
+    (size(A,1)-1,size(A,2)-1)
+@traitfn opbandwidths(A::X) where {X; HasWrapperStructure{X}} =
+    bandwidths(A.op)
+
+@traitfn opstride(A::X) where {X; HasWrapperStructure{X}} =
+    stride(A.op)
+@traitfn opstride(A::X) where {X; !HasWrapperStructure{X}} =
+    isdiag(A) ? factorial(10) : 1
+
+@traitfn opisblockbanded(A::X) where {X; HasWrapperStructure{X}} =
+    isblockbanded(A.op)
+@traitfn opisblockbanded(A::X) where {X; !HasWrapperStructure{X}} =
+    all(isfinite, blockbandwidths(A))::Bool
+
+@traitfn opisbandedblockbanded(A::X) where {X; HasWrapperStructure{X}} =
+    isbandedblockbanded(A.op)
+@traitfn opisbandedblockbanded(A::X) where {X; !HasWrapperStructure{X}} =
+    isbandedblockbandedabove(A) && isbandedblockbandedbelow(A)
+
+@traitfn opisbanded(A::X) where {X; HasWrapperStructure{X}} =
+    isbanded(A.op)
+@traitfn opisbanded(A::X) where {X; !HasWrapperStructure{X}} =
+    all(isfinite, bandwidths(A))::Bool
+
+@traitfn opisraggedbelow(A::X) where {X; HasWrapperStructure{X}} =
+    israggedbelow(A.op)
+@traitfn function opisraggedbelow(A::X) where {X; !HasWrapperStructure{X}}
+    isbandedbelow(A)::Bool ||
+        isbandedblockbanded(A)::Bool ||
+        isblockbandedbelow(A)::Bool
+end
+
+# this should be determinable at compile time
+#TODO: I think it can be generalized to the case when the domainspace
+# blocklengths == rangespace blocklengths, in which case replace the definition
+# of p with maximum(blocklength(domainspace(A)))
+@traitfn opblockbandwidths(A::X) where {X; HasWrapperStructure{X}} =
+    opblockbandwidths(A.op)
+@traitfn function opblockbandwidths(A::X) where {X; !HasWrapperStructure{X}}
+    hastrivialblocks(A) && return bandwidths(A)
+
+    if hasconstblocks(A)
+        a,b = bandwidths(A)
+        p = getindex_value(blocklengths(domainspace(A)))
+        return (-fld(-a,p),-fld(-b,p))
+    end
+
+    #TODO: Generalize to finite dimensional
+    if size(A,2) == 1
+        rs = rangespace(A)
+
+        if hasconstblocks(rs)
+            a = bandwidth(A,1)
+            p = getindex_value(blocklengths(rs))
+            return (-fld(-a,p),0)
+        end
+    end
+
+    return (length(blocklengths(rangespace(A)))-1,length(blocklengths(domainspace(A)))-1)
+end
+
+@traitfn opsubblockbandwidths(A::X) where {X; HasWrapperStructure{X}} =
+    subblockbandwidths(A.op)
+@traitfn opsubblockbandwidths(A::X) where {X; !HasWrapperStructure{X}} =
+    maximum(blocklengths(rangespace(A)))-1, maximum(blocklengths(domainspace(A)))-1
+
+@traitfn opsize(A::X, k::Integer) where {X; HasWrapperStructure{X}} =
+    opsize(A.op, k)
+@traitfn opsize(::X, k::PosInfinity) where {X; HasWrapperStructure{X}} = ℵ₀
+
+defaultsize(A, k) = k==1 ? dimension(rangespace(A)) : dimension(domainspace(A))
+@traitfn opsize(A::X, k::Integer) where {X; !HasWrapperStructure{X}} =
+    defaultsize(A, k)
 
 # use this for wrapper operators that have the same structure but
 # not necessarily the same entries
 #
 #  Ex: c*op or real(op)
-macro wrapperstructure(Wrap, forwardsize = true)
-    fns = [:(ApproxFunBase.bandwidths),:(LinearAlgebra.stride),
-             :(ApproxFunBase.isbandedblockbanded),:(ApproxFunBase.isblockbanded),
-             :(ApproxFunBase.israggedbelow),:(ApproxFunBase.isbanded),
-             :(ApproxFunBase.blockbandwidths),:(ApproxFunBase.subblockbandwidths),
-             :(LinearAlgebra.issymmetric)]
-
-    if forwardsize
-        fns = [fns; :(Base.size)]
-    end
+macro wrapperstructure(Wrap)
+    fns = [:(LinearAlgebra.issymmetric)]
 
     v1 = map(fns) do func
-
         :($func(D::$Wrap) = $func(D.op))
     end
 
     fns2 = [:(ApproxFunBase.bandwidth),:(ApproxFunBase.colstart),:(ApproxFunBase.colstop),
              :(ApproxFunBase.rowstart),:(ApproxFunBase.rowstop),:(ApproxFunBase.blockbandwidth),
              :(ApproxFunBase.subblockbandwidth)]
-
-    if forwardsize
-        fns2 = [fns2; :(Base.size)]
-    end
 
     v2 = map(fns2) do func
         quote
@@ -524,7 +566,7 @@ macro wrapperstructure(Wrap, forwardsize = true)
      end
 
     ret = quote
-        ApproxFunBase.haswrapperstructure(::$Wrap) = true
+        ApproxFunBase.haswrapperstructure(::Type{<:$Wrap}) = true
         $(v1...)
         $(v2...)
     end
@@ -537,7 +579,7 @@ end
 # use this for wrapper operators that have the same entries but
 # not necessarily the same spaces
 #
-macro wrappergetindex(Wrap, forwardsize = true)
+macro wrappergetindex(Wrap)
     v = map((:(ApproxFunBase.BandedMatrix),:(ApproxFunBase.RaggedMatrix),
                 :(Base.Matrix),:(Base.Vector),:(Base.AbstractVector))) do TYP
         quote
@@ -602,7 +644,7 @@ macro wrappergetindex(Wrap, forwardsize = true)
                 ApproxFunBase.default_BandedBlockBandedMatrix)
         end
 
-        ApproxFunBase.@wrapperstructure($Wrap, $forwardsize) # structure is automatically inherited
+        ApproxFunBase.@wrapperstructure($Wrap) # structure is automatically inherited
     end
 
     esc(ret)

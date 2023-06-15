@@ -96,6 +96,8 @@ import DomainSets: dimension
 
 import IntervalSets: (..), endpoints
 
+using SimpleTraits
+
 const Vec{d,T} = SVector{d,T}
 
 export pad!, pad, chop!, sample,
