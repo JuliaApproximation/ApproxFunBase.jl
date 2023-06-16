@@ -3,7 +3,8 @@ using Base: AnyDict
 using Base, BlockArrays, BandedMatrices, BlockBandedMatrices, DomainSets,
               IntervalSets, SpecialFunctions, AbstractFFTs, FFTW,
               SpecialFunctions, DSP, DualNumbers, LinearAlgebra, SparseArrays,
-              LowRankApprox, FillArrays, InfiniteArrays, InfiniteLinearAlgebra
+              LowRankApprox, FillArrays, InfiniteArrays, InfiniteLinearAlgebra,
+              SimpleTraits
 
 import StaticArrays, Calculus
 using StaticArrays: SVector, @SArray, SArray
