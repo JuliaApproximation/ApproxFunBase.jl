@@ -198,6 +198,11 @@ using LinearAlgebra
             @test fs[1] == Fun(f1, sp)
             @test fs[2] == Fun(f2, sp)
         end
+
+        @testset "promote_rule" begin
+            F = Fun{typeof(PointSpace(1:3)), Float32}
+            @test ApproxFunBase.cfstype(F) == Float32
+        end
     end
 
     @testset "DiracSpace" begin

@@ -54,12 +54,24 @@ union_rule(A::ConstantSpace, B::Space) = constspace_union_rule(A, B)
     ConstantSpace(domain(B))⊕B
 @traitfn constspace_union_rule(A::ConstantSpace, B::X) where {X; ContainsConstant{X}} = B
 
+promote_rule(TF::Type{<:Fun}, TN::Type{<:Number}) = fun_promote_rule(TF, TN)
+
+@traitfn fun_promote_rule(::Type{<:Fun{S,CT}},
+            ::Type{T}) where {T<:Number,CT,S; !ContainsConstant{S}} = Fun
+@traitfn function fun_promote_rule(::Type{<:Fun{S,CT}},
+            ::Type{T}) where {T<:Number,CT,S; ContainsConstant{S}}
+    ApproxFunBase.VFun{S,promote_type(CT,T)}
+end
+@traitfn fun_promote_rule(::Type{Fun{S}},
+            ::Type{T}) where {T<:Number,S; !ContainsConstant{S}} = Fun
+@traitfn function fun_promote_rule(::Type{<:Fun{S}},
+            ::Type{T}) where {T<:Number,S; ContainsConstant{S}}
+    ApproxFunBase.VFun{S,T}
+end
+
 # setup conversions for spaces that contain constants
 macro containsconstants(SP)
     esc(quote
-        Base.promote_rule(::Type{ApproxFunBase.Fun{S,V,VV}},::Type{T}) where {T<:Number,S<:$SP,V,VV} =
-        ApproxFunBase.VFun{S,promote_type(V,T)}
-        Base.promote_rule(::Type{ApproxFunBase.Fun{S}},::Type{T}) where {T<:Number,S<:$SP} = ApproxFunBase.VFun{S,T}
         Base.promote_rule(::Type{ApproxFunBase.Fun{S,V,VV}},
         ::Type{Fun{ApproxFunBase.ConstantSpace{ApproxFunBase.AnyDomain},T,VT}}) where {T,S<:$SP,V,VV,VT} =
             ApproxFunBase.VFun{S,promote_type(V,T)}
@@ -100,7 +112,6 @@ Number(f::Fun) = strictconvert(Number, f)
 Base.promote_rule(::Type{Fun{CS}},::Type{T}) where {CS<:ConstantSpace,T<:Number} = Fun{CS,T}
 Base.promote_rule(::Type{Fun{CS,V}},::Type{T}) where {CS<:ConstantSpace,T<:Number,V} =
     Fun{CS,promote_type(T,V)}
-Base.promote_rule(::Type{IF},::Type{T}) where {T<:Number,IF<:Fun} = Fun
 
 
 # we know multiplication by constants preserves types
