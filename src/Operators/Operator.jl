@@ -245,35 +245,35 @@ getindex(B::Operator,k::Block{2}) = B[Block.(k.n)...]
 
 ## override getindex.
 
-defaultgetindex(B::Operator,k::Integer) = error("Override [k] for $(typeof(B))")
-defaultgetindex(B::Operator,k::Integer,j::Integer) = error("Override [k,j] for $(typeof(B))")
-
+defaultgetindex(B::Operator,k::Integer) =
+    error("Override getindex(::$(typeof(B)), ::Integer)")
+defaultgetindex(B::Operator,k::Integer,j::Integer) =
+    error("Override getindex(::$(typeof(B)), ::Integer, ::Integer)")
+defaultgetindex(A::Operator,kj::CartesianIndex) = A[Tuple(kj)...]
 
 # Ranges
 
+index_ndim(::Integer) = 0
+index_ndim(::Union{AbstractVector, Block, Colon}) = 1
+index_ndims(inds...) = Val(sum(index_ndim, inds))
 
-defaultgetindex(op::Operator,kr::AbstractRange) = eltype(op)[op[k] for k in kr]
-defaultgetindex(B::Operator,k::Block,j::Block) = AbstractMatrix(view(B,k,j))
-defaultgetindex(B::Operator,k::AbstractRange,j::Block) = AbstractMatrix(view(B,k,j))
-defaultgetindex(B::Operator,k::Block,j::AbstractRange) = AbstractMatrix(view(B,k,j))
-defaultgetindex(B::Operator,k::AbstractRange,j::AbstractRange) = AbstractMatrix(view(B,k,j))
+select_vectorinds(a, b...) = a
+select_vectorinds(a::Integer, b...) = select_vectorinds(b...)
 
-defaultgetindex(op::Operator,k::Integer,jr::AbstractRange) = eltype(op)[op[k,j] for j in jr]
-defaultgetindex(op::Operator,kr::AbstractRange,j::Integer) = eltype(op)[op[k,j] for k in kr]
+combine_inds(inds::Tuple, k) = (k, combine_inds(inds[2:end], k)...)
+combine_inds(inds::Tuple{Integer,Vararg}, k) = (inds[1], combine_inds(inds[2:end], k)...)
+combine_inds(::Tuple{}, k) = ()
 
-defaultgetindex(B::Operator,k::Block,j::BlockRange) = AbstractMatrix(view(B,k,j))
-defaultgetindex(B::Operator,k::BlockRange,j::BlockRange) = AbstractMatrix(view(B,k,j))
+defaultgetindex(B::Operator, kj...) = defaultgetindex(B, index_ndims(kj...), kj...)
 
-defaultgetindex(op::Operator,k::Integer,jr::BlockRange) = eltype(op)[op[k,j] for j in jr]
-defaultgetindex(op::Operator,kr::BlockRange,j::Integer) = eltype(op)[op[k,j] for k in kr]
+defaultgetindex(op::Operator, ::Val{1}, inds...) =
+    eltype(op)[op[combine_inds(inds, k)...] for k in select_vectorinds(inds...)]
 
-
-# Colon casdes
-defaultgetindex(A::Operator,kj::CartesianIndex{2}) = A[kj[1],kj[2]]
-defaultgetindex(A::Operator,kj::CartesianIndex{1}) = A[kj[1]]
-defaultgetindex(A::Operator,k,j) = view(A,k,j)
-
-
+function defaultgetindex(B::Operator, ::Val{2}, inds...)
+    S = view(B,inds...)
+    all(isfinite, size(S)) || return S
+    AbstractMatrix(S)
+end
 
 # TODO: finite dimensional blocks
 blockcolstart(A::Operator, J::Block{1}) = Block(max(1,Int(J)-blockbandwidth(A,2)))
