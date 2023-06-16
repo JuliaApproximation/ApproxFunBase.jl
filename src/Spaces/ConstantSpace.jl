@@ -72,10 +72,6 @@ end
 # setup conversions for spaces that contain constants
 macro containsconstants(SP)
     esc(quote
-        Base.promote_rule(::Type{ApproxFunBase.Fun{S,V,VV}},
-        ::Type{Fun{ApproxFunBase.ConstantSpace{ApproxFunBase.AnyDomain},T,VT}}) where {T,S<:$SP,V,VV,VT} =
-            ApproxFunBase.VFun{S,promote_type(V,T)}
-
         ApproxFunBase.containsconstant(::Type{<:$SP}) = true
     end)
 end
