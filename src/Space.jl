@@ -631,7 +631,7 @@ end
 ConstantSpace(d::Domain) = ConstantSpace{typeof(d),real(prectype(d))}(d)
 
 ConstantSpace(::Type{N},d::Domain) where {N<:Number} = ConstantSpace{typeof(d),real(N)}(d)
-ConstantSpace(::Type{N}) where {N<:Number} = ConstantSpace(N,AnyDomain())
+ConstantSpace(N::Type{<:Number}) = ConstantSpace(N,AnyDomain())
 ConstantSpace() = ConstantSpace(Float64)
 
 

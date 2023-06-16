@@ -216,8 +216,8 @@ one(::Type{Fun{S,T,VT}}) where {T,S<:Space,VT} = ones(T,S(AnyDomain()))
 zero(f::Fun) = zeros(cfstype(f), space(f))
 one(f::Fun) = ones(cfstype(f), space(f))
 
-cfstype(::Fun{S,T}) where {S,T} = T
-cfstype(::Type{Fun{S,T,VT}}) where {S,T,VT} = T
+cfstype(f::Fun) = cfstype(typeof(f))
+cfstype(::Type{<:Fun{<:Any,T}}) where {T} = T
 
 # Number and Array conform to the Fun interface
 cfstype(::Type{T}) where T<: Number = T
