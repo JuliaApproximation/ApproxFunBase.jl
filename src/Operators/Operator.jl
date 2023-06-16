@@ -184,9 +184,12 @@ bandwidths(A::Operator) = opbandwidths(A)
 # the gcd with any number < 10 is the number
 stride(A::Operator) = opstride(A::Operator)
 
-isdiag(A::Operator) = bandwidths(A)==(0,0)
+isdiag(A::Operator) = opisdiag(A)
+
 istriu(A::Operator) = bandwidth(A, 1) <= 0
 istril(A::Operator) = bandwidth(A, 2) <= 0
+
+issymmetric(A::Operator) = opissymmetric(A)
 
 
 ## Construct operators
@@ -523,15 +526,19 @@ defaultsize(A, k) = k==1 ? dimension(rangespace(A)) : dimension(domainspace(A))
 @traitfn opsize(A::X, k::Integer) where {X; !HasWrapperStructure{X}} =
     defaultsize(A, k)
 
+@traitfn opisdiag(A::X) where {X; !HasWrapperStructure{X}} = bandwidths(A)==(0,0)
+@traitfn opissymmetric(A::X) where {X; !HasWrapperStructure{X}} = false
+
 for f in [:size, :stride, :bandwidths, :blockbandwidths, :subblockbandwidths,
-            :israggedbelow, :isbanded, :isblockbanded, :isbandedblockbanded]
+            :israggedbelow, :isbanded, :isblockbanded, :isbandedblockbanded,
+            :issymmetric, :isdiag]
     opf = Symbol(:op, f)
     @eval begin
         @traitfn $opf(A::X) where {X; HasWrapperStructure{X}} = $f(A.op)
     end
 end
 
-for f in [:size]
+for f in [:size, :bandwidth, :blockbandwidth, :subblockbandwidth]
     opf = Symbol(:op, f)
     @eval begin
         @traitfn $opf(A::X, k::Integer) where {X; HasWrapperStructure{X}} = $f(A.op, k)
@@ -543,17 +550,10 @@ end
 #
 #  Ex: c*op or real(op)
 macro wrapperstructure(Wrap)
-    fns = [:(LinearAlgebra.issymmetric)]
+    fns2 = [:(ApproxFunBase.colstart),:(ApproxFunBase.colstop),
+             :(ApproxFunBase.rowstart),:(ApproxFunBase.rowstop)]
 
-    v1 = map(fns) do func
-        :($func(D::$Wrap) = $func(D.op))
-    end
-
-    fns2 = [:(ApproxFunBase.bandwidth),:(ApproxFunBase.colstart),:(ApproxFunBase.colstop),
-             :(ApproxFunBase.rowstart),:(ApproxFunBase.rowstop),:(ApproxFunBase.blockbandwidth),
-             :(ApproxFunBase.subblockbandwidth)]
-
-    v2 = map(fns2) do func
+    v = map(fns2) do func
         quote
              $func(D::$Wrap,k::Integer) = $func(D.op,k)
              $func(A::$Wrap,i::ApproxFunBase.PosInfinity) = ℵ₀ # $func(A.op,i) | see PR #42
@@ -562,8 +562,7 @@ macro wrapperstructure(Wrap)
 
     ret = quote
         ApproxFunBase.haswrapperstructure(::Type{<:$Wrap}) = true
-        $(v1...)
-        $(v2...)
+        $(v...)
     end
 
     esc(ret)
@@ -605,8 +604,6 @@ macro wrappergetindex(Wrap)
             ApproxFunBase.mul_coefficients(view(parent(A).op,A.indexes[1],A.indexes[2]),b)
         ApproxFunBase.mul_coefficients(A::ApproxFunBase.SubOperator{T,OP},b) where {T,OP<:$Wrap} =
             ApproxFunBase.mul_coefficients(view(parent(A).op,A.indexes[1],A.indexes[2]),b)
-
-        LinearAlgebra.isdiag(W::$Wrap) = LinearAlgebra.isdiag(W.op)
 
         # fast converts to banded matrices would be based on indices, not blocks
         function ApproxFunBase.BandedMatrix(S::ApproxFunBase.SubOperator{T,OP,NTuple{2,ApproxFunBase.BlockRange1}}) where {T,OP<:$Wrap}
