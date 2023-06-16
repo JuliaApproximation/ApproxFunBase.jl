@@ -470,31 +470,19 @@ haswrapperstructure(x::Operator) = haswrapperstructure(typeof(x))
 
 @traitfn opbandwidths(A::X) where {X; !HasWrapperStructure{X}} =
     (size(A,1)-1,size(A,2)-1)
-@traitfn opbandwidths(A::X) where {X; HasWrapperStructure{X}} =
-    bandwidths(A.op)
 
-@traitfn opstride(A::X) where {X; HasWrapperStructure{X}} =
-    stride(A.op)
 @traitfn opstride(A::X) where {X; !HasWrapperStructure{X}} =
     isdiag(A) ? factorial(10) : 1
 
-@traitfn opisblockbanded(A::X) where {X; HasWrapperStructure{X}} =
-    isblockbanded(A.op)
 @traitfn opisblockbanded(A::X) where {X; !HasWrapperStructure{X}} =
     all(isfinite, blockbandwidths(A))::Bool
 
-@traitfn opisbandedblockbanded(A::X) where {X; HasWrapperStructure{X}} =
-    isbandedblockbanded(A.op)
 @traitfn opisbandedblockbanded(A::X) where {X; !HasWrapperStructure{X}} =
     isbandedblockbandedabove(A) && isbandedblockbandedbelow(A)
 
-@traitfn opisbanded(A::X) where {X; HasWrapperStructure{X}} =
-    isbanded(A.op)
 @traitfn opisbanded(A::X) where {X; !HasWrapperStructure{X}} =
     all(isfinite, bandwidths(A))::Bool
 
-@traitfn opisraggedbelow(A::X) where {X; HasWrapperStructure{X}} =
-    israggedbelow(A.op)
 @traitfn function opisraggedbelow(A::X) where {X; !HasWrapperStructure{X}}
     isbandedbelow(A)::Bool ||
         isbandedblockbanded(A)::Bool ||
@@ -505,8 +493,6 @@ end
 #TODO: I think it can be generalized to the case when the domainspace
 # blocklengths == rangespace blocklengths, in which case replace the definition
 # of p with maximum(blocklength(domainspace(A)))
-@traitfn opblockbandwidths(A::X) where {X; HasWrapperStructure{X}} =
-    opblockbandwidths(A.op)
 @traitfn function opblockbandwidths(A::X) where {X; !HasWrapperStructure{X}}
     hastrivialblocks(A) && return bandwidths(A)
 
@@ -530,18 +516,27 @@ end
     return (length(blocklengths(rangespace(A)))-1,length(blocklengths(domainspace(A)))-1)
 end
 
-@traitfn opsubblockbandwidths(A::X) where {X; HasWrapperStructure{X}} =
-    subblockbandwidths(A.op)
 @traitfn opsubblockbandwidths(A::X) where {X; !HasWrapperStructure{X}} =
     maximum(blocklengths(rangespace(A)))-1, maximum(blocklengths(domainspace(A)))-1
-
-@traitfn opsize(A::X, k::Integer) where {X; HasWrapperStructure{X}} =
-    opsize(A.op, k)
-@traitfn opsize(::X, k::PosInfinity) where {X; HasWrapperStructure{X}} = ℵ₀
 
 defaultsize(A, k) = k==1 ? dimension(rangespace(A)) : dimension(domainspace(A))
 @traitfn opsize(A::X, k::Integer) where {X; !HasWrapperStructure{X}} =
     defaultsize(A, k)
+
+for f in [:size, :stride, :bandwidths, :blockbandwidths, :subblockbandwidths,
+            :israggedbelow, :isbanded, :isblockbanded, :isbandedblockbanded]
+    opf = Symbol(:op, f)
+    @eval begin
+        @traitfn $opf(A::X) where {X; HasWrapperStructure{X}} = $f(A.op)
+    end
+end
+
+for f in [:size]
+    opf = Symbol(:op, f)
+    @eval begin
+        @traitfn $opf(A::X, k::Integer) where {X; HasWrapperStructure{X}} = $f(A.op, k)
+    end
+end
 
 # use this for wrapper operators that have the same structure but
 # not necessarily the same entries
