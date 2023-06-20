@@ -48,7 +48,7 @@ end
 
 @wrappergetindex SpaceOperator
 
-size(S::SpaceOperator, k::Integer) = defaultsize(S, k)
+size(S::SpaceOperator, k::Integer) = opsize(DefaultStyle(), S, k)
 
 # SpaceOperator can change blocks, so we need to override this
 getindex(A::SpaceOperator,KR::BlockRange, JR::BlockRange) = defaultgetindex(A,KR,JR)

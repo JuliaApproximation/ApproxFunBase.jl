@@ -109,6 +109,8 @@ end
 
 
 @wrapper EvaluationWrapper false
+dominantstyle(S::StyleConflict, ::Any, ::EvaluationWrapper) = S.wrapper
+
 EvaluationWrapper(sp::Space,x,order,func::Operator) =
     EvaluationWrapper{typeof(sp),typeof(x),typeof(func),typeof(order),eltype(func)}(sp,x,order,func)
 

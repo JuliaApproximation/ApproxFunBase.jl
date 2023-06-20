@@ -19,7 +19,7 @@ using AbstractFFTs: Plan
 
 import Base: values, convert, getindex, setindex!, *, +, -, ==, <, <=, >, |, !,
               !=, eltype, iterate, /, ^, \,
-              transpose, size, tail, broadcast, broadcast!, copyto!, copy,
+              transpose, size, ndims, tail, broadcast, broadcast!, copyto!, copy,
               to_index, (:), similar, map, vcat, hcat, hvcat, show, summary,
               stride, sum, cumsum, imag, conj, inv, complex, reverse, exp,
               sqrt, abs, abs2, sign, issubset, in, first, last, rand, intersect,
