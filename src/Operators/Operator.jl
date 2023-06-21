@@ -271,8 +271,8 @@ function defaultgetindex(op::Operator, ::Val{1}, inds...)
     # avoid stack-overflow if iterating over indsvec returns indsvec
     # e.g. Blocks
     if typeof(first(indsvec)) == typeof(indsvec)
-        TN = nameof(typeof(op))
-        throw(ArgumentError("please implement getindex(::$TN, $indsvec)"))
+        T = typeof(op)
+        throw(ArgumentError("please implement getindex(::$T, $indsvec)"))
     end
     eltype(op)[op[combine_inds(inds, k)...] for k in indsvec]
 end

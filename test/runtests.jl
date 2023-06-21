@@ -482,6 +482,10 @@ end
         v = @inferred mul_coefficients(T, Float64[1:4;])
         @test v == Float64[1:4;].^2
     end
+    @testset "Evaluation" begin
+        E = Evaluation(PointSpace(1:3), 1)
+        @test_throws ArgumentError E[Block(1)]
+    end
 end
 
 @testset "RowVector" begin
