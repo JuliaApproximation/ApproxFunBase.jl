@@ -266,8 +266,16 @@ combine_inds(::Tuple{}, k) = ()
 
 defaultgetindex(B::Operator, kj...) = defaultgetindex(B, index_ndims(kj...), kj...)
 
-defaultgetindex(op::Operator, ::Val{1}, inds...) =
-    eltype(op)[op[combine_inds(inds, k)...] for k in select_vectorinds(inds...)]
+function defaultgetindex(op::Operator, ::Val{1}, inds...)
+    indsvec = select_vectorinds(inds...)
+    # avoid stack-overflow if iterating over indsvec returns indsvec
+    # e.g. Blocks
+    if typeof(first(indsvec)) == typeof(indsvec)
+        TN = nameof(typeof(op))
+        throw(ArgumentError("please implement getindex(::$TN, $indsvec)"))
+    end
+    eltype(op)[op[combine_inds(inds, k)...] for k in indsvec]
+end
 
 function defaultgetindex(B::Operator, ::Val{2}, inds...)
     S = view(B,inds...)
