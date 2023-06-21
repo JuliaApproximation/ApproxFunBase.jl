@@ -260,14 +260,25 @@ index_ndims(inds...) = Val(sum(index_ndim, inds))
 select_vectorinds(a, b...) = a
 select_vectorinds(a::Integer, b...) = select_vectorinds(b...)
 
-combine_inds(inds::Tuple, k) = (k, combine_inds(inds[2:end], k)...)
-combine_inds(inds::Tuple{Integer,Vararg}, k) = (inds[1], combine_inds(inds[2:end], k)...)
-combine_inds(::Tuple{}, k) = ()
+replace_vector_by_scalar(inds::Tuple, k) = (k, replace_vector_by_scalar(inds[2:end], k)...)
+replace_vector_by_scalar(inds::Tuple{Integer,Vararg}, k) = (inds[1], replace_vector_by_scalar(inds[2:end], k)...)
+replace_vector_by_scalar(::Tuple{}, k) = ()
 
 defaultgetindex(B::Operator, kj...) = defaultgetindex(B, index_ndims(kj...), kj...)
 
-defaultgetindex(op::Operator, ::Val{1}, inds...) =
-    eltype(op)[op[combine_inds(inds, k)...] for k in select_vectorinds(inds...)]
+function defaultgetindex(op::Operator, ::Val{1}, inds...)
+    indsvec = select_vectorinds(inds...)
+    # avoid stack-overflow if iterating over indsvec returns indsvec
+    # e.g. Blocks
+    k = first(indsvec)
+    indsscal = replace_vector_by_scalar(inds, k)
+    if typeof(indsscal) == typeof(inds)
+        T = typeof(op)
+        throw(ArgumentError("please implement "*
+            "getindex(::$T, $(join(string.("::", typeof.(inds)), ",")))"))
+    end
+    eltype(op)[op[replace_vector_by_scalar(inds, k)...] for k in indsvec]
+end
 
 function defaultgetindex(B::Operator, ::Val{2}, inds...)
     S = view(B,inds...)
