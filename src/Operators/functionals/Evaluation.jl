@@ -87,6 +87,8 @@ function getindex(D::ConcreteEvaluation,k::Integer)
     strictconvert(eltype(D), v)
 end
 
+getindex(D::ConcreteEvaluation, r::AbstractRange) = [D[j] for j in r]
+
 boundaryfn(x::typeof(rightendpoint)) = x
 boundaryfn(x::typeof(leftendpoint)) = x
 boundaryfn(x::Boundary) = isleftendpoint(x) ? leftendpoint : rightendpoint
