@@ -2,7 +2,7 @@
 Core functionality of ApproxFun
 
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaApproximation.github.io/ApproxFun.jl/stable)
-[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://JuliaApproximation.github.io/ApproxFun.jl/latest)
+[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaApproximation.github.io/ApproxFun.jl/dev)
 [![CI](https://github.com/JuliaApproximation/ApproxFunBase.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/JuliaApproximation/ApproxFunBase.jl/actions/workflows/ci.yml)
 [![IntegrationTest](https://github.com/JuliaApproximation/ApproxFunBase.jl/actions/workflows/downstream.yml/badge.svg)](https://github.com/JuliaApproximation/ApproxFunBase.jl/actions/workflows/downstream.yml)
 [![codecov](https://codecov.io/gh/JuliaApproximation/ApproxFunBase.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/JuliaApproximation/ApproxFunBase.jl)
