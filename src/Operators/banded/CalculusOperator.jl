@@ -25,6 +25,10 @@ macro calculus_operator(Op)
             rangespace::R
         end
 
+        function ApproxFunBase.dominantstyle(S::ApproxFunBase.StyleConflict, ::Function, A::$WrappOp)
+            S.wrapper
+        end
+
         ApproxFunBase.@wrapper $WrappOp false false
         ApproxFunBase.domainspace(A::$WrappOp) = A.domainspace
         ApproxFunBase.rangespace(A::$WrappOp) = A.rangespace

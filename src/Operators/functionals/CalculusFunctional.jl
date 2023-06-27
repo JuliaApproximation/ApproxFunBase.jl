@@ -19,6 +19,14 @@ macro calculus_functional(Op)
             domainspace::S
         end
 
+        function ApproxFunBase.dominantstyle(S::ApproxFunBase.StyleConflict, ::Function, ::$WrappOp)
+            S.wrapper
+        end
+        function ApproxFunBase.dominantstyle(S::ApproxFunBase.StyleConflict,
+                ::typeof(ApproxFunBase.rangespace), ::$WrappOp)
+            S.functional
+        end
+
         ApproxFunBase.@wrapper $WrappOp false false
         ApproxFunBase.domainspace(A::$WrappOp) = A.domainspace
 

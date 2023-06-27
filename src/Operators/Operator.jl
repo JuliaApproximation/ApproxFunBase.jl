@@ -35,22 +35,6 @@ copy(A::Operator) = A
 BroadcastStyle(::Type{<:Operator}) = DefaultArrayStyle{2}()
 broadcastable(A::Operator) = A
 
-## We assume operators are T->T
-"""
-    rangespace(op::Operator)
-
-Return the range space of `op`.  That is, `op*f` will return a `Fun` in the
-space `rangespace(op)`, provided `f` can be converted to a `Fun` in
-`domainspace(op)`.
-"""
-rangespace(A::Operator) = error("Override rangespace for $(typeof(A))")
-"""
-    domainspace(op::Operator)
-
-Return the domain space of `op`.  That is, `op*f` will first convert `f` to
-a `Fun` in the space `domainspace(op)` before applying the operator.
-"""
-domainspace(A::Operator) = error("Override domainspace for $(typeof(A))")
 spaces(A::Operator) = (rangespace(A), domainspace(A)) # order is consistent with size(::Matrix)
 domain(A::Operator) = domain(domainspace(A))
 
@@ -72,12 +56,202 @@ hasconstblocks(A::Operator) = hasconstblocks(domainspace(A)) && hasconstblocks(r
                                 getindex_value(blocklengths(domainspace(A))) == getindex_value(blocklengths(rangespace(A)))
 
 
+# Operator traits
+
+abstract type OperatorStyle end
+
+struct DefaultStyle <: OperatorStyle end
+
+struct OperatorWrapperStyle{Structure,Indexing,Spaces} <: OperatorStyle end
+const WrapperStructure = OperatorWrapperStyle{true}
+const WrapperIndexing = OperatorWrapperStyle{<:Any,true}
+const WrapperSpaces = OperatorWrapperStyle{<:Any,<:Any,true}
+const WrapperStructureIndexing = OperatorWrapperStyle{true,true}
+const WrapperStructureIndexingSpaces = OperatorWrapperStyle{true,true,true}
+
+OperatorWrapperStyle(A::Operator) = OperatorWrapperStyle(typeof(A))
+function OperatorWrapperStyle(::Type{T}) where {T<:Operator}
+    Structure = iswrapperstructure(T)
+    Indexing = iswrapperindexing(T)
+    Spaces = iswrapperspaces(T)
+    OperatorWrapperStyle{Structure,Indexing,Spaces}()
+end
+
+for f in [:iswrapperstructure, :iswrapperindexing, :iswrapperspaces]
+    @eval $f(@nospecialize(_)) = false
+end
+
+iswrapper(A) = iswrapperstructure(A) || iswrapperindexing(A) || iswrapperspaces(A)
+
+struct Functional <: OperatorStyle end
+
+isafunctional(@nospecialize(_)) = false
+
+# This disambiguates cases where an operator is both a functional and a wrapper
+# In such cases, functions get to choose which trait to dispatch on
+# All such operators must disambiguate between conflicting styles
+struct StyleConflict{W, F} <: OperatorStyle
+    wrapper :: W
+    functional :: F
+end
+
+function dominantstyle(S::StyleConflict, f, op::Operator)
+    throw(ArgumentError("please disambiguate operator style for $f and $(typeof(op))"))
+end
+
+OperatorStyle(A::Operator) = OperatorStyle(typeof(A))
+function OperatorStyle(::Type{T}) where {T<:Operator}
+    Wrap = OperatorWrapperStyle(T)
+    f = Functional()
+    if iswrapper(T) && isafunctional(T)
+        StyleConflict(Wrap, f)
+    elseif iswrapper(T)
+        Wrap
+    elseif isafunctional(T)
+        f
+    else
+        DefaultStyle()
+    end
+end
+
+
+## We assume operators are T->T
+"""
+    rangespace(op::Operator)
+
+Return the range space of `op`.  That is, `op*f` will return a `Fun` in the
+space `rangespace(op)`, provided `f` can be converted to a `Fun` in
+`domainspace(op)`.
+"""
+rangespace(A::Operator) = oprangespace(OperatorStyle(A), A)
+
+"""
+    domainspace(op::Operator)
+
+Return the domain space of `op`.  That is, `op*f` will first convert `f` to
+a `Fun` in the space `domainspace(op)` before applying the operator.
+"""
+domainspace(A::Operator) = opdomainspace(OperatorStyle(A), A)
+
+# Fallback definitions
+opbandwidths(::OperatorStyle, A) = (size(A,1)-1,size(A,2)-1)
+
+opstride(::OperatorStyle, A) = isdiag(A) ? factorial(10) : 1
+
+opisblockbanded(::OperatorStyle, A) = all(isfinite, blockbandwidths(A))::Bool
+
+opisbandedblockbanded(::OperatorStyle, A) =
+    isbandedblockbandedabove(A) && isbandedblockbandedbelow(A)
+
+opisbanded(::OperatorStyle, A) =
+    all(isfinite, bandwidths(A))::Bool
+
+function opisraggedbelow(::OperatorStyle, A)
+    isbandedbelow(A)::Bool ||
+        isbandedblockbanded(A)::Bool ||
+        isblockbandedbelow(A)::Bool
+end
+
+# this should be determinable at compile time
+#TODO: I think it can be generalized to the case when the domainspace
+# blocklengths == rangespace blocklengths, in which case replace the definition
+# of p with maximum(blocklength(domainspace(A)))
+function opblockbandwidths(::OperatorStyle, A)
+    hastrivialblocks(A) && return bandwidths(A)
+
+    if hasconstblocks(A)
+        a,b = bandwidths(A)
+        p = getindex_value(blocklengths(domainspace(A)))
+        return (-fld(-a,p),-fld(-b,p))
+    end
+
+    #TODO: Generalize to finite dimensional
+    if size(A,2) == 1
+        rs = rangespace(A)
+
+        if hasconstblocks(rs)
+            a = bandwidth(A,1)
+            p = getindex_value(blocklengths(rs))
+            return (-fld(-a,p),0)
+        end
+    end
+
+    return (length(blocklengths(rangespace(A)))-1,length(blocklengths(domainspace(A)))-1)
+end
+
+opsubblockbandwidths(::OperatorStyle, A) =
+    maximum(blocklengths(rangespace(A)))-1, maximum(blocklengths(domainspace(A)))-1
+
+opbandwidth(::OperatorStyle, A, k) = bandwidths(A)[k]
+opblockbandwidth(::OperatorStyle, A, k) = blockbandwidths(A)[k]
+opsubblockbandwidth(::OperatorStyle, A, k) = subblockbandwidths(A)[k]
+
+opsize(::OperatorStyle, A, k) = k==1 ? dimension(rangespace(A)) : dimension(domainspace(A))
+
+opisdiag(::OperatorStyle, A) = bandwidths(A)==(0,0)
+opissymmetric(::OperatorStyle, A) = false
+
+for f in [:domainspace, :rangespace]
+    opf = Symbol(:op, f)
+    @eval begin
+        $opf(::OperatorStyle, A) = error("Override domainspace for $(typeof(A))")
+        $opf(S::StyleConflict, A) = $opf(dominantstyle(S, $f, A), A)
+    end
+end
+# Since Functional doesn't change the domain space, we may forward it for WrapperSpaces
+opdomainspace(S::StyleConflict{<:WrapperSpaces}, A) = opdomainspace(S.wrapper, A)
+
+for f in [:bandwidths]
+    opf = Symbol(:op, f)
+    @eval begin
+        # we are always banded by the size
+        """
+            bandwidths(op::Operator)
+
+        Return the bandwidth of `op` in the form `(l,u)`, where `l ≥ 0` represents
+        the number of subdiagonals and `u ≥ 0` represents the number of superdiagonals.
+        """
+        $f(A::Operator) = $opf(OperatorStyle(A), A)
+        $opf(::WrapperStructure, A) = $f(A.op)
+        $opf(S::StyleConflict, A) = $opf(dominantstyle(S, $f, A), A)
+    end
+end
+
+## stride(::Operator)
+# lets us know if operators decouple the entries
+# to split into sub problems
+# A diagonal operator has essentially infinite stride
+# which we represent by a factorial, so that
+# the gcd with any number < 10 is the number
+
+for f in [:stride, :blockbandwidths, :subblockbandwidths,
+            :israggedbelow, :isbanded, :isblockbanded, :isbandedblockbanded,
+            :issymmetric, :isdiag]
+    opf = Symbol(:op, f)
+    @eval begin
+        $f(A::Operator) = $opf(OperatorStyle(A), A)
+        $opf(::WrapperStructure, A) = $f(A.op)
+        $opf(S::StyleConflict, A) = $opf(dominantstyle(S, $f, A), A)
+    end
+end
+
+for f in [:size, :bandwidth, :blockbandwidth, :subblockbandwidth]
+    opf = Symbol(:op, f)
+    @eval begin
+        $f(A::Operator, k::Integer) = $opf(OperatorStyle(A), A, k)
+        $opf(::WrapperStructure, A, k) = $f(A.op, k)
+        $opf(S::StyleConflict, A, k) = $opf(dominantstyle(S, $f, A), A, k)
+    end
+end
+
+# Functional
+opsize(::Functional, A, k) = k==1 ? 1 : dimension(domainspace(A))
+oprangespace(::Functional, F) = ConstantSpace(eltype(F))
+opblockbandwidths(::Functional, A) = 0,hastrivialblocks(domainspace(A)) ? bandwidth(A,2) : ℵ₀
+
 macro functional(FF)
     quote
-        Base.size(A::$FF,k::Integer) = k==1 ? 1 : dimension(domainspace(A))
-        ApproxFunBase.rangespace(F::$FF) = ApproxFunBase.ConstantSpace(eltype(F))
-        ApproxFunBase.isafunctional(::$FF) = true
-        ApproxFunBase.blockbandwidths(A::$FF) = 0,hastrivialblocks(domainspace(A)) ? bandwidth(A,2) : ℵ₀
+        ApproxFunBase.isafunctional(::Type{<:$FF}) = true
         function ApproxFunBase.defaultgetindex(f::$FF,k::Integer,j::Integer)
             @assert k==1
             f[j]::eltype(f)
@@ -109,11 +283,9 @@ end
 blocksize(A::Operator,k) = k==1 ? length(blocklengths(rangespace(A))) : length(blocklengths(domainspace(A)))
 blocksize(A::Operator) = (blocksize(A,1),blocksize(A,2))
 
-
+# operators need to define size(A, k::Integer)
 size(A::Operator) = (size(A,1),size(A,2))
-size(A::Operator,k::Integer) = k==1 ? dimension(rangespace(A)) : dimension(domainspace(A))
 length(A::Operator) = size(A,1) * size(A,2)
-
 
 # used to compute "end" for last index
 function lastindex(A::Operator, n::Integer)
@@ -129,7 +301,7 @@ function lastindex(A::Operator, n::Integer)
 end
 lastindex(A::Operator) = size(A,1)*size(A,2)
 
-Base.ndims(::Operator) = 2
+ndims(::Operator) = 2
 
 
 
@@ -139,79 +311,15 @@ Base.ndims(::Operator) = 2
 ## bandrange and indexrange
 isbandedbelow(A::Operator) = isfinite(bandwidth(A,1))::Bool
 isbandedabove(A::Operator) = isfinite(bandwidth(A,2))::Bool
-isbanded(A::Operator) = all(isfinite, bandwidths(A))::Bool
-
 
 isbandedblockbandedbelow(_) = false
 isbandedblockbandedabove(_) = false
 
-isbandedblockbanded(A::Operator) = isbandedblockbandedabove(A) && isbandedblockbandedbelow(A)
-
-
-# this should be determinable at compile time
-#TODO: I think it can be generalized to the case when the domainspace
-# blocklengths == rangespace blocklengths, in which case replace the definition
-# of p with maximum(blocklength(domainspace(A)))
-function blockbandwidths(A::Operator)
-    hastrivialblocks(A) && return bandwidths(A)
-
-    if hasconstblocks(A)
-        a,b = bandwidths(A)
-        p = getindex_value(blocklengths(domainspace(A)))
-        return (-fld(-a,p),-fld(-b,p))
-    end
-
-    #TODO: Generalize to finite dimensional
-    if size(A,2) == 1
-        rs = rangespace(A)
-
-        if hasconstblocks(rs)
-            a = bandwidth(A,1)
-            p = getindex_value(blocklengths(rs))
-            return (-fld(-a,p),0)
-        end
-    end
-
-    return (length(blocklengths(rangespace(A)))-1,length(blocklengths(domainspace(A)))-1)
-end
-
-# assume dense blocks
-subblockbandwidths(K::Operator) = maximum(blocklengths(rangespace(K)))-1, maximum(blocklengths(domainspace(K)))-1
-
 isblockbandedbelow(A::Operator) = isfinite(blockbandwidth(A,1))::Bool
 isblockbandedabove(A::Operator) = isfinite(blockbandwidth(A,2))::Bool
-isblockbanded(A::Operator) = all(isfinite, blockbandwidths(A))::Bool
-
-israggedbelow(A::Operator) = isbandedbelow(A)::Bool || isbandedblockbanded(A)::Bool || isblockbandedbelow(A)::Bool
-
-
-blockbandwidth(K::Operator, k::Integer) = blockbandwidths(K)[k]
-subblockbandwidth(K::Operator,k::Integer) = subblockbandwidths(K)[k]
-
-
-bandwidth(A::Operator, k::Integer) = bandwidths(A)[k]
-# we are always banded by the size
-"""
-    bandwidths(op::Operator)
-
-Return the bandwidth of `op` in the form `(l,u)`, where `l ≥ 0` represents
-the number of subdiagonals and `u ≥ 0` represents the number of superdiagonals.
-"""
-bandwidths(A::Operator) = (size(A,1)-1,size(A,2)-1)
-bandwidths(A::Operator, k::Integer) = bandwidths(A)[k]
 
 
 
-## Strides
-# lets us know if operators decouple the entries
-# to split into sub problems
-# A diagonal operator has essentially infinite stride
-# which we represent by a factorial, so that
-# the gcd with any number < 10 is the number
-stride(A::Operator) =
-    isdiag(A) ? factorial(10) : 1
-
-isdiag(A::Operator) = bandwidths(A)==(0,0)
 istriu(A::Operator) = bandwidth(A, 1) <= 0
 istril(A::Operator) = bandwidth(A, 2) <= 0
 
@@ -228,7 +336,7 @@ include("SubOperator.jl")
 # sparse(B::Operator,n::Colon,m::AbstractRange)=sparse(BandedMatrix(B,n,m))
 # sparse(B::Operator,n::AbstractRange,m::Colon)=sparse(BandedMatrix(B,n,m))
 
-## geteindex
+## getindex
 
 
 """
@@ -496,38 +604,16 @@ end
 
 # Convenience for wrapper ops
 unwrap_axpy!(α,P,A) = axpy!(α,view(parent(P).op,P.indexes[1],P.indexes[2]),A)
-iswrapper(_) = false
-haswrapperstructure(_) = false
 
 # use this for wrapper operators that have the same structure but
 # not necessarily the same entries
 #
 #  Ex: c*op or real(op)
-macro wrapperstructure(Wrap, forwardsize = true)
-    fns = [:(ApproxFunBase.bandwidths),:(LinearAlgebra.stride),
-             :(ApproxFunBase.isbandedblockbanded),:(ApproxFunBase.isblockbanded),
-             :(ApproxFunBase.israggedbelow),:(ApproxFunBase.isbanded),
-             :(ApproxFunBase.blockbandwidths),:(ApproxFunBase.subblockbandwidths),
-             :(LinearAlgebra.issymmetric)]
+macro wrapperstructure(Wrap)
+    fns2 = [:(ApproxFunBase.colstart),:(ApproxFunBase.colstop),
+             :(ApproxFunBase.rowstart),:(ApproxFunBase.rowstop)]
 
-    if forwardsize
-        fns = [fns; :(Base.size)]
-    end
-
-    v1 = map(fns) do func
-
-        :($func(D::$Wrap) = $func(D.op))
-    end
-
-    fns2 = [:(ApproxFunBase.bandwidth),:(ApproxFunBase.colstart),:(ApproxFunBase.colstop),
-             :(ApproxFunBase.rowstart),:(ApproxFunBase.rowstop),:(ApproxFunBase.blockbandwidth),
-             :(ApproxFunBase.subblockbandwidth)]
-
-    if forwardsize
-        fns2 = [fns2; :(Base.size)]
-    end
-
-    v2 = map(fns2) do func
+    v = map(fns2) do func
         quote
              $func(D::$Wrap,k::Integer) = $func(D.op,k)
              $func(A::$Wrap,i::ApproxFunBase.PosInfinity) = ℵ₀ # $func(A.op,i) | see PR #42
@@ -535,9 +621,8 @@ macro wrapperstructure(Wrap, forwardsize = true)
      end
 
     ret = quote
-        ApproxFunBase.haswrapperstructure(::$Wrap) = true
-        $(v1...)
-        $(v2...)
+        ApproxFunBase.iswrapperstructure(::Type{<:$Wrap}) = true
+        $(v...)
     end
 
     esc(ret)
@@ -548,7 +633,7 @@ end
 # use this for wrapper operators that have the same entries but
 # not necessarily the same spaces
 #
-macro wrappergetindex(Wrap, forwardsize = true)
+macro wrappergetindex(Wrap)
     v = map((:(ApproxFunBase.BandedMatrix),:(ApproxFunBase.RaggedMatrix),
                 :(Base.Matrix),:(Base.Vector),:(Base.AbstractVector))) do TYP
         quote
@@ -579,8 +664,6 @@ macro wrappergetindex(Wrap, forwardsize = true)
             ApproxFunBase.mul_coefficients(view(parent(A).op,A.indexes[1],A.indexes[2]),b)
         ApproxFunBase.mul_coefficients(A::ApproxFunBase.SubOperator{T,OP},b) where {T,OP<:$Wrap} =
             ApproxFunBase.mul_coefficients(view(parent(A).op,A.indexes[1],A.indexes[2]),b)
-
-        LinearAlgebra.isdiag(W::$Wrap) = LinearAlgebra.isdiag(W.op)
 
         # fast converts to banded matrices would be based on indices, not blocks
         function ApproxFunBase.BandedMatrix(S::ApproxFunBase.SubOperator{T,OP,NTuple{2,ApproxFunBase.BlockRange1}}) where {T,OP<:$Wrap}
@@ -613,7 +696,9 @@ macro wrappergetindex(Wrap, forwardsize = true)
                 ApproxFunBase.default_BandedBlockBandedMatrix)
         end
 
-        ApproxFunBase.@wrapperstructure($Wrap, $forwardsize) # structure is automatically inherited
+        ApproxFunBase.@wrapperstructure($Wrap) # structure is automatically inherited
+
+        ApproxFunBase.iswrapperindexing(::Type{<:$Wrap}) = true
     end
 
     esc(ret)
@@ -629,23 +714,21 @@ function _blockmaybebandedmatrix(S, f::T, fdef::D) where {T,D}
     end
 end
 
+isconstop(A) = opisconstop(OperatorStyle(A), A)
+opisconstop(::OperatorStyle, A) = false
+
 # use this for wrapper operators that have the same spaces but
 # not necessarily the same entries or structure
 #
+for f in [:domainspace, :rangespace, :opisconstop]
+    opf = Symbol(:op, f)
+    @eval $opf(::WrapperSpaces, A) = $f(A.op)
+end
+
 macro wrapperspaces(Wrap, forwarddomain = true, forwardrange = true)
-    fns = [:(ApproxFunBase.isconstop)]
-    if forwarddomain
-        fns = [fns; :(ApproxFunBase.domainspace)]
-    end
-    if forwardrange
-        fns = [fns; :(ApproxFunBase.rangespace)]
-    end
-    v = map(fns) do func
-        :($func(D::$Wrap) = $func(D.op))
-    end
     ret = quote
-        $(v...)
-        ApproxFunBase.domain(D::$Wrap) = domain(domainspace(D))
+        ApproxFunBase.iswrapperspaces(::Type{<:$Wrap}) = true
+        # ApproxFunBase.domain(D::$Wrap) = domain(domainspace(D))
     end
 
     esc(ret)
@@ -658,8 +741,6 @@ macro wrapper(Wrap, forwarddomain = true, forwardrange = true)
     ret = quote
         ApproxFunBase.@wrappergetindex($Wrap)
         ApproxFunBase.@wrapperspaces($Wrap, $forwarddomain, $forwardrange)
-
-        ApproxFunBase.iswrapper(::$Wrap) = true
     end
 
 
