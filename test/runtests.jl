@@ -727,3 +727,5 @@ end
 
 @time include("ETDRK4Test.jl")
 include("show.jl")
+
+include("PolynomialSpacesTests.jl")
