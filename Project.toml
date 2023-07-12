@@ -39,22 +39,32 @@ DSP = "0.6, 0.7"
 DomainSets = "0.5, 0.6"
 DualNumbers = "0.6.2"
 FFTW = "0.3, 1"
+FastGaussQuadrature = "0.4, 0.5"
+FastTransforms = "0.12, 0.13, 0.14, 0.15.1"
 FillArrays = "0.11, 0.12, 0.13, 1"
+HalfIntegers = "1.5"
 InfiniteArrays = "0.11, 0.12"
 InfiniteLinearAlgebra = "0.5, 0.6"
 Infinities = "0.1"
 IntervalSets = "0.5, 0.6, 0.7"
 LazyArrays = "0.20, 0.21, 0.22, 1"
 LowRankApprox = "0.2, 0.3, 0.4, 0.5"
+OddEvenIntegers = "0.1.8"
 SimpleTraits = "0.9"
 SpecialFunctions = "0.10, 1.0, 2"
+Static = "0.8"
 StaticArrays = "0.12, 1.0"
 julia = "1.6"
 
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+FastGaussQuadrature = "442a2c76-b920-505d-bb47-c5924d526838"
+FastTransforms = "057dd010-8810-581a-b7be-e3fc3b93f78c"
+HalfIntegers = "f0d1745a-41c9-11e9-1dd9-e5d34d218721"
 Infinities = "e1ba4f0e-776d-440f-acd9-e1d2e9742647"
+OddEvenIntegers = "8d37c425-f37a-4ca2-9b9d-a61bc06559d2"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Static = "aedffcd0-7271-4cad-89d0-dc628f76c6d3"
 
 [targets]
-test = ["Aqua", "Random", "Infinities"]
+test = ["Aqua", "Random", "FastTransforms", "FastGaussQuadrature", "HalfIntegers", "Infinities", "OddEvenIntegers", "Static"]

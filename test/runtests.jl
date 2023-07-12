@@ -696,7 +696,11 @@ end
     @test eltype(vs) == Int
 
     v = ApproxFunBase.CachedIterator(1:∞)
-    @test Base.IteratorSize(v) == Base.IsInfinite()
+    if Base.IteratorSize(1:∞) isa Base.IsInfinite
+        @test Base.IteratorSize(v) == Base.IsInfinite()
+    else # on older versions of InfiniteArrays
+        @test Base.IteratorSize(v) == Base.HasLength()
+    end
     @test isinf(length(v))
     @test eltype(v) == Int
     @test findfirst(3, v) == 3
@@ -727,3 +731,5 @@ end
 
 @time include("ETDRK4Test.jl")
 include("show.jl")
+
+include("PolynomialSpacesTests.jl")
