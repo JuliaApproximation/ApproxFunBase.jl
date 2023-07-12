@@ -31,52 +31,39 @@ coefficients(cfs::AbstractVector,::SequenceSpace) = cfs  # all vectors are conve
 
 ## Constant space defintions
 
-@traitdef ContainsConstant{X}
-@traitimpl ContainsConstant{X} <- containsconstant(X)
-
-containsconstant(@nospecialize(_)) = false
-
-promote_rule(TS1::Type{<:ConstantSpace}, TS2::Type{<:Space}) =
-    constspace_promote_rule(TS1, TS2)
-
-@traitfn function constspace_promote_rule(::Type{<:ConstantSpace},
-            B::Type{X}) where {X; !ContainsConstant{X}}
-    Union{}
-end
-@traitfn function constspace_promote_rule(::Type{<:ConstantSpace},
-            B::Type{X}) where {X; ContainsConstant{X}}
-    B
-end
-
-union_rule(A::ConstantSpace, B::Space) = constspace_union_rule(A, B)
-# TODO: this seems like it needs more thought
-@traitfn constspace_union_rule(A::ConstantSpace, B::X) where {X; !ContainsConstant{X}} =
-    ConstantSpace(domain(B))⊕B
-@traitfn constspace_union_rule(A::ConstantSpace, B::X) where {X; ContainsConstant{X}} = B
-
-promote_rule(TF::Type{<:Fun}, TN::Type{<:Number}) = fun_promote_rule(TF, TN)
-
-@traitfn fun_promote_rule(::Type{<:Fun{S,CT}},
-            ::Type{T}) where {T<:Number,CT,S; !ContainsConstant{S}} = Fun
-@traitfn function fun_promote_rule(::Type{<:Fun{S,CT}},
-            ::Type{T}) where {T<:Number,CT,S; ContainsConstant{S}}
-    ApproxFunBase.VFun{S,promote_type(CT,T)}
-end
-@traitfn fun_promote_rule(::Type{Fun{S}},
-            ::Type{T}) where {T<:Number,S; !ContainsConstant{S}} = Fun
-@traitfn function fun_promote_rule(::Type{<:Fun{S}},
-            ::Type{T}) where {T<:Number,S; ContainsConstant{S}}
-    ApproxFunBase.VFun{S,T}
-end
+containsconstant(A::Space) = containsconstant(typeof(A))
+containsconstant(@nospecialize(_)) = Val(false)
 
 # setup conversions for spaces that contain constants
 macro containsconstants(SP)
     esc(quote
-        ApproxFunBase.containsconstant(::Type{<:$SP}) = true
+        ApproxFunBase.containsconstant(::Type{<:$SP}) = Val(true)
     end)
 end
 
+function promote_rule(TS1::Type{<:ConstantSpace}, ::Type{TS2}) where {TS2<:Space}
+    constspace_promote_rule(TS1, TS2, containsconstant(TS2))
+end
+constspace_promote_rule(::Type{<:ConstantSpace}, ::Type{<:Space}, ::Val{false}) = Union{}
+constspace_promote_rule(::Type{<:ConstantSpace}, ::Type{B}, ::Val{true}) where {B<:Space} = B
 
+union_rule(A::ConstantSpace, B::Space) = constspace_union_rule(A, B, containsconstant(B))
+# TODO: this seems like it needs more thought
+function constspace_union_rule(@nospecialize(_::ConstantSpace), B::Space, ::Val{false})
+    ConstantSpace(domain(B)) ⊕ B
+end
+constspace_union_rule(@nospecialize(_::ConstantSpace), B::Space, ::Val{true}) = B
+
+function promote_rule(TF::Type{<:Fun{S}}, TN::Type{<:Number}) where {S}
+    fun_promote_rule(TF, TN, containsconstant(S))
+end
+fun_promote_rule(::Type{<:Fun}, ::Type{<:Number}, ::Val{false}) = Fun
+function fun_promote_rule(::Type{<:Fun{S,CT}}, ::Type{T}, ::Val{true}) where {T<:Number,CT,S}
+    ApproxFunBase.VFun{S,promote_type(CT,T)}
+end
+function fun_promote_rule(::Type{<:Fun{S}}, ::Type{T}, ::Val{true}) where {T<:Number,S}
+    ApproxFunBase.VFun{S,T}
+end
 
 Fun(c::Number) = Fun(ConstantSpace(typeof(c)),[c])
 Fun(c::Number,d::ConstantSpace) = Fun(d,[c])
