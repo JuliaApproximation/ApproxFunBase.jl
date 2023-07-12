@@ -370,8 +370,10 @@ Base.:(==)(a::UniqueInterval, b::UniqueInterval) = (@assert a.parentinterval == 
 
     @testset "ConstantSpace" begin
         S = Chebyshev()
-        C = ConstantSpace(ChebyshevInterval())
+        d = domain(S)
+        C = ConstantSpace(d)
         @test promote_type(typeof(S), typeof(C)) == typeof(S)
+        @test promote_type(typeof(S|(2:3)), typeof(C)) <: Space{typeof(d)}
 
         @test union(S, C) == S
         # space doesn't contain constant
