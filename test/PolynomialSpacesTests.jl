@@ -27,7 +27,7 @@ ApproxFunBase.domainscompatible(a::UniqueInterval, b::UniqueInterval) = a == b
 
 Base.:(==)(a::UniqueInterval, b::UniqueInterval) = (@assert a.parentinterval == b.parentinterval; true)
 
-@testset "ApproxFunBase" begin
+@testset "PolynomialSpaces" begin
     @testset "Constructor" begin
         @test (@inferred Fun()) == Fun(x->x, Chebyshev())
         @test (@inferred norm(Fun())) ≈ norm(Fun(), 2) ≈ √(2/3) # √∫x^2 dx over -1..1
@@ -366,6 +366,24 @@ Base.:(==)(a::UniqueInterval, b::UniqueInterval) = (@assert a.parentinterval == 
         x = Fun()
         A = @inferred Derivative() * Multiplication(x, Chebyshev())
         @test A * x ≈ 2x
+    end
+
+    @testset "ConstantSpace" begin
+        S = Chebyshev()
+        d = domain(S)
+        C = ConstantSpace(d)
+        @test promote_type(typeof(S), typeof(C)) == typeof(S)
+        @test promote_type(typeof(S|(2:3)), typeof(C)) <: Space{typeof(d)}
+
+        @test union(S, C) == S
+        # space doesn't contain constant
+        cmps = union(S|(2:4), C)
+        @test C in components(cmps)
+        @test S|(2:4) in components(cmps)
+
+        @test promote_type(typeof(Fun()), Float64) == typeof(Fun())
+        @test [Fun(), 1] isa Vector{typeof(Fun())}
+        @test promote_type(Fun{typeof(Chebyshev())}, Float64) == typeof(Fun())
     end
 end
 

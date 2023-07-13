@@ -3,8 +3,7 @@ using Base: AnyDict
 using Base, BlockArrays, BandedMatrices, BlockBandedMatrices, DomainSets,
               IntervalSets, SpecialFunctions, AbstractFFTs, FFTW,
               SpecialFunctions, DSP, DualNumbers, LinearAlgebra, SparseArrays,
-              LowRankApprox, FillArrays, InfiniteArrays, InfiniteLinearAlgebra,
-              SimpleTraits
+              LowRankApprox, FillArrays, InfiniteArrays, InfiniteLinearAlgebra
 
 import StaticArrays, Calculus
 using StaticArrays: SVector, @SArray, SArray
@@ -95,8 +94,6 @@ import Base: view
 import DomainSets: dimension
 
 import IntervalSets: (..), endpoints
-
-using SimpleTraits
 
 const Vec{d,T} = SVector{d,T}
 
