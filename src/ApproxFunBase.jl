@@ -88,7 +88,7 @@ import InfiniteArrays: PosInfinity, InfRanges, AbstractInfUnitRange,
 # convenience for 1-d block ranges
 const BlockRange1 = BlockRange{1,Tuple{UnitRange{Int}}}
 
-import Base: view
+import Base: view, oneto
 
 import DomainSets: dimension
 
@@ -105,7 +105,6 @@ export endpoints, cache
 
 export normalizedspace
 
-import Base: oneto
 
 # assert that the conversion succeeds. This helps with inference as well as sanity
 strictconvert(T::Type, x) = convert(T, x)::T
