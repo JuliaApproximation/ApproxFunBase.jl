@@ -4,7 +4,7 @@ using BlockArrays, BandedMatrices, BlockBandedMatrices, DomainSets,
               SpecialFunctions, DSP, DualNumbers, LinearAlgebra, SparseArrays,
               LowRankApprox, FillArrays, InfiniteArrays, InfiniteLinearAlgebra
 
-import StaticArrays, Calculus
+import Calculus
 using StaticArrays: SVector, @SArray, SArray
 
 import DomainSets: Domain, indomain, UnionDomain, ProductDomain, Point, ∂,
