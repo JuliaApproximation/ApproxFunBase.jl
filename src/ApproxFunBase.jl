@@ -29,7 +29,7 @@ import Base: values, convert, getindex, setindex!, *, +, -, ==, <, <=, >, |, !,
               eachindex, firstindex, lastindex, isreal,
               OneTo, Array, Vector, Matrix, view, ones, @propagate_inbounds,
               print_array, split, iszero, permutedims, rad2deg, deg2rad, checkbounds,
-              real, float
+              real, float, view, oneto
 
 import Base.Broadcast: BroadcastStyle, Broadcasted, AbstractArrayStyle,
               broadcastable, DefaultArrayStyle, broadcasted
@@ -87,8 +87,6 @@ import InfiniteArrays: PosInfinity, InfRanges, AbstractInfUnitRange,
 
 # convenience for 1-d block ranges
 const BlockRange1 = BlockRange{1,Tuple{UnitRange{Int}}}
-
-import Base: view, oneto
 
 import DomainSets: dimension
 
