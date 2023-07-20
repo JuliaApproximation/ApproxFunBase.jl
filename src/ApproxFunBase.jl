@@ -1,11 +1,10 @@
 module ApproxFunBase
-using Base: AnyDict
-using Base, BlockArrays, BandedMatrices, BlockBandedMatrices, DomainSets,
+using BlockArrays, BandedMatrices, BlockBandedMatrices, DomainSets,
               IntervalSets, SpecialFunctions, AbstractFFTs, FFTW,
               SpecialFunctions, DSP, DualNumbers, LinearAlgebra, SparseArrays,
               LowRankApprox, FillArrays, InfiniteArrays, InfiniteLinearAlgebra
 
-import StaticArrays, Calculus
+import Calculus
 using StaticArrays: SVector, @SArray, SArray
 
 import DomainSets: Domain, indomain, UnionDomain, ProductDomain, Point, ∂,
@@ -30,7 +29,7 @@ import Base: values, convert, getindex, setindex!, *, +, -, ==, <, <=, >, |, !,
               eachindex, firstindex, lastindex, isreal,
               OneTo, Array, Vector, Matrix, view, ones, @propagate_inbounds,
               print_array, split, iszero, permutedims, rad2deg, deg2rad, checkbounds,
-              real, float
+              real, float, view, oneto
 
 import Base.Broadcast: BroadcastStyle, Broadcasted, AbstractArrayStyle,
               broadcastable, DefaultArrayStyle, broadcasted
@@ -89,8 +88,6 @@ import InfiniteArrays: PosInfinity, InfRanges, AbstractInfUnitRange,
 # convenience for 1-d block ranges
 const BlockRange1 = BlockRange{1,Tuple{UnitRange{Int}}}
 
-import Base: view
-
 import DomainSets: dimension
 
 import IntervalSets: (..), endpoints
@@ -106,7 +103,6 @@ export endpoints, cache
 
 export normalizedspace
 
-import Base: oneto
 
 # assert that the conversion succeeds. This helps with inference as well as sanity
 strictconvert(T::Type, x) = convert(T, x)::T

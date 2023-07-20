@@ -29,7 +29,7 @@ end
 
 clenshaw(x,c) = clenshaw_halved(2*x, c)
 
-@generated function clenshaw_halved(x, c::StaticArrays.SVector{N,R}) where {N, R}
+@generated function clenshaw_halved(x, c::SVector{N,R}) where {N, R}
     a, b = :(zero(R)), :(zero(R))
     as = []
     for k = N:-1:2
