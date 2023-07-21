@@ -1,10 +1,11 @@
 using ApproxFunBase
-using ApproxFunBase: ∞
+using ApproxFunBase: chebyshev_clenshaw
 using Aqua
 using BandedMatrices
 using BlockArrays
 using BlockBandedMatrices
 using DomainSets
+using DualNumbers
 using FillArrays
 using InfiniteArrays
 using Infinities
@@ -731,5 +732,10 @@ end
 
 @time include("ETDRK4Test.jl")
 include("show.jl")
+
+@testset "chebyshev_clenshaw" begin
+    @test @inferred(chebyshev_clenshaw([1,2], 1)) == 3
+    @test @inferred(chebyshev_clenshaw([1,2], Dual(2,1))) == Dual(5,2)
+end
 
 include("PolynomialSpacesTests.jl")
