@@ -750,5 +750,7 @@ function Integral(d::IntervalOrSegment, n::Number)
     Integral(Ultraspherical(1,d), n)
 end
 
+include("roots.jl")
+
 
 end

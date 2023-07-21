@@ -9,6 +9,8 @@ using BandedMatrices
 using IntervalSets: AbstractInterval
 import IntervalSets: endpoints, closedendpoints
 
+using SpecialFunctions
+
 include("AFOP/PolynomialSpaces.jl")
 using .PolynomialSpaces
 
@@ -384,6 +386,20 @@ Base.:(==)(a::UniqueInterval, b::UniqueInterval) = (@assert a.parentinterval == 
         @test promote_type(typeof(Fun()), Float64) == typeof(Fun())
         @test [Fun(), 1] isa Vector{typeof(Fun())}
         @test promote_type(Fun{typeof(Chebyshev())}, Float64) == typeof(Fun())
+    end
+end
+
+@testset "Special Functions" begin
+    @testset for f in [
+            sinpi, cospi, sin, cos, cosh, exp2, exp10, log2, log10, csc, sec,
+              cot, acot, sinh, csch, asinh, acsch,
+              sech, tanh, coth,
+              sinc, cosc, log1p, log, expm1, tan,
+              cbrt, sqrt, abs, abs2, sign, inv,
+              angle]
+
+        g = Fun(x ->x^2, 0.5..1)
+        @test f(g)(0.75) ≈ f((0.75)^2)
     end
 end
 
