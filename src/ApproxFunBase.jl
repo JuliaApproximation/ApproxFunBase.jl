@@ -29,7 +29,12 @@ import Base: values, convert, getindex, setindex!, *, +, -, ==, <, <=, >, |, !,
               eachindex, firstindex, lastindex, isreal,
               OneTo, Array, Vector, Matrix, view, ones, @propagate_inbounds,
               print_array, split, iszero, permutedims, rad2deg, deg2rad, checkbounds,
-              real, float, view, oneto
+              real, float, view, oneto,
+              sinpi, cospi, sin, cos, cosh, exp2, exp10, log2, log10, csc, acsc, sec,
+              asec, cot, acot, sinh, csch, asinh, acsch,
+              sech, acosh, asech, tanh, coth, atanh, acoth,
+              sinc, cosc, log1p, log, expm1, tan,
+              max, min, cbrt, atan, acos, asin
 
 import Base.Broadcast: BroadcastStyle, Broadcasted, AbstractArrayStyle,
               broadcastable, DefaultArrayStyle, broadcasted
@@ -50,14 +55,9 @@ import SparseArrays: blockdiag
 
 # we need to import all special functions to use Calculus.symbolic_derivatives_1arg
 # we can't do importall Base as we replace some Base definitions
-import SpecialFunctions: sinpi, cospi, airy, besselh,
-              sin, cos, cosh, exp2, exp10, log2, log10, csc, acsc, sec,
-              asec, cot, acot, sinh, csch, asinh, acsch,
-              sech, acosh, asech, tanh, coth, atanh, acoth,
-              log1p, lfact, sinc, cosc, beta, lbeta,
+import SpecialFunctions: airy, besselh,
+              lfact, beta, lbeta,
               eta, zeta, polygamma, logabsgamma, loggamma,
-              abs, sign, log, expm1, tan, abs2, sqrt, angle,
-              max, min, cbrt, atan, acos, asin, inv,
               besselj, bessely, besseli, besselk, besselkx,
               hankelh1, hankelh2, hankelh1x, hankelh2x,
               # functions from Calculus.symbolic_derivatives_1arg
