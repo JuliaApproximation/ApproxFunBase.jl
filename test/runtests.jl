@@ -734,6 +734,11 @@ end
 include("show.jl")
 
 @testset "chebyshev_clenshaw" begin
+    @test @inferred(chebyshev_clenshaw(Int[], 1)) == 0
+    @test @inferred(chebyshev_clenshaw(Int[], Dual(2,1))) == Dual(0,0)
+    @test @inferred(chebyshev_clenshaw(Float64[], 1)) == 0
+    @test @inferred(chebyshev_clenshaw(Float64[], 1.0)) == 0
+    @test @inferred(chebyshev_clenshaw(Int[1], 1)) == 1
     @test @inferred(chebyshev_clenshaw([1,2], 1)) == 3
     @test @inferred(chebyshev_clenshaw([1,2], Dual(2,1))) == Dual(5,2)
 end
