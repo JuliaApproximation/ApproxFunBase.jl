@@ -110,3 +110,5 @@ function Base.kron(f::Fun,g::Fun)
 end
 Base.kron(f::Fun,g::Number) = kron(f,Fun(g))
 Base.kron(f::Number,g::Fun) = kron(Fun(f),g)
+Base.kron(f::Fun,g::UniformScaling) = kron(f,Operator(g))
+Base.kron(f::UniformScaling,g::Fun) = kron(Operator(f),g)

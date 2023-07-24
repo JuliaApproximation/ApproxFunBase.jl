@@ -223,21 +223,32 @@ end
 
 ## Shorthand
 
-
-⊗(A,B) = kron(A,B)
+const KronTypes = Union{Fun, Operator, AbstractArray{<:Operator}}
+const MiscKronTypes = Union{Number, UniformScaling}
+# avoid defining methods like 2 ⊗ 2
+⊗(A::KronTypes, B::KronTypes) = kron(A, B)
+⊗(A::KronTypes, B::MiscKronTypes) = kron(A, B)
+⊗(A::MiscKronTypes, B::KronTypes) = kron(A, B)
 
 Base.kron(A::Operator,B::Operator) = KroneckerOperator(A,B)
 Base.kron(A::Operator,B) = KroneckerOperator(A,B)
 Base.kron(A,B::Operator) = KroneckerOperator(A,B)
-Base.kron(A::AbstractVector{T},B::Operator) where {T<:Operator} =
-    Operator{promote_type(eltype(T),eltype(B))}[kron(a,B) for a in A]
-Base.kron(A::Operator,B::AbstractVector{T}) where {T<:Operator} =
-    Operator{promote_type(eltype(T),eltype(A))}[kron(A,b) for b in B]
-Base.kron(A::AbstractVector{T},B::UniformScaling) where {T<:Operator} =
-    Operator{promote_type(eltype(T),eltype(B))}[kron(a,1.0B) for a in A]
-Base.kron(A::UniformScaling,B::AbstractVector{T}) where {T<:Operator} =
-    Operator{promote_type(eltype(T),eltype(A))}[kron(1.0A,b) for b in B]
 
+function Base.kron(A::AbstractVector{T},B::Operator) where {T<:Operator}
+    Operator{promote_type(eltype(T),eltype(B))}[kron(a,B) for a in A]
+end
+
+function Base.kron(A::Operator,B::AbstractVector{T}) where {T<:Operator}
+    Operator{promote_type(eltype(T),eltype(A))}[kron(A,b) for b in B]
+end
+
+function Base.kron(A::AbstractVector{T},B::UniformScaling) where {T<:Operator}
+    Operator{promote_type(eltype(T),eltype(B))}[kron(a,1.0B) for a in A]
+end
+
+function Base.kron(A::UniformScaling,B::AbstractVector{T}) where {T<:Operator}
+    Operator{promote_type(eltype(T),eltype(A))}[kron(1.0A,b) for b in B]
+end
 
 
 
