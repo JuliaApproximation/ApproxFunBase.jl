@@ -218,6 +218,8 @@ Base.:(==)(a::UniqueInterval, b::UniqueInterval) = (@assert a.parentinterval == 
             x = Fun()
             O = x ⊗ I
             @test O * Fun((x,y)->x^2 * y^2, Chebyshev()^2) ≈ Fun((x,y)->x^3 * y^2, Chebyshev()^2)
+            O = I ⊗ x
+            @test O * Fun((x,y)->x^2 * y^2, Chebyshev()^2) ≈ Fun((x,y)->x^2 * y^3, Chebyshev()^2)
         end
     end
 
