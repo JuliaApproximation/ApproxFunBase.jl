@@ -1,7 +1,14 @@
-
-
 export HermitianOperator, SymmetricOperator, AdjointOperator, TransposeOperator
 
+function char_to_symbol(uplo::Char)
+    if uplo == 'U'
+        return :U
+    elseif uplo == 'L'
+        return :L
+    else
+        throw(ArgumentError("invalid uplo $uplo"))
+    end
+end
 
 struct HermitianOperator{T<:Number,B<:Operator} <: Operator{T}
     op::B
@@ -9,7 +16,9 @@ struct HermitianOperator{T<:Number,B<:Operator} <: Operator{T}
 end
 
 HermitianOperator(B::Operator{T}, uplo::Symbol=:U) where {T<:Number} = HermitianOperator{T,typeof(B)}(B, char_uplo(uplo))
-convert(::Type{Operator{T}},A::HermitianOperator) where {T}=HermitianOperator(strictconvert(Operator{T},A.op), A.uplo)
+function convert(::Type{Operator{T}},A::HermitianOperator) where {T}
+    HermitianOperator(strictconvert(Operator{T},A.op), char_to_symbol(A.uplo))
+end
 
 domainspace(P::HermitianOperator)=domainspace(P.op)
 rangespace(P::HermitianOperator)=rangespace(P.op)
@@ -42,7 +51,9 @@ struct SymmetricOperator{T<:Number,B<:Operator} <: Operator{T}
 end
 
 SymmetricOperator(B::Operator{T}, uplo::Symbol=:U) where {T<:Number} = SymmetricOperator{T,typeof(B)}(B, char_uplo(uplo))
-convert(::Type{Operator{T}},A::SymmetricOperator) where {T}=SymmetricOperator(strictconvert(Operator{T},A.op), A.uplo)
+function convert(::Type{Operator{T}},A::SymmetricOperator) where {T}
+    SymmetricOperator(strictconvert(Operator{T},A.op), char_to_symbol(A.uplo))
+end
 
 domainspace(P::SymmetricOperator)=domainspace(P.op)
 rangespace(P::SymmetricOperator)=rangespace(P.op)
