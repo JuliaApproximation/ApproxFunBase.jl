@@ -223,12 +223,7 @@ end
 
 ## Shorthand
 
-const KronTypes = Union{Fun, Operator, AbstractArray{<:Operator}}
-const MiscKronTypes = Union{Number, UniformScaling}
-# avoid defining methods like 2 ⊗ 2
-⊗(A::KronTypes, B::KronTypes) = kron(A, B)
-⊗(A::KronTypes, B::MiscKronTypes) = kron(A, B)
-⊗(A::MiscKronTypes, B::KronTypes) = kron(A, B)
+⊗(A,B) = kron(A,B)
 
 Base.kron(A::Operator,B::Operator) = KroneckerOperator(A,B)
 Base.kron(A::Operator,B) = KroneckerOperator(A,B)
