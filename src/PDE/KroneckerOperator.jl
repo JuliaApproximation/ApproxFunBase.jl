@@ -223,27 +223,21 @@ end
 
 ## Shorthand
 
+
 ⊗(A,B) = kron(A,B)
 
 Base.kron(A::Operator,B::Operator) = KroneckerOperator(A,B)
 Base.kron(A::Operator,B) = KroneckerOperator(A,B)
 Base.kron(A,B::Operator) = KroneckerOperator(A,B)
-
-function Base.kron(A::AbstractVector{T},B::Operator) where {T<:Operator}
+Base.kron(A::AbstractVector{T},B::Operator) where {T<:Operator} =
     Operator{promote_type(eltype(T),eltype(B))}[kron(a,B) for a in A]
-end
-
-function Base.kron(A::Operator,B::AbstractVector{T}) where {T<:Operator}
+Base.kron(A::Operator,B::AbstractVector{T}) where {T<:Operator} =
     Operator{promote_type(eltype(T),eltype(A))}[kron(A,b) for b in B]
-end
-
-function Base.kron(A::AbstractVector{T},B::UniformScaling) where {T<:Operator}
+Base.kron(A::AbstractVector{T},B::UniformScaling) where {T<:Operator} =
     Operator{promote_type(eltype(T),eltype(B))}[kron(a,1.0B) for a in A]
-end
-
-function Base.kron(A::UniformScaling,B::AbstractVector{T}) where {T<:Operator}
+Base.kron(A::UniformScaling,B::AbstractVector{T}) where {T<:Operator} =
     Operator{promote_type(eltype(T),eltype(A))}[kron(1.0A,b) for b in B]
-end
+
 
 
 

@@ -203,13 +203,21 @@ Base.:(==)(a::UniqueInterval, b::UniqueInterval) = (@assert a.parentinterval == 
         @test f(0.5)*g(0.5) ≈ (f*g)(0.5)
     end
 
-    @testset "Multivariate" begin
+    @testset "ArraySpace" begin
         @testset for S in Any[Chebyshev(), Legendre()]
             f = Fun(x->ones(2,2), S)
             @test (f+1) * f ≈ (1+f) * f ≈ f^2 + f
             @test (f-1) * f ≈ f^2 - f
             @test (1-f) * f ≈ f - f^2
             @test f + f ≈ 2f ≈ f*2
+        end
+    end
+
+    @testset "Multivariate" begin
+        @testset "kron" begin
+            x = Fun()
+            O = x ⊗ I
+            @test O * Fun((x,y)->x^2 * y^2, Chebyshev()^2) ≈ Fun((x,y)->x^3 * y^2, Chebyshev()^2)
         end
     end
 
