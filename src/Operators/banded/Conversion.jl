@@ -91,7 +91,12 @@ Return `Conversion(normalizedspace(S), S)`. This may be concretely inferred for 
 """
 function Conversion_normalizedspace(S::Space, v::Union{Val{:forward}, Val{:backward}} = Val(:forward))
     vflip = v isa Val{:forward} ? Val(:backward) : Val(:forward)
-    Conversion_maybeconcrete(normalizedspace(S), S, vflip)
+    NS = normalizedspace(S)
+    if S isa typeof(NS) # in case S is already normalized, in which case the conversion is a no-op
+        Conversion(S)
+    else
+        Conversion_maybeconcrete(NS, S, vflip)
+    end
 end
 
 """
