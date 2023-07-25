@@ -326,6 +326,17 @@ Base.:(==)(a::UniqueInterval, b::UniqueInterval) = (@assert a.parentinterval == 
         end
     end
 
+    @testset "layout Operators" begin
+        D = Derivative(Chebyshev())
+        for S in (SymmetricOperator(D),
+                    HermitianOperator(D))
+            S2 = convert(Operator{Int}, S)
+            B = S2[1:10, 1:10]
+            @test B isa BandedMatrix{Int}
+            @test S2[1:10, 1:10] == S[1:10, 1:10]
+        end
+    end
+
     @testset "inplace ldiv" begin
         @testset for T in [Float32, Float64, ComplexF32, ComplexF64]
             v = rand(T, 4)
