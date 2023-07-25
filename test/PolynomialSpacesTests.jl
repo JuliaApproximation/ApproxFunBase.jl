@@ -147,7 +147,7 @@ Base.:(==)(a::UniqueInterval, b::UniqueInterval) = (@assert a.parentinterval == 
         end
     end
 
-    @testset "conversion" begin
+    @testset "Conversion" begin
         C12 = Conversion(Chebyshev(), NormalizedLegendre())
         C21 = Conversion(NormalizedLegendre(), Chebyshev())
         @test Matrix((C12 * C21)[1:10, 1:10]) ≈ I
@@ -157,6 +157,21 @@ Base.:(==)(a::UniqueInterval, b::UniqueInterval) = (@assert a.parentinterval == 
         C1C2 = Conversion(Ultraspherical(1), NormalizedPolynomialSpace(Ultraspherical(1))) *
                 Conversion(Chebyshev(), Ultraspherical(1))
         @test Matrix(C12[1:10, 1:10]) ≈ Matrix(C1C2[1:10, 1:10])
+
+        @testset "to normalized spaces" begin
+            for S in (Legendre(), NormalizedLegendre())
+                f = Fun(x->x^2, S)
+                C = @inferred Conversion_normalizedspace(S, Val(:forward))
+                g = C * f
+                @test space(g) == normalizedspace(space(f))
+                @test g ≈ f
+                f = Fun(x->x^2, normalizedspace(S))
+                C = @inferred Conversion_normalizedspace(S, Val(:backward))
+                g = C * f
+                @test normalizedspace(space(g)) == space(f)
+                @test g ≈ f
+            end
+        end
     end
 
     @testset "union" begin
