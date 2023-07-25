@@ -90,11 +90,11 @@ Return `Conversion(S, normalizedspace(S))`. This may be concretely inferred for 
 Return `Conversion(normalizedspace(S), S)`. This may be concretely inferred for orthogonal polynomial spaces.
 """
 function Conversion_normalizedspace(S::Space, v::Union{Val{:forward}, Val{:backward}} = Val(:forward))
-    vflip = v isa Val{:forward} ? Val(:backward) : Val(:forward)
     NS = normalizedspace(S)
     if S isa typeof(NS) # in case S is already normalized, in which case the conversion is a no-op
         Conversion(S)
     else
+        vflip = v isa Val{:forward} ? Val(:backward) : Val(:forward)
         Conversion_maybeconcrete(NS, S, vflip)
     end
 end
