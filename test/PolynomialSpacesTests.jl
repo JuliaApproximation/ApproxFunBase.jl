@@ -305,6 +305,13 @@ Base.:(==)(a::UniqueInterval, b::UniqueInterval) = (@assert a.parentinterval == 
         @testset for I in CartesianIndices(B)
             @test B[I] ≈ P[Tuple(I)...] rtol=1e-8 atol=eps(eltype(B))
         end
+
+        D1 = Derivative(Chebyshev())
+        P1 = PartialInverseOperator(Conversion(domainspace(D1), rangespace(D1)))
+        D2 = Derivative(Chebyshev(), 2)
+        P2 = PartialInverseOperator(Conversion(domainspace(D2), rangespace(D2)))
+        @test (P1 * D1)[1:10, 1:10] ≈ (P2 * D1)[1:10, 1:10]
+        @test ((P1 * D1)^2)[1:10, 1:10] ≈ (P2 * D2)[1:10, 1:10]
     end
 
     @testset "istriu/istril" begin
@@ -378,6 +385,12 @@ Base.:(==)(a::UniqueInterval, b::UniqueInterval) = (@assert a.parentinterval == 
         x = Fun()
         A = @inferred Derivative() * Multiplication(x, Chebyshev())
         @test A * x ≈ 2x
+        @test ApproxFunBase.rowstart(A, ApproxFunBase.ℵ₀) == ApproxFunBase.ℵ₀
+    end
+
+    @testset "PlusOperator" begin
+        A = Derivative(Chebyshev()) + Derivative(Chebyshev())
+        @test ApproxFunBase.rowstart(A, ApproxFunBase.ℵ₀) == ApproxFunBase.ℵ₀
     end
 
     @testset "ConstantSpace" begin

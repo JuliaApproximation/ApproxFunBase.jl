@@ -48,6 +48,7 @@ for (OP, mn) in ((:colstart, :min), (:colstop, :max), (:rowstart, :min), (:rowst
             mapreduce(op -> $OP(op, k), $mn, P.ops)
         end
     end
+    @eval $OP(::PlusOperator, ::InfiniteCardinal{0}) = ℵ₀
 end
 
 # We assume that a Vector{Operator{T}} occurs when incompatible operators are added
@@ -340,10 +341,10 @@ else
     promotetimes(args...) = _promotetimes(args...)
 end
 @inline function _promotetimes(opsin,
-    dsp=domainspace(last(opsin)),
-    anytimesop=true)
+        dsp=domainspace(last(opsin)),
+        anytimesop=true)
 
-    @assert length(opsin) > 1 "need at least 2 operators"
+    length(opsin) > 1 || throw(ArgumentError("need at least 2 operators"))
     ops, bw, bbw, sbbw, ibbb, irb = __promotetimes(opsin, dsp, anytimesop)
     sz = _timessize(ops)
     isaf = sz[1] == 1 && isconstspace(rangespace(first(ops)))
@@ -356,14 +357,12 @@ function __promotetimes(opsin, dsp, anytimesop)
 
     for k in reverse(eachindex(opsin))
         op = opsin[k]
-        if !isa(op, Conversion)
-            op_dsp = promotedomainspace(op, dsp)
-            dsp = rangespace(op_dsp)
-            if anytimesop && isa(op_dsp, TimesOperator)
-                append!(ops, view(op_dsp.ops, reverse(axes(op_dsp.ops, 1))))
-            else
-                push!(ops, op_dsp)
-            end
+        op_dsp = promotedomainspace(op, dsp)
+        dsp = rangespace(op_dsp)
+        if anytimesop && isa(op_dsp, TimesOperator)
+            append!(ops, view(op_dsp.ops, reverse(axes(op_dsp.ops, 1))))
+        else
+            push!(ops, op_dsp)
         end
     end
     reverse!(ops), bandwidthssum(bandwidths, ops), bandwidthssum(blockbandwidths, ops),
@@ -433,6 +432,7 @@ for OP in (:rowstart, :rowstop)
         end
         k
     end
+    @eval $OP(::TimesOperator, ::InfiniteCardinal{0}) = ℵ₀
 end
 
 for OP in (:colstart, :colstop)
