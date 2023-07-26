@@ -543,10 +543,28 @@ Base.isless(x::PosInfinity, y::Block{1}) = isless(x, Int(y))
 pad(A::BandedMatrix,n,::Colon) = pad(A,n,n+A.u)  # Default is to get all columns
 columnrange(A,row::Integer) = max(1,row-bandwidth(A,1)):row+bandwidth(A,2)
 
+abstract type AbstractCachedIterator{T,IT} end
+eltype(it::Type{<:AbstractCachedIterator{T}}) where {T} = T
+function Base.IteratorSize(::Type{<:AbstractCachedIterator{<:Any,IT}}) where {IT}
+    Base.IteratorSize(IT) isa Base.IsInfinite ? Base.IsInfinite() : Base.HasLength()
+end
 
+Base.keys(c::AbstractCachedIterator) = oneto(length(c))
+length(A::AbstractCachedIterator) = length(A.iterator)
+
+# Lazy wrapper that mimics a CachedIterator, and has an `iterator` field
+struct UncachedIterator{T,IT} <: AbstractCachedIterator{T,IT}
+    iterator :: IT
+end
+UncachedIterator(it::IT) where IT = UncachedIterator{eltype(it),IT}(it)
+
+iterate(it::UncachedIterator, st...) = iterate(it.iterator, st...)
+getindex(it::UncachedIterator, k) = it.iterator[k]
+
+Base.show(io::IO, C::UncachedIterator) = print(io, "$UncachedIterator(", C.iterator, ")")
 
 ## Store iterator
-mutable struct CachedIterator{T,IT}
+mutable struct CachedIterator{T,IT} <: AbstractCachedIterator{T,IT}
     iterator::IT
     storage::Vector{T}
     state
@@ -582,15 +600,6 @@ function resize!(it::CachedIterator{T},n::Integer) where {T}
     it
 end
 
-
-eltype(it::Type{<:CachedIterator{T}}) where {T} = T
-
-function Base.IteratorSize(::Type{<:CachedIterator{<:Any,IT}}) where {IT}
-    Base.IteratorSize(IT) isa Base.IsInfinite ? Base.IsInfinite() : Base.HasLength()
-end
-
-Base.keys(c::CachedIterator) = oneto(length(c))
-
 iterate(it::CachedIterator) = iterate(it,1)
 function iterate(it::CachedIterator,st::Int)
     if  st > it.length && iterate(it.iterator,it.state...) === nothing
@@ -612,7 +621,6 @@ end
 @deprecate findfirst(A::CachedIterator, x) findfirst(x, A::CachedIterator)
 findfirst(x::T, A::CachedIterator{T}) where {T} = findfirst(==(x), A)
 
-length(A::CachedIterator) = length(A.iterator)
 
 ## nocat
 vnocat(A...) = Base.vect(A...)
@@ -676,7 +684,7 @@ conv(x::AbstractFill, y::AbstractFill) = DSP.conv(x, y)
 ## BlockInterlacer
 # interlaces coefficients by blocks
 # this has the property that all the coefficients of a block of a subspace
-# are grouped together, starting with the first bloc
+# are grouped together, starting with the first block
 #
 # TODO: cache sums
 
@@ -747,3 +755,33 @@ iterate(it::TrivialInterlacer{N,OneToInf{Int}}, st...) where {N} =
     iterate(Iterators.product(1:N, axes(it.blocks[1],1)), st...)
 
 cache(Q::BlockInterlacer) = CachedIterator(Q)
+
+# don't cache a trivial interlacer, as indexing into it is fast
+cache(Q::TrivialInterlacer) = UncachedIterator(Q)
+function Base.getindex(Q::TrivialInterlacer{N}, i::Int) where {N}
+    reverse(divrem(i-1,N) .+ 1)
+end
+function Base.getindex(Q::TrivialInterlacer, v::AbstractVector)
+    TrivialInterlacerSection(Q, v)
+end
+
+struct TrivialInterlacerSection{TI,I} <: AbstractVector{Tuple{Int,Int}}
+    interlacer::TI
+    inds::I
+end
+Base.size(t::TrivialInterlacerSection) = size(t.inds)
+Base.getindex(t::TrivialInterlacerSection, i::Int) = t.interlacer[t.inds[i]]
+function Base.getindex(t::TrivialInterlacerSection, i::AbstractVector{Int})
+    TrivialInterlacerSection(t.interlacer, t.inds[i])
+end
+function findsub(t::TrivialInterlacerSection{<:TrivialInterlacer{d}}, n::Int) where {d}
+    if 1 <= n <= d
+        ind1 = findfirst(x->x[1]==n, t) # d terms need to be searched at most
+        if ind1 === nothing
+            return oneunit(firstindex(t)):d:zero(length(t))
+        end
+        return ind1:d:length(t)
+    else
+        return oneunit(firstindex(t)):d:zero(length(t))
+    end
+end

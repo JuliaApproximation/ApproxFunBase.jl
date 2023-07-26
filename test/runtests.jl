@@ -66,10 +66,26 @@ end
                 for (a,b) in it
                     @test a == b
                 end
+                C1 = cache(B1)
+                C2 = cache(B2)
+                for i in 0:nD
+                    indsB1 = ApproxFunBase.findsub(C1[1:10], i)
+                    indsB2 = ApproxFunBase.findsub(C2[1:10], i)
+                    @test indsB1 == indsB2
+                    indsB1 = ApproxFunBase.findsub(C1[2:2], i)
+                    indsB2 = ApproxFunBase.findsub(C2[2:2], i)
+                    @test indsB1 == indsB2
+                end
             end
             test_nD(1)
             test_nD(2)
             test_nD(3)
+
+            B = ApproxFunBase.BlockInterlacer((o, o))
+            C = cache(B)
+            @test contains(Base.sprint(show, C), "UncachedIterator($(repr(B)))")
+            @test first(C, 10) == C[1:10] == B[1:10] == first(B, 10)
+            @test C[2:10][1:2:end] == B[2:10][1:2:end]
         end
     end
 
