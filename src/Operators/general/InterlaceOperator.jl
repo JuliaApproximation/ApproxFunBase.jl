@@ -320,7 +320,7 @@ function getindex(L::InterlaceOperator{T},kr::UnitRange) where T
     end
 
     for ν=1:length(L.ops)
-        # indicies of ret
+        # indices of ret
         ret_kr=findsub(cr,ν)
 
         # block indices
@@ -370,7 +370,7 @@ for TYP in (:BandedMatrix, :BlockBandedMatrix, :BandedBlockBandedMatrix, :Ragged
             rs=rangespace(L)
             cr=cache(interlacer(rs))[kr]
             for ν=1:length(L.ops)
-                # indicies of ret
+                # indices of ret
                 ret_kr=findsub(cr,ν)
 
                 # block indices
