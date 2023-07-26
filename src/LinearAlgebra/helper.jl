@@ -552,6 +552,7 @@ end
 Base.keys(c::AbstractCachedIterator) = oneto(length(c))
 length(A::AbstractCachedIterator) = length(A.iterator)
 
+# Lazy wrapper that mimics a CachedIterator, and has an `iterator` field
 struct UncachedIterator{T,IT} <: AbstractCachedIterator{T,IT}
     iterator :: IT
 end
