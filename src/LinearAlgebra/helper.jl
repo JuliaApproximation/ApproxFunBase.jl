@@ -686,7 +686,7 @@ struct BlockInterlacer{DMS<:Tuple{Vararg{AbstractVector{Int}}}}
 end
 
 
-const TrivialInterlacer{d} = BlockInterlacer{<:NTuple{d,Ones{Int}}}
+const TrivialInterlacer{d,Ax} = BlockInterlacer{<:NTuple{d,Ones{Int,1,Tuple{Ax}}}}
 
 BlockInterlacer(v::AbstractVector) = BlockInterlacer(Tuple(v))
 
@@ -732,23 +732,18 @@ function iterate(it::BlockInterlacer, (N,k,blkst,lngs))
         return iterate(it,(1,1,blkst,lngs))
     end
 
-    Bnxtb = iterate(it.blocks[N],blkst[N]...)  # B is block size
+    Bnxtb = iterate(it.blocks[N],blkst[N]...)
 
-    if Bnxtb === nothing
+    if Bnxtb === nothing || k > Bnxtb[1]
         # increment to next N
         return iterate(it,(N+1,1,blkst,lngs))
     end
 
-    B,nxtb = Bnxtb
-
-    if k > B
-        #increment to next N
-        return iterate(it,(N+1,1,blkst,lngs))
-    end
-
-
     lngs = Base.setindex(lngs, lngs[N]+1, N)
     return (N,lngs[N]),(N,k+1,blkst,lngs)
 end
+
+iterate(it::TrivialInterlacer{N,OneToInf{Int}}, st...) where {N} =
+    iterate(Iterators.product(1:N, axes(it.blocks[1],1)), st...)
 
 cache(Q::BlockInterlacer) = CachedIterator(Q)
