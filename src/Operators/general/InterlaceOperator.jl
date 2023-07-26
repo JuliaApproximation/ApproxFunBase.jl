@@ -398,7 +398,7 @@ for TYP in (:BandedMatrix, :BlockBandedMatrix, :BandedBlockBandedMatrix, :Ragged
             cr=L.rangeinterlacer[kr]
             cd=L.domaininterlacer[jr]
             for ν=1:size(L.ops,1),μ=1:size(L.ops,2)
-                # indicies of ret
+                # indices of ret
                 ret_kr=findsub(cr,ν)
                 ret_jr=findsub(cd,μ)
 

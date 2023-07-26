@@ -87,8 +87,9 @@
 		end
 	end
 	@testset "Iterators" begin
-		B = ApproxFunBase.BlockInterlacer((Ones{Int}(2), Ones{Int}(2)))
-		@test repr(B) == "ApproxFunBase.BlockInterlacer((Ones(2), Ones(2)))"
+		t = ([1,1], [1,1])
+		B = ApproxFunBase.BlockInterlacer(t)
+		@test repr(B) == "$(ApproxFunBase.BlockInterlacer)($(repr(t)))"
 		C = cache(B)
 		@test contains(repr(C), "Cached " * repr(B))
 	end
