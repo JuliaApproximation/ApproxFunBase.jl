@@ -55,6 +55,22 @@ end
 
         @test collect(ApproxFunBase.BlockInterlacer(([2],[2],[2]))) ==
             [(1,1),(1,2),(2,1),(2,2),(3,1),(3,2)]
+
+        @testset "TrivialInterlacer" begin
+            o = Ones{Int}(ℵ₀)
+            f = Fill(1, ℵ₀)
+            function test_nD(nD)
+                B1 = ApproxFunBase.BlockInterlacer(ntuple(_->o, nD))
+                B2 = ApproxFunBase.BlockInterlacer(ntuple(_->f, nD))
+                it = Iterators.take(zip(B1, B2), 100_000)
+                for (a,b) in it
+                    @test a == b
+                end
+            end
+            test_nD(1)
+            test_nD(2)
+            test_nD(3)
+        end
     end
 
     @testset "issue #94" begin
