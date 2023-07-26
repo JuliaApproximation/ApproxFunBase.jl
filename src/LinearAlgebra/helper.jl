@@ -560,7 +560,7 @@ UncachedIterator(it::IT) where IT = UncachedIterator{eltype(it),IT}(it)
 iterate(it::UncachedIterator, st...) = iterate(it.iterator, st...)
 getindex(it::UncachedIterator, k) = it.iterator[k]
 
-Base.show(io::IO, C::UncachedIterator) = print(io, "Uncached wrapper around ", c.iterator)
+Base.show(io::IO, C::UncachedIterator) = print(io, "$UncachedIterator(", C.iterator, ")")
 
 ## Store iterator
 mutable struct CachedIterator{T,IT} <: AbstractCachedIterator{T,IT}
