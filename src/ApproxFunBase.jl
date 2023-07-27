@@ -1,7 +1,7 @@
 module ApproxFunBase
 using BlockArrays, BandedMatrices, BlockBandedMatrices, DomainSets,
               IntervalSets, SpecialFunctions, AbstractFFTs, FFTW,
-              SpecialFunctions, DSP, DualNumbers, LinearAlgebra, SparseArrays,
+              SpecialFunctions, DSP, DualNumbers, LinearAlgebra,
               LowRankApprox, FillArrays, InfiniteArrays, InfiniteLinearAlgebra
 
 import Calculus
@@ -39,8 +39,6 @@ import Base: values, convert, getindex, setindex!, *, +, -, ==, <, <=, >, |, !,
 import Base.Broadcast: BroadcastStyle, Broadcasted, AbstractArrayStyle,
               broadcastable, DefaultArrayStyle, broadcasted
 
-import Statistics: mean
-
 import Combinatorics: multiexponents
 
 import LinearAlgebra: BlasInt, BlasFloat, norm, ldiv!, mul!, det, cross,
@@ -48,10 +46,6 @@ import LinearAlgebra: BlasInt, BlasFloat, norm, ldiv!, mul!, det, cross,
               Tridiagonal, diagm, diagm_container, factorize,
               nullspace, Hermitian, Symmetric, adjoint, transpose, char_uplo,
               axpy!, eigvals
-
-import SparseArrays: blockdiag
-
-# import Arpack: eigs
 
 # we need to import all special functions to use Calculus.symbolic_derivatives_1arg
 # we can't do importall Base as we replace some Base definitions
@@ -154,5 +148,10 @@ include("hacks.jl")
 include("testing.jl")
 include("specialfunctions.jl")
 include("show.jl")
+
+if !isdefined(Base, :get_extension)
+    include("../ext/ApproxFunBaseSparseArraysExt.jl")
+    include("../ext/ApproxFunBaseStatisticsExt.jl")
+end
 
 end #module
