@@ -68,6 +68,7 @@ issubset(a::Segment,b::Segment) = leftendpoint(a)∈b && rightendpoint(a)∈b
 arclength(d::AbstractInterval) = width(d)
 arclength(d::Segment) = norm(complexlength(d))
 complexlength(d::IntervalOrSegment) = rightendpoint(d)-leftendpoint(d)
+# ApproxFunBase.mean != Statistics.mean, as the latter is defined in the Statistics extension
 mean(d::IntervalOrSegment) = (rightendpoint(d)+leftendpoint(d))/2
 angle(d::IntervalOrSegment) = angle(complexlength(d))
 sign(d::IntervalOrSegment) = sign(complexlength(d))
