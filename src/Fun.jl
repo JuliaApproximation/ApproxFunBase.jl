@@ -270,13 +270,13 @@ Return the domain that `f` is defined on.
 ```jldoctest
 julia> f = Fun(x->x^2);
 
-julia> domain(f)
--1.0..1.0 (Chebyshev)
+julia> domain(f) == ChebyshevInterval()
+true
 
 julia> f = Fun(x->x^2, 0..1);
 
-julia> domain(f)
-0..1
+julia> domain(f) == 0..1
+true
 ```
 """
 domain(f::Fun) = domain(f.space)
@@ -293,14 +293,21 @@ Return `f` projected onto `domain`.
 
 # Examples
 ```jldoctest
-julia> f = Fun(x->x^2)
-Fun(Chebyshev(), [0.5, 0.0, 0.5])
+julia> f = Fun(x->x^2);
 
-julia> setdomain(f, 0..1)
-Fun(Chebyshev(0..1), [0.5, 0.0, 0.5])
+julia> domain(f) == ChebyshevInterval()
+true
+
+julia> g = setdomain(f, 0..1);
+
+julia> domain(g) == 0..1
+true
+
+julia> coefficients(f) == coefficients(g)
+true
 ```
 """
-setdomain(f::Fun,d::Domain) = Fun(setdomain(space(f),d),f.coefficients)
+setdomain(f::Fun, d::Domain) = Fun(setdomain(space(f), d), f.coefficients)
 
 for op in (:tocanonical,:tocanonicalD,:fromcanonical,:fromcanonicalD,:invfromcanonicalD)
     @eval $op(f::Fun,x...) = $op(space(f),x...)
@@ -385,10 +392,7 @@ Return an extrapolation of `f` from its domain to `x`.
 julia> f = Fun(x->x^2)
 Fun(Chebyshev(), [0.5, 0.0, 0.5])
 
-julia> domain(f)
--1.0..1.0 (Chebyshev)
-
-julia> extrapolate(f, 2)
+julia> extrapolate(f, 2) # 2 lies outside the domain -1..1
 4.0
 ```
 """
@@ -422,6 +426,7 @@ values(f::Fun,dat...) = _values(f.space, f.coefficients, dat...)
 _values(sp, v, dat...) = itransform(sp, v, dat...)
 _values(sp::UnivariateSpace, v::Vector{T}, dat...) where {T<:Number} =
     itransform(sp, v, dat...)::Vector{float(T)}
+
 """
     points(f::Fun)
 
