@@ -64,10 +64,10 @@
 	@testset "Operator" begin
 		@testset "QuotientSpace" begin
 			Q = QuotientSpace(Dirichlet(ConstantSpace(0..1)))
-			@test startswith(repr(Q), "ConstantSpace(0..1) /")
+			@test startswith(repr(Q), "ConstantSpace($(0..1)) /")
 			show(io, MIME"text/plain"(), Q)
 			s = String(take!(io))
-			@test startswith(s, "ConstantSpace(0..1) /")
+			@test startswith(s, "ConstantSpace($(0..1)) /")
 		end
 		@testset "ConstantOperator" begin
 			A = I : PointSpace(1:4)
