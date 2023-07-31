@@ -10,7 +10,6 @@ using DualNumbers
 using FFTW
 using FillArrays
 using InfiniteArrays
-using InfiniteLinearAlgebra
 using IntervalSets
 using LinearAlgebra
 using LowRankMatrices
