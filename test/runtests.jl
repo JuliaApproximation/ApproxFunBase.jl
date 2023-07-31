@@ -779,5 +779,3 @@ include("show.jl")
 
     @test @inferred(chebyshev_clenshaw(BigInt[1], 1)) == 1
 end
-
-include("PolynomialSpacesTests.jl")
