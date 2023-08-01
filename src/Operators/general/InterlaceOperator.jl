@@ -90,12 +90,6 @@ end
 const VectorInterlaceOperator = InterlaceOperator{T,1,DS,RS} where {T,DS,RS<:Space{D,R}} where {D,R<:AbstractVector}
 const MatrixInterlaceOperator = InterlaceOperator{T,2,DS,RS} where {T,DS,RS<:Space{D,R}} where {D,R<:AbstractVector}
 
-@static if VERSION >= v"1.8"
-    Base.@constprop :aggressive interlace_bandwidths(args...) = _interlace_bandwidths(args...)
-else
-    interlace_bandwidths(args...) = _interlace_bandwidths(args...)
-end
-
 __interlace_ops_bandwidths(ops::AbstractMatrix) = bandwidths.(ops)
 __interlace_ops_bandwidths(ops::Diagonal) = bandwidths.(parent(ops))
 function __interlace_bandwidths_square(ops::AbstractMatrix, bw = __interlace_ops_bandwidths(ops))
@@ -119,8 +113,11 @@ function __interlace_bandwidths_square(ops::Diagonal, bw = __interlace_ops_bandw
     l,u
 end
 
-@inline function _interlace_bandwidths(ops::AbstractMatrix{<:Operator}, ds, rs,
-        allbanded = all(isbanded,ops), bw = allbanded ? __interlace_ops_bandwidths(ops) : nothing)
+Base.@constprop :aggressive function interlace_bandwidths(ops::AbstractMatrix{<:Operator},
+        ds, rs,
+        allbanded = all(isbanded, ops),
+        bw = allbanded ? __interlace_ops_bandwidths(ops) : nothing)
+
     p=size(ops,1)
     dsi = interlacer(ds)
     rsi = interlacer(rs)
@@ -159,7 +156,7 @@ function InterlaceOperator(ops::AbstractMatrix{<:Operator},ds::Space,rs::Space;
                         israggedbelow)
 end
 
-@inline function _interlace_bandwidths(ops::VectorOrTupleOfOp, ds, rs, allbanded = all(isbanded, ops))
+Base.@constprop :aggressive function interlace_bandwidths(ops::VectorOrTupleOfOp, ds, rs, allbanded = all(isbanded, ops))
     p=size(ops,1)
     ax1 = first(axes(ops))
     if allbanded
@@ -210,18 +207,9 @@ function InterlaceOperator(opsin::AbstractVector{<:Operator})
     ops = convert_vector(promotedomainspace(opsin))
     InterlaceOperator(ops, domainspace(first(ops)), rangespace(ops))
 end
-@inline function _InterlaceOperator(opsin, promotedomain)
+Base.@constprop :aggressive function InterlaceOperator(opsin, promotedomain = true)
     ops = promotedomain ? promotedomainspace(opsin) : opsin
     InterlaceOperator(ops, domainspace(first(ops)), rangespace(ops))
-end
-@static if VERSION >= v"1.8"
-    Base.@constprop :aggressive function InterlaceOperator(opsin::Tuple{Operator, Vararg{Operator}}, promotedomain = true)
-        _InterlaceOperator(opsin, promotedomain)
-    end
-else
-    function InterlaceOperator(opsin::Tuple{Operator, Vararg{Operator}}, promotedomain = true)
-        _InterlaceOperator(opsin, promotedomain)
-    end
 end
 
 InterlaceOperator(ops::AbstractArray, ds=NoSpace, rs=ds) =

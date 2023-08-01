@@ -245,32 +245,24 @@ _spacename(::PiecewiseSpace) = PiecewiseSpace
 end
 
 for (Op,OpWrap) in ((:Derivative,:DerivativeWrapper),(:Integral,:IntegralWrapper))
-    _Op = Symbol(:_, Op)
     @eval begin
-        @inline function $_Op(S::PiecewiseSpace, k::Number)
+        Base.@constprop :aggressive function $Op(S::PiecewiseSpace, k::Number)
             assert_integer(k)
             t = map(s->$Op(s,k),components(S))
             O = InterlaceOperator_Diagonal(t, S)
             $OpWrap(O,k)
         end
-        @inline function $_Op(S::ArraySpace, k::Number)
+        Base.@constprop :aggressive function $Op(S::ArraySpace, k::Number)
             assert_integer(k)
             ops = map(s->$Op(s,k),S)
             RS = ArraySpace(reshape(map(rangespace, ops), size(S)))
             O = InterlaceOperator(Diagonal(ops), S, RS)
             $OpWrap(O,k)
         end
-        @static if VERSION >= v"1.8"
-            Base.@constprop :aggressive $Op(s::PiecewiseSpace, k::Number) = $_Op(s, k)
-            Base.@constprop :aggressive $Op(s::ArraySpace, k::Number) = $_Op(s, k)
-        else
-            $Op(s::PiecewiseSpace, k::Number) = $_Op(s, k)
-            $Op(s::ArraySpace, k::Number) = $_Op(s, k)
-        end
     end
 end
 
-@inline function _Derivative(S::SumSpace, k::Number)
+Base.@constprop :aggressive function Derivative(S::SumSpace, k::Number)
     assert_integer(k)
     # we want to map before we decompose, as the map may introduce
     # mixed bases.
@@ -283,13 +275,8 @@ end
     end
 end
 
-@static if VERSION >= v"1.8"
-    Base.@constprop :aggressive Derivative(s::SumSpace, k::Number) = _Derivative(s, k)
-else
-    Derivative(s::SumSpace, k::Number) = _Derivative(s, k)
-end
-
-choosedomainspace(M::CalculusOperator{UnsetSpace},sp::SumSpace)=mapreduce(s->choosedomainspace(M,s),union,sp.spaces)
+choosedomainspace(M::CalculusOperator{UnsetSpace}, sp::SumSpace) =
+    mapreduce(s->choosedomainspace(M,s),union,sp.spaces)
 
 ## Multiplcation for Array*Vector
 
