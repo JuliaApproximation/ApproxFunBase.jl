@@ -4,6 +4,8 @@ using AbstractFFTs
 using BandedMatrices
 using BlockArrays
 using BlockBandedMatrices
+import Calculus
+import Combinatorics: multiexponents
 using DSP
 using DomainSets
 using DualNumbers
@@ -15,9 +17,8 @@ using LinearAlgebra
 using LowRankMatrices
 using SparseArrays
 using SpecialFunctions
-
-import Calculus
 using StaticArrays: SVector, @SArray, SArray
+import Statistics: mean
 
 import DomainSets: Domain, indomain, UnionDomain, ProductDomain, Point, ∂,
               SetdiffDomain, Interval, ChebyshevInterval, boundary,
@@ -50,10 +51,6 @@ import Base: values, convert, getindex, setindex!, *, +, -, ==, <, <=, >, |, !,
 
 import Base.Broadcast: BroadcastStyle, Broadcasted, AbstractArrayStyle,
               broadcastable, DefaultArrayStyle, broadcasted
-
-import Statistics: mean
-
-import Combinatorics: multiexponents
 
 import LinearAlgebra: BlasInt, BlasFloat, norm, ldiv!, mul!, det, cross,
               qr, qr!, rank, isdiag, istril, istriu, issymmetric,
@@ -103,8 +100,6 @@ const BlockRange1 = BlockRange{1,Tuple{UnitRange{Int}}}
 import DomainSets: dimension
 
 import IntervalSets: (..), endpoints
-
-const Vec{d,T} = SVector{d,T}
 
 export pad!, pad, chop!, sample,
        complexroots, roots,
