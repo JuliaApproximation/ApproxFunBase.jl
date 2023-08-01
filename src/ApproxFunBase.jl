@@ -1,8 +1,21 @@
 module ApproxFunBase
-using BlockArrays, BandedMatrices, BlockBandedMatrices, DomainSets,
-              IntervalSets, SpecialFunctions, AbstractFFTs, FFTW,
-              SpecialFunctions, DSP, DualNumbers, LinearAlgebra, SparseArrays,
-              LowRankMatrices, FillArrays, InfiniteArrays, InfiniteLinearAlgebra
+
+using AbstractFFTs
+using BandedMatrices
+using BlockArrays
+using BlockBandedMatrices
+using DSP
+using DomainSets
+using DualNumbers
+using FFTW
+using FillArrays
+using InfiniteArrays
+using InfiniteLinearAlgebra
+using IntervalSets
+using LinearAlgebra
+using LowRankMatrices
+using SparseArrays
+using SpecialFunctions
 
 import Calculus
 using StaticArrays: SVector, @SArray, SArray
