@@ -6,6 +6,7 @@ using BlockArrays
 using BlockBandedMatrices
 using DSP
 using DomainSets
+using DualNumbers
 using FFTW
 using FillArrays
 using InfiniteArrays
