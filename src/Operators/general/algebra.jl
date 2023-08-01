@@ -250,34 +250,18 @@ struct TimesOperator{T,BW,SZ,O<:Operator{T},BBW,SBBW} <: Operator{T}
     israggedbelow::Bool
     isafunctional::Bool
 
-    @static if VERSION >= v"1.8"
-        Base.@constprop :aggressive function TimesOperator{T,BW,SZ,O,BBW,SBBW}(ops::Vector{O}, bw::BW,
-                sz::SZ, bbw::BBW, sbbw::SBBW,
-                ibbb::Bool, irb::Bool, isaf::Bool;
-                anytimesop = any(x -> x isa TimesOperator, ops)) where {T,O<:Operator{T},BW,SZ,BBW,SBBW}
+    Base.@constprop :aggressive function TimesOperator{T,BW,SZ,O,BBW,SBBW}(ops::Vector{O}, bw::BW,
+            sz::SZ, bbw::BBW, sbbw::SBBW,
+            ibbb::Bool, irb::Bool, isaf::Bool;
+            anytimesop = any(x -> x isa TimesOperator, ops)) where {T,O<:Operator{T},BW,SZ,BBW,SBBW}
 
-            # check compatible
-            check_times(ops)
+        # check compatible
+        check_times(ops)
 
-            # remove TimesOperators buried inside ops
-            newops = anytimesop ? splice_times(ops) : ops
+        # remove TimesOperators buried inside ops
+        newops = anytimesop ? splice_times(ops) : ops
 
-            new{T,BW,SZ,O,BBW,SBBW}(newops, bw, sz, bbw, sbbw, ibbb, irb, isaf)
-        end
-    else
-        function TimesOperator{T,BW,SZ,O,BBW,SBBW}(ops::Vector{O}, bw::BW,
-                sz::SZ, bbw::BBW, sbbw::SBBW,
-                ibbb::Bool, irb::Bool, isaf::Bool;
-                anytimesop = any(x -> x isa TimesOperator, ops)) where {T,O<:Operator{T},BW,SZ,BBW,SBBW}
-
-            # check compatible
-            check_times(ops)
-
-            # remove TimesOperators buried inside ops
-            newops = anytimesop ? splice_times(ops) : ops
-
-            new{T,BW,SZ,O,BBW,SBBW}(newops, bw, sz, bbw, sbbw, ibbb, irb, isaf)
-        end
+        new{T,BW,SZ,O,BBW,SBBW}(newops, bw, sz, bbw, sbbw, ibbb, irb, isaf)
     end
 end
 
@@ -334,13 +318,7 @@ function convert(::Type{Operator{T}}, P::TimesOperator) where {T}
     end
 end
 
-
-@static if VERSION > v"1.8"
-    Base.@constprop :aggressive promotetimes(args...) = _promotetimes(args...)
-else
-    promotetimes(args...) = _promotetimes(args...)
-end
-@inline function _promotetimes(opsin,
+Base.@constprop :aggressive function promotetimes(opsin,
         dsp=domainspace(last(opsin)),
         anytimesop=true)
 
@@ -666,20 +644,12 @@ end
 -(A::Operator) = ConstantTimesOperator(-1, A)
 -(A::Operator, B::Operator) = A + (-B)
 
-@inline function _mulop(f::Fun, A::Operator)
+Base.@constprop :aggressive function *(f::Fun, A::Operator)
     if isafunctional(A) && (isinf(bandwidth(A, 1)) || isinf(bandwidth(A, 2)))
         LowRankOperator(f, A)
     else
         TimesOperator(Multiplication(f, rangespace(A)), A)
     end
-end
-
-@static if VERSION >= v"1.8"
-    Base.@constprop :aggressive function *(f::Fun, A::Operator)
-        _mulop(f, A)
-    end
-else
-    *(f::Fun, A::Operator) = _mulop(f, A)
 end
 
 *(c::Number, A::Operator) = ConstantTimesOperator(c, A)

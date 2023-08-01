@@ -358,20 +358,13 @@ Space(sp::ProductDomain) = TensorSpace(sp)
 setdomain(sp::TensorSpace, d::ProductDomain) = TensorSpace(setdomain.(factors(sp), factors(d)))
 
 *(A::Space, B::Space) = A ⊗ B
-@inline function _powspace(A, p)
+Base.@constprop :aggressive function ^(A::Space, p::Integer)
     p >= 1 || throw(ArgumentError("exponent must be >= 1, received $p"))
     # Enumerate common cases to help with constant propagation
     p == 1 ? A :
     p == 2 ? A * A :
     p == 3 ? A * A * A :
     foldl(*, ntuple(_ -> A, p))
-end
-@static if VERSION >= v"1.8"
-    Base.@constprop :aggressive function ^(A::Space, p::Integer)
-        _powspace(A, p)
-    end
-else
-    ^(A::Space, p::Integer) = _powspace(A, p)
 end
 
 
