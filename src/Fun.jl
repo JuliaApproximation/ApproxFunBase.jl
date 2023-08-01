@@ -594,12 +594,7 @@ end
 
 \(c::Number, f::Fun) = Fun(f.space, c \ f.coefficients)
 
-@static if VERSION >= v"1.8"
-    Base.@constprop :aggressive intpow(f::Fun, k::Integer) = _intpow(f, k)
-else
-    intpow(f::Fun, k::Integer) = _intpow(f, k)
-end
-@inline function _intpow(f, k)
+Base.@constprop :aggressive function intpow(f, k)
     if k == 0
         ones(cfstype(f), space(f))
     elseif k==1
