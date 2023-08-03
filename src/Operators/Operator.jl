@@ -830,7 +830,11 @@ const WrapperOperator = Union{SpaceOperator,MultiplicationWrapper,DerivativeWrap
 ## BLAS and matrix routines
 # We assume that copy may be overriden
 
-axpy!(a, X::Operator, Y::AbstractMatrix) = (Y .= a .* AbstractMatrix(X) .+ Y)
+function axpy!(a, X::Operator, Y::AbstractMatrix)
+    Y .+= a .* AbstractMatrix(X)
+    # the explicit return statement improves type inference
+    return Y
+end
 copyto!(dest::AbstractMatrix, src::Operator) = copyto!(dest, AbstractMatrix(src))
 
 # this is for operators that implement copy via axpy!
