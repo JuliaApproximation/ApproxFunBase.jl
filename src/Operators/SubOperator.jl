@@ -354,7 +354,7 @@ for TYP in (:RaggedMatrix, :Matrix)
             elseif isbandedblockbanded(A)
                 N = block(rangespace(A), last(parentindices(V)[1]))
                 M = block(domainspace(A), last(parentindices(V)[2]))
-                B = A[Block(1):N, Block(1):M]
+                B = BandedBlockBandedMatrix(view(A, Block(1):N, Block(1):M))
                 RaggedMatrix{eltype(V)}(view(B, parentindices(V)...), _colstops(V))
             else
                 $def_TYP(V)
