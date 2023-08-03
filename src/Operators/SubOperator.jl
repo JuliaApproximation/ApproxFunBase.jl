@@ -355,7 +355,7 @@ for TYP in (:RaggedMatrix, :Matrix)
                 N = block(rangespace(A), last(parentindices(V)[1]))
                 M = block(domainspace(A), last(parentindices(V)[2]))
                 B = A[Block(1):N, Block(1):M]
-                RaggedMatrix(view(B, parentindices(V)...), _colstops(V))
+                RaggedMatrix{eltype(V)}(view(B, parentindices(V)...), _colstops(V))
             else
                 $def_TYP(V)
             end
