@@ -191,6 +191,18 @@ end
 
 
 ## Map to canonical
+@static if VERSION >= v"1.8"
+    for f in (:DefaultDerivative, :DefaultIntegral)
+        _f = Symbol(:_, f)
+        @eval Base.@constprop :aggressive $f(sp::Space, k::Number) = $_f(sp, k)
+    end
+else
+    for f in (:DefaultDerivative, :DefaultIntegral)
+        _f = Symbol(:_, f)
+        @eval $f(sp::Space, k::Number) = $_f(sp, k)
+    end
+end
+
 @inline function _DefaultDerivative(sp::Space, k::Number)
     assert_integer(k)
     if nameof(typeof(canonicaldomain(sp))) == nameof(typeof(domain(sp)))
@@ -206,31 +218,20 @@ end
         csp = canonicalspace(sp)
         D1 = if csp == sp
             _Dsp = invfromcanonicalD(sp)*Derivative(setdomain(sp,canonicaldomain(sp)))
-            rsp = rangespace(_Dsp)
+            rsp = setdomain(rangespace(_Dsp), domain(sp))
             _Dsp
         else
             Dcsp = Derivative(csp)
             rsp = rangespace(Dcsp)
             Dcsp * Conversion_maybeconcrete(sp, csp, Val(:forward))
         end
-        D=DerivativeWrapper(SpaceOperator(D1,sp,setdomain(rsp,domain(sp))),1)
+        D=DerivativeWrapper(D1,1,sp,rsp)
         if k==1
-            D
+            return D
         else
-            DerivativeWrapper(TimesOperator(Derivative(rangespace(D),k-1),D), k, sp)
+            Drsp = Derivative(rsp,k-1)
+            return DerivativeWrapper(TimesOperator(Drsp,D), k, sp, rangespace(Drsp))
         end
-    end
-end
-
-@static if VERSION >= v"1.8"
-    for f in (:DefaultDerivative, :DefaultIntegral)
-        _f = Symbol(:_, f)
-        @eval Base.@constprop :aggressive $f(sp::Space, k::Number) = $_f(sp, k)
-    end
-else
-    for f in (:DefaultDerivative, :DefaultIntegral)
-        _f = Symbol(:_, f)
-        @eval $f(sp::Space, k::Number) = $_f(sp, k)
     end
 end
 
