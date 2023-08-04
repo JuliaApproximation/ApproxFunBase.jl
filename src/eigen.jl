@@ -161,12 +161,14 @@ function basis_recombination(SE::EigenSystem)
     L, QS = SE.L, SE.QS
     S = domainspace(L)
     C = Conversion(S, rangespace(L))
-    D1 = Conversion_normalizedspace(S)
-    D2 = Conversion_normalizedspace(S, Val(:backward))
+    C_S_NS = Conversion_normalizedspace(S)
+    C_NS_S = Conversion_normalizedspace(S, Val(:backward))
     Q = Conversion(QS, S)
-    R = D1*Q
-    P = cache(PartialInverseOperator(C, (0, bandwidth(L, 1) + bandwidth(R, 1) + bandwidth(C, 2))));
-    A = R'D1*P*L*D2*R
+    R = C_S_NS * Q
+    P = cache(PartialInverseOperator(C, (0, bandwidth(L, 1) + bandwidth(R, 1) + bandwidth(C, 2))))
+    # A = R' * C_S_NS * P * L * C_NS_S * R
+    # We use C_NS_S * R == Q to simplify this
+    A = R' * C_S_NS * P * L * Q
     B = R'R
 
     return A, B
