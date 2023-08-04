@@ -206,18 +206,19 @@ Base.@constprop :aggressive function DefaultDerivative(sp::Space, k::Number)
         csp = canonicalspace(sp)
         D1 = if csp == sp
             _Dsp = invfromcanonicalD(sp)*Derivative(setdomain(sp,canonicaldomain(sp)))
-            rsp = rangespace(_Dsp)
+            rsp = setdomain(rangespace(_Dsp), domain(sp))
             _Dsp
         else
             Dcsp = Derivative(csp)
             rsp = rangespace(Dcsp)
             Dcsp * Conversion_maybeconcrete(sp, csp, Val(:forward))
         end
-        D=DerivativeWrapper(SpaceOperator(D1,sp,setdomain(rsp,domain(sp))),1)
+        D=DerivativeWrapper(D1,1,sp,rsp)
         if k==1
-            D
+            return D
         else
-            DerivativeWrapper(TimesOperator(Derivative(rangespace(D),k-1),D), k, sp)
+            Drsp = Derivative(rsp,k-1)
+            DerivativeWrapper(TimesOperator(Drsp,D), k, sp, rangespace(Drsp))
         end
     end
 end
