@@ -244,19 +244,22 @@ end
 
 coefficients(f::ProductFun)=funlist2coefficients(f.coefficients)
 
-function coefficients(f::ProductFun,ox::Space,oy::Space)
+function coefficients(f::ProductFun, ox::Space, oy::Space)
     T=cfstype(f)
     m=size(f,1)
-    B=Matrix{T}(m,length(f.coefficients))
+    B = zeros(T, m, length(f.coefficients))
     # convert in x direction
     #TODO: adaptively grow in x?
     for k=1:length(f.coefficients)
         B[:,k]=pad!(coefficients(f.coefficients[k],ox),m)
     end
 
+    sp = space(f)
+    spf2 = factor(sp, 2)
+
     # convert in y direction
     for k=1:size(B,1)
-        ccfs=coefficients(vec(B[k,:]),space(f,2),oy)
+        ccfs=coefficients(view(B,k,:), spf2, oy)
         if length(ccfs)>size(B,2)
             B=pad(B,size(B,1),length(ccfs))
         end
@@ -273,7 +276,7 @@ end
 # ProductFun does only support BivariateFunctions, this function below just does not work
 # (f::ProductFun)(x,y,z) = evaluate(f,x,y,z)
 
-coefficients(f::ProductFun,ox::TensorSpace) = coefficients(f,ox[1],ox[2])
+coefficients(f::ProductFun, ox::TensorSpace) = coefficients(f, factors(ox)...)
 
 
 
