@@ -30,9 +30,9 @@ jobs:
       - name: Query rate
         run:
           curl \
-            --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
-            -H "Accept: application/vnd.github.v3+json" \
-            --url https://api.github.com/rate_limit
+          --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+          -H "Accept: application/vnd.github.v3+json" \
+          --url https://api.github.com/rate_limit
       - id: skip_check
         uses: fkirc/skip-duplicate-actions@v5
 
