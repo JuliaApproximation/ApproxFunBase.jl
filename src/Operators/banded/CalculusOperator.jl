@@ -191,6 +191,18 @@ end
 
 
 ## Map to canonical
+@static if VERSION >= v"1.8"
+    for f in (:DefaultDerivative, :DefaultIntegral)
+        _f = Symbol(:_, f)
+        @eval Base.@constprop :aggressive $f(sp::Space, k::Number) = $_f(sp, k)
+    end
+else
+    for f in (:DefaultDerivative, :DefaultIntegral)
+        _f = Symbol(:_, f)
+        @eval $f(sp::Space, k::Number) = $_f(sp, k)
+    end
+end
+
 @inline function _DefaultDerivative(sp::Space, k::Number)
     assert_integer(k)
     if nameof(typeof(canonicaldomain(sp))) == nameof(typeof(domain(sp)))
@@ -223,7 +235,7 @@ end
     end
 end
 
-Base.@constprop :aggressive function DefaultIntegral(sp::Space, k::Number)
+@inline function _DefaultIntegral(sp::Space, k::Number)
     assert_integer(k)
     if nameof(typeof(canonicaldomain(sp))) == nameof(typeof(domain(sp)))
         # this is the normal default constructor
