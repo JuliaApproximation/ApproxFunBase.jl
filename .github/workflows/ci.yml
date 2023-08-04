@@ -24,6 +24,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Query rate
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
         run: |
           curl \
             -H "Accept: application/vnd.github.v3+json" \
