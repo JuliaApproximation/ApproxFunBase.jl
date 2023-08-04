@@ -2,15 +2,16 @@ import LinearAlgebra: LU, checknonsingular
 
 export QuotientSpace
 
-struct QuotientSpace{S,O,D,R} <: Space{D,R}
+struct QuotientSpace{S,O,D,R,LUT<:LU{R}} <: Space{D,R}
     space::S
     bcs::O
-    F::LU{R,Matrix{R}}
+    F::LUT
     x::Vector{R}
     function QuotientSpace{S,O,D,R}(space::S, bcs::O) where {S,O,D,R}
         n = size(bcs, 1)
         @assert isfinite(n)
-        new{S,O,D,R}(space, bcs, lu!(Matrix{R}(I, n, n)), zeros(R, n))
+        F = lu!(Matrix{R}(I, n, n))
+        new{S,O,D,R,typeof(F)}(space, bcs, F, zeros(R, n))
     end
 end
 
@@ -27,15 +28,16 @@ hasconversion(a::QuotientSpace,b::QuotientSpace) = hasconversion(a.space,b)
 
 
 Conversion(Q::QuotientSpace{S}, sp::S) where S<:Space = ConcreteConversion(Q, sp)
-@inline bandwidths(C::ConcreteConversion{QuotientSpace{S,O,D,R},S}) where {S,O,D,R} = (size(C.domainspace.F, 1), 0)
+@inline bandwidths(C::ConcreteConversion{<:QuotientSpace{S},S}) where {S} = (size(C.domainspace.F, 1), 0)
 
-function getindex(C::ConcreteConversion{QuotientSpace{S,O,D,R},S}, i::Integer, j::Integer) where {S,O,D,R}
+function getindex(C::ConcreteConversion{<:QuotientSpace{S},S}, i::Integer, j::Integer) where {S}
     sp = domainspace(C)
     B = sp.bcs
     F = sp.F
     A = F.factors
     n = size(A, 1)
     x = sp.x
+    R = rangetype(sp)
     if i == j
         return one(R)
     elseif j < i ≤ j+n
@@ -262,7 +264,7 @@ for (gesdd, elty, relty) in ((:dgesdd_,:Float64,:Float64),
 end
 
 
-function BandedMatrix(S::SubOperator{T,ConcreteConversion{QuotientSpace{SP,O,D,R},SP,T},NTuple{2,UnitRange{Int}}}) where {SP,O,D,R,T}
+function BandedMatrix(S::SubOperator{T,<:ConcreteConversion{<:QuotientSpace{SP},SP,T},NTuple{2,UnitRange{Int}}}) where {SP,T}
     kr,jr = parentindices(S)
     C = parent(S)
     #ret = BandedMatrix{eltype(S)}(undef, size(S), bandwidths(S))
@@ -275,6 +277,7 @@ function BandedMatrix(S::SubOperator{T,ConcreteConversion{QuotientSpace{SP,O,D,R
     n = size(A, 1)
     B = sp.bcs[1:n,1:last(jr)+n]
     x = sp.x
+    R = rangetype(sp)
     @inbounds for j in 1:last(jr)
         kk = colrange(ret, j)
         if j in kk
