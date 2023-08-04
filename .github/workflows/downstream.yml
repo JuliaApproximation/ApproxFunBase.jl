@@ -1,7 +1,9 @@
 name: IntegrationTest
 on:
   push:
-    branches: [master]
+    branches:
+      - master
+      - backport**
     tags: [v*]
   pull_request:
     paths-ignore:
