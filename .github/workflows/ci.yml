@@ -27,12 +27,11 @@ jobs:
     outputs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
     steps:
-      - name: Query rate
-        run:
+      - run: |
           curl \
-          --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
-          -H "Accept: application/vnd.github.v3+json" \
-          --url https://api.github.com/rate_limit
+            --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
+            -H "Accept: application/vnd.github.v3+json" \
+            --url https://api.github.com/rate_limit
       - id: skip_check
         uses: fkirc/skip-duplicate-actions@v5
 
