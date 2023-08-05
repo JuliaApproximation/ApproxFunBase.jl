@@ -471,6 +471,9 @@ end
         M = Multiplication(Fun(PointSpace(1:4)), PointSpace(1:4))
         M2 = @inferred C * M * C
         @test M2 * f ≈ M * f
+
+        @test @inferred(C : PointSpace(1:4)) == C
+        @test @inferred(C → PointSpace(1:4)) == C
     end
     @testset "ConstantOperator" begin
         C = ConstantOperator(3.0, PointSpace(1:4))
