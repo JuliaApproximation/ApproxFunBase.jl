@@ -459,6 +459,10 @@ function (*)(ko::KroneckerOperator{<:Operator, <:ConstantOperator}, pf::ProductF
         ProductFun(vc, factor(pf.space, 2))
     end
 end
+function (*)(ko::KroneckerOperator{<:Operator, <:ConstantOperator}, f::Fun{<:TensorSpace})
+    q = ko * ProductFun(f)
+    Fun(q)
+end
 
 function (*)(ko::KroneckerOperator, lrf::LowRankFun)
     O1, O2 = ko.ops
