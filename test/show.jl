@@ -11,7 +11,7 @@
 		@testset "ConstantSpace" begin
 			@test contains(repr(ConstantSpace()), "ConstantSpace")
 			c = ConstantSpace(0..1)
-			@test contains(repr(c), "ConstantSpace")
+			@test startswith(repr(c), "ConstantSpace")
 			@test contains(repr(c), repr(domain(c)))
 		end
 		@testset "TensorSpace" begin
@@ -20,6 +20,13 @@
 			v = strip.(split(repr(S), '⊗'))
 			@test length(v) == 2
 			@test all(==(repr(S1)), v)
+		end
+		@testset "ProductSpace" begin
+			S1 = PointSpace(1:4)
+			S2 = PointSpace(1:2)
+			P = ProductSpace([S1, S1], S2)
+			@test startswith(repr(P), "ProductSpace")
+			@test contains(repr(P), string(factors(P)))
 		end
 		@testset "SumSpace" begin
 			S1 = PointSpace(1:3)
@@ -32,7 +39,7 @@
 			p = PointSpace(1:4)
 			ps = PiecewiseSpace(p)
 			rpr = repr(ps)
-			@test contains(rpr, "PiecewiseSpace")
+			@test startswith(rpr, "PiecewiseSpace")
 			@test contains(rpr, repr(p))
 		end
 	end

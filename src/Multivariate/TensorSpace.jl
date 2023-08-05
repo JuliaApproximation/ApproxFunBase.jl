@@ -435,6 +435,8 @@ domain(f::ProductSpace) = f.domain
 
 factors(d::ProductSpace) = (d.spacesx, d.spacey)
 
+show(io::IO, P::ProductSpace) = print(io, "ProductSpace", factors(P))
+
 ## Transforms
 function nDtransform_inner!(A, tempv, Rpre, Rpost, dim, plan!)
     for indpost in Rpost, indpre in Rpre
