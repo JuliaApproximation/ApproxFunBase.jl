@@ -27,7 +27,8 @@ end
 domainspace(C::ConcreteConversion)=C.domainspace
 rangespace(C::ConcreteConversion)=C.rangespace
 
-
+promotedomainspace(C::Conversion, sp::Space) = Conversion(sp, rangespace(C))
+promoterangespace(C::Conversion, sp::Space) = Conversion(domainspace(C), sp)
 
 function _implementconversionerror(a, b)
     error("Implement Conversion from ", typeof(a), " to ", typeof(b))
