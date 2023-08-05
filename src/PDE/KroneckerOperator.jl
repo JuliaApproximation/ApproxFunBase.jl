@@ -452,7 +452,16 @@ end
 function (*)(ko::KroneckerOperator{<:Operator, <:ConstantOperator}, pf::ProductFun)
     O1, O2 = ko.ops
     O12 = O2.λ * O1
-    ProductFun(map(x -> O12*x, pf.coefficients), factor(pf.space, 2))
+    vc = map(x -> O12*x, pf.coefficients)
+    if space(pf) isa TensorSpace
+        ProductFun(vc, space(vc[1]), factor(pf.space, 2))
+    else
+        ProductFun(vc, factor(pf.space, 2))
+    end
+end
+function (*)(ko::KroneckerOperator{<:Operator, <:ConstantOperator}, f::Fun{<:TensorSpace})
+    q = ko * ProductFun(f)
+    Fun(q)
 end
 
 function (*)(ko::KroneckerOperator, lrf::LowRankFun)

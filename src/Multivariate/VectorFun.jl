@@ -147,7 +147,7 @@ norm(A::VectorFun, p::Real) = norm(norm.(Array(A)),p)
 
 function coefficientmatrix(::Type{N},f::AbstractVector{F},o...) where {N,F}
     if isempty(f)
-        return Matrix{N}(0,0)
+        return Matrix{N}(undef,0,0)
     end
 
     n=mapreduce(ncoefficients,max,f)
