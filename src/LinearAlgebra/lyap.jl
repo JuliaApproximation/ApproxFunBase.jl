@@ -10,8 +10,9 @@ end
 # where P,R,S and T are upper triangular
 function lyapuptriang(P,R,S,T,F::AbstractArray{N}) where N
     m=size(P,2); n = size(T,2)
-    Y=Matrix{N}(m,n)
-    PY = Matrix{N}(m,n); SY = Matrix{N}(m,n)
+    Y=Matrix{N}(undef,m,n)
+    PY = Matrix{N}(undef,m,n)
+    SY = Matrix{N}(undef,m,n)
 
     k=n
     while k > 1
@@ -24,7 +25,8 @@ function lyapuptriang(P,R,S,T,F::AbstractArray{N}) where N
             end
 
             Y[:,k] = (R[k,k]*P + T[k,k]*S)\rhs
-            PY[:,k] = P*Y[:,k];SY[:,k] = S*Y[:,k]
+            PY[:,k] = P*Y[:,k]
+            SY[:,k] = S*Y[:,k]
 
             k -= 1
         else
@@ -34,7 +36,7 @@ function lyapuptriang(P,R,S,T,F::AbstractArray{N}) where N
                 rhs2[l] -= R[k,j]*PY[l,j] + T[k,j]*SY[l,j]
             end
 
-            SM = Matrix{N}(2m,2m)
+            SM = Matrix{N}(undef,2m,2m)
 
             for i=1:m,j=1:m
                 SM[i,j] = R[k-1,k-1]*P[i,j] + T[k-1,k-1]*S[i,j]
