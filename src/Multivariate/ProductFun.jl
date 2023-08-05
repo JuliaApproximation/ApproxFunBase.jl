@@ -109,8 +109,10 @@ true
 ```
 """
 function ProductFun(M::AbstractVector{VFun{S,T}}, dy::V) where {S<:UnivariateSpace,V<:UnivariateSpace,T<:Number}
-    prodsp = ProductSpace(map(space, M), dy)
-    ProductFun{S,V,typeof(prodsp),T}(copy(M), prodsp)
+    sp = mapreduce(space, maxspace, M)
+    Msp = [Fun(f, sp) for f in M]
+    prodsp = sp ⊗ dy
+    ProductFun{S,V,typeof(prodsp),T}(Msp, prodsp)
 end
 
 ## Adaptive construction
