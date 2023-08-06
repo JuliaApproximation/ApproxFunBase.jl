@@ -81,6 +81,9 @@ for f in [:iswrapperstructure, :iswrapperindexing, :iswrapperspaces]
     @eval $f(@nospecialize(_)) = false
 end
 
+iswrapperstructure(A::Operator) = iswrapperstructure(typeof(A))
+iswrapperindexing(A::Operator) = iswrapperindexing(typeof(A))
+iswrapperspaces(A::Operator) = iswrapperspaces(typeof(A))
 iswrapper(A) = iswrapperstructure(A) || iswrapperindexing(A) || iswrapperspaces(A)
 
 struct Functional <: OperatorStyle end

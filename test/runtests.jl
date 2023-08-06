@@ -453,7 +453,14 @@ end
     end
     @testset "conversion and constantoperator" begin
         A = Conversion(PointSpace(1:4), PointSpace(1:4))
+        @test ApproxFunBase.iswrapper(A)
+        @test ApproxFunBase.iswrapperstructure(A)
+        @test ApproxFunBase.iswrapperindexing(A)
+        @test ApproxFunBase.iswrapperspaces(A)
         @test convert(Number, A) == 1
+        f = Fun(PointSpace(1:4))
+        @test (A * A) * f == A * f == f
+        @test ApproxFunBase.ConversionWrapper(A) === A
 
         C = I : PointSpace(1:4)
         C2 = C * C

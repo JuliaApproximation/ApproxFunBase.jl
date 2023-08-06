@@ -129,9 +129,12 @@ end
 domainspace(C::ConversionWrapper) = C.domainspace
 rangespace(C::ConversionWrapper) = C.rangespace
 
+ConversionWrapper(d::Space, r::Space, B::ConversionWrapper) =
+    ConversionWrapper(d, r, B.op)
+
 function ConversionWrapper(B::Operator,
         d::Space=domainspace(B), r::Space=rangespace(B))
-    ConversionWrapper(d, r, unwrap(B))
+    ConversionWrapper(d, r, B)
 end
 Conversion(A::Space,B::Space,C::Space) =
     ConversionWrapper(Conversion(B,C)*Conversion(A,B), A, C)
