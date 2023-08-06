@@ -641,7 +641,7 @@ end
 
 # Conversions we always assume are intentional: no need to promote
 function *(A::Conversion, B::Conversion)
-    T = TimesOperator(unwrap(A), unwrap(B))
+    T = TimesOperator(A, B)
     ConversionWrapper(T, domainspace(B), rangespace(A))
 end
 *(A::Conversion, B::TimesOperator) = TimesOperator(A, B)
