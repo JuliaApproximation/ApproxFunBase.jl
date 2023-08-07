@@ -115,7 +115,7 @@ end
 
 ## Adaptive construction
 
-function ProductFun(f::Function, sp::AbstractProductSpace{Tuple{S,V}}; tol=100eps()) where {S<:UnivariateSpace,V<:UnivariateSpace}
+function ProductFun(f::Function, sp::AbstractProductSpace{<:NTuple{2,UnivariateSpace}}; tol=100eps())
     for n = 50:100:5000
         X = coefficients(ProductFun(f,sp,n,n;tol=tol))
         if size(X,1)<n && size(X,2)<n
@@ -135,7 +135,11 @@ function ProductFun(f::Function,S::AbstractProductSpace,M::Integer,N::Integer;to
     vals=T[f(ptsx[k,j],ptsy[k,j]) for k=1:size(ptsx,1), j=1:size(ptsx,2)]
     ProductFun(transform!(S,vals),S;tol=tol,chopping=true)
 end
-ProductFun(f::Function,S::TensorSpace) = ProductFun(LowRankFun(f,S))
+_ProductFunLowRank(f, S) = ProductFun(LowRankFun(f,S))
+ProductFun(f::Function, S::TensorSpace2D) =
+    _ProductFunLowRank(f, S)
+ProductFun(f::Fun, S::TensorSpace2D) =
+    _ProductFunLowRank(f, S)
 
 ProductFun(f,dx::Space,dy::Space)=ProductFun(f,TensorSpace(dx,dy))
 
@@ -180,7 +184,7 @@ end
 
 ## Conversion to other ProductSpaces with the same coefficients
 
-ProductFun(f::ProductFun,sp::TensorSpace)=space(f)==sp ? f : ProductFun(coefficients(f,sp),sp)
+ProductFun(f::ProductFun,sp::TensorSpace2D)=space(f)==sp ? f : ProductFun(coefficients(f,sp),sp)
 ProductFun(f::ProductFun{S,V,SS},sp::ProductDomain) where {S,V,SS<:TensorSpace}=ProductFun(f,Space(sp))
 
 function ProductFun(f::ProductFun,sp::AbstractProductSpace)
