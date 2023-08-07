@@ -255,7 +255,7 @@ function coefficients(f::ProductFun, ox::Space, oy::Space)
     # convert in x direction
     #TODO: adaptively grow in x?
     for k=1:length(f.coefficients)
-        B[:,k] = pad(coefficients(f.coefficients[k],ox), m)
+        copyto!(@view(B[:,k]), coefficients(f.coefficients[k],ox))
     end
 
     sp = space(f)
