@@ -136,9 +136,9 @@ function ProductFun(f::Function,S::AbstractProductSpace,M::Integer,N::Integer;to
     ProductFun(transform!(S,vals),S;tol=tol,chopping=true)
 end
 _ProductFunLowRank(f, S) = ProductFun(LowRankFun(f,S))
-ProductFun(f::Function, S::TensorSpace{<:NTuple{2,UnivariateSpace}}) =
+ProductFun(f::Function, S::TensorSpace2D) =
     _ProductFunLowRank(f, S)
-ProductFun(f::Fun, S::TensorSpace{<:NTuple{2,UnivariateSpace}}) =
+ProductFun(f::Fun, S::TensorSpace2D) =
     _ProductFunLowRank(f, S)
 
 ProductFun(f,dx::Space,dy::Space)=ProductFun(f,TensorSpace(dx,dy))
@@ -184,7 +184,7 @@ end
 
 ## Conversion to other ProductSpaces with the same coefficients
 
-ProductFun(f::ProductFun,sp::TensorSpace)=space(f)==sp ? f : ProductFun(coefficients(f,sp),sp)
+ProductFun(f::ProductFun,sp::TensorSpace2D)=space(f)==sp ? f : ProductFun(coefficients(f,sp),sp)
 ProductFun(f::ProductFun{S,V,SS},sp::ProductDomain) where {S,V,SS<:TensorSpace}=ProductFun(f,Space(sp))
 
 function ProductFun(f::ProductFun,sp::AbstractProductSpace)
