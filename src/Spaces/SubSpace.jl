@@ -13,7 +13,7 @@ SubSpace(sp::SubSpace,kr) = SubSpace(sp.space,reindex(sp,sp.indexes,to_indexes(k
 domain(DS::SubSpace) = domain(DS.space)
 dimension(sp::SubSpace) = length(sp.indexes)
 
-|(sp::Space,kr::AbstractRange) = SubSpace(sp,kr)
+|(sp::Space, kr) = SubSpace(sp,kr)
 
 
 function |(f::Fun,kr::AbstractInfUnitRange)
