@@ -100,4 +100,9 @@
 		C = cache(B)
 		@test contains(repr(C), "Cached " * repr(B))
 	end
+	@testset "Tensorizer" begin
+		o = Ones(Int,ℵ₀)
+		t = ApproxFunBase.Tensorizer((o,o))
+		@test repr(t) == "ApproxFunBase.Tensorizer($((o,o)))"
+	end
 end
