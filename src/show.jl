@@ -149,9 +149,8 @@ end
 
 summarystr(ss::ArraySpace) = string(Base.dims2string(length.(axes(ss))), " ArraySpace")
 summary(io::IO, ss::ArraySpace) = print(io, summarystr(ss))
-function show(io::IO,ss::ArraySpace;header::Bool=true)
-    header && print(io,summarystr(ss)*":\n")
-    show(io, ss.spaces)
+function show(io::IO, ss::ArraySpace; header::Bool=true)
+    print(io, ArraySpace, "(", ss.spaces, ")")
 end
 
 function show(io::IO,s::TensorSpace)
