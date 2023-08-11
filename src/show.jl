@@ -10,16 +10,6 @@ function show(io::IO, f::Fun)
     print(io,")")
 end
 
-evalconst(f, ::AnyDomain) = f(0.0)
-evalconst(f, d) = f(leftendpoint(d))
-evalconst(f, d::Union{Point, UnionDomain{<:Any, <:Tuple{Point, Vararg{Point}}}}) = f(d)
-
-function show(io::IO,f::Fun{<:Union{ConstantSpace, ArraySpace{<:ConstantSpace}}})
-    d = domain(f)
-    print(io, evalconst(f, domain(f)))
-    print(io, d isa AnyDomain ? " anywhere" : " on " * string(d))
-end
-
 ## MultivariateFun
 
 show(io::IO, ::MIME"text/plain", f::MultivariateFun) = show(io, f)
