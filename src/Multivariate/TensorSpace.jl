@@ -24,13 +24,15 @@ factor(d::AbstractProductSpace,k) = factors(d)[k]
 # would be Tensorizer((Ones{Int}(∞), Fill(2,∞)))
 
 
-struct Tensorizer{DMS<:Tuple}
+struct Tensorizer{DMS<:Tuple{Vararg{AbstractVector{Int}}}}
     blocks::DMS
 end
 
 const InfOnes = Ones{Int,1,Tuple{OneToInf{Int}}}
 const Tensorizer2D{AA, BB} = Tensorizer{Tuple{AA, BB}}
 const TrivialTensorizer{d} = Tensorizer{NTuple{d,InfOnes}}
+
+show(io::IO, t::Tensorizer) = print(io, Tensorizer, "(",  t.blocks, ")")
 
 eltype(::Type{<:Tensorizer{<:Tuple{Vararg{Any,N}}}}) where {N} = NTuple{N,Int}
 dimensions(a::Tensorizer) = map(sum,a.blocks)

@@ -35,6 +35,12 @@
 			@test contains(rpr, "PiecewiseSpace")
 			@test contains(rpr, repr(p))
 		end
+		@testset "ArraySpace" begin
+			spaces = [PointSpace(1:1), PointSpace(2:2)]
+			A = ApproxFunBase.ArraySpace(spaces)
+			@test startswith(repr(A), "$(ApproxFunBase.ArraySpace)")
+			@test contains(repr(A), repr(spaces))
+		end
 	end
 	@testset "Fun" begin
 		f = Fun(PointSpace(1:3), [1,2,3])
@@ -92,5 +98,10 @@
 		@test repr(B) == "$(ApproxFunBase.BlockInterlacer)($(repr(t)))"
 		C = cache(B)
 		@test contains(repr(C), "Cached " * repr(B))
+	end
+	@testset "Tensorizer" begin
+		o = Ones(Int,ℵ₀)
+		t = ApproxFunBase.Tensorizer((o,o))
+		@test repr(t) == "ApproxFunBase.Tensorizer($((o,o)))"
 	end
 end
