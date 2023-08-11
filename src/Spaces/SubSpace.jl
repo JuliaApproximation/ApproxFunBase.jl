@@ -13,7 +13,7 @@ SubSpace(sp::SubSpace,kr) = SubSpace(sp.space,reindex(sp,sp.indexes,to_indexes(k
 domain(DS::SubSpace) = domain(DS.space)
 dimension(sp::SubSpace) = length(sp.indexes)
 
-|(sp::Space,kr::AbstractRange) = SubSpace(sp,kr)
+|(sp::Space, kr) = SubSpace(sp,kr)
 
 
 function |(f::Fun,kr::AbstractInfUnitRange)
@@ -26,21 +26,22 @@ block(sp::SubSpace, k::Integer) = block(sp.space,reindex(sp,(sp.indexes,),(k,))[
 function blocklengths(sp::SubSpace{DS,UnitRange{Int}}) where DS
     N = first(sp.indexes)
     M = last(sp.indexes)
-    B1=block(sp.space,N)
-    B2=block(sp.space,M)
+    B1 = block(sp.space,N)
+    B2 = block(sp.space,M)
     # if the blocks are equal, we have only one bvlock
-    B1 == B2 && return [zeros(Int,B1.n[1]-1);length(sp.indexes)]
+    B1 == B2 && return [Zeros{Int}(B1.n[1]-1); length(sp.indexes)]
 
-    [zeros(Int,B1.n[1]-1);
-         blockstop(sp.space,B1)-N+1;blocklengths(sp.space)[B1.n[1]+1:B2.n[1]-1];
+    [Zeros{Int}(B1.n[1]-1);
+         blockstop(sp.space,B1)-N+1;
+         blocklengths(sp.space)[B1.n[1]+1:B2.n[1]-1];
         M-blockstart(sp.space,B2)+1]
 end
 
 function blocklengths(sp::SubSpace{DS,<:AbstractInfUnitRange{Int}}) where DS
     N = first(sp.indexes)
-    B1=block(sp.space,N)
+    B1 = block(sp.space,N)
 
-    Vcat([zeros(Int,B1.n[1]-1); blockstop(sp.space,B1)-N+1],
+    Vcat([Zeros{Int}(B1.n[1]-1); blockstop(sp.space,B1)-N+1],
             blocklengths(sp.space)[B1.n[1]+1:∞])
 end
 

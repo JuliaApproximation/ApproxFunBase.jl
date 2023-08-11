@@ -134,7 +134,7 @@ end
         # special case for example
         l,u = max(bandwidth(ops[1],1),bandwidth(ops[2],1)-1),bandwidth(ops[2],2)+1
     else
-        l,u = (1-dimension(rs),dimension(ds)-1)  # not banded
+        l,u = (dimension(rs)-1,dimension(ds)-1)  # not banded
     end
 
     l,u
@@ -171,7 +171,7 @@ end
             u = max(u, p*opbw[2]+1-k)
         end
     else
-        l,u = (1-dimension(rs),dimension(ds)-1)  # not banded
+        l,u = (dimension(rs)-1,dimension(ds)-1)  # not banded
     end
     l,u
 end
