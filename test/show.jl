@@ -42,6 +42,12 @@
 			@test startswith(rpr, "PiecewiseSpace")
 			@test contains(rpr, repr(p))
 		end
+		@testset "ArraySpace" begin
+			spaces = [PointSpace(1:1), PointSpace(2:2)]
+			A = ApproxFunBase.ArraySpace(spaces)
+			@test startswith(repr(A), "$(ApproxFunBase.ArraySpace)")
+			@test contains(repr(A), repr(spaces))
+		end
 	end
 	@testset "Fun" begin
 		f = Fun(PointSpace(1:3), [1,2,3])
