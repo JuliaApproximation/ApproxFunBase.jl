@@ -69,8 +69,8 @@ end
 
 ## Interlace operator
 
-struct InterlaceOperator{T,p,DS,RS,DI,RI,BI,BBW} <: Operator{T}
-    ops::Array{Operator{T},p}
+struct InterlaceOperator{T,p,DS,RS,DI,RI,BI,BBW,A<:AbstractArray{<:Operator{T},p}} <: Operator{T}
+    ops::A
     domainspace::DS
     rangespace::RS
     domaininterlacer::DI
@@ -79,11 +79,12 @@ struct InterlaceOperator{T,p,DS,RS,DI,RI,BI,BBW} <: Operator{T}
     blockbandwidths::BBW
     israggedbelow::Bool
 
-    function InterlaceOperator(ops::Array{Operator{T},p}, ds::DS, rs::RS, dsi::DI, rsi::RI, bw::BI,
+    function InterlaceOperator(ops::A, ds::DS, rs::RS, dsi::DI, rsi::RI, bw::BI,
         blockbandwidths::BBW = bandwidthsmax(ops, blockbandwidths),
-        israggedbelow::Bool = all(israggedbelow, ops)) where {T,p,DS,RS,DI,RI,BI,BBW}
+        israggedbelow::Bool = all(israggedbelow, ops)
+        ) where {T,p,DS,RS,DI,RI,BI,BBW,A<:AbstractArray{<:Operator{T},p}}
 
-        new{T,p,DS,RS,DI,RI,BI,BBW}(ops, ds, rs, dsi, rsi, bw, blockbandwidths, israggedbelow)
+        new{T,p,DS,RS,DI,RI,BI,BBW,A}(ops, ds, rs, dsi, rsi, bw, blockbandwidths, israggedbelow)
     end
 end
 
@@ -146,8 +147,8 @@ function InterlaceOperator(ops::AbstractMatrix{<:Operator},ds::Space,rs::Space;
     dsi = interlacer(ds)
     rsi = interlacer(rs)
 
-    MT = Matrix{Operator{promote_eltypeof(ops)}}
-    opsm = strictconvert(MT, ops)
+    T = promote_eltypeof(ops)
+    opsm = map(x -> strictconvert(Operator{T}, x), ops)
     InterlaceOperator(opsm,ds,rs,
                         cache(dsi),
                         cache(rsi),
@@ -179,8 +180,8 @@ function InterlaceOperator(ops::VectorOrTupleOfOp, ds::Space, rs::Space;
         blockbandwidths = bandwidthsmax(ops, blockbandwidths),
         israggedbelow = all(israggedbelow, ops))
 
-    VT = Vector{Operator{promote_eltypeof(ops)}}
-    opsv = strictconvert(VT, convert_vector(ops))
+    T = promote_eltypeof(ops)
+    opsv = map(x -> convert(Operator{T}, x), convert_vector_or_svector(ops))
     InterlaceOperator(opsv,ds,rs,
                         cache(BlockInterlacer(tuple(blocklengths(ds)))),
                         cache(interlacer(rs)),
@@ -220,7 +221,7 @@ function convert(::Type{Operator{T}},S::InterlaceOperator) where T
     if T == eltype(S)
         S
     else
-        ops = convert(AbstractArray{Operator{T}}, S.ops)
+        ops = map(x -> convert(Operator{T},x), S.ops)
         InterlaceOperator(ops,domainspace(S),rangespace(S),
                             S.domaininterlacer,S.rangeinterlacer,S.bandwidths,
                             S.blockbandwidths, S.israggedbelow)
