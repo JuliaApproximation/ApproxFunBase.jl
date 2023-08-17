@@ -98,8 +98,8 @@ macro calculus_operator(Op)
 
 
         function ApproxFunBase.promotedomainspace(D::$Op, sp::ApproxFunBase.Space)
-            if ApproxFunBase.isambiguous(domain(sp))
-                $Op(typeof(sp)(domain(D)),D.order)
+            if ApproxFunBase.isambiguous(ApproxFunBase.domain(sp))
+                $Op(typeof(sp)(ApproxFunBase.domain(D)),D.order)
             else
                 $Op(sp,D.order)
             end
