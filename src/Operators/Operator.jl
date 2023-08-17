@@ -671,8 +671,8 @@ macro wrappergetindex(Wrap)
         # fast converts to banded matrices would be based on indices, not blocks
         function ApproxFunBase.BandedMatrix(S::ApproxFunBase.SubOperator{T,OP,NTuple{2,ApproxFunBase.BlockRange1}}) where {T,OP<:$Wrap}
             A = parent(S)
-            ds = domainspace(A)
-            rs = rangespace(A)
+            ds = ApproxFunBase.domainspace(A)
+            rs = ApproxFunBase.rangespace(A)
             KR,JR = parentindices(S)
             ApproxFunBase.BandedMatrix(view(A,
                               ApproxFunBase.blockstart(rs,first(KR)):ApproxFunBase.blockstop(rs,last(KR)),
