@@ -792,3 +792,8 @@ end
 
     @test @inferred(chebyshev_clenshaw(BigInt[1], 1)) == 1
 end
+
+@testset "Statistics" begin
+    @test mean(Segment(1,3)) == 2
+    @test mean(1..3) == 2
+end

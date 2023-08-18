@@ -16,7 +16,6 @@ using LinearAlgebra
 using LowRankMatrices
 using SparseArrays
 using StaticArrays: SVector, @SArray, SArray
-import Statistics: mean
 
 import DomainSets: Domain, indomain, UnionDomain, ProductDomain, Point, ∂,
               SetdiffDomain, Interval, ChebyshevInterval, boundary,
