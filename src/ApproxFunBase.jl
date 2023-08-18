@@ -8,7 +8,6 @@ import Calculus
 import Combinatorics: multiexponents
 using DSP
 using DomainSets
-using DualNumbers
 using FFTW
 using FillArrays
 using InfiniteArrays
@@ -16,7 +15,6 @@ using IntervalSets
 using LinearAlgebra
 using LowRankMatrices
 using SparseArrays
-# using SpecialFunctions
 using StaticArrays: SVector, @SArray, SArray
 import Statistics: mean
 
