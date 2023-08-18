@@ -12,6 +12,7 @@ using Infinities
 using LinearAlgebra
 using Random
 using SpecialFunctions
+using Statistics
 using Test
 
 @testset "Project quality" begin
@@ -791,4 +792,9 @@ end
     @test @inferred(chebyshev_clenshaw([1,2], Dual(2,1))) == Dual(5,2)
 
     @test @inferred(chebyshev_clenshaw(BigInt[1], 1)) == 1
+end
+
+@testset "Statistics" begin
+    @test mean(Segment(1,3)) == 2
+    @test mean(1..3) == 2
 end
