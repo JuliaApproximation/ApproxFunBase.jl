@@ -16,7 +16,7 @@ using IntervalSets
 using LinearAlgebra
 using LowRankMatrices
 using SparseArrays
-using SpecialFunctions
+# using SpecialFunctions
 using StaticArrays: SVector, @SArray, SArray
 import Statistics: mean
 
@@ -59,22 +59,6 @@ import LinearAlgebra: BlasInt, BlasFloat, norm, ldiv!, mul!, det, cross,
               axpy!, eigvals
 
 import SparseArrays: blockdiag
-
-# import Arpack: eigs
-
-# we need to import all special functions to use Calculus.symbolic_derivatives_1arg
-# we can't do importall Base as we replace some Base definitions
-import SpecialFunctions: airy, besselh,
-              lfact, beta, lbeta,
-              eta, zeta, polygamma, logabsgamma, loggamma,
-              besselj, bessely, besseli, besselk, besselkx,
-              hankelh1, hankelh2, hankelh1x, hankelh2x,
-              # functions from Calculus.symbolic_derivatives_1arg
-              erf, erfinv, erfc, erfcinv, erfi, gamma, lgamma,
-              digamma, invdigamma, trigamma,
-              airyai, airybi, airyaiprime, airybiprime,
-              besselj0, besselj1, bessely0, bessely1,
-              erfcx, dawson
 
 import BandedMatrices: bandrange, inbands_setindex!, bandwidth,
               colstart, colstop, colrange, rowstart, rowstop, rowrange,
