@@ -114,23 +114,32 @@ function __interlace_bandwidths_square(ops::Diagonal, bw = __interlace_ops_bandw
     l,u
 end
 
+# this is a hack to get constant-propagation in the indexing operation
+_first(A) = A[1]
+_second(A) = A[2]
+
+_first(A::Diagonal) = parent(A)[1]
+_second(A::Diagonal) = zero(eltype(A))
+
+issquare(A) = size(A,1) == size(A,2)
+issquare(A::Diagonal) = true
+
 Base.@constprop :aggressive function interlace_bandwidths(ops::AbstractMatrix{<:Operator},
         ds, rs,
         allbanded = all(isbanded, ops),
         bw = allbanded ? __interlace_ops_bandwidths(ops) : nothing)
 
-    p=size(ops,1)
     dsi = interlacer(ds)
     rsi = interlacer(rs)
 
-    if size(ops,2) == p && allbanded && # only support blocksize (1,) for now
+    if issquare(ops) && allbanded && # only support blocksize (1,) for now
             all(i->isa(i,AbstractFill) && getindex_value(i) == 1, dsi.blocks) &&
             all(i->isa(i,AbstractFill) && getindex_value(i) == 1, rsi.blocks)
 
         l,u = __interlace_bandwidths_square(ops, bw)
-    elseif p == 1 && size(ops,2) == 2 && size(ops[1],2) == 1
+    elseif size(ops,1) == 1 && size(ops,2) == 2 && size(_first(ops),2) == 1
         # special case for example
-        l,u = max(bandwidth(ops[1],1),bandwidth(ops[2],1)-1),bandwidth(ops[2],2)+1
+        l,u = max(bandwidth(_first(ops),1),bandwidth(_second(ops),1)-1),bandwidth(_second(ops),2)+1
     else
         l,u = (dimension(rs)-1,dimension(ds)-1)  # not banded
     end
