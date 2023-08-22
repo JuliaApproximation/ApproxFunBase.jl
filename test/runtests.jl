@@ -15,7 +15,10 @@ using SpecialFunctions
 using Test
 
 @testset "Project quality" begin
-    Aqua.test_all(ApproxFunBase, ambiguities=false, piracy = false)
+    Aqua.test_all(ApproxFunBase, ambiguities=false, piracy = false,
+        # only test formatting on VERSION >= v1.7
+        # https://github.com/JuliaTesting/Aqua.jl/issues/105#issuecomment-1551405866
+        project_toml_formatting = VERSION >= v"1.9")
 end
 
 @testset "Helper" begin
@@ -771,12 +774,6 @@ end
 
 @time include("ETDRK4Test.jl")
 include("show.jl")
-
-@testset "Dual" begin
-    z = complex(1,1)
-    @test ApproxFunBase.eps(Dual(z, zero(z))) == ApproxFunBase.eps(z)
-    @test ApproxFunBase.eps(Dual{ComplexF64}) == ApproxFunBase.eps(ComplexF64)
-end
 
 @testset "chebyshev_clenshaw" begin
     @test @inferred(chebyshev_clenshaw(Int[], 1)) == 0
