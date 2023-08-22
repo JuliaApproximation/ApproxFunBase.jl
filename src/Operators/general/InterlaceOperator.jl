@@ -129,7 +129,6 @@ Base.@constprop :aggressive function interlace_bandwidths(ops::AbstractMatrix{<:
         allbanded = all(isbanded, ops),
         bw = allbanded ? __interlace_ops_bandwidths(ops) : nothing)
 
-    p=size(ops,1)
     dsi = interlacer(ds)
     rsi = interlacer(rs)
 
@@ -138,7 +137,7 @@ Base.@constprop :aggressive function interlace_bandwidths(ops::AbstractMatrix{<:
             all(i->isa(i,AbstractFill) && getindex_value(i) == 1, rsi.blocks)
 
         l,u = __interlace_bandwidths_square(ops, bw)
-    elseif p == 1 && size(ops,2) == 2 && size(_first(ops),2) == 1
+    elseif size(ops,1) == 1 && size(ops,2) == 2 && size(_first(ops),2) == 1
         # special case for example
         l,u = max(bandwidth(_first(ops),1),bandwidth(_second(ops),1)-1),bandwidth(_second(ops),2)+1
     else
