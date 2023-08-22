@@ -418,6 +418,7 @@ for OP in (:(Base.max),:(Base.min))
     end
 end
 
+# from DualNumbers
 for (funsym, exp) in Calculus.symbolic_derivatives_1arg()
     funsym == :abs && continue
     funsym == :sign && continue
