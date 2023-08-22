@@ -164,12 +164,12 @@ end
 # ODE gives the first order ODE a special function op satisfies,
 # RHS is the right hand side
 # growth says what to use to choose a good point to impose an initial condition
-for (op, ODE, RHS, growth) in (
-                            (:(exp),    "D-f'",              "0",        :(real)),
+for (op, ODE, RHS, growth) in ((:(exp),    "D-f'",           "0",        :(real)),
                             (:(asinh),  "sqrt(f^2+1)*D",     "f'",       :(real)),
                             (:(acosh),  "sqrt(f^2-1)*D",     "f'",       :(real)),
                             (:(atanh),  "(1-f^2)*D",         "f'",       :(real)),
-                            )
+                            (:(erfcx),  "D-2f*f'",       "-2f'/sqrt(π)", :(real)),
+                            (:(dawson), "D+2f*f'",           "f'",       :(real)))
     L,R = Meta.parse(ODE), Meta.parse(RHS)
     @eval begin
         # depice before doing op
@@ -208,12 +208,16 @@ function specialfunctionnormalizationpoint2(op, growth, f, T = cfstype(f))
     xmin, xmax, opfxmin, opfxmax, opmax
 end
 
-for (op,ODE,RHS,growth) in (
+for (op,ODE,RHS,growth) in ((:(erf),"f'*D^2+(2f*f'^2-f'')*D","0",:(imag)),
+                            (:(erfi),"f'*D^2-(2f*f'^2+f'')*D","0",:(real)),
                             (:(sin),"f'*D^2-f''*D+f'^3","0",:(imag)),
                             (:(cos),"f'*D^2-f''*D+f'^3","0",:(imag)),
                             (:(sinh),"f'*D^2-f''*D-f'^3","0",:(real)),
                             (:(cosh),"f'*D^2-f''*D-f'^3","0",:(real)),
-                            )
+                            (:(airyai),"f'*D^2-f''*D-f*f'^3","0",:(imag)),
+                            (:(airybi),"f'*D^2-f''*D-f*f'^3","0",:(imag)),
+                            (:(airyaiprime),"f'*D^2-f''*D-f*f'^3","airyai(f)*f'^3",:(imag)),
+                            (:(airybiprime),"f'*D^2-f''*D-f*f'^3","airybi(f)*f'^3",:(imag)))
     L,R = Meta.parse(ODE),Meta.parse(RHS)
     @eval begin
         function $op(fin::Fun)
@@ -229,6 +233,8 @@ for (op,ODE,RHS,growth) in (
         end
     end
 end
+
+erfc(f::Fun) = 1-erf(f)
 
 
 exp2(f::Fun) = exp(log(2)*f)
@@ -271,8 +277,35 @@ end
 sinpi(f::Fun) = sin(π*f)
 cospi(f::Fun) = cos(π*f)
 
+function airy(k::Number,f::Fun)
+    if k == 0
+        airyai(f)
+    elseif k == 1
+        airyaiprime(f)
+    elseif k == 2
+        airybi(f)
+    elseif k == 3
+        airybiprime(f)
+    else
+        error("invalid argument")
+    end
+end
+
+besselh(ν,k::Integer,f::Fun) = k == 1 ? hankelh1(ν,f) : k == 2 ? hankelh2(ν,f) : throw(Base.Math.AmosException(1))
+
+for jy in (:j, :y)
+    bjy = Symbol(:bessel, jy)
+    for ν in (0,1)
+        bjynu = Symbol(bjy, ν)
+        @eval SpecialFunctions.$bjynu(f::Fun) = $bjy($ν,f)
+    end
+end
+
 ## Miscellaneous
-for op in (:(expm1),:(log1p),:(sinc),:(cosc))
+for op in (:(expm1),:(log1p),:(lfact),:(sinc),:(cosc),
+           :(erfinv),:(erfcinv),:(beta),:(lbeta),
+           :(eta),:(zeta),:(gamma),:(lgamma),
+           :(polygamma),:(invdigamma),:(digamma),:(trigamma))
     @eval begin
         $op(f::Fun) = Fun($op ∘ f,domain(f))
     end
@@ -424,16 +457,39 @@ for (funsym, exp) in Calculus.symbolic_derivatives_1arg()
     funsym == :sign && continue
     funsym == :exp && continue
     funsym == :sqrt && continue
-    if isdefined(Base, funsym)
-        @eval begin
-            $(funsym)(z::Fun{<:ConstantSpace,<:Real}) =
-                Fun($(funsym)(Number(z)),space(z))
-            $(funsym)(z::Fun{<:ConstantSpace,<:Complex}) =
-                Fun($(funsym)(Number(z)),space(z))
-            $(funsym)(z::Fun{<:ConstantSpace}) =
-                Fun($(funsym)(Number(z)),space(z))
+    @eval begin
+        $(funsym)(z::Fun{<:ConstantSpace,<:Real}) =
+            Fun($(funsym)(Number(z)),space(z))
+        $(funsym)(z::Fun{<:ConstantSpace,<:Complex}) =
+            Fun($(funsym)(Number(z)),space(z))
+        $(funsym)(z::Fun{<:ConstantSpace}) =
+            Fun($(funsym)(Number(z)),space(z))
+    end
+end
+
+# Other special functions
+for f in [:logabsgamma]
+    @eval function $f(z::Fun{<:ConstantSpace, <:Real})
+        t = $f(Number(z))
+        Fun(t[1], space(z)), t[2]
+    end
+end
+function loggamma(z::Fun{<:ConstantSpace})
+    t = loggamma(Number(z))
+    Fun(t, space(z))
+end
+for f in [:gamma, :loggamma]
+    @eval begin
+        function $f(a, z::Fun{<:ConstantSpace})
+            t = $f(a, Number(z))
+            Fun(t, space(z))
         end
     end
+end
+
+for f in [:besselj, :besselk, :besselkx, :bessely, :besseli,
+            :hankelh1x, :hankelh2x, :hankelh1, :hankelh2]
+    @eval $f(nu, x::Fun{<:ConstantSpace}) = Fun($f(nu, Number(x)), space(x))
 end
 
 # Roots
