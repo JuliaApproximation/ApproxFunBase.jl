@@ -569,17 +569,17 @@ for op in (:(maximum),:(minimum))
     @eval begin
         function $op(::typeof(abs), f::Fun{<:RealSpace,<:Real})
             pts = iszero(f') ? [leftendpoint(domain(f))] : extremal_args(f)
-            _maybemap($op, f, pts)
+            _maybemap($op, abs(f), pts)
         end
         function $op(::typeof(abs), f::Fun)
             # complex spaces/types can have different extrema
             pts = extremal_args(abs(f))
-            _maybemap($op, f, pts)
+            _maybemap($op, abs(f), pts)
         end
         $op(f::Fun{PiecewiseSpace{<:Any,<:UnionDomain,<:Real},<:Real}) =
-            $op(map($op,components(f)))
+            $op(map($op, components(f)))
         $op(::typeof(abs), f::Fun{PiecewiseSpace{<:Any,<:UnionDomain,<:Real},<:Real}) =
-            $op(abs, map(g -> $op(abs, g),components(f)))
+            $op(abs, map(g -> $op(abs, g), components(f)))
     end
 end
 
