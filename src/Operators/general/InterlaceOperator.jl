@@ -157,7 +157,7 @@ function InterlaceOperator(ops::AbstractMatrix{<:Operator},ds::Space,rs::Space;
     rsi = interlacer(rs)
 
     T = promote_eltypeof(ops)
-    opsm = ops isa AbstractMatrix{Operator{T}} ? ops :
+    opsm = ops isa AbstractMatrix{<:Operator{T}} ? ops :
                 map(x -> strictconvert(Operator{T}, x), ops)
     InterlaceOperator(opsm,ds,rs,
                         cache(dsi),
@@ -192,7 +192,7 @@ function InterlaceOperator(ops::VectorOrTupleOfOp, ds::Space, rs::Space;
 
     T = promote_eltypeof(ops)
     opsabsv = convert_vector_or_svector(ops)
-    opsv = opsabsv isa AbstractVector{Operator{T}} ? opsabsv :
+    opsv = opsabsv isa AbstractVector{<:Operator{T}} ? opsabsv :
             map(x -> convert(Operator{T}, x), opsabsv)
     InterlaceOperator(opsv,ds,rs,
                         cache(BlockInterlacer(tuple(blocklengths(ds)))),
