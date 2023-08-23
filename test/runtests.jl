@@ -12,6 +12,7 @@ using Infinities
 using LinearAlgebra
 using Random
 using SpecialFunctions
+using StaticArrays
 using Test
 
 @testset "Project quality" begin
