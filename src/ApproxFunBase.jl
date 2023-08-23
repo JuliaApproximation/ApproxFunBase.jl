@@ -148,8 +148,8 @@ function _IteratorSize(::Type{T}) where {T<:Tuple}
 end
 
 _IteratorSize(::Type{<:AbstractVector{<:InfRanges}}) = Base.IsInfinite()
-_IteratorSize(::Type{<:AbstractVector{<:Vector{<:Integer}}}) = Base.HasLength()
-_IteratorSize(::Type{<:AbstractVector{<:SVector{<:Integer}}}) = Base.HasLength()
+_IteratorSize(::Type{<:AbstractVector{<:Union{Vector{<:Integer},
+                                    SVector{<:Any,<:Integer}}}}) = Base.HasLength()
 _IteratorSize(::Type{<:AbstractVector}) = Base.SizeUnknown()
 
 tuple_to_SVector(t::Tuple) = SVector(t)
