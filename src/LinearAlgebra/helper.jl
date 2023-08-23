@@ -689,14 +689,12 @@ conv(x::AbstractFill, y::AbstractFill) = DSP.conv(x, y)
 # TODO: cache sums
 
 
-struct BlockInterlacer{DMS<:Tuple{Vararg{AbstractVector{Int}}}}
+struct BlockInterlacer{DMS}
     blocks::DMS
 end
 
 
 const TrivialInterlacer{d,Ax} = BlockInterlacer{<:NTuple{d,Ones{Int,1,Tuple{Ax}}}}
-
-BlockInterlacer(v::AbstractVector) = BlockInterlacer(Tuple(v))
 
 eltype(::Type{<:BlockInterlacer}) = Tuple{Int,Int}
 
@@ -724,10 +722,16 @@ function done(it::BlockInterlacer,st)
     return true
 end
 
-iterate(it::BlockInterlacer) =
+iterate(it::BlockInterlacer{<:Tuple}) =
     iterate(it, (1,1,ntuple(_ -> tuple(), length(it.blocks)),
             ntuple(zero,length(it.blocks))))
 
+iterate(it::BlockInterlacer{<:AbstractVector}) =
+    iterate(it, (1,1, [tuple() for _ in 1:length(it.blocks)],
+            [zero(i) for i in 1:length(it.blocks)]))
+
+_setindex(coll, v, ind) = (coll[ind] = v; coll)
+_setindex(coll::Tuple, v, ind) = Base.setindex(coll, v, ind)
 function iterate(it::BlockInterlacer, (N,k,blkst,lngs))
     done(it, (N,k,blkst,lngs)) && return nothing
 
@@ -747,7 +751,7 @@ function iterate(it::BlockInterlacer, (N,k,blkst,lngs))
         return iterate(it,(N+1,1,blkst,lngs))
     end
 
-    lngs = Base.setindex(lngs, lngs[N]+1, N)
+    lngs = _setindex(lngs, lngs[N]+1, N)
     return (N,lngs[N]),(N,k+1,blkst,lngs)
 end
 

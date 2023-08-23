@@ -147,6 +147,17 @@ function _IteratorSize(::Type{T}) where {T<:Tuple}
     any(x -> x isa Base.IsInfinite, s) ? Base.IsInfinite() : Base.HasLength()
 end
 
+_IteratorSize(::Type{<:AbstractVector{<:AbstractFill{<:Any,<:Any,
+        <:Tuple{Vararg{InfRanges}}}}}) = Base.IsInfinite()
+_IteratorSize(::Type{<:AbstractVector{<:InfRanges}}) = Base.IsInfinite()
+_IteratorSize(::Type{<:AbstractVector{<:Union{Vector{<:Integer},
+                                    SVector{<:Any,<:Integer}}}}) = Base.HasLength()
+_IteratorSize(::Type{<:AbstractVector}) = Base.SizeUnknown()
+
+tuple_to_SVector(t::Tuple) = SVector(t)
+tuple_to_SVector(x) = x
+_vcat_toabsvec(args...) = mapreduce(tuple_to_SVector, vcat, args)
+
 include("LinearAlgebra/LinearAlgebra.jl")
 include("Fun.jl")
 include("onehotvector.jl")

@@ -361,4 +361,20 @@ using LinearAlgebra
         @test length(A) == 0
         @test ApproxFunBase.dimension(A) == 0
     end
+
+    @testset "PiecewiseSpace" begin
+        ps = PiecewiseSpace([PointSpace(1:2), PointSpace(3:4)])
+        @test PiecewiseSpace(ps, ps) == ps
+        @test ApproxFunBase.canonicalspace(ps) == ps
+        d = domain(ps)
+        @test all(x -> x in d, 1:4)
+        @test all(x -> !(x in d), 5:6)
+        d2 = domain(PiecewiseSpace(ps, PointSpace(5:6)))
+        @test all(x -> x in d2, 5:6)
+        d2 = domain(PiecewiseSpace(PointSpace(5:6), ps))
+        @test all(x -> x in d2, 5:6)
+
+        ps2 = PiecewiseSpace([PointSpace(3:4), PointSpace(1:2)])
+        @test ApproxFunBase.canonicalspace(ps2) == ps
+    end
 end

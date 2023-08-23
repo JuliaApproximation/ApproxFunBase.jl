@@ -25,7 +25,7 @@ ncomponents(f::Fun) = ncomponents(space(f))
 
 BlockInterlacer(sp::DirectSumSpace) = BlockInterlacer(map(blocklengths,sp.spaces))
 interlacer(sp::DirectSumSpace) = BlockInterlacer(sp)
-interlacer(sp::Space) = BlockInterlacer(tuple(blocklengths(sp)))
+interlacer(sp::Space) = BlockInterlacer(blocklengths(sp))
 
 function blocklengths(sp::DirectSumSpace)
     bl=map(blocklengths,components(sp))
@@ -50,42 +50,14 @@ end
 SumSpace(sp::Tuple) = SumSpace{typeof(sp),domaintype(first(sp)),
                                 mapreduce(rangetype,promote_type,sp)}(sp)
 
+SumSpace(A::SumSpace,B::SumSpace) = SumSpace(tuple(A.spaces...,B.spaces...))
 
-struct PiecewiseSpace{SV,D<:UnionDomain,R} <: DirectSumSpace{SV,D,R}
-    spaces::SV
-    PiecewiseSpace{SV,D,R}(dom::AnyDomain) where {SV,D,R} =
-        new{SV,D,R}(tuple(map(typ->typ(dom),SV.parameters)...))
-    PiecewiseSpace{SV,D,R}(dom::UnionDomain) where {SV,D,R} =
-        new{SV,D,R}(tuple(map((typ,dom)->typ(dom),SV.parameters,dom.domains)...))
-    PiecewiseSpace{SV,D,R}(sp::Tuple) where {SV,D,R} =
-        new{SV,D,R}(sp)
-end
+SumSpace(A::Space,B::SumSpace) = SumSpace(tuple(A,B.spaces...))
+SumSpace(A::SumSpace,B::Space) = SumSpace(tuple(A.spaces...,B))
+SumSpace(A::Space...) = SumSpace(A)
+SumSpace(sp::AbstractArray) = SumSpace(tuple(sp...))
 
-function _PiecewiseSpace(sp)
-    PiecewiseSpace{typeof(sp),typeof(UnionDomain(map(domain,sp))),
-                   mapreduce(rangetype,promote_type,sp)}(sp)
-end
-function PiecewiseSpace(spin::Tuple)
-    sp=tuple(union(spin)...)  # remove duplicates
-    _PiecewiseSpace(sp)
-end
-
-PiecewiseSpace(spin::Set) = PiecewiseSpace(collect(spin))
-
-
-
-for TYP in (:SumSpace,:PiecewiseSpace)
-    @eval begin
-        $TYP(A::$TYP,B::$TYP) = $TYP(tuple(A.spaces...,B.spaces...))
-
-        $TYP(A::Space,B::$TYP) = $TYP(tuple(A,B.spaces...))
-        $TYP(A::$TYP,B::Space) = $TYP(tuple(A.spaces...,B))
-        $TYP(A::Space...) = $TYP(A)
-        $TYP(sp::AbstractArray) = $TYP(tuple(sp...))
-
-        canonicalspace(A::$TYP) = $TYP(sort(collect(A.spaces)))
-    end
-end
+canonicalspace(A::SumSpace) = SumSpace(sort(collect(A.spaces)))
 
 # TODO: Fix this Hack
 SumSpace(A::ConstantSpace{AnyDomain}, B::ConstantSpace{AnyDomain}) = error("Should not happen")
@@ -93,6 +65,36 @@ SumSpace(A::SumSpace, B::ConstantSpace{AnyDomain}) = SumSpace(A, setdomain(B, do
 SumSpace(B::ConstantSpace{AnyDomain}, A::SumSpace) = SumSpace(setdomain(B, domain(A)), A)
 SumSpace(A::Space, B::ConstantSpace{AnyDomain}) = SumSpace(A, setdomain(B, domain(A)))
 SumSpace(B::ConstantSpace{AnyDomain}, A::Space) = SumSpace(setdomain(B, domain(A)), A)
+
+struct PiecewiseSpace{SV,D<:UnionDomain,R} <: DirectSumSpace{SV,D,R}
+    spaces::SV
+    PiecewiseSpace{SV,D,R}(dom::AnyDomain) where {SV,D,R} =
+        new{SV,D,R}(tuple(map(typ->typ(dom),SV.parameters)...))
+    PiecewiseSpace{SV,D,R}(dom::UnionDomain) where {SV,D,R} =
+        new{SV,D,R}(tuple(map((typ,dom)->typ(dom),SV.parameters,dom.domains)...))
+    PiecewiseSpace{SV,D,R}(sp::SV) where {SV,D,R} =
+        new{SV,D,R}(sp)
+end
+
+function _PiecewiseSpace(sp)
+    PiecewiseSpace{typeof(sp),typeof(UnionDomain(map(domain,sp))),
+                   mapreduce(rangetype,promote_type,sp)}(sp)
+end
+function PiecewiseSpace(spacesin::Union{Tuple{Vararg{Space}}, AbstractVector{<:Space}})
+    sp = union(spacesin)  # remove duplicates
+    _PiecewiseSpace(sp)
+end
+
+PiecewiseSpace(spacesin::Set) = PiecewiseSpace(collect(spacesin))
+
+PiecewiseSpace(A::PiecewiseSpace, B::PiecewiseSpace) =
+    PiecewiseSpace(_vcat_toabsvec(A.spaces, B.spaces))
+
+PiecewiseSpace(A::Space,B::PiecewiseSpace) = PiecewiseSpace(_vcat_toabsvec(A, B.spaces))
+PiecewiseSpace(A::PiecewiseSpace,B::Space) = PiecewiseSpace(_vcat_toabsvec(A.spaces, B))
+PiecewiseSpace(A::Space...) = PiecewiseSpace(A)
+
+canonicalspace(A::PiecewiseSpace) = PiecewiseSpace(sort(convert_vector_or_svector(A.spaces)))
 
 pieces(sp::PiecewiseSpace) = sp.spaces
 piece(s::Space,k) = pieces(s)[k]
