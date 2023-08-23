@@ -361,4 +361,16 @@ using LinearAlgebra
         @test length(A) == 0
         @test ApproxFunBase.dimension(A) == 0
     end
+
+    @testset "PiecewiseSpace" begin
+        ps = PiecewiseSpace([PointSpace(1:2), PointSpace(3:4)])
+        @test PiecewiseSpace(ps, ps) == ps
+        @test_broken PiecewiseSpace(ps, PointSpace(1:2)) == ps
+        @test_broken PiecewiseSpace(PointSpace(1:2), ps) == ps
+        d = domain(ps)
+        @test all(x -> x in d, 1:4)
+        @test all(x -> !(x in d), 5:6)
+        d2 = domain(PiecewiseSpace(ps, PointSpace(5:6)))
+        @test all(x -> x in d2, 5:6)
+    end
 end

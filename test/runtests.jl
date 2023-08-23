@@ -87,6 +87,21 @@ end
             @test first(C, 10) == C[1:10] == B[1:10] == first(B, 10)
             @test C[2:10][1:2:end] == B[2:10][1:2:end]
         end
+
+        a = [1,2]
+        sa = SVector(1,2)
+        f = Fill(2,∞)
+        @test Base.IteratorSize(ApproxFunBase.BlockInterlacer((f, f))) == Base.IsInfinite()
+        @test Base.IteratorSize(ApproxFunBase.BlockInterlacer([f, f])) == Base.IsInfinite()
+        @test Base.IteratorSize(ApproxFunBase.BlockInterlacer((1:∞, 1:∞))) == Base.IsInfinite()
+        @test Base.IteratorSize(ApproxFunBase.BlockInterlacer([1:∞, 1:∞])) == Base.IsInfinite()
+        @test Base.IteratorSize(ApproxFunBase.BlockInterlacer([sa, sa])) == Base.HasLength()
+        @test Base.IteratorSize(ApproxFunBase.BlockInterlacer([a, a])) == Base.HasLength()
+        @test Base.IteratorSize(ApproxFunBase.BlockInterlacer((a, a))) == Base.HasLength()
+
+        b1 = ApproxFunBase.BlockInterlacer([Fill(2,2), 1:2])
+        b2 = ApproxFunBase.BlockInterlacer((Fill(2,2), 1:2))
+        @test collect(b1) == collect(b2)
     end
 
     @testset "issue #94" begin

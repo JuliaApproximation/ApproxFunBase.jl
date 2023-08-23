@@ -147,6 +147,8 @@ function _IteratorSize(::Type{T}) where {T<:Tuple}
     any(x -> x isa Base.IsInfinite, s) ? Base.IsInfinite() : Base.HasLength()
 end
 
+_IteratorSize(::Type{<:AbstractVector{<:AbstractFill{<:Any,<:Any,
+        <:Tuple{Vararg{InfRanges}}}}}) = Base.IsInfinite()
 _IteratorSize(::Type{<:AbstractVector{<:InfRanges}}) = Base.IsInfinite()
 _IteratorSize(::Type{<:AbstractVector{<:Union{Vector{<:Integer},
                                     SVector{<:Any,<:Integer}}}}) = Base.HasLength()
