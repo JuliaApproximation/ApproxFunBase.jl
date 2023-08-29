@@ -2,7 +2,7 @@ export Domain, SegmentDomain, tocanonical, fromcanonical, fromcanonicalD, ∂
 export isambiguous, arclength
 export components, component, ncomponents
 
-
+export 𝑪
 
 
 # add indexing for all spaces, not just DirectSumSpace
@@ -118,6 +118,7 @@ maps the point `x` in `d` to a point in `canonical(d,x)`
 """
 function tocanonical end
 
+const 𝑪 = tocanonical
 
 ## conveninece routines
 

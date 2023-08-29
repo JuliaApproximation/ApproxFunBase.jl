@@ -3,8 +3,7 @@ on:
   push:
     branches:
       - master
-      - backport**
-    tags: [v*]
+    tags: '*'
   pull_request:
     paths-ignore:
       - 'LICENSE'
@@ -27,13 +26,13 @@ jobs:
         uses: fkirc/skip-duplicate-actions@v5
   test:
     needs: pre_job
-    if: needs.pre_job.outputs.should_skip != 'true'
+    if: ${{ !cancelled() }} && (github.ref_type == 'tag' || needs.pre_job.outputs.should_skip != 'true')
     name: ${{ matrix.package.group }}/${{ matrix.package.repo }}/${{ matrix.julia-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: true
       matrix:
-        julia-version: ['1', '1.6']
+        julia-version: ['1']
         os: [ubuntu-latest]
         package:
           - {repo: ApproxFun.jl, group: JuliaApproximation}
