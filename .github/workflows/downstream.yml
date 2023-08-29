@@ -1,8 +1,9 @@
 name: IntegrationTest
 on:
   push:
-    branches: [master]
-    tags: [v*]
+    branches:
+      - master
+    tags: '*'
   pull_request:
     paths-ignore:
       - 'LICENSE'

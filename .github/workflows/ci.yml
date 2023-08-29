@@ -5,8 +5,6 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  create:
-    tags:
   push:
     branches:
       - master
@@ -14,6 +12,7 @@ on:
       - 'LICENSE'
       - 'README.md'
       - '.github/workflows/TagBot.yml'
+    tags: '*'
   pull_request:
     paths-ignore:
       - 'LICENSE'
