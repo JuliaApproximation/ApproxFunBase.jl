@@ -172,5 +172,4 @@ show(io::IO,::ConstantSpace{AnyDomain}) = print(io,"ConstantSpace")
 show(io::IO,S::ConstantSpace) = print(io,"ConstantSpace($(domain(S)))")
 
 ## Segment
-
-show(io::IO,d::Segment) = print(io,"the segment [$(leftendpoint(d)),$(rightendpoint(d))]")
+show(io::IO,d::Segment) = print(io, "Segment($(leftendpoint(d)), $(rightendpoint(d)))")
