@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master
+      - backport**
     tags: '*'
   pull_request:
     paths-ignore:
