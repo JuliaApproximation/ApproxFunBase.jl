@@ -53,7 +53,7 @@ jobs:
           repository: ${{ matrix.package.group }}/${{ matrix.package.repo }}
           path: downstream
       - name: Load this and run the downstream tests
-        shell: julia --color=yes --project=downstream --code-coverage=@ {0}
+        shell: julia --color=yes --project=downstream {0}
         run: |
           using Pkg
           try
@@ -65,7 +65,7 @@ jobs:
               Pkg.develop(PackageSpec(path="ApproxFunBaseTest"))
             end
             Pkg.update()
-            Pkg.test(; coverage = true)  # resolver may fail with test time deps
+            Pkg.test(; coverage = "user")  # resolver may fail with test time deps
           catch err
             err isa Pkg.Resolve.ResolverError || rethrow()
             # If we can't resolve that means this is incompatible by SemVer and this is fine
