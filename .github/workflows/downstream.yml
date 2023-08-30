@@ -4,6 +4,10 @@ on:
     branches:
       - master
     tags: '*'
+    paths-ignore:
+      - 'LICENSE'
+      - 'README.md'
+      - '.github/workflows/TagBot.yml'
   pull_request:
     paths-ignore:
       - 'LICENSE'
