@@ -53,7 +53,7 @@ jobs:
           repository: ${{ matrix.package.group }}/${{ matrix.package.repo }}
           path: downstream
       - name: Load this and run the downstream tests
-        shell: julia --color=yes --project=downstream --code-coverage=@src {0}
+        shell: julia --color=yes --project=downstream --code-coverage=@ {0}
         run: |
           using Pkg
           try
