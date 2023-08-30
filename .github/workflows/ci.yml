@@ -5,16 +5,14 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  create:
-    tags:
   push:
     branches:
       - master
-      - backport**
     paths-ignore:
       - 'LICENSE'
       - 'README.md'
       - '.github/workflows/TagBot.yml'
+    tags: '*'
   pull_request:
     paths-ignore:
       - 'LICENSE'
@@ -33,7 +31,7 @@ jobs:
 
   test:
     needs: pre_job
-    if: needs.pre_job.outputs.should_skip != 'true'
+    if: ${{ !cancelled() }} && (github.ref_type == 'tag' || needs.pre_job.outputs.should_skip != 'true')
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
     strategy:
