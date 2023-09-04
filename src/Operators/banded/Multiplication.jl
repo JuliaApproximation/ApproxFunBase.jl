@@ -77,15 +77,21 @@ getindex(D::ConcreteMultiplication{F,UnsetSpace,T},k::Integer,j::Integer) where 
 
 
 ##multiplication can always be promoted, range space is allowed to change
-promotedomainspace(D::Multiplication,sp::UnsetSpace) = D
-promotedomainspace(D::Multiplication,sp::Space) = Multiplication(D.f,sp)
-promoterangespace(D::ConcreteMultiplication{P,UnsetSpace},sp::UnsetSpace) where {P} = D
-promoterangespace(D::ConcreteMultiplication{P,UnsetSpace},sp::Space) where {P} =
+promotedomainspace(D::Multiplication, sp::UnsetSpace) = D
+function promotedomainspace(D::Multiplication, sp::Space)
+    if domainspace(D) == sp
+        D
+    else
+        Multiplication(D.f,sp)
+    end
+end
+promoterangespace(D::ConcreteMultiplication{P,UnsetSpace}, sp::UnsetSpace) where {P} = D
+promoterangespace(D::ConcreteMultiplication{P,UnsetSpace}, sp::Space) where {P} =
     promoterangespace(Multiplication(D.f,ConstantSpace(domain(sp))), sp)
 
-choosedomainspace(M::ConcreteMultiplication{D,UnsetSpace},::UnsetSpace) where {D} = space(M.f)
+choosedomainspace(M::ConcreteMultiplication{D,UnsetSpace}, ::UnsetSpace) where {D} = space(M.f)
 # we assume multiplication maps spaces to themselves
-choosedomainspace(M::ConcreteMultiplication{D,UnsetSpace},sp::Space) where {D} = sp
+choosedomainspace(M::ConcreteMultiplication{D,UnsetSpace}, sp::Space) where {D} = sp
 
 
 diagm(a::Fun) = Multiplication(a)
