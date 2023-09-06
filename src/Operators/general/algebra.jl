@@ -332,8 +332,10 @@ Base.@constprop :aggressive function promotetimes(opsin,
     anytimesop = any(x -> x isa TimesOperator, ops)
     TimesOperator(convert_vector(ops), bw, sz, bbw, sbbw, ibbb, irb, isaf; anytimesop)
 end
+maybenarroweltype(::AbstractVector{Operator{T}}) where {T} = Operator{T}
+maybenarroweltype(opsin) = mapreduce(operatortype, promote_type, opsin)
 function __promotetimes(opsin, dsp, anytimesop)
-    ops = Vector{mapreduce(operatortype, promote_type, opsin)}(undef, 0)
+    ops = Vector{maybenarroweltype(opsin)}(undef, 0)
     sizehint!(ops, length(opsin))
 
     for k in reverse(eachindex(opsin))
@@ -614,7 +616,7 @@ function A_mul_B(A::Operator, B::Operator; dspB=domainspace(B), rspA=rangespace(
     elseif isconstop(B)
         promotedomainspace(strictconvert(Number, B) * A, dspB)
     else
-        promotetimes(collateops(*, A, B), dspB, false)
+        promotetimes(collateops(*, A : rangespace(B), B), dspB, false)
     end
 end
 
