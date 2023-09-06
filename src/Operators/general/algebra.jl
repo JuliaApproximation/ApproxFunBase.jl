@@ -80,7 +80,7 @@ end
 
 domain(P::PlusOperator) = commondomain(P.ops)
 
-_extractops(A, ::Any) = SVector{1}(A)
+_extractops(A, ::Any) = [A]
 _extractops(A::PlusOperator, ::typeof(+)) = A.ops
 
 function +(A::Operator, B::Operator)
@@ -265,6 +265,9 @@ struct TimesOperator{T,BW,SZ,O<:Operator{T},BBW,SBBW} <: Operator{T}
     end
 end
 
+operatortype(::T) where {T<:Operator} = T
+operatortype(::TimesOperator{<:Any,<:Any,<:Any,O}) where {O} = O
+
 const PlusOrTimesOp = Union{PlusOperator,TimesOperator}
 
 bandwidthssum(f, ops) = mapfoldl(f, (t1, t2) -> t1 .+ t2, ops, init=(0, 0))
@@ -329,8 +332,10 @@ Base.@constprop :aggressive function promotetimes(opsin,
     anytimesop = any(x -> x isa TimesOperator, ops)
     TimesOperator(convert_vector(ops), bw, sz, bbw, sbbw, ibbb, irb, isaf; anytimesop)
 end
+maybenarroweltype(::AbstractVector{Operator{T}}) where {T} = Operator{T}
+maybenarroweltype(opsin) = mapreduce(operatortype, promote_type, opsin)
 function __promotetimes(opsin, dsp, anytimesop)
-    ops = Vector{Operator{promote_eltypeof(opsin)}}(undef, 0)
+    ops = Vector{maybenarroweltype(opsin)}(undef, 0)
     sizehint!(ops, length(opsin))
 
     for k in reverse(eachindex(opsin))
@@ -597,7 +602,7 @@ anyplustimes(::typeof(*), op::TimesOperator, ops...) = true
 anyplustimes(f) = false
 
 collateops(op, As::Operator...) = collateops(op, Val(anyplustimes(op, As...)), As...)
-collateops(op, ::Val{true}, As...) = mapreduce(x -> _extractops(x, op), vcat, As)
+collateops(op, ::Val{true}, As...) = reduce(vcat, map(x -> _extractops(x, op), As))
 collateops(op, ::Val{false}, As...) = As
 
 *(A::Operator, B::Operator) = A_mul_B(A, B)
@@ -611,7 +616,7 @@ function A_mul_B(A::Operator, B::Operator; dspB=domainspace(B), rspA=rangespace(
     elseif isconstop(B)
         promotedomainspace(strictconvert(Number, B) * A, dspB)
     else
-        promotetimes(collateops(*, A, B), dspB, false)
+        promotetimes(collateops(*, A : rangespace(B), B), dspB, false)
     end
 end
 
