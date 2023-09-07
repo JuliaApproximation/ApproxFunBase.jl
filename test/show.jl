@@ -11,7 +11,7 @@
 		@testset "ConstantSpace" begin
 			@test contains(repr(ConstantSpace()), "ConstantSpace")
 			c = ConstantSpace(0..1)
-			@test contains(repr(c), "ConstantSpace")
+			@test startswith(repr(c), "ConstantSpace")
 			@test contains(repr(c), repr(domain(c)))
 		end
 		@testset "TensorSpace" begin
@@ -32,7 +32,7 @@
 			p = PointSpace(1:4)
 			ps = PiecewiseSpace(p)
 			rpr = repr(ps)
-			@test contains(rpr, "PiecewiseSpace")
+			@test startswith(rpr, "PiecewiseSpace")
 			@test contains(rpr, repr(p))
 		end
 		@testset "ArraySpace" begin
