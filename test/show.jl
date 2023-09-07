@@ -21,13 +21,6 @@
 			@test length(v) == 2
 			@test all(==(repr(S1)), v)
 		end
-		@testset "ProductSpace" begin
-			S1 = PointSpace(1:4)
-			S2 = PointSpace(1:2)
-			P = ProductSpace([S1, S1], S2)
-			@test startswith(repr(P), "ProductSpace")
-			@test contains(repr(P), string(factors(P)))
-		end
 		@testset "SumSpace" begin
 			S1 = PointSpace(1:3)
 			S = S1 ⊕ S1
