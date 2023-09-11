@@ -594,6 +594,10 @@ end
 
 \(c::Number, f::Fun) = Fun(f.space, c \ f.coefficients)
 
+# eliminate the type-unstable 1/t branch by using an unsigned integer exponent
+isnegative(x) = x < zero(x)
+isnegative(::Unsigned) = false
+
 Base.@constprop :aggressive function intpow(f, k)
     if k == 0
         ones(cfstype(f), space(f))
@@ -607,10 +611,10 @@ Base.@constprop :aggressive function intpow(f, k)
         f * f * f * f
     else
         t = foldl(*, fill(f, abs(k)-1), init=f)
-        if k > 0
-            return t
-        else
+        if isnegative(k)
             return 1/t
+        else
+            return t
         end
     end
 end
