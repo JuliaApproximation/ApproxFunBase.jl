@@ -309,6 +309,7 @@ using LinearAlgebra
         @test g > f
         @test g >= f
         @test 1 < f < 3
+        @test norm(f) == 2
 
         @test maxspace(ConstantSpace(Point(1)), ConstantSpace(Point(2))) == ConstantSpace(Point(1) ∪ Point(2))
         @test maxspace(ConstantSpace(Point(1)), ConstantSpace(AnyDomain())) == ConstantSpace(Point(1))
