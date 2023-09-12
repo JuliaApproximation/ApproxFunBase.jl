@@ -315,6 +315,9 @@ using LinearAlgebra
         @test maxspace(ConstantSpace(Point(1)), ConstantSpace(AnyDomain())) == ConstantSpace(Point(1))
         @test maxspace(ConstantSpace(AnyDomain()), ConstantSpace(Point(2))) == ConstantSpace(Point(2))
         @test maxspace(ConstantSpace(AnyDomain()), ConstantSpace(AnyDomain())) == ConstantSpace(AnyDomain())
+
+        C = Multiplication(Fun(ConstantSpace(), Float64[]), ConstantSpace())
+        @test all(iszero, AbstractMatrix(C))
     end
 
     @testset "promotion" begin

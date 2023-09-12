@@ -173,8 +173,16 @@ defaultMultiplication(f::Fun,b::ConstantSpace) = ConcreteMultiplication(f,b)
 
 bandwidths(D::ConcreteMultiplication{CS1,CS2,T}) where {CS1<:ConstantSpace,CS2<:ConstantSpace,T} =
     0,0
-getindex(D::ConcreteMultiplication{CS1,CS2,T},k::Integer,j::Integer) where {CS1<:ConstantSpace,CS2<:ConstantSpace,T} =
-    k==j==1 ? strictconvert(T,D.f.coefficients[1]) : one(T)
+
+function getindex(D::ConcreteMultiplication{<:ConstantSpace,<:ConstantSpace,T},k::Integer,j::Integer) where {T}
+    if k==j==1
+        (; f) = D
+        c = ncoefficients(f) == 0 ? zero(cfstype(f)) : coefficient(f,1)
+        strictconvert(T, c)
+    else
+        one(T)
+    end
+end
 
 rangespace(D::ConcreteMultiplication{CS1,CS2,T}) where {CS1<:ConstantSpace,CS2<:ConstantSpace,T} =
     D.space
