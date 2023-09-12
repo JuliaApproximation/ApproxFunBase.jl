@@ -3,16 +3,14 @@
 
 struct TrivialTensorFun{d, SS<:TensorSpaceND{d}, T<:Number} <: MultivariateFun{T, d}
     space::SS
-    coefficients::Vector{T}
+    coefficients::AbstractVector{T}
     iterator::TrivialTensorizer{d}
     orders::Block{1, Int}
 end
 
 
-function TrivialTensorFun(iter::TrivialTensorizer{d},cfs::Vector{T},blk::Block, sp::TensorSpaceND{d}) where {T<:Number,d}
-    if any(map(dimension, sp.spaces).!=ℵ₀)
-        error("This Space is not a Trivial Tensor space!")
-    end
+function TrivialTensorFun(iter::TrivialTensorizer{d},
+                          cfs::AbstractVector{T}, blk::Block, sp::TensorSpaceND{d}) where {T<:Number,d}
     TrivialTensorFun(sp, cfs, iter, blk)
 end
 
@@ -20,7 +18,7 @@ end
 
 # TensorSpace evaluation
 function evaluate(f::TrivialTensorFun{d, SS, T},x...) where {d, SS, T}
-    highest_order = f.orders.n[1]
+    highest_order = f.orders.n[1]-1
     n = length(f.coefficients)
 
     # this could be lazy evaluated for the sparse case

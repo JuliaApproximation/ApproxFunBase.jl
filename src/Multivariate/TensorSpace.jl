@@ -30,7 +30,10 @@ end
 
 const InfOnes = Ones{Int,1,Tuple{OneToInf{Int}}}
 const Tensorizer2D{AA, BB} = Tensorizer{Tuple{AA, BB}}
+const MixedTrivConstTensorizer{d} = Tensorizer{<:Tuple{Vararg{Union{InfOnes, SVector{1, <:Int}},d}}} # const or trivial
+# TrivialTensorizer and ConstantTensorizer are special cases of MixedTrivConstTensorizer
 const TrivialTensorizer{d} = Tensorizer{NTuple{d,InfOnes}}
+const ConstantTensorizer{d} = Tensorizer{<:NTuple{d,SVector{1, <:Int}}}  # for all dimensions constant
 
 show(io::IO, t::Tensorizer) = print(io, Tensorizer, "(",  t.blocks, ")")
 
@@ -41,6 +44,24 @@ length(a::Tensorizer) = reduce(*, dimensions(a)) # easier type-inference than ma
 Base.IteratorSize(::Type{Tensorizer{T}}) where {T<:Tuple} = _IteratorSize(T)
 
 Base.keys(a::Tensorizer) = oneto(length(a))
+
+
+function start(a::ConstantTensorizer{d}) where {d}
+    @assert length(a) == 1
+    block = ntuple(one, d)
+    return (block, (0,1))
+end
+
+function next(a::ConstantTensorizer{d}, iterator_tuple) where {d}
+    (block, (i,tot)) = iterator_tuple
+    ret = block
+    ret, (block, (i+1,tot))
+end
+
+function done(a::ConstantTensorizer, iterator_tuple)::Bool
+    i, tot = last(iterator_tuple)
+    return i ≥ tot
+end
 
 function start(a::TrivialTensorizer{d}) where {d}
     # ((block_dim_1, block_dim_2,...), (itaration_number, iterator, iterator_state)), (itemssofar, length)
@@ -80,8 +101,56 @@ function next(a::TrivialTensorizer{d}, iterator_tuple) where {d}
     ret, ((block, (j, iterator, iter_state)), (i,tot))
 end
 
-
 function done(a::TrivialTensorizer, iterator_tuple)::Bool
+    i, tot = last(iterator_tuple)
+    return i ≥ tot
+end
+
+
+function start(a::MixedTrivConstTensorizer{d}) where {d}
+    # const indices are always left to be one
+    relevant_ind = filter!(i->i≠0, map(i->a.blocks[i] isa SVector{1, <:Int} ? 0 : i,1:length(a.blocks)))
+    real_d = length(relevant_ind)
+    # ((block_dim_1, block_dim_2,...), (itaration_number, iterator, iterator_state)), (itemssofar, length)
+    block = ones(Int, real_d)
+    return (block, (relevant_ind, real_d, 0, nothing, nothing)), (0,length(a))
+end
+
+function next(a::MixedTrivConstTensorizer{d}, iterator_tuple) where {d}
+    (block, (relevant_ind, real_d, j, iterator, iter_state)), (i,tot) = iterator_tuple
+
+    @inline function check_block_finished(j, iterator, block)
+        if iterator === nothing
+            return true
+        end
+        # there are N-1 over d-1 combinations in a block
+        amount_combinations_block = binomial(sum(block)-1, real_d-1)
+        # check if all combinations have been iterated over
+        amount_combinations_block <= j
+    end
+
+    ret_vec = ones(Int, d)
+    ret_vec[relevant_ind] = reverse(block)
+    ret = Tuple(SVector{d}(ret_vec))
+
+    if check_block_finished(j, iterator, block)   # end of new block
+        # set up iterator for new block
+        current_sum = sum(block)
+        iterator = multiexponents(real_d, current_sum+1-real_d)
+        iter_state = nothing
+        j = 0
+    end
+
+    # increase block, or initialize new block
+    _res, iter_state = iterate(iterator, iter_state)
+    # res = Tuple(SVector{real_d}(_res))
+    block = _res.+1
+    j = j+1
+
+    ret, ((block, (relevant_ind, real_d, j, iterator, iter_state)), (i,tot))
+end
+
+function done(a::MixedTrivConstTensorizer, iterator_tuple)::Bool
     i, tot = last(iterator_tuple)
     return i ≥ tot
 end
@@ -90,11 +159,13 @@ end
 # (blockrow,blockcol), (subrow,subcol), (rowshift,colshift), (numblockrows,numblockcols), (itemssofar, length)
 start(a::Tensorizer2D) = _start(a)
 start(a::TrivialTensorizer{2}) = _start(a)
+start(a::MixedTrivConstTensorizer{2}) = _start(a)
 
 _start(a) = (1,1, 1,1, 0,0, a.blocks[1][1],a.blocks[2][1]), (0,length(a))
 
 next(a::Tensorizer2D, state) = _next(a, state::typeof(_start(a)))
 next(a::TrivialTensorizer{2}, state) = _next(a, state::typeof(_start(a)))
+next(a::MixedTrivConstTensorizer{2}, state) = _next(a, state::typeof(_start(a)))
 
 function _next(a, st)
     (K,J, k,j, rsh,csh, n,m), (i,tot) = st
@@ -123,6 +194,7 @@ end
 
 done(a::Tensorizer2D, state) = _done(a, state::typeof(_start(a)))
 done(a::TrivialTensorizer{2}, state) = _done(a, state::typeof(_start(a)))
+done(a::MixedTrivConstTensorizer{2}, state) = _done(a, state::typeof(_start(a)))
 
 function _done(a, st)::Bool
     i, tot = last(st)
@@ -218,7 +290,18 @@ blocklength(it,k::BlockRange) = blocklength(it,Int.(k))
 
 blocklengths(::TrivialTensorizer{2}) = 1:∞
 
-
+## anonymous function needed in order to compare if two blocklenghts are equal
+_blocklengths_trivialTensorizer(d) = let d=d
+    x->binomial(x+(d-2), d-1)
+end
+blocklengths(::TrivialTensorizer{d}) where {d} = _blocklengths_trivialTensorizer(d).(1:∞)
+blocklengths(::ConstantTensorizer) = SVector(1)
+function blocklengths(a::MixedTrivConstTensorizer{d}) where {d}
+    real_d = mapreduce(bl->bl isa SVector{1, <:Int} ? 0 : 1, +, a.blocks)
+    real_d == 0 && return SVector(1)
+    real_d == 1 && return 1:∞
+    return _blocklengths_trivialTensorizer(real_d).(1:∞)
+end
 
 blocklengths(it::Tensorizer) = tensorblocklengths(it.blocks...)
 blocklengths(it::CachedIterator) = blocklengths(it.iterator)
@@ -306,7 +389,15 @@ const TensorSpace2D{AA, BB, D,R} = TensorSpace{<:Tuple{AA, BB}, D, R} where {AA<
 const TensorSpaceND{d, D, R} = TensorSpace{<:NTuple{d, <:UnivariateSpace}, D, R}
 
 tensorizer(sp::TensorSpace) = Tensorizer(map(blocklengths,sp.spaces))
-blocklengths(S::TensorSpace) = tensorblocklengths(map(blocklengths,S.spaces)...)
+function blocklengths(S::TensorSpace)
+    list_blocks = map(blocklengths,S.spaces)
+    if all(x->x == Ones{Int}(ℵ₀), list_blocks)
+        d = length(S.spaces)
+        return _blocklengths_trivialTensorizer(d).(1:∞)
+    else
+        return tensorblocklengths(list_blocks...)
+    end
+end
 
 
 # the evaluation is *, so the type will be the same as *
@@ -329,11 +420,11 @@ dimension(sp::TensorSpace) = mapreduce(dimension,*,sp.spaces)
 ==(A::TensorSpace{<:NTuple{N,Space}}, B::TensorSpace{<:NTuple{N,Space}}) where {N} =
         factors(A) == factors(B)
 
-conversion_rule(a::TensorSpace{<:NTuple{2,Space}}, b::TensorSpace{<:NTuple{2,Space}}) =
-    conversion_type(a.spaces[1],b.spaces[1]) ⊗ conversion_type(a.spaces[2],b.spaces[2])
+conversion_rule(a::TensorSpace{<:NTuple{N,Space}}, b::TensorSpace{<:NTuple{N,Space}}) where {N} =
+    mapreduce((a,b)->conversion_type(a,b),⊗,a.spaces,b.spaces)
 
-maxspace_rule(a::TensorSpace{<:NTuple{2,Space}}, b::TensorSpace{<:NTuple{2,Space}}) =
-    maxspace(a.spaces[1],b.spaces[1]) ⊗ maxspace(a.spaces[2],b.spaces[2])
+maxspace_rule(a::TensorSpace{<:NTuple{N,Space}}, b::TensorSpace{<:NTuple{N,Space}}) where {N} =
+    mapreduce((a,b)->maxspace(a,b),⊗,a.spaces,b.spaces)
 
 function spacescompatible(A::TensorSpace{<:NTuple{N,Space}}, B::TensorSpace{<:NTuple{N,Space}}) where {N}
     _spacescompatible(factors(A), factors(B))
@@ -618,7 +709,7 @@ function totensor(it::Tensorizer,M::AbstractVector)
     ret
 end
 
-@inline function totensoriterator(it::TrivialTensorizer{d},M::AbstractVector) where {d}
+@inline function totensoriterator(it::MixedTrivConstTensorizer{d} ,M::AbstractVector) where {d}
     B=block(it,length(M))
     return it, M, B
 end
@@ -661,7 +752,29 @@ evaluate(f::AbstractVector,S::TensorSpace2D,x) = ProductFun(totensor(S,f), S)(x.
 evaluate(f::AbstractVector,S::TensorSpace2D,x,y) = ProductFun(totensor(S,f),S)(x,y)
 
 # ND evaluation functions of Trivial Spaces
-evaluate(f::AbstractVector,S::TensorSpaceND,x) = TrivialTensorFun(totensor(S, f)..., S)(x...)
+not_const_spaces_indices(S) = filter!(i->i≠0, map(i->S.spaces[i] isa ConstantSpace ? 0 : i,1:length(S.spaces)))
+function evaluate(f::AbstractVector,S::TensorSpaceND,x)
+    if !any(s->s isa ConstantSpace, S.spaces)
+        return TrivialTensorFun(totensor(S, f)..., S)(x...)
+    end
+    not_cons_indices = not_const_spaces_indices(S)
+    xmod = if length(x) == length(not_cons_indices)
+        x
+    else
+        x[not_cons_indices]
+    end
+    (length(not_cons_indices) == 0) && return f[1]
+    S_new = reduce(⊗, S.spaces[not_cons_indices])
+    if length(not_cons_indices) > 2
+        return TrivialTensorFun(totensor(S_new, f)..., S_new)(x...)
+    elseif length(S_new) == 2
+        return ProductFun(totensor(S_new, f), S_new)(x...)
+    elseif length(S_new) == 1
+        return Fun(S_new[1], f)(x)
+    else
+        error("This should not happen")
+    end
+end
 
 coefficientmatrix(f::Fun{<:AbstractProductSpace}) = totensor(space(f),f.coefficients)
 

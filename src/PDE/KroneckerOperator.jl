@@ -6,8 +6,8 @@ export KroneckerOperator
 # KroneckerOperator gives the kronecker product of two 1D operators
 #########
 
-struct KroneckerOperator{S,V,DS,RS,DI,RI,T} <: Operator{T}
-    ops::Tuple{S,V}
+struct KroneckerOperator{TT, DS,RS,DI,RI,T} <: Operator{T}
+    ops::TT
     domainspace::DS
     rangespace::RS
     domaintensorizer::DI
@@ -16,11 +16,33 @@ end
 
 
 KroneckerOperator(A,B,ds::Space,rs::Space,di,ri) =
-    KroneckerOperator{typeof(A),typeof(B),typeof(ds),typeof(rs),typeof(di),typeof(ri),
+    KroneckerOperator{typeof((A, B)),typeof(ds),typeof(rs),typeof(di),typeof(ri),
                         promote_type(eltype(A),eltype(B))}((A,B),ds,rs,di,ri)
+KroneckerOperator(A::Tuple,ds::Space,rs::Space,di,ri) =
+    KroneckerOperator{typeof(A), typeof(ds),typeof(rs),typeof(di),typeof(ri),
+                        promote_type(eltype(A[1]),eltype(A[2]))}(A,ds,rs,di,ri)
 
 KroneckerOperator(A,B,ds::Space,rs::Space) = KroneckerOperator(A,B,ds,rs,
                     CachedIterator(tensorizer(ds)),CachedIterator(tensorizer(rs)))
+KroneckerOperator(A::Tuple, ds::Space, rs::Space) = KroneckerOperator(A,ds,rs,
+                    CachedIterator(tensorizer(ds)),CachedIterator(tensorizer(rs)))
+
+# DON'T nest KroneckerOperators
+function KroneckerOperator(A::KroneckerOperator,B::KroneckerOperator)
+    ds=domainspace(A)⊗domainspace(B)
+    rs=rangespace(A)⊗rangespace(B)
+    KroneckerOperator((A.ops..., B.ops...), ds, rs)
+end
+function KroneckerOperator(A::KroneckerOperator,B)
+    ds=domainspace(A)⊗domainspace(B)
+    rs=rangespace(A)⊗rangespace(B)
+    KroneckerOperator((A.ops..., B), ds, rs)
+end
+function KroneckerOperator(A,B::KroneckerOperator)
+    ds=domainspace(A)⊗domainspace(B)
+    rs=rangespace(A)⊗rangespace(B)
+    KroneckerOperator((A, B.ops...), ds, rs)
+end
 function KroneckerOperator(A,B)
     ds=domainspace(A)⊗domainspace(B)
     rs=rangespace(A)⊗rangespace(B)
@@ -40,15 +62,14 @@ KroneckerOperator(K::KroneckerOperator) = K
 KroneckerOperator(T::TimesOperator) = mapfoldr(op -> KroneckerOperator(op), *, T.ops)
 
 function promotedomainspace(K::KroneckerOperator,ds::TensorSpace)
-    A=promotedomainspace(K.ops[1],ds.spaces[1])
-    B=promotedomainspace(K.ops[2],ds.spaces[2])
-    KroneckerOperator(A,B,ds,rangespace(A)⊗rangespace(B))
+    A = ntuple(i->promotedomainspace(K.ops[i], ds.spaces[i]), length(K.ops))
+    rs = reduce(⊗, [rangespace(a) for a∈A])
+    KroneckerOperator(A,ds,rs)
 end
 
 function promoterangespace(K::KroneckerOperator,rs::TensorSpace)
-    A=promoterangespace(K.ops[1],rs.spaces[1])
-    B=promoterangespace(K.ops[2],rs.spaces[2])
-    KroneckerOperator(A,B,domainspace(K),rs)
+    A = ntuple(i->promoterangespace(K.ops[i], rs.spaces[i]), length(K.ops))
+    KroneckerOperator(A,domainspace(K),rs)
 end
 
 
@@ -57,7 +78,7 @@ function convert(::Type{Operator{T}},K::KroneckerOperator) where T<:Number
         K
     else
         ops = map(Operator{T}, K.ops)
-        KroneckerOperator{map(typeof, ops)...,
+        KroneckerOperator{typeof(ops),
             typeof(K.domainspace),typeof(K.rangespace),
             typeof(K.domaintensorizer),typeof(K.rangetensorizer),T}(ops,
               K.domainspace,K.rangespace,
@@ -116,7 +137,7 @@ for f in [:isblockbanded, :israggedbelow, :isdiag]
         $(_f)(::Tuple{}) = true
     end
 end
-isbandedblockbanded(K::KroneckerOperator) = _isbandedblockbanded(K.ops)
+isbandedblockbanded(K::KroneckerOperator) = length(K.ops)>2 ? false : _isbandedblockbanded(K.ops)
 isbandedblockbandedcheck(op) = isbanded(op) && isinf(size(op,1)) && isinf(size(op,2))
 function _isbandedblockbanded(ops::Tuple)
     isbandedblockbandedcheck(first(ops)) && _isbandedblockbanded(Base.tail(ops))
@@ -124,11 +145,12 @@ end
 _isbandedblockbanded(::Tuple{}) = true
 
 blockbandwidths(K::KroneckerOperator) =
-    (blockbandwidth(K.ops[1],1)+blockbandwidth(K.ops[2],1),
-    blockbandwidth(K.ops[1],2)+blockbandwidth(K.ops[2],2))
+    (mapreduce(k->blockbandwidth(k,1), +, K.ops), 
+    mapreduce(k->blockbandwidth(k,2), +, K.ops))
 
 # If each block were in turn BlockBandedMatrix, these would
 # be the    bandwidths
+# TODO: How does this work for multiple Ops?
 subblock_blockbandwidths(K::KroneckerOperator) =
     (max(blockbandwidth(K.ops[1],1),blockbandwidth(K.ops[2],2)) ,
            max(blockbandwidth(K.ops[1],2),blockbandwidth(K.ops[2],1)))
@@ -182,20 +204,24 @@ domaintensorizer(K::KroneckerOperator) = K.domaintensorizer
 rangetensorizer(K::KroneckerOperator) = K.rangetensorizer
 
 
+# For 2 ops, we can do this
 # we suport 4-indexing with KroneckerOperator
 # If A is K x J and B is N x M, then w
 # index to match KO=reshape(kron(B,A),N,K,M,J)
 # that is
 # KO[k,n,j,m] = A[k,j]*B[n,m]
-# TODO: arbitrary number of ops
 
-getindex(KO::KroneckerOperator,k::Integer,n::Integer,j::Integer,m::Integer) =
-    KO.ops[1][k,j]*KO.ops[2][n,m]
+# TODO: arbitrary number of ops
+# We get tuples of arbitraty length from the tensorizers
+
+## this should not be used anymore, can be deleted
+# getindex(KO::KroneckerOperator,k::Integer,n::Integer,j::Integer,m::Integer) =
+#     KO.ops[1][k,j]*KO.ops[2][n,m]
 
 function getindex(KO::KroneckerOperator,kin::Integer,jin::Integer)
-    j,m=KO.domaintensorizer[jin]
-    k,n=KO.rangetensorizer[kin]
-    KO[k,n,j,m]
+    domain_tuple=KO.domaintensorizer[jin]
+    range_tuple=KO.rangetensorizer[kin]
+    mapreduce((k,i_in,j_out)->k[i_in,j_out], *, KO.ops, range_tuple, domain_tuple)
 end
 
 function getindex(KO::KroneckerOperator,k::Integer)
@@ -212,11 +238,8 @@ end
 function *(A::KroneckerOperator, B::KroneckerOperator)
     dspB = domainspace(B)
     rspA = rangespace(A)
-    A1, A2 = A.ops
-    B1, B2 = B.ops
-    AB1 = A1 * B1
-    AB2 = A2 * B2
-    KroneckerOperator(AB1, AB2, dspB, rspA)
+    AB = Tuple([a*b for (a,b) in zip(A.ops, B.ops)])
+    KroneckerOperator(AB, dspB, rspA)
 end
 
 
@@ -262,25 +285,25 @@ Base.transpose(S::ConstantTimesOperator) = sp.c*transpose(S.op)
 
 ### Calculus
 
-#TODO: general dimension
-function Derivative(S::TensorSpace{<:Any,<:EuclideanDomain{2}}, order)
-    @assert length(order)==2
-    if order[1]==0
-        Dy=Derivative(S.spaces[2],order[2])
-        K=Operator(I,S.spaces[1])⊗Dy
-    elseif order[2]==0
-        Dx=Derivative(S.spaces[1],order[1])
-        K=Dx⊗Operator(I,S.spaces[2])
-    else
-        Dx=Derivative(S.spaces[1],order[1])
-        Dy=Derivative(S.spaces[2],order[2])
-        K=Dx⊗Dy
-    end
-    DerivativeWrapper(K,order,S)
+function Derivative(S::TensorSpace{<:Any,<:EuclideanDomain}, order)
+    @assert length(order)==length(S.spaces)
+    @inline Derivative_or_I(i) = order[i]>0 ? Derivative(S.spaces[i], order[i]) : Operator(I,S.spaces[i])
+    DerivativeWrapper(mapreduce(i->Derivative_or_I(i),⊗,1:length(order)), order, S)
 end
 
+function Integral(S::TensorSpace{<:Any,<:EuclideanDomain}, order)
+    @assert length(order)==length(S.spaces)
+    @assert max(order...)<=1
+    @inline Integral_or_I(i) = order[i]>0 ? Integral(S.spaces[i]) : Operator(I,S.spaces[i])
+    IntegralWrapper(mapreduce(i->Integral_or_I(i),⊗,1:length(order)))
+end
 
 DefiniteIntegral(S::TensorSpace) = DefiniteIntegralWrapper(mapreduce(DefiniteIntegral,⊗,S.spaces))
+function DefiniteIntegral(S::TensorSpace, dim::Vector{Int})
+    @assert length(dim)==length(S.spaces)
+    @inline Int_or_I(i) = 1==dim[i] ? DefiniteIntegral(S.spaces[i]) : Operator(I,S.spaces[i])
+    DefiniteIntegralWrapper(mapreduce(i->Int_or_I(i),⊗,1:length(dim)))
+end
 
 
 
@@ -345,9 +368,9 @@ const Trivial2DTensorizer = CachedIterator{Tuple{Int,Int},
 # This routine is an efficient version of KroneckerOperator for the case of
 # tensor product of trivial blocks
 
-function BandedBlockBandedMatrix(S::SubOperator{T,KroneckerOperator{SS,V,DS,RS,
+function BandedBlockBandedMatrix(S::SubOperator{T,KroneckerOperator{TT,DS,RS,
                                      Trivial2DTensorizer,Trivial2DTensorizer,T},
-                                     Tuple{BlockRange1,BlockRange1}}) where {SS,V,DS,RS,T}
+                                     Tuple{BlockRange1,BlockRange1}}) where {TT,DS,RS,T}
     KR,JR = parentindices(S)
     KR_i, JR_i = Int.(KR), Int.(JR)
 
@@ -379,9 +402,9 @@ function BandedBlockBandedMatrix(S::SubOperator{T,KroneckerOperator{SS,V,DS,RS,
     ret
 end
 
-convert(::Type{BandedBlockBandedMatrix}, S::SubOperator{T,KroneckerOperator{SS,V,DS,RS,
+convert(::Type{BandedBlockBandedMatrix}, S::SubOperator{T,KroneckerOperator{TT,DS,RS,
                                      Trivial2DTensorizer,Trivial2DTensorizer,T},
-                                     Tuple{BlockRange1,BlockRange1}}) where {SS,V,DS,RS,T} =
+                                     Tuple{BlockRange1,BlockRange1}}) where {TT,DS,RS,T} =
     BandedBlockBandedMatrix(S)
 
 ## TensorSpace operators
@@ -397,6 +420,13 @@ function Conversion(a::TensorSpace2D,b::TensorSpace2D)
     C1 = Conversion(a.spaces[1],b.spaces[1])
     C2 = Conversion(a.spaces[2],b.spaces[2])
     K = KroneckerOperator(C1, C2, a, b)
+    T = promote_type(prectype(a),prectype(b))
+    ConversionWrapper(strictconvert(Operator{T}, K))
+end
+
+function Conversion(a::TensorSpace,b::TensorSpace)
+    C = map(Conversion,a.spaces,b.spaces)
+    K = KroneckerOperator(C, a, b)
     T = promote_type(prectype(a),prectype(b))
     ConversionWrapper(strictconvert(Operator{T}, K))
 end
@@ -449,7 +479,7 @@ end
 
 # if the second operator is a constant, we may scale the first operator,
 # and apply it on the coefficients
-function (*)(ko::KroneckerOperator{<:Operator, <:ConstantOperator}, pf::ProductFun)
+function (*)(ko::KroneckerOperator{<:Tuple{<:Operator, <:ConstantOperator}}, pf::ProductFun)
     O1, O2 = ko.ops
     O12 = O2.λ * O1
     vc = map(x -> O12*x, pf.coefficients)
