@@ -164,7 +164,6 @@ isconstop(::Union{ZeroOperator,ConstantOperator}) = true
 isconstop(S::SpaceOperator) = isconstop(S.op)
 
 iszeroop(::ZeroOperator) = true
-iszeroop(A::ConstantOperator) = A.λ==0.0
 iszeroop(A) = false
 
 convert(::Type{T},::ZeroOperator) where {T<:Number} = zero(T)
