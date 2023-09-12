@@ -256,5 +256,5 @@ Base.isfinite(f::Fun{CS}) where {CS<:ConstantSpace} = isfinite(Number(f))
 
 ## Calculus
 
-integrate(f::Fun{<:ConstantSpace{<:IntervalOrSegment}}) = Number(f) * Fun(Chebyshev(domain(f)))
+integrate(f::Fun{<:ConstantSpace{<:IntervalOrSegment}}) = Number(f) * Fun(domain(f))
 differentiate(f::Fun{<:ConstantSpace{<:IntervalOrSegment}}) = zero(f)
