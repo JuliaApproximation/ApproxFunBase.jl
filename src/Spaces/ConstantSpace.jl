@@ -6,7 +6,7 @@ iterate(f::Fun{SequenceSpace}, st) = f[st], st+1
 
 getindex(f::Fun{SequenceSpace}, k::Integer) =
     k ≤ ncoefficients(f) ? f.coefficients[k] : zero(cfstype(f))
-getindex(f::Fun{SequenceSpace},K::CartesianIndex{0}) = f[1]
+getindex(f::Fun{SequenceSpace},K::CartesianIndex{0}) = _first_or_zero(f)
 getindex(f::Fun{SequenceSpace},K) = cfstype(f)[f[k] for k in K]
 
 length(f::Fun{SequenceSpace}) = ℵ₀
@@ -80,7 +80,10 @@ ones(S::ConstantSpace) = Fun(S,fill(1.0,1))
 ones(S::Union{AnyDomain,UnsetSpace}) = ones(ConstantSpace())
 zeros(S::AnyDomain) = zero(ConstantSpace())
 zero(S::UnsetSpace) = zero(ConstantSpace())
-evaluate(f::AbstractVector,::ConstantSpace,x...)=f[1]
+_first_or_zero(f::AbstractVector) = get(f, 1, zero(eltype(f)))
+function evaluate(f::AbstractVector,::ConstantSpace,x...)
+    _first_or_zero(f)
+end
 evaluate(f::AbstractVector,::ZeroSpace,x...)=zero(eltype(f))
 
 
@@ -176,8 +179,7 @@ bandwidths(D::ConcreteMultiplication{CS1,CS2,T}) where {CS1<:ConstantSpace,CS2<:
 
 function getindex(D::ConcreteMultiplication{<:ConstantSpace,<:ConstantSpace,T},k::Integer,j::Integer) where {T}
     if k==j==1
-        (; f) = D
-        c = ncoefficients(f) == 0 ? zero(cfstype(f)) : coefficient(f,1)
+        c = _first_or_zero(coefficients(D.f))
         strictconvert(T, c)
     else
         one(T)

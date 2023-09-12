@@ -9,7 +9,7 @@
 	end
 	@testset "Space" begin
 		@testset "ConstantSpace" begin
-			@test contains(repr(ConstantSpace()), "ConstantSpace")
+			@test repr(ConstantSpace()) == "ConstantSpace()"
 			c = ConstantSpace(0..1)
 			@test startswith(repr(c), "ConstantSpace")
 			@test contains(repr(c), repr(domain(c)))

@@ -316,7 +316,10 @@ using LinearAlgebra
         @test maxspace(ConstantSpace(AnyDomain()), ConstantSpace(Point(2))) == ConstantSpace(Point(2))
         @test maxspace(ConstantSpace(AnyDomain()), ConstantSpace(AnyDomain())) == ConstantSpace(AnyDomain())
 
-        C = Multiplication(Fun(ConstantSpace(), Float64[]), ConstantSpace())
+        f = Fun(ConstantSpace(), Float64[])
+        @test f(0) == 0
+
+        C = Multiplication(f, space(f))
         @test all(iszero, AbstractMatrix(C))
     end
 
