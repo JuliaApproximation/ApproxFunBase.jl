@@ -317,9 +317,12 @@ using LinearAlgebra
         @test maxspace(ConstantSpace(AnyDomain()), ConstantSpace(AnyDomain())) == ConstantSpace(AnyDomain())
 
         f = Fun(ConstantSpace(), Float64[])
-        @test f(0) == 0
+        g = Fun(ConstantSpace(), Float64[0])
+        @test f(0) == g(0) == 0
 
         C = Multiplication(f, space(f))
+        @test all(iszero, AbstractMatrix(C))
+        C = Multiplication(g, space(g))
         @test all(iszero, AbstractMatrix(C))
     end
 
