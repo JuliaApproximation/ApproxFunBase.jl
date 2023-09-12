@@ -168,7 +168,7 @@ function show(io::IO,s::SubSpace)
     show(io,s.indexes)
 end
 
-show(io::IO,::ConstantSpace{AnyDomain}) = print(io,"ConstantSpace")
+show(io::IO,::ConstantSpace{AnyDomain}) = print(io,"ConstantSpace()")
 show(io::IO,S::ConstantSpace) = print(io,"ConstantSpace($(domain(S)))")
 
 ## Segment
