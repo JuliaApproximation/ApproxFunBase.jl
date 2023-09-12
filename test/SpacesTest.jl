@@ -70,6 +70,7 @@ using LinearAlgebra
                 @test ApproxFunBase.intpow(f, n) == f^n == reduce(*, fill(f, n))
             end
             @test ApproxFunBase.intpow(f,-2) == f^-2 == 1/(f*f)
+            @test f^2 == f^UInt(2)
 
             if VERSION >= v"1.8"
                 @test (@inferred (x -> x^1)(sp)) == sp
