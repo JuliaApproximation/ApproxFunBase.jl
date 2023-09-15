@@ -213,7 +213,7 @@ block(sp::Tensorizer,k::Int) = Block(findfirst(x->x≥k, _cumsum(blocklengths(sp
 block(sp::CachedIterator,k::Int) = block(sp.iterator,k)
 
 blocklength(it,k) = blocklengths(it)[k]
-blocklength(it,k::Block) = blocklength(it,k.n[1])
+blocklength(it,k::Block) = blocklength(it,Int(k))
 blocklength(it,k::BlockRange) = blocklength(it,Int.(k))
 
 blocklengths(::TrivialTensorizer{2}) = 1:∞
@@ -237,8 +237,8 @@ _K_sum(bl::AbstractVector, K) = sum(bl[1:K])
 _K_sum(bl::Integer, K) = bl
 blockstop(it, K)::Int = _K_sum(blocklengths(it), K)
 
-blockstart(it,K::Block) = blockstart(it,K.n[1])
-blockstop(it,K::Block) = blockstop(it,K.n[1])
+blockstart(it,K::Block) = blockstart(it,Int(K))
+blockstop(it,K::Block) = blockstop(it,Int(K))
 
 
 blockrange(it,K) = blockstart(it,K):blockstop(it,K)
@@ -249,10 +249,10 @@ blockrange(it,K::BlockRange) = blockstart(it,first(K)):blockstop(it,last(K))
 
 # convert from block, subblock to tensor
 subblock2tensor(rt::TrivialTensorizer{2},K,k) =
-    (k,K.n[1]-k+1)
+    (k,Int(K)-k+1)
 
 subblock2tensor(rt::CachedIterator{II,TrivialTensorizer{2}},K,k) where {II} =
-    (k,K.n[1]-k+1)
+    (k,Int(K)-k+1)
 
 
 subblock2tensor(rt::CachedIterator,K,k) = rt[blockstart(rt,K)+k-1]
@@ -602,10 +602,10 @@ function totensor(it::Tensorizer,M::AbstractVector)
     n=length(M)
     B=block(it,n)
 
-    #ret=zeros(eltype(M),[sum(it.blocks[i][1:min(B.n[1],length(it.blocks[i]))]) for i=1:length(it.blocks)]...)
+    #ret=zeros(eltype(M),[sum(it.blocks[i][1:min(Int(B),length(it.blocks[i]))]) for i=1:length(it.blocks)]...)
 
-    ret=zeros(eltype(M),sum(it.blocks[1][1:min(B.n[1],length(it.blocks[1]))]),
-                        sum(it.blocks[2][1:min(B.n[1],length(it.blocks[2]))]))
+    ret=zeros(eltype(M),sum(it.blocks[1][1:min(Int(B),length(it.blocks[1]))]),
+                        sum(it.blocks[2][1:min(Int(B),length(it.blocks[2]))]))
 
     k=1
     for index in it

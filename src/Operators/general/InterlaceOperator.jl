@@ -437,7 +437,7 @@ function blockbanded_interlace_convert!(S,ret)
             k = 0
             m = 0
             for κ=1:size(M,1)
-                if K.n[1] ≤ blocksize(M[κ,ξ],1) && J.n[1] ≤ blocksize(M[κ,ξ],2)
+                if Int(K) ≤ blocksize(M[κ,ξ],1) && Int(J) ≤ blocksize(M[κ,ξ],2)
                     MKJ = M[κ,ξ][K,J]::Matrix{T}
                     n,m = size(MKJ)
                     Bs[k+1:k+n,j+1:j+m] = MKJ

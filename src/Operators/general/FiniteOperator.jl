@@ -61,5 +61,9 @@ end
 
 
 bandwidths(T::FiniteOperator) = bandwidths(T.matrix)
-blockbandwidths(T::FiniteOperator) = block(rangespace(T),size(T.matrix,1)).n[1]-1,block(domainspace(T),size(T.matrix,2)).n[1]-1
+function blockbandwidths(T::FiniteOperator)
+    n1 = Int(block(rangespace(T),size(T.matrix,1)))-1
+    n2 = Int(block(domainspace(T),size(T.matrix,2)))-1
+    return n1, n2
+end
 Base.maximum(K::FiniteOperator) = maximum(K.matrix)
