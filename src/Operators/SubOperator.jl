@@ -24,8 +24,8 @@ function checkbounds(::Type{Bool}, A::Operator,kr,jr)
 end
 
 checkbounds(::Type{Bool}, A::Operator,K::Block,J::Block) =
-     1 ≤ first(K.n[1]) ≤ length(blocklengths(rangespace(A))) &&
-     1 ≤ first(J.n[1]) ≤ length(blocklengths(domainspace(A)))
+     1 ≤ first(Int(K)) ≤ length(blocklengths(rangespace(A))) &&
+     1 ≤ first(Int(J)) ≤ length(blocklengths(domainspace(A)))
 
 checkbounds(::Type{Bool}, A::Operator,K::BlockRange{1},J::BlockRange{1}) =
     isempty(K) || isempty(J) ||
@@ -58,8 +58,8 @@ function SubOperator(A,inds::NTuple{2,Block},lu)
     _SubOperator(A, inds, lu, domainspace(A), rangespace(A))
 end
 function _SubOperator(A, inds, lu, dsp, rsp)
-    SubOperator(A,inds,(blocklengths(rsp)[inds[1].n[1]],
-                        blocklengths(dsp)[inds[2].n[1]]),lu)
+    SubOperator(A,inds,(blocklengths(rsp)[Int(inds[1])],
+                        blocklengths(dsp)[Int(inds[2])]),lu)
 end
 
 SubOperator(A, inds::NTuple{2,Block}) = SubOperator(A,inds,subblockbandwidths(A))
@@ -232,7 +232,7 @@ blockbandwidths(S::SubOperator{<:Any,<:Any,NTuple{2,AbstractRange{Int}}}) =
 function blockbandwidths(S::SubOperator{<:Any,<:Any,NTuple{2,BlockRange1}})
     KR,JR = parentindices(S)
     l,u = blockbandwidths(parent(S))
-    sh = first(KR).n[1]-first(JR).n[1]
+    sh = Int(first(KR)) - Int(first(JR))
     l-sh,u+sh
 end
 

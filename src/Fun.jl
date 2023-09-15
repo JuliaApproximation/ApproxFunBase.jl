@@ -153,7 +153,7 @@ function coefficient(f::Fun,kr::AbstractRange)
     f.coefficients[first(kr):min(b, end)]
 end
 
-coefficient(f::Fun,K::Block) = coefficient(f,blockrange(space(f),K.n[1]))
+coefficient(f::Fun,K::Block) = coefficient(f,blockrange(space(f),Int(K)))
 coefficient(f::Fun,::Colon) = coefficient(f,1:dimension(space(f)))
 
 # convert to vector while computing coefficients
@@ -461,7 +461,7 @@ julia> ncoefficients(f)
 """
 ncoefficients(f::Fun)::Int = length(f.coefficients)
 
-blocksize(f::Fun) = (block(space(f),ncoefficients(f)).n[1],)
+blocksize(f::Fun) = (Int(block(space(f),ncoefficients(f))),)
 
 """
     stride(f::Fun)

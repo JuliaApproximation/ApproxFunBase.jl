@@ -20,7 +20,7 @@ end
 
 # TensorSpace evaluation
 function evaluate(f::TrivialTensorFun{d, SS, T},x...) where {d, SS, T}
-    highest_order = f.orders.n[1]
+    highest_order = Int(f.orders)
     n = length(f.coefficients)
 
     # this could be lazy evaluated for the sparse case
