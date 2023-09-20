@@ -565,10 +565,18 @@ end
 points(d::Union{EuclideanDomain{2},BivariateSpace},n,m) = points(d,n,m,1),points(d,n,m,2)
 
 function points(d::BivariateSpace,n,m,k)
-    ptsx=points(columnspace(d,1),n)
-    ptst=points(factor(d,2),m)
+    k ∈ (1,2) || throw(ArgumentError("k must be 1 or 2"))
 
-    promote_type(eltype(ptsx),eltype(ptst))[fromcanonical(d,x,t)[k] for x in ptsx, t in ptst]
+    ptsx = points(columnspace(d,1), n)
+    ptst = points(factor(d,2), m)
+
+    T = promote_eltypeof(ptsx, ptst)
+
+    if k == 1
+        repeat(ptsx, 1, m)
+    else # k == 2
+        repeat(reshape(ptst, 1, m), n)
+    end
 end
 
 
