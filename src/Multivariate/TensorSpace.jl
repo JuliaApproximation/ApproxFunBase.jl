@@ -572,11 +572,13 @@ function points(d::BivariateSpace,n,m,k)
 
     T = promote_eltypeof(ptsx, ptst)
 
-    if k == 1
+    A = if k == 1
         repeat(ptsx, 1, m)
     else # k == 2
         repeat(reshape(ptst, 1, m), n)
     end
+
+    convert(AbstractArray{T}, A)
 end
 
 
