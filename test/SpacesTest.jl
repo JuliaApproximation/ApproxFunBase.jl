@@ -295,6 +295,13 @@ using LinearAlgebra
             @test a == a
             @test a != b
         end
+
+        @testset "points" begin
+            S = PointSpace(1:4) ⊗ PointSpace(1:4)
+            P = points(S, 4, 4)
+            @test P[1] == repeat(1:4, 1, 4)
+            @test P[2] == repeat((1:4)', 4, 1)
+        end
     end
 
     @testset "ConstantSpace" begin
