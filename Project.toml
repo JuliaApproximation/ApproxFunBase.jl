@@ -1,6 +1,6 @@
 name = "ApproxFunBase"
 uuid = "fbd15aa5-315a-5a7d-a8a4-24992e37be05"
-version = "0.8.60"
+version = "0.8.61"
 
 [deps]
 AbstractFFTs = "621f4979-c628-5d54-868e-fcf4e3e8185c"
@@ -29,7 +29,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 [compat]
 AbstractFFTs = "0.5, 1"
 Aqua = "0.6"
-BandedMatrices = "0.16, 0.17"
+BandedMatrices = "0.16, 0.17, 1"
 BlockArrays = "0.14, 0.15, 0.16"
 BlockBandedMatrices = "0.10, 0.11, 0.12"
 Calculus = "0.5"
