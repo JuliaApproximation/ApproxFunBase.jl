@@ -4,7 +4,8 @@ using Aqua
 using BandedMatrices
 using BlockArrays
 using BlockBandedMatrices
-using DomainSets
+using DomainSets: DomainSets, Point
+using IntervalSets: (..)
 using DualNumbers
 using FillArrays
 using InfiniteArrays
@@ -15,10 +16,7 @@ using SpecialFunctions
 using Test
 
 @testset "Project quality" begin
-    Aqua.test_all(ApproxFunBase, ambiguities=false, piracy = false,
-        # only test formatting on VERSION >= v1.7
-        # https://github.com/JuliaTesting/Aqua.jl/issues/105#issuecomment-1551405866
-        project_toml_formatting = VERSION >= v"1.9")
+    Aqua.test_all(ApproxFunBase, ambiguities=false, piracy = false)
 end
 
 @testset "Helper" begin
