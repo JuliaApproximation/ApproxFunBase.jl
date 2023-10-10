@@ -1,7 +1,7 @@
 name = "ApproxFunBaseTest"
 uuid = "a931bfaf-0cfd-4a5c-b69c-bf2eed002b43"
 authors = ["Jishnu Bhattacharya <jishnub.github@gmail.com>"]
-version = "0.1.8"
+version = "0.1.9"
 
 [deps]
 ApproxFunBase = "fbd15aa5-315a-5a7d-a8a4-24992e37be05"
@@ -18,6 +18,6 @@ ApproxFunBase = "0.5, 0.6, 0.7, 0.8, 0.9"
 BandedMatrices = "0.16, 0.17, 1"
 BlockArrays = "0.14, 0.15, 0.16"
 BlockBandedMatrices = "0.10, 0.11, 0.12"
-DomainSets = "0.5, 0.6"
+DomainSets = "0.5, 0.6, 0.7"
 InfiniteArrays = "0.11, 0.12, 0.13"
 julia = "1.5"
