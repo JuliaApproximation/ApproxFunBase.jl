@@ -1,15 +1,11 @@
 module ApproxFunBaseTest
 
-Base.Experimental.@optlevel 1
-
 using ApproxFunBase
 using ApproxFunBase: plan_transform, plan_itransform, israggedbelow, RaggedMatrix, isbandedbelow, isbanded,
     blockstart, blockstop, resizedata!
 using BandedMatrices: BandedMatrices, rowstart, rowstop, colstart, colstop, BandedMatrix, bandwidth
-using BlockArrays
-using BlockArrays: blockrowstop, blockcolstop
-using BlockBandedMatrices
-using BlockBandedMatrices: isbandedblockbanded
+using BlockArrays: blockrowstop, blockcolstop, Block
+using BlockBandedMatrices: isbandedblockbanded, blockbandwidth, isblockbanded, subblockbandwidth
 using DomainSets: dimension
 using InfiniteArrays
 using LinearAlgebra
