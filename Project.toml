@@ -26,7 +26,7 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
 AbstractFFTs = "0.5, 1"
-Aqua = "0.7"
+Aqua = "0.8"
 BandedMatrices = "0.16, 0.17, 1"
 BlockArrays = "0.14, 0.15, 0.16"
 BlockBandedMatrices = "0.10, 0.11, 0.12"
@@ -43,10 +43,12 @@ IntervalSets = "0.5, 0.6, 0.7"
 LazyArrays = "0.20, 0.21, 0.22, 1"
 LinearAlgebra = "1.9"
 LowRankMatrices = "1"
+Random = "1.9"
 SparseArrays = "1.9"
 SpecialFunctions = "0.10, 1.0, 2"
 StaticArrays = "0.12, 1.0"
 Statistics = "1.9"
+Test = "1.9"
 julia = "1.9"
 
 [extras]
