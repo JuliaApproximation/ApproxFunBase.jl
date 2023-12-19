@@ -11,6 +11,7 @@ using FillArrays
 using InfiniteArrays
 using Infinities
 using LinearAlgebra
+using LowRankMatrices
 using Random
 using SpecialFunctions
 using Test
