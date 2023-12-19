@@ -249,6 +249,11 @@ end
     AInt = convert(AbstractArray{Int}, A)
     @test AInt isa AbstractArray{Int}
     @test AInt == A
+
+    bands, fill = BandedMatrix(0=>Float64[1:4;]), LowRankMatrix(Float64[1:4;], Float64[1:4;])
+    AB = ApproxFunBase.AlmostBandedMatrix(bands, fill)
+    U = UpperTriangular(view(AB, 1:4, 1:4))
+    @test ldiv!(U, Float64[1:4;]) == ldiv!(ones(4), U, Float64[1:4;]) == ldiv!(factorize(Array(U)), Float64[1:4;])
 end
 
 @testset "DiracDelta sampling" begin
