@@ -392,4 +392,10 @@ for ArrTyp in (:AbstractVector, :AbstractMatrix)
         end
         u
     end
+    @eval function ldiv!(v::$ArrTyp{T},
+                U::UpperTriangular{T,<:SubArray{T, 2, <:AlmostBandedMatrix{T}, NTuple{2,UnitRange{Int}}}},
+                u::$ArrTyp{T}) where T
+
+        ldiv!(U, copyto!(v, u))
+    end
 end
