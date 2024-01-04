@@ -64,11 +64,7 @@ jobs:
           try
             # force it to use this PR's version of the package
             Pkg.develop(PackageSpec(path="."))  # resolver may fail with main deps
-            # the following may fail because of https://github.com/JuliaLang/Pkg.jl/issues/3327
-            # currently, we only test on older versions that don't use Pkg extensions
-            if VERSION < v"1.9"
-              Pkg.develop(PackageSpec(path="ApproxFunBaseTest"))
-            end
+            Pkg.develop(PackageSpec(path="ApproxFunBaseTest"))
             Pkg.update()
             Pkg.test(; coverage = true)  # resolver may fail with test time deps
           catch err
