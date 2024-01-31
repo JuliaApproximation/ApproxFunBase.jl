@@ -224,13 +224,13 @@ function chebyshev_clenshaw(c::AbstractVector, x)
         return first(c) * oneunit(float(x))
     end
 
-    x = 2x
+    y = 2x
     bk1,bk2 = zero(T),zero(T)
     @inbounds for k = N:-1:2
-        bk2, bk1 = bk1, muladd(x,bk1,c[k]-bk2)
+        bk2, bk1 = bk1, muladd(y,bk1,c[k]-bk2)
     end
 
-    muladd(x/2,bk1,c[1]-bk2)
+    muladd(x,bk1,c[1]-bk2)
 end
 
 
