@@ -534,7 +534,10 @@ julia> transform(Chebyshev(), v)
  0.0
 ```
 """
-transform(S::Space, vals) = plan_transform(S,vals)*_toStridedArray(vals)
+function transform(S::Space, vals)
+    valsf = convert(AbstractArray{float(eltype(vals))}, vals)
+    plan_transform(S,valsf)*_toStridedArray(valsf)
+end
 
 """
     itransform(s::Space,coefficients::AbstractVector)
@@ -556,7 +559,10 @@ julia> itransform(Chebyshev(), [0.5, 0, 0.5])
  0.75
 ```
 """
-itransform(S::Space, cfs) = plan_itransform(S,cfs)*_toStridedArray(cfs)
+function itransform(S::Space, cfs)
+    cfsf = convert(AbstractArray{float(eltype(cfs))}, cfs)
+    plan_itransform(S,cfsf)*_toStridedArray(cfsf)
+end
 
 itransform!(S::Space,cfs) = plan_itransform!(S,cfs)*cfs
 transform!(S::Space,cfs) = plan_transform!(S,cfs)*cfs
