@@ -500,6 +500,11 @@ plan_itransform!(sp::Space,v) = ICanonicalTransformPlan(sp, v, Val(true))
 # transform converts from values at points(S,n) to coefficients
 # itransform converts from coefficients to values at points(S,n)
 
+# convert to strided arrays, as currently the inverse performs inplace scaling
+# ideally, this should not be needed if FastTransforms avoids modifying cfs
+_toStridedArray(cfs::StridedArray) = cfs
+_toStridedArray(cfs::AbstractArray) = convert(Array, cfs)
+
 """
     transform(s::Space, vals)
 
@@ -529,7 +534,7 @@ julia> transform(Chebyshev(), v)
  0.0
 ```
 """
-transform(S::Space, vals) = plan_transform(S,vals)*vals
+transform(S::Space, vals) = plan_transform(S,vals)*_toStridedArray(vals)
 
 """
     itransform(s::Space,coefficients::AbstractVector)
@@ -551,7 +556,7 @@ julia> itransform(Chebyshev(), [0.5, 0, 0.5])
  0.75
 ```
 """
-itransform(S::Space, cfs) = plan_itransform(S,cfs)*cfs
+itransform(S::Space, cfs) = plan_itransform(S,cfs)*_toStridedArray(cfs)
 
 itransform!(S::Space,cfs) = plan_itransform!(S,cfs)*cfs
 transform!(S::Space,cfs) = plan_transform!(S,cfs)*cfs
