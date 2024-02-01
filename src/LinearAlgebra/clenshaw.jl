@@ -217,9 +217,9 @@ sineshaw(c::AbstractVector,Î¸::AbstractMatrix) = promote_type(eltype(c),eltype(Î
 
 
 function chebyshev_clenshaw(c::AbstractVector, x)
-    N,T = length(c),promote_type(eltype(c),typeof(x))
+    N,T = length(c),promote_type(eltype(c),float(typeof(x)))
     if N == 0
-        return zero(float(x) * oneunit(eltype(c)))
+        return zero(T)
     elseif N == 1 # avoid issues with NaN x
         return first(c) * oneunit(float(x))
     end
