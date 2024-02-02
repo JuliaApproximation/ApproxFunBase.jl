@@ -724,3 +724,9 @@ julia> Chebyshev()(1, 0.5)
 ```
 """
 (s::Space)(n::Integer, args...) = s(n)(args...)
+
+# assume that the basis label starts at zero
+function basisfunction(sp, oneindex)
+    oneindex >= 0 || throw(ArgumentError("index to set to one must be non-negative, received $oneindex"))
+    Fun(sp, OneElement{Float64}(oneindex, oneindex))
+end
