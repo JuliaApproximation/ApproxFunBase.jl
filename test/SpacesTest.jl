@@ -317,6 +317,11 @@ using LinearAlgebra
         @test g >= f
         @test 1 < f < 3
         @test differentiate(f) == Fun(0, ConstantSpace(0..1))
+        @test f(-1) == 0
+        @test first(f) == last(f) == 2
+
+        f = Fun(2, ConstantSpace())
+        @test first(f) == last(f) == 2
 
         @test maxspace(ConstantSpace(Point(1)), ConstantSpace(Point(2))) == ConstantSpace(Point(1) ∪ Point(2))
         @test maxspace(ConstantSpace(Point(1)), ConstantSpace(AnyDomain())) == ConstantSpace(Point(1))
