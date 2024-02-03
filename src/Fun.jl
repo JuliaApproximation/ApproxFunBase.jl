@@ -776,9 +776,7 @@ isreal(f::Fun) = false
 iszero(f::Fun)    = all(iszero,f.coefficients)
 
 # Deliberately not named isconst or isconstant to avoid conflicts with Base or DomainSets
-isconstantfun(f::Fun) = _isconstantfun(containsconstant(space(f)), f)
-_isconstantfun(::Val{true}, f) = iszero(f - first(f))
-_isconstantfun(::Val{false}, f) = false
+isconstantfun(f::Fun) = iszero(f - first(f))
 
 # sum, integrate, and idfferentiate are in CalculusOperator
 
