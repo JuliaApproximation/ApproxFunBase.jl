@@ -217,6 +217,7 @@ using Test
         @test f(5) == 0
         @test isinf(f(0))
         @test isinf(f(Point(0)))
+        @test sum(f) == 6
     end
 
     @testset "Derivative operator for HeavisideSpace" begin
