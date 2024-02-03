@@ -83,7 +83,7 @@ first(f::Fun{<:PointSpace}) = coefficients(f)[1]
 last(f::Fun{<:PointSpace}) = coefficients(f)[end]
 
 function evaluate(f::AbstractVector, PS::PointSpace, x)
-    p = findfirst(y->isapprox(convert(Number,x), y), PS.points)
+    p = findfirst(≈(convert(Number,x)), PS.points)
     if p === nothing
         zero(eltype(f))
     else
@@ -92,7 +92,7 @@ function evaluate(f::AbstractVector, PS::PointSpace, x)
 end
 
 function evaluate(f::AbstractVector, PS::DiracSpace, x)
-    p = findfirst(y->isapprox(convert(Number, x), y), PS.points)
+    p = findfirst(≈(convert(Number,x)), PS.points)
     if p === nothing
         zero(eltype(f))
     else
