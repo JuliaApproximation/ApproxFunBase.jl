@@ -107,7 +107,8 @@ julia> coefficients(f, Legendre()) ≈ [0, 0, 1]
 true
 ```
 """
-function coefficients(f::Fun,msp::Space)
+coefficients(f::Fun,msp::Space) = _coefficients(f::Fun,msp::Space)
+function _coefficients(f::Fun,msp::Space)
     #zero can always be converted
     fc = f.coefficients
     if ncoefficients(f) == 0 || (ncoefficients(f) == 1 && fc[1] == 0)
@@ -774,7 +775,10 @@ isreal(f::Fun) = false
 
 iszero(f::Fun)    = all(iszero,f.coefficients)
 
-
+# Deliberately not named isconst or isconstant to avoid conflicts with Base or DomainSets
+isconstantfun(f::Fun) = _isconstantfun(containsconstant(space(f)), f)
+_isconstantfun(::Val{true}, f) = iszero(f - first(f))
+_isconstantfun(::Val{false}, f) = false
 
 # sum, integrate, and idfferentiate are in CalculusOperator
 

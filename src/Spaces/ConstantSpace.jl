@@ -93,6 +93,7 @@ convert(::Type{T}, f::Fun{CS}) where {CS<:ConstantSpace,T<:Number} =
 
 Number(f::Fun) = strictconvert(Number, f)
 
+isconstantfun(f::Fun{<:ConstantSpace}) = true
 
 # promoting numbers to Fun
 # override promote_rule if the space type can represent constants
@@ -144,6 +145,10 @@ function getindex(C::ConcreteConversion{CS,S,T},k::Integer,j::Integer) where {CS
     k ≤ ncoefficients(on) ? strictconvert(T,on.coefficients[k]) : zero(T)
 end
 
+function coefficients(f::Fun, msp::ConstantSpace)
+    isconstantfun(f) || throw(ArgumentError("cannot convert a non-constant Fun to ConstantSpace"))
+    _coefficients(f, msp)
+end
 
 coefficients(f::AbstractVector,sp::ConstantSpace{Segment{SVector{2,TT}}},
              ts::TensorSpace{SV,DD}) where {TT,SV,DD<:EuclideanDomain{2}} =
