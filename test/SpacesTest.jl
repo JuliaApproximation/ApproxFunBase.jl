@@ -325,6 +325,7 @@ using Test
         @test differentiate(f) == Fun(0, ConstantSpace(0..1))
         @test f(-1) == 0
         @test first(f) == last(f) == 2
+        @test ApproxFunBase.isconstantfun(f)
 
         f = Fun(2, ConstantSpace())
         @test first(f) == last(f) == 2
