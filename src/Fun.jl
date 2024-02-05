@@ -107,7 +107,8 @@ julia> coefficients(f, Legendre()) ≈ [0, 0, 1]
 true
 ```
 """
-function coefficients(f::Fun,msp::Space)
+coefficients(f::Fun,msp::Space) = _coefficients(f::Fun,msp::Space)
+function _coefficients(f::Fun,msp::Space)
     #zero can always be converted
     fc = f.coefficients
     if ncoefficients(f) == 0 || (ncoefficients(f) == 1 && fc[1] == 0)
@@ -777,9 +778,10 @@ isapprox(g::Number, f::Fun; kw...) = isapprox(g*ones(space(f)), f; kw...)
 isreal(f::Fun{<:RealSpace,<:Real}) = true
 isreal(f::Fun) = false
 
-iszero(f::Fun)    = all(iszero,f.coefficients)
+iszero(f::Fun)    = all(iszero, coefficients(f)) || all(iszero, values(f))
 
-
+# Deliberately not named isconst or isconstant to avoid conflicts with Base or DomainSets
+isconstantfun(f::Fun) = iszero(f - first(f))
 
 # sum, integrate, and idfferentiate are in CalculusOperator
 

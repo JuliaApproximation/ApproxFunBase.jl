@@ -1,9 +1,10 @@
 using ApproxFunBase
-using Test
 using ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, SVector, checkpoints, AnyDomain
-using StaticArrays
 using BandedMatrices: rowrange, colrange, BandedMatrix
+using DomainSets: Point
 using LinearAlgebra
+using StaticArrays
+using Test
 
 @testset "Spaces" begin
     @testset "PointSpace" begin
@@ -11,6 +12,9 @@ using LinearAlgebra
 
         f = @inferred Fun(x->(x-0.1),PointSpace([0,0.1,1]))
         @test roots(f) == [0.1]
+        @test first(f) == -0.1
+        @test last(f) == 0.9
+        @test f(Point(0)) == -0.1
 
         a = @inferred Fun(exp, space(f))
         @test f/a == @inferred Fun(x->(x-0.1)*exp(-x),space(f))
@@ -204,6 +208,11 @@ using LinearAlgebra
             F = Fun{typeof(PointSpace(1:3)), Float32}
             @test ApproxFunBase.cfstype(F) == Float32
         end
+
+        @testset "isconstantfun" begin
+            f = Fun(PointSpace(1:4), ones(4))
+            @test ApproxFunBase.isconstantfun(f)
+        end
     end
 
     @testset "DiracSpace" begin
@@ -212,6 +221,8 @@ using LinearAlgebra
         @test f(0.5) == 0
         @test f(5) == 0
         @test isinf(f(0))
+        @test isinf(f(Point(0)))
+        @test sum(f) == 6
     end
 
     @testset "Derivative operator for HeavisideSpace" begin
@@ -317,6 +328,12 @@ using LinearAlgebra
         @test g >= f
         @test 1 < f < 3
         @test differentiate(f) == Fun(0, ConstantSpace(0..1))
+        @test f(-1) == 0
+        @test first(f) == last(f) == 2
+        @test ApproxFunBase.isconstantfun(f)
+
+        f = Fun(2, ConstantSpace())
+        @test first(f) == last(f) == 2
 
         @test maxspace(ConstantSpace(Point(1)), ConstantSpace(Point(2))) == ConstantSpace(Point(1) ∪ Point(2))
         @test maxspace(ConstantSpace(Point(1)), ConstantSpace(AnyDomain())) == ConstantSpace(Point(1))

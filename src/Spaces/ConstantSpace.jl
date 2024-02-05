@@ -81,7 +81,8 @@ ones(S::Union{AnyDomain,UnsetSpace}) = ones(ConstantSpace())
 zeros(S::AnyDomain) = zero(ConstantSpace())
 zero(S::UnsetSpace) = zero(ConstantSpace())
 _first_or_zero(f::AbstractVector) = get(f, 1, zero(eltype(f)))
-function evaluate(f::AbstractVector,::ConstantSpace,x...)
+function evaluate(f::AbstractVector, sp::ConstantSpace, x)
+    x in domain(sp) || return zero(eltype(f))
     _first_or_zero(f)
 end
 evaluate(f::AbstractVector,::ZeroSpace,x...)=zero(eltype(f))
@@ -143,6 +144,10 @@ function getindex(C::ConcreteConversion{CS,S,T},k::Integer,j::Integer) where {CS
     k ≤ ncoefficients(on) ? strictconvert(T,on.coefficients[k]) : zero(T)
 end
 
+function coefficients(f::Fun, msp::ConstantSpace)
+    isconstantfun(f) || throw(ArgumentError("cannot convert a non-constant Fun to ConstantSpace"))
+    _coefficients(f, msp)
+end
 
 coefficients(f::AbstractVector,sp::ConstantSpace{Segment{SVector{2,TT}}},
              ts::TensorSpace{SV,DD}) where {TT,SV,DD<:EuclideanDomain{2}} =
@@ -155,6 +160,9 @@ coefficients(f::AbstractVector, sp::ConstantSpace{<:Domain{<:Number}}, ts::Space
 coefficients(f::AbstractVector, sp::ConstantSpace, ts::Space) =
     f[1]*ones(ts).coefficients
 
+# a Fun{<:ConstantSpace} corresponds to a constant value within the domain, irrespective of the domain
+first(f::Fun{<:ConstantSpace}) = convert(Number, f)
+last(f::Fun{<:ConstantSpace}) = convert(Number, f)
 
 ########
 # Evaluation
