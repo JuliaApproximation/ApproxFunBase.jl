@@ -793,3 +793,10 @@ include("show.jl")
 
     @test @inferred(chebyshev_clenshaw(BigInt[1], 1)) == 1
 end
+
+@testset "Unimplemented functionality errors" begin
+    struct MyOperator{T} <: ApproxFunBase.Operator{T} end
+    X = MyOperator{Float64}();
+    @test_throws ErrorException("Override domainspace for $(typeof(X))") domainspace(X)
+    @test_throws ErrorException("Override rangespace for $(typeof(X))") rangespace(X)
+end
