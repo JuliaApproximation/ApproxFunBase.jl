@@ -208,6 +208,11 @@ using Test
             F = Fun{typeof(PointSpace(1:3)), Float32}
             @test ApproxFunBase.cfstype(F) == Float32
         end
+
+        @testset "isconstantfun" begin
+            f = Fun(PointSpace(1:4), ones(4))
+            @test ApproxFunBase.isconstantfun(f)
+        end
     end
 
     @testset "DiracSpace" begin
