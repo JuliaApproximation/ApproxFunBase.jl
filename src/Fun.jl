@@ -773,7 +773,7 @@ isapprox(g::Number, f::Fun; kw...) = isapprox(g*ones(space(f)), f; kw...)
 isreal(f::Fun{<:RealSpace,<:Real}) = true
 isreal(f::Fun) = false
 
-iszero(f::Fun)    = all(iszero, values(f))
+iszero(f::Fun)    = iszero(ncoefficients(f)) || all(iszero, values(f))
 
 # Deliberately not named isconst or isconstant to avoid conflicts with Base or DomainSets
 isconstantfun(f::Fun) = iszero(f - first(f))
