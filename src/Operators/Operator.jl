@@ -197,7 +197,7 @@ opissymmetric(::OperatorStyle, A) = false
 for f in [:domainspace, :rangespace]
     opf = Symbol(:op, f)
     @eval begin
-        $opf(::OperatorStyle, A) = error("Override domainspace for $(typeof(A))")
+        $opf(::OperatorStyle, A) = error("Override $($f) for $(typeof(A))")
         $opf(S::StyleConflict, A) = $opf(dominantstyle(S, $f, A), A)
     end
 end
