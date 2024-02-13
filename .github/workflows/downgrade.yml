@@ -1,15 +1,26 @@
 name: Downgrade
+
+concurrency:
+  group: build-${{ github.event.pull_request.number || github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
 on:
   pull_request:
     branches:
       - master
     paths-ignore:
       - 'docs/**'
+      - 'LICENSE'
+      - 'README.md'
+      - '.github/workflows/TagBot.yml'
   push:
     branches:
       - master
     paths-ignore:
       - 'docs/**'
+      - 'LICENSE'
+      - 'README.md'
+      - '.github/workflows/TagBot.yml'
 jobs:
   pre_job:
     # continue-on-error: true # Uncomment once integration is finished
