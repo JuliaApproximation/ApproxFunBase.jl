@@ -94,11 +94,12 @@ function Base.kron(f::Fun,g::Fun)
     sp=space(f)⊗space(g)
     it=tensorizer(sp)
     N=ncoefficients(f);M=ncoefficients(g)
+    n=ncomponents(f);m=ncomponents(g)
     cfs=Array{promote_type(cfstype(f),cfstype(g))}(undef,0)
     for (k,j) in it
-        # Tensor product is N x M, so if we are outside
-        # the (N+M)th diagonal we have no more entries
-        if k+j > N+M
+        # Tensor product is n*N x m*M, so if we are outside
+        # the (n*N+m*M)th diagonal we have no more entries
+        if k+j > N*n+M*m
             break
         elseif k ≤ N && j ≤ M
             push!(cfs,f.coefficients[k]*g.coefficients[j])
