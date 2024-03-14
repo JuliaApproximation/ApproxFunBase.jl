@@ -7,7 +7,7 @@ Core functionality of ApproxFun
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 [![deps](https://juliahub.com/docs/ApproxFunBase/deps.svg)](https://juliahub.com/ui/Packages/ApproxFunBase/deO92?t=2)
 [![version](https://juliahub.com/docs/ApproxFunBase/version.svg)](https://juliahub.com/ui/Packages/ApproxFunBase/deO92)
-[![pkgeval](https://juliahub.com/docs/General/ApproxFunBase/stable/pkgeval.svg)](https://juliahub.com/ui/Packages/General/ApproxFunBase)
+[![pkgeval](https://juliahub.com/docs/General/ApproxFunBase/stable/pkgeval.svg)](https://juliaci.github.io/NanosoldierReports/pkgeval_badges/report.html)
 
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaApproximation.github.io/ApproxFun.jl/stable)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaApproximation.github.io/ApproxFun.jl/dev)
