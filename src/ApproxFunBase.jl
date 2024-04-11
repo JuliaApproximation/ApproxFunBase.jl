@@ -15,10 +15,8 @@ using InfiniteArrays
 using IntervalSets
 using LinearAlgebra
 using LowRankMatrices
-using SparseArrays
 using SpecialFunctions
 using StaticArrays: SVector, @SArray, SArray
-import Statistics: mean
 
 import DomainSets: Domain, indomain, UnionDomain, ProductDomain, Point, ∂,
               SetdiffDomain, Interval, ChebyshevInterval, boundary,
@@ -57,10 +55,6 @@ import LinearAlgebra: BlasInt, BlasFloat, norm, ldiv!, mul!, det, cross,
               Tridiagonal, diagm, diagm_container, factorize,
               nullspace, Hermitian, Symmetric, adjoint, transpose, char_uplo,
               axpy!, eigvals
-
-import SparseArrays: blockdiag
-
-# import Arpack: eigs
 
 # we need to import all special functions to use Calculus.symbolic_derivatives_1arg
 # we can't do importall Base as we replace some Base definitions
@@ -159,5 +153,10 @@ include("eigen.jl")
 include("hacks.jl")
 include("specialfunctions.jl")
 include("show.jl")
+
+if !isdefined(Base, :get_extension)
+    include("../ext/ApproxFunBaseSparseArraysExt.jl")
+    include("../ext/ApproxFunBaseStatisticsExt.jl")
+end
 
 end #module

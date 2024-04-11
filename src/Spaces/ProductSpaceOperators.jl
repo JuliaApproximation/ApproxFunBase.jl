@@ -55,9 +55,6 @@ end
 continuity(d::UnionDomain,k) = continuity(Space(d),k)
 continuity(d) = continuity(d,0)
 
-blockdiag(A::PlusOperator) = mapreduce(blockdiag, +, A.ops)
-blockdiag(A::TimesOperator) = mapreduce(blockdiag, .*, A.ops)
-
 # TODO: general wrappers
 
 Evaluation(S::SumSpace,x,order) =
