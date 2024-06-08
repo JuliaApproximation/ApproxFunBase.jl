@@ -47,16 +47,21 @@ import Base: values, convert, getindex, setindex!, *, +, -, ==, <, <=, >, |, !,
               asec, cot, acot, sinh, csch, asinh, acsch,
               sech, acosh, asech, tanh, coth, atanh, acoth,
               sinc, cosc, log1p, log, expm1, tan,
-              max, min, cbrt, atan, acos, asin
+              max, min, cbrt, atan, acos, asin, chop,
+              axes, IndexStyle, IndexLinear, typed_hcat, parent
 
 import Base.Broadcast: BroadcastStyle, Broadcasted, AbstractArrayStyle,
               broadcastable, DefaultArrayStyle, broadcasted
 
-import LinearAlgebra: BlasInt, BlasFloat, norm, ldiv!, mul!, det, cross,
+import LinearAlgebra: BlasFloat, norm, ldiv!, mul!, det, cross,
               qr, qr!, rank, isdiag, istril, istriu, issymmetric,
               Tridiagonal, diagm, diagm_container, factorize,
               nullspace, Hermitian, Symmetric, adjoint, transpose, char_uplo,
-              axpy!, eigvals
+              axpy!, eigvals, LU, checknonsingular, chkstride1
+
+import LinearAlgebra.LAPACK.chklapackerror
+
+import LinearAlgebra.BLAS: @blasfunc, libblas, liblapack, BlasInt
 
 import SparseArrays: blockdiag
 

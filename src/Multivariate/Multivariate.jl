@@ -1,7 +1,7 @@
+export grad, lap, curl
+
 abstract type MultivariateFun{T,N} <: Function end
 const BivariateFun{T} = MultivariateFun{T,2}
-
-export grad, lap, curl
 
 #implements coefficients/values/evaluate
 space(f::MultivariateFun{T,N}) where {T,N}=mapreduce(k->space(f,k),⊗,1:N)

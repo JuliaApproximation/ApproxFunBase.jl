@@ -1,5 +1,3 @@
-import LinearAlgebra.BLAS: @blasfunc, libblas, liblapack
-
 # Level 2
 ## mv
 ### gemv

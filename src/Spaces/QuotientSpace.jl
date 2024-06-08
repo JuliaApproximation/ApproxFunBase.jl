@@ -1,6 +1,4 @@
-import LinearAlgebra: LU, checknonsingular
-
-export QuotientSpace
+export QuotientSpace, PathologicalQuotientSpace
 
 struct QuotientSpace{S,O,D,R,LUT<:LU{R}} <: Space{D,R}
     space::S
@@ -109,14 +107,6 @@ function mutable_lu!(F::LU{T}, ::Val{Pivot} = Val(true);
     check && checknonsingular(info)
     return F
 end
-
-
-
-import LinearAlgebra.BLAS.@blasfunc
-import LinearAlgebra: chkstride1, BlasInt
-import LinearAlgebra.LAPACK.chklapackerror
-
-export PathologicalQuotientSpace
 
 struct PathologicalQuotientSpace{S,O<:Operator,DD,T,RT} <: Space{DD,T}
     space::S

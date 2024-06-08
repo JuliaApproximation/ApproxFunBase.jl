@@ -1,6 +1,7 @@
 export Fun, evaluate, values, points, extrapolate, setdomain
 export coefficients, ncoefficients, coefficient
 export integrate, differentiate, domain, space, linesum, linenorm
+export bilinearform, linebilinearform, innerproduct, lineinnerproduct
 
 include("Domain.jl")
 include("Space.jl")
@@ -636,8 +637,6 @@ Base.literal_pow(::typeof(^), f::Fun, ::Val{4}) = f * f * f * f
 inv(f::Fun) = 1/f
 
 # Integrals over two Funs, which are fast with the orthogonal weight.
-
-export bilinearform, linebilinearform, innerproduct, lineinnerproduct
 
 # Having fallbacks allow for the fast implementations.
 
