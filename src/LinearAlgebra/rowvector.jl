@@ -1,10 +1,6 @@
 # This file is based on rowvector.jl in Julia. License is MIT: https://julialang.org/license
 # The motivation for this file is to allow RowVector which doesn't transpose the entries
 
-import Base: convert, similar, length, size, axes, IndexStyle,
-            IndexLinear, @propagate_inbounds, getindex, setindex!,
-            broadcast, hcat, typed_hcat, map, parent
-
 """
     RowVector(vector)
 

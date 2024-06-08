@@ -1,5 +1,3 @@
-import Base: chop
-
 # BLAS/linear algebra overrides
 
 @inline dot(x...) = LinearAlgebra.dot(x...)

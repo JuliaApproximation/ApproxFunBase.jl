@@ -1,9 +1,3 @@
-
-
-
-import LinearAlgebra.BLAS: BlasInt, @blasfunc
-
-
 for (hseqr,elty) in ((:zhseqr_,:ComplexF64),)
     @eval function hesseneigvals(M::Matrix{$elty})
         if isempty(M)
