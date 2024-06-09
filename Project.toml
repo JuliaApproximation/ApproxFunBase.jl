@@ -53,12 +53,14 @@ LazyArrays = "0.20, 0.21, 0.22, 1"
 LowRankMatrices = "1"
 SpecialFunctions = "0.10, 1.0, 2"
 StaticArrays = "0.12, 1.0"
+Test = "1"
 julia = "1.6"
 
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 Infinities = "e1ba4f0e-776d-440f-acd9-e1d2e9742647"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Aqua", "Random", "Infinities"]
+test = ["Aqua", "Random", "Infinities", "Test"]

@@ -169,4 +169,8 @@ include("specialfunctions.jl")
 include("show.jl")
 include("testutils.jl")
 
+if !isdefined(Base, :get_extension)
+    include("ext/ApproxFunBaseTestExt.jl")
+end
+
 end #module
