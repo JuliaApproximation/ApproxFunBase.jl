@@ -687,9 +687,9 @@ macro wrappergetindex(Wrap)
                 ApproxFunBase.default_BlockBandedMatrix)
         end
 
-        function ApproxFunBase.PseudoBlockMatrix(S::ApproxFunBase.SubOperator{T,OP}) where {T,OP<:$Wrap}
+        function ApproxFunBase.BlockedMatrix(S::ApproxFunBase.SubOperator{T,OP}) where {T,OP<:$Wrap}
             ApproxFunBase._blockmaybebandedmatrix(S,
-                ApproxFunBase.PseudoBlockMatrix,
+                ApproxFunBase.BlockedMatrix,
                 ApproxFunBase.default_BlockMatrix)
         end
 
@@ -886,18 +886,18 @@ function BlockBandedMatrix(S::Operator)
 end
 
 function default_BlockMatrix(S::Operator)
-    ret = PseudoBlockArray(zeros(eltype(S), size(S)),
+    ret = BlockedArray(zeros(eltype(S), size(S)),
                         AbstractVector{Int}(blocklengths(rangespace(S))),
                         AbstractVector{Int}(blocklengths(domainspace(S))))
     ret .= S
     ret
 end
 
-function PseudoBlockMatrix(S::Operator)
+function BlockedMatrix(S::Operator)
     if isbandedblockbanded(S)
-        PseudoBlockMatrix(BandedBlockBandedMatrix(S))
+        BlockedMatrix(BandedBlockBandedMatrix(S))
     elseif isblockbanded(S)
-        PseudoBlockMatrix(BlockBandedMatrix(S))
+        BlockedMatrix(BlockBandedMatrix(S))
     else
         default_BlockMatrix(S)
     end
@@ -937,7 +937,7 @@ function arraytype(V::SubOperator{T,B,Tuple{KR,JR}}) where {T, B, KR <: Union{Bl
     P = parent(V)
     isbandedblockbanded(P) && return BandedBlockBandedMatrix
     isblockbanded(P) && return BlockBandedMatrix
-    return PseudoBlockMatrix
+    return BlockedMatrix
 end
 
 function arraytype(V::SubOperator{T,B,Tuple{KR,JR}}) where {T, B, KR <: Block, JR <: Block}

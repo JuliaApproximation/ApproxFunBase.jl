@@ -386,9 +386,9 @@ function interlace(a::AbstractVector, b::AbstractVector, (ncomponents_a, ncompon
     pad_b = pad(b, ncomponents_b * nblk_b)
 
     blksz_a = Fill(ncomponents_a, nblk_a)
-    aPBlk = PseudoBlockArray(pad_a, blksz_a)
+    aPBlk = BlockedArray(pad_a, blksz_a)
     blksz_b = Fill(ncomponents_b, nblk_b)
-    bPBkl = PseudoBlockArray(pad_b, blksz_b)
+    bPBkl = BlockedArray(pad_b, blksz_b)
 
     nblk_ret = nblk_a + nblk_b
     blksz_ret = zeros(Int, nblk_ret)
@@ -396,7 +396,7 @@ function interlace(a::AbstractVector, b::AbstractVector, (ncomponents_a, ncompon
     blksz_ret[2:2:end] = blksz_b
     nret = sum(blksz_ret)
     ret = initvector(T, nret)
-    retPBlk = PseudoBlockArray(ret, blksz_ret)
+    retPBlk = BlockedArray(ret, blksz_ret)
 
     @views begin
         for (ind, i) in enumerate(1:2:nblk_ret)
