@@ -1,5 +1,7 @@
 module TestUtils
 
+# methods to the functions defined here are added in ext/ApproxFunBaseTestExt.jl
+
 export testspace, testfunctional, testraggedbelowoperator, testbandedblockbandedoperator,
     testbandedoperator, testtransforms, testcalculus, testmultiplication, testinfoperator,
     testblockbandedoperator, testbandedbelowoperator
