@@ -166,5 +166,6 @@ include("eigen.jl")
 include("hacks.jl")
 include("specialfunctions.jl")
 include("show.jl")
+include("testutils.jl")
 
 end #module
