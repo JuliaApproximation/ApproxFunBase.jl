@@ -48,7 +48,8 @@ import Base: values, convert, getindex, setindex!, *, +, -, ==, <, <=, >, |, !,
               sech, acosh, asech, tanh, coth, atanh, acoth,
               sinc, cosc, log1p, log, expm1, tan,
               max, min, cbrt, atan, acos, asin, chop,
-              axes, IndexStyle, IndexLinear, typed_hcat, parent
+              axes, IndexStyle, IndexLinear, typed_hcat, parent,
+              AbstractMatrix, AbstractVector
 
 import Base.Broadcast: BroadcastStyle, Broadcasted, AbstractArrayStyle,
               broadcastable, DefaultArrayStyle, broadcasted
@@ -85,7 +86,8 @@ import BandedMatrices: bandrange, inbands_setindex!, bandwidth,
               colstart, colstop, colrange, rowstart, rowstop, rowrange,
               bandwidths, _BandedMatrix, BandedMatrix, isbanded
 
-import BlockArrays: blocksize, block, blockaxes, blockindex, blocklengths
+import BlockArrays: blocksize, block, blockaxes, blockindex, blocklengths,
+                    PseudoBlockMatrix
 import BlockBandedMatrices: blockbandwidth, blockbandwidths, blockcolstop,
               blockcolrange, blockcolstart, blockrowstop, blockrowstart,
               subblockbandwidth, subblockbandwidths, _BlockBandedMatrix,
