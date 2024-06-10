@@ -47,7 +47,8 @@ import Base: values, convert, getindex, setindex!, *, +, -, ==, <, <=, >, |, !,
               asec, cot, acot, sinh, csch, asinh, acsch,
               sech, acosh, asech, tanh, coth, atanh, acoth,
               sinc, cosc, log1p, log, expm1, tan,
-              max, min, cbrt, atan, acos, asin
+              max, min, cbrt, atan, acos, asin,
+              AbstractMatrix, AbstractVector
 
 import Base.Broadcast: BroadcastStyle, Broadcasted, AbstractArrayStyle,
               broadcastable, DefaultArrayStyle, broadcasted
@@ -167,5 +168,10 @@ include("hacks.jl")
 include("testing.jl")
 include("specialfunctions.jl")
 include("show.jl")
+include("testutils.jl")
+
+if !isdefined(Base, :get_extension)
+    include("../ext/ApproxFunBaseTestExt.jl")
+end
 
 end #module

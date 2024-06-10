@@ -5,3 +5,4 @@ deps/deps.jl
 src/Domains/.DS_Store
 .DS_Store
 Manifest.toml
+Manifest-v*.*.toml
