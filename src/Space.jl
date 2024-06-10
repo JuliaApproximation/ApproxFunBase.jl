@@ -707,15 +707,15 @@ basis function.
 
 # Examples
 ```jldoctest
-julia> Chebyshev()(2)
-Fun(Chebyshev(), [0.0, 0.0, 1.0])
+julia> Chebyshev()(2) == Fun(Chebyshev(), [0, 0, 1])
+true
 ```
 """
 (s::Space)(n::Integer) = basisfunction(s, n+1)
 """
     (s::Space)(n::Integer, points...)
 
-Evaluate `s(n)(points...)`
+Evaluate `Fun(s, [zeros(n); 1])(points...)` efficiently without allocating the vector of coefficients.
 
 # Examples
 ```jldoctest
