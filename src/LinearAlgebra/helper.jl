@@ -74,8 +74,6 @@ eps(::T) where T<:Integer = eps(T)
 
 eps(::Type{Complex{T}}) where {T<:Real} = eps(real(T))
 eps(z::Complex{T}) where {T<:Real} = eps(abs(z))
-eps(::Type{Dual{Complex{T}}}) where {T<:Real} = eps(real(T))
-eps(z::Dual{Complex{T}}) where {T<:Real} = eps(abs(z))
 
 
 eps(::Type{Vector{T}}) where {T<:Number} = eps(T)
