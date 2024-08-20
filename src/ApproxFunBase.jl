@@ -8,7 +8,6 @@ import Calculus
 import Combinatorics: multiexponents
 using DSP
 using DomainSets
-using DualNumbers
 using FFTW
 using FillArrays
 using InfiniteArrays
