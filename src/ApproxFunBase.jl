@@ -23,7 +23,7 @@ import DomainSets: Domain, indomain, UnionDomain, ProductDomain, Point, ∂,
               SetdiffDomain, Interval, ChebyshevInterval, boundary,
               rightendpoint, leftendpoint, dimension, WrappedDomain, VcatDomain,
               component, components, ncomponents, factor, factors, nfactors,
-              canonicaldomain
+              canonicaldomain, domain
 
 using AbstractFFTs: Plan
 

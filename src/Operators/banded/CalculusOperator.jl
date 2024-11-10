@@ -49,7 +49,7 @@ macro calculus_operator(Op)
             O = $Op(csp,k)
             C = ApproxFunBase.Conversion_maybeconcrete(sp, csp, Val(:forward))
             Top = ApproxFunBase.TimesOperator([O,C])
-            $WrappOp(Top, sp, k, ApproxFunBase.rangespace(O))
+            $WrappOp(Top, k, sp, ApproxFunBase.rangespace(O))
         end
 
         $DefaultOp(d,k) = $Op(ApproxFunBase.Space(d),k)
