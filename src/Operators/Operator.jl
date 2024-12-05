@@ -332,13 +332,6 @@ istril(A::Operator) = bandwidth(A, 2) <= 0
 
 include("SubOperator.jl")
 
-
-#
-# sparse(B::Operator,n::Integer)=sparse(BandedMatrix(B,n))
-# sparse(B::Operator,n::AbstractRange,m::AbstractRange)=sparse(BandedMatrix(B,n,m))
-# sparse(B::Operator,n::Colon,m::AbstractRange)=sparse(BandedMatrix(B,n,m))
-# sparse(B::Operator,n::AbstractRange,m::Colon)=sparse(BandedMatrix(B,n,m))
-
 ## getindex
 
 
