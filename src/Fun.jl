@@ -493,6 +493,7 @@ pad(f::Fun,n::Integer) = Fun(f.space,pad(f.coefficients,n))
 
 function chop!(sp::UnivariateSpace,cfs,tol::Real)
     n=standardchoplength(cfs,tol)
+    n=max(1,n) # empty coeffs vector causes all sorts of problems
     resize!(cfs,n)
     cfs
 end
