@@ -48,7 +48,7 @@ import Base: values, convert, getindex, setindex!, *, +, -, ==, <, <=, >, |, !,
               sinc, cosc, log1p, log, expm1, tan,
               max, min, cbrt, atan, acos, asin, chop,
               axes, IndexStyle, IndexLinear, typed_hcat, parent,
-              AbstractMatrix, AbstractVector
+              AbstractMatrix, AbstractVector, Number
 
 import Base.Broadcast: BroadcastStyle, Broadcasted, AbstractArrayStyle,
               broadcastable, DefaultArrayStyle, broadcasted
