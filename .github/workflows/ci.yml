@@ -18,6 +18,12 @@ on:
       - 'LICENSE'
       - 'README.md'
       - '.github/workflows/TagBot.yml'
+
+# needed to allow julia-actions/cache to delete old caches that it has created
+permissions:
+  actions: write
+  contents: read
+
 jobs:
   pre_job:
     # continue-on-error: true # Uncomment once integration is finished
@@ -32,7 +38,7 @@ jobs:
   test:
     needs: pre_job
     if: needs.pre_job.outputs.should_skip != 'true'
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -41,28 +47,17 @@ jobs:
           - '1'
           - 'lts'
           - 'pre'
+          - 'min'
         os:
           - ubuntu-latest
           - macOS-latest
           - windows-latest
-        arch:
-          - x64
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
-          arch: ${{ matrix.arch }}
-      - uses: actions/cache@v4
-        env:
-          cache-name: cache-artifacts
-        with:
-          path: ~/.julia/artifacts
-          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-test-${{ env.cache-name }}-
-            ${{ runner.os }}-test-
-            ${{ runner.os }}-
+      - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
