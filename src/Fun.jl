@@ -112,11 +112,7 @@ coefficients(f::Fun,msp::Space) = _coefficients(f::Fun,msp::Space)
 function _coefficients(f::Fun,msp::Space)
     #zero can always be converted
     fc = f.coefficients
-    if ncoefficients(f) == 0 || (ncoefficients(f) == 1 && fc[1] == 0)
-        convert(Vector, fc)
-    else
-        coefficients(fc, space(f), msp)
-    end
+    coefficients(coefficients(f), space(f), msp)
 end
 coefficients(f::Fun,::Type{T}) where {T<:Space} = coefficients(f,T(domain(f)))
 
