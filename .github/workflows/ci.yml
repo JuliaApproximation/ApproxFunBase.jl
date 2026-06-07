@@ -12,14 +12,13 @@ on:
       - 'LICENSE'
       - 'README.md'
       - '.github/workflows/TagBot.yml'
-      - '.github/workflows/downgrade.yml'
     tags: '*'
   pull_request:
     paths-ignore:
       - 'LICENSE'
       - 'README.md'
       - '.github/workflows/TagBot.yml'
-      - '.github/workflows/downgrade.yml'
+
 # needed to allow julia-actions/cache to delete old caches that it has created
 permissions:
   actions: write
