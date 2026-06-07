@@ -70,7 +70,7 @@ function _affine_setdiff(d::Domain, pts)
     filter!(p->p ∈ d,pts)
 
     isempty(pts) && return d
-    length(pts) == 1 && return d \ pts[1]
+    length(pts) == 1 && return d \ DomainRef(pts[1])
 
     ret = Array{Domain}(undef, length(pts)+1)
     ret[1] = Domain(leftendpoint(d) .. pts[1])

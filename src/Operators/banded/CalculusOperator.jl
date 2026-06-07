@@ -163,7 +163,7 @@ function linesum(f::Fun)
     cd=canonicaldomain(f)
     d=domain(f)
 
-    if isreal(d)
+    if isrealdomain(d)
         a,b=leftendpoint(d),rightendpoint(d)
         sign(last(b)-first(a))*sum(f)
     elseif typeof(cd)==typeof(d)  || isperiodic(d)
