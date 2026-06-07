@@ -10,20 +10,20 @@ using Test
     @testset "PointSpace" begin
         @test eltype(domain(PointSpace([0,0.1,1])) ) == Float64
 
-        f = @inferred_11011 Fun(x->(x-0.1),PointSpace([0,0.1,1]))
+        f = @inferred Fun(x->(x-0.1),PointSpace([0,0.1,1]))
         @test roots(f) == [0.1]
         @test first(f) == -0.1
         @test last(f) == 0.9
         @test f(Point(0)) == -0.1
 
-        a = @inferred_11011 Fun(exp, space(f))
-        @test f/a == @inferred_11011 Fun(x->(x-0.1)*exp(-x),space(f))
+        a = @inferred Fun(exp, space(f))
+        @test f/a == @inferred Fun(x->(x-0.1)*exp(-x),space(f))
 
-        f = @inferred_11011 Fun(space(f),[1.,2.,3.])
+        f = @inferred Fun(space(f),[1.,2.,3.])
 
         @test (+f) == f
 
-        f2 = @inferred_11011 Fun(space(f), view(Float64[1:3;], :))
+        f2 = @inferred Fun(space(f), view(Float64[1:3;], :))
         @test coefficients(f2) == coefficients(f)
 
         f = Fun(PointSpace(1:4), [1:4;])
@@ -36,13 +36,13 @@ using Test
                 T = Fun{S, Any, Any}
                 fany = convert(T, f)
                 @test fany isa T
-                @test (@inferred_11011 oftype(f, fany)) isa typeof(f)
+                @test (@inferred oftype(f, fany)) isa typeof(f)
             end
             S = typeof(space(f))
             T = Fun{S, Any}
             fany = convert(T, f)
             @test fany isa T
-            @test (@inferred_11011 oftype(f, fany)) isa typeof(f)
+            @test (@inferred oftype(f, fany)) isa typeof(f)
 
             # some trivial cases
             s = PointSpace(1:3)
@@ -50,11 +50,11 @@ using Test
             @test maxspace(s, s) == s
         end
 
-        A = @inferred_11011 f * Multiplication(f)
+        A = @inferred f * Multiplication(f)
         @test A * f == f^3
 
         @testset "inafunctional inference" begin
-            @test @inferred_11011 !ApproxFunBase.isafunctional(Multiplication(f))
+            @test @inferred !ApproxFunBase.isafunctional(Multiplication(f))
         end
 
         @testset "real/complex coefficients" begin
@@ -77,9 +77,9 @@ using Test
             @test f^2 == f^UInt(2)
 
             if VERSION >= v"1.8"
-                @test (@inferred_11011 (x -> x^1)(sp)) == sp
-                @test (@inferred_11011 (x -> x^2)(sp)) == sp * sp
-                @test (@inferred_11011 (x -> x^3)(sp)) == sp * sp * sp
+                @test (@inferred (x -> x^1)(sp)) == sp
+                @test (@inferred (x -> x^2)(sp)) == sp * sp
+                @test (@inferred (x -> x^3)(sp)) == sp * sp * sp
             else
                 @test sp^1 == sp
                 @test sp^2 == sp * sp
@@ -107,35 +107,35 @@ using Test
             end
         end
 
-        f = @inferred_11011 (T -> ones(T, PointSpace(1:3)))(Float64)
+        f = @inferred (T -> ones(T, PointSpace(1:3)))(Float64)
         @test f == Fun(PointSpace(1:3), [1.0, 1.0, 1.0])
-        f = @inferred_11011 (T -> zeros(T, PointSpace(1:3)))(Float64)
+        f = @inferred (T -> zeros(T, PointSpace(1:3)))(Float64)
         @test space(f) == PointSpace(1:3)
         @test all(iszero(coefficients(f)))
 
         M = Multiplication(Fun(PointSpace(1:3), [1:3;]), PointSpace(1:3))
-        @test (@inferred_11011 size(M)) == (3,3)
+        @test (@inferred size(M)) == (3,3)
         M2 = M + M
         @test size(M2) == (3,3)
         M = Multiplication(Fun(PointSpace(1:3), [1:3;]))
         M2 = M + M
         infty = ApproxFunBase.InfiniteCardinal{0}()
-        @test (@inferred_11011 size(M2)) == (infty, infty)
+        @test (@inferred size(M2)) == (infty, infty)
 
         @testset "literal pow" begin
             local f = Fun(PointSpace(1:3), Float64[1:3;])
-            @test (@inferred_11011 (x -> x^0)(f)) == ApproxFunBase.intpow(f,0)
-            @test (@inferred_11011 (x -> x^1)(f)) == ApproxFunBase.intpow(f,1)
-            @test (@inferred_11011 (x -> x^2)(f)) == ApproxFunBase.intpow(f,2)
-            @test (@inferred_11011 (x -> x^3)(f)) == ApproxFunBase.intpow(f,3)
-            @test (@inferred_11011 (x -> x^4)(f)) == ApproxFunBase.intpow(f,4)
+            @test (@inferred (x -> x^0)(f)) == ApproxFunBase.intpow(f,0)
+            @test (@inferred (x -> x^1)(f)) == ApproxFunBase.intpow(f,1)
+            @test (@inferred (x -> x^2)(f)) == ApproxFunBase.intpow(f,2)
+            @test (@inferred (x -> x^3)(f)) == ApproxFunBase.intpow(f,3)
+            @test (@inferred (x -> x^4)(f)) == ApproxFunBase.intpow(f,4)
 
             local f = Fun(PointSpace(Float32[1:3;]), Float32[1:3;])
-            g = @inferred_11011 (x -> x^0)(f)
+            g = @inferred (x -> x^0)(f)
             @test eltype(coefficients(g)) == Float32
-            g = @inferred_11011 (x -> x^1)(f)
+            g = @inferred (x -> x^1)(f)
             @test eltype(coefficients(g)) == Float32
-            g = @inferred_11011 (x -> x^2)(f)
+            g = @inferred (x -> x^2)(f)
             @test eltype(coefficients(g)) == Float32
         end
 
@@ -248,7 +248,7 @@ using Test
 
         a = HeavisideSpace(0:0.25:1)
         @test dimension(a) == 4
-        @test @inferred_11011(points(a)) == 0.125:0.25:0.875
+        @test @inferred(points(a)) == 0.125:0.25:0.875
     end
 
     @testset "DiracDelta integration and differentiation" begin
@@ -275,26 +275,26 @@ using Test
 
     @testset "Multivariate" begin
         a = HeavisideSpace(0:0.25:1)
-        @test @inferred_11011(dimension(a^2)) == dimension(a)^2
-        @test @inferred_11011(domain(a^2)) == domain(a)^2
-        @test @inferred_11011(points(a^2)) == vec(SVector.(points(a), points(a)'))
-        @test  @inferred_11011(checkpoints(a^2)) == vec(SVector.(checkpoints(a)', checkpoints(a)))
+        @test @inferred(dimension(a^2)) == dimension(a)^2
+        @test @inferred(domain(a^2)) == domain(a)^2
+        @test @inferred(points(a^2)) == vec(SVector.(points(a), points(a)'))
+        @test  @inferred(checkpoints(a^2)) == vec(SVector.(checkpoints(a)', checkpoints(a)))
 
-        aa2 = @inferred_11011 TensorSpace(a , a^2)
+        aa2 = @inferred TensorSpace(a , a^2)
         @test dimension(aa2) == dimension(a)^3
-        @test @inferred_11011(domain(aa2)) == domain(a)^3
-        @test @inferred_11011(points(aa2)) == vec(SVector.(points(a), points(a)', reshape(points(a), 1,1,4)))
-        @test  @inferred_11011(checkpoints(aa2)) == vec(SVector.(reshape(checkpoints(a), 1,1,length(checkpoints(a))), checkpoints(a)', checkpoints(a)))
+        @test @inferred(domain(aa2)) == domain(a)^3
+        @test @inferred(points(aa2)) == vec(SVector.(points(a), points(a)', reshape(points(a), 1,1,4)))
+        @test  @inferred(checkpoints(aa2)) == vec(SVector.(reshape(checkpoints(a), 1,1,length(checkpoints(a))), checkpoints(a)', checkpoints(a)))
 
         @test dimension(a^3) == dimension(a)^3
-        @test @inferred_11011(domain(a^3)) == domain(a)^3
-        @test_broken @inferred_11011(points(a^3)) == vec(SVector.(points(a), points(a)', reshape(points(a), 1,1,4)))
+        @test @inferred(domain(a^3)) == domain(a)^3
+        @test_broken @inferred(points(a^3)) == vec(SVector.(points(a), points(a)', reshape(points(a), 1,1,4)))
 
         p = PointSpace(1:4)
         d = domain(p)
-        @test domain(@inferred_11011 TensorSpace(p)) == d
-        @test components(domain(@inferred_11011 TensorSpace(p, p))) == (d, d)
-        @test components(domain(@inferred_11011 TensorSpace(p, p, p))) == (d, d, d)
+        @test domain(@inferred TensorSpace(p)) == d
+        @test components(domain(@inferred TensorSpace(p, p))) == (d, d)
+        @test components(domain(@inferred TensorSpace(p, p, p))) == (d, d, d)
 
         @testset "spacescompatible for TensorSpace" begin
             a = PointSpace(1:4)^2
@@ -316,9 +316,9 @@ using Test
     end
 
     @testset "ConstantSpace" begin
-        @test (@inferred_11011 convert(Fun, 2)) == Fun(2)
+        @test (@inferred convert(Fun, 2)) == Fun(2)
         f = Fun(2)
-        @test (@inferred_11011 convert(Fun{typeof(space(f))}, 2)) == f
+        @test (@inferred convert(Fun{typeof(space(f))}, 2)) == f
 
         f = Fun(2, ConstantSpace(0..1))
         g = Fun(3, ConstantSpace(0..1))
@@ -354,9 +354,9 @@ using Test
         M = Multiplication(Fun(PointSpace(1:3), [1:3;]));
         D = Derivative()
         for v in Any[[M, M], [D, D], [D, M]]
-            @test (@inferred_11011 ApproxFunBase.promotedomainspace(v)) == v
-            @test (@inferred_11011 ApproxFunBase.promoterangespace(v)) == v
-            @test (@inferred_11011 ApproxFunBase.promotespaces(v)) == v
+            @test (@inferred ApproxFunBase.promotedomainspace(v)) == v
+            @test (@inferred ApproxFunBase.promoterangespace(v)) == v
+            @test (@inferred ApproxFunBase.promotespaces(v)) == v
         end
     end
 
@@ -366,17 +366,17 @@ using Test
 
     @testset "union and AmbiguousSpace" begin
         a = PointSpace(1:3)
-        @test (@inferred_11011 union(a, a)) == a
+        @test (@inferred union(a, a)) == a
         for b in Any[ApproxFunBase.UnsetSpace(), ApproxFunBase.NoSpace()]
-            @test (@inferred_11011 union(a, b)) == a
-            @test (@inferred_11011 union(b, a)) == a
-            @test (@inferred_11011 union(b, b)) == b
+            @test (@inferred union(a, b)) == a
+            @test (@inferred union(b, a)) == a
+            @test (@inferred union(b, b)) == b
         end
     end
 
     @testset "ArraySpace" begin
         a = ApproxFunBase.ArraySpace(PointSpace(1:4), 2)
-        b = @inferred_11011 ApproxFunBase.ArraySpace(PointSpace(1:4), Val(2))
+        b = @inferred ApproxFunBase.ArraySpace(PointSpace(1:4), Val(2))
         @test a == b
         c = ApproxFunBase.ArraySpace(PointSpace(1:4), 3)
         @test a != c
@@ -384,11 +384,11 @@ using Test
         @test a != d
 
         a = ApproxFunBase.ArraySpace(PointSpace(1:4), 2, 2)
-        b = @inferred_11011 ApproxFunBase.ArraySpace(PointSpace(1:4), Val((2,2)))
+        b = @inferred ApproxFunBase.ArraySpace(PointSpace(1:4), Val((2,2)))
         @test a == b
 
-        a = @inferred_11011 space(rand(2,2))
-        b = @inferred_11011 space(@SArray rand(2,2))
+        a = @inferred space(rand(2,2))
+        b = @inferred space(@SArray rand(2,2))
         @test a == b
 
         # empty array space

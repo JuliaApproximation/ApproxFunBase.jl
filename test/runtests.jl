@@ -16,15 +16,6 @@ using Random
 using SpecialFunctions
 using Test
 
-# We skip inference tests on older versions where they're not tested
-macro inferred_11011(ex)
-    if VERSION >= v"1.10.11"
-        return esc(:(@inferred $ex))
-    else
-        return esc(ex)
-    end
-end
-
 @testset "Project quality" begin
     Aqua.test_all(ApproxFunBase, ambiguities=false, piracies = false)
 end
@@ -121,7 +112,7 @@ end
         @testset "float" begin
             @testset for T in [Float64, Any]
                 a = T[1,2,3]
-                b = @inferred_11011 pad(a, 4)
+                b = @inferred pad(a, 4)
                 @test length(b) == 4
                 @test @view(b[1:3]) == a
                 @test b[end] == 0
@@ -169,7 +160,7 @@ end
         @test all(==(D), v)
     end
 
-    @test @inferred_11011(ApproxFunBase.flipsign(2, 0im)) == 2
+    @test @inferred(ApproxFunBase.flipsign(2, 0im)) == 2
 
     @testset "mindotu" begin
         @test ApproxFunBase.mindotu(Float64[1,2], Float64[1,2,3]) == sum([1,2] .* [1,2])
@@ -213,8 +204,8 @@ end
     @test sqrt.(Segment(1,2)) ≡ Segment(1,sqrt(2))
 
     @testset "ChebyshevInterval" begin
-        @test @inferred_11011 ApproxFunBase.domainscompatible(ChebyshevInterval{Float64}(), ChebyshevInterval{Float32}())
-        @test @inferred_11011 ApproxFunBase.domainscompatible(ChebyshevInterval{Float64}(), ChebyshevInterval{BigFloat}())
+        @test @inferred ApproxFunBase.domainscompatible(ChebyshevInterval{Float64}(), ChebyshevInterval{Float32}())
+        @test @inferred ApproxFunBase.domainscompatible(ChebyshevInterval{Float64}(), ChebyshevInterval{BigFloat}())
     end
 
     @testset "union" begin
@@ -253,7 +244,7 @@ end
 
 @testset "AlmostBandedMatrix" begin
     A = ApproxFunBase.AlmostBandedMatrix{Float64}(Zeros(4,4), (1,1), 2)
-    sz = @inferred_11011 size(A)
+    sz = @inferred size(A)
     @test sz == (4,4)
     @test convert(AbstractArray{Float64}, A) == A
     AInt = convert(AbstractArray{Int}, A)
@@ -299,7 +290,7 @@ end
             M = Multiplication(f, sp) * Multiplication(f, sp)
             M1 = ApproxFunBase.MultiplicationWrapper(f, M)
             M2 = ApproxFunBase.MultiplicationWrapper(eltype(M), f, M)
-            M3 = @inferred_11011 ApproxFunBase.MultiplicationWrapper(f, M, sp)
+            M3 = @inferred ApproxFunBase.MultiplicationWrapper(f, M, sp)
             @test M1 * f ≈ M2 * f ≈ M3 * f
         end
         @testset "TimesOperator" begin
@@ -324,16 +315,16 @@ end
             end
             M = Multiplication(f)
             @test coefficients(((M * M) * M) * f) == coefficients((M * M * M) * f)
-            T = @inferred_11011 TimesOperator(M, M)
-            TM = @inferred_11011 TimesOperator(T, M)
-            MT = @inferred_11011 TimesOperator(M, T)
-            TT = @inferred_11011 TimesOperator(T, T)
+            T = @inferred TimesOperator(M, M)
+            TM = @inferred TimesOperator(T, M)
+            MT = @inferred TimesOperator(M, T)
+            TT = @inferred TimesOperator(T, T)
             @test T == M * M
             @test TM == T * M
             @test MT == M * T
             @test T * M == M * T == M * M * M
             @test TT == T * T == M * M * M * M
-            @test (@inferred_11011 adjoint(T)) == adjoint(M) * adjoint(M)
+            @test (@inferred adjoint(T)) == adjoint(M) * adjoint(M)
 
             M = Multiplication(f, sp)
             @test M^2 == M * M == (T : sp)
@@ -343,7 +334,7 @@ end
             f = Fun(PointSpace(1:3), c)
             M = Multiplication(f)
             @testset for t in [1, 3]
-                op = @inferred_11011 M + t * M
+                op = @inferred M + t * M
                 @test bandwidths(op) == bandwidths(M)
                 @test coefficients(op * f) == @. (1+t)*c^2
                 for op2 in (M + M + t * M, op + M)
@@ -360,24 +351,24 @@ end
                 @test coefficients(f1) == coefficients(f2) == coefficients(f3)
             end
             Z = ApproxFunBase.ZeroOperator()
-            @test (@inferred_11011 Z + Z) == Z
-            @test (@inferred_11011 Z + Z + Z) == Z
-            @test (@inferred_11011 Z + Z + Z + Z) == Z
+            @test (@inferred Z + Z) == Z
+            @test (@inferred Z + Z + Z) == Z
+            @test (@inferred Z + Z + Z + Z) == Z
 
-            @inferred_11011 (() -> (local D = Derivative(); D + D))()
+            @inferred (() -> (local D = Derivative(); D + D))()
 
-            A = @inferred_11011 M + M
+            A = @inferred M + M
             @test A * f ≈ 2 * (M * f)
             M = Multiplication(f, space(f))
             A = M + M
             @test A * f ≈ 2 * (M * f)
-            B = @inferred_11011 convert(Operator{ComplexF64}, A)
+            B = @inferred convert(Operator{ComplexF64}, A)
             @test eltype(B) == ComplexF64
             @test B * f ≈ 2 * (M * f)
 
-            C = @inferred_11011 2M
+            C = @inferred 2M
             D = M + C
-            E = @inferred_11011 convert(Operator{ComplexF64}, D)
+            E = @inferred convert(Operator{ComplexF64}, D)
             @test eltype(E) == ComplexF64
             @test E * f ≈ 3 * (M * f)
         end
@@ -489,11 +480,11 @@ end
 
         C = Conversion(PointSpace(1:4), PointSpace(1:4))
         M = Multiplication(Fun(PointSpace(1:4)), PointSpace(1:4))
-        M2 = @inferred_11011 C * M * C
+        M2 = @inferred C * M * C
         @test M2 * f ≈ M * f
 
-        @test @inferred_11011(C : PointSpace(1:4)) == C
-        @test @inferred_11011(C → PointSpace(1:4)) == C
+        @test @inferred(C : PointSpace(1:4)) == C
+        @test @inferred(C → PointSpace(1:4)) == C
     end
     @testset "ConstantOperator" begin
         C = ConstantOperator(3.0, PointSpace(1:4))
@@ -535,7 +526,7 @@ end
         C = Conversion(PointSpace(1:4), PointSpace(1:4))
         M = Multiplication(Fun(PointSpace(1:4)), PointSpace(1:4))
         T = C * M * C
-        v = @inferred_11011 mul_coefficients(T, Float64[1:4;])
+        v = @inferred mul_coefficients(T, Float64[1:4;])
         @test v == Float64[1:4;].^2
     end
     @testset "Evaluation" begin
@@ -670,7 +661,7 @@ end
 end
 
 @testset "ToeplitzOperator" begin
-    A = @inferred_11011 ApproxFunBase.SymToeplitzOperator(Int[])
+    A = @inferred ApproxFunBase.SymToeplitzOperator(Int[])
     B = A[1:5, 1:5]
     @test all(iszero, B)
 
@@ -678,11 +669,11 @@ end
         T = ApproxFunBase.ToeplitzOperator(Float64[1,2], Float64[1,2])
         TT = T ⊗ T
         TypeExp = Union{ApproxFunBase.SubOperator{Float64, KroneckerOperator{ToeplitzOperator{Float64}, ToeplitzOperator{Float64}, TensorSpace{Tuple{SequenceSpace, SequenceSpace}, DomainSets.VcatDomain{2, Int64, (1, 1), Tuple{ApproxFunBase.PositiveIntegers, ApproxFunBase.PositiveIntegers}}, Union{}}, TensorSpace{Tuple{SequenceSpace, SequenceSpace}, DomainSets.VcatDomain{2, Int64, (1, 1), Tuple{ApproxFunBase.PositiveIntegers, ApproxFunBase.PositiveIntegers}}, Union{}}, ApproxFunBase.CachedIterator{Tuple{Int64, Int64}, ApproxFunBase.Tensorizer{Tuple{FillArrays.Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}, FillArrays.Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}}}}, ApproxFunBase.CachedIterator{Tuple{Int64, Int64}, ApproxFunBase.Tensorizer{Tuple{FillArrays.Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}, FillArrays.Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}}}}, Float64}, Tuple{UnitRange{Int64}, UnitRange{Int64}}, Tuple{Int64, Int64}, Tuple{Infinities.InfiniteCardinal{0}, Infinities.InfiniteCardinal{0}}}, ApproxFunBase.SubOperator{Float64, KroneckerOperator{ToeplitzOperator{Float64}, ToeplitzOperator{Float64}, TensorSpace{Tuple{SequenceSpace, SequenceSpace}, DomainSets.VcatDomain{2, Int64, (1, 1), Tuple{ApproxFunBase.PositiveIntegers, ApproxFunBase.PositiveIntegers}}, Union{}}, TensorSpace{Tuple{SequenceSpace, SequenceSpace}, DomainSets.VcatDomain{2, Int64, (1, 1), Tuple{ApproxFunBase.PositiveIntegers, ApproxFunBase.PositiveIntegers}}, Union{}}, ApproxFunBase.CachedIterator{Tuple{Int64, Int64}, ApproxFunBase.Tensorizer{Tuple{FillArrays.Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}, FillArrays.Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}}}}, ApproxFunBase.CachedIterator{Tuple{Int64, Int64}, ApproxFunBase.Tensorizer{Tuple{FillArrays.Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}, FillArrays.Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}}}}, Float64}, Tuple{UnitRange{Int64}, UnitRange{Int64}}, Tuple{Int64, Int64}, Tuple{Int64, Int64}}}
-        @inferred_11011 view(T, 1:1, 1:1)
+        @inferred TypeExp view(T, 1:1, 1:1)
         TypeExp2 = Union{ApproxFunBase.SubOperator{Float64, KroneckerOperator{ToeplitzOperator{Float64}, ToeplitzOperator{Float64}, TensorSpace{Tuple{SequenceSpace, SequenceSpace}, DomainSets.VcatDomain{2, Int64, (1, 1), Tuple{ApproxFunBase.PositiveIntegers, ApproxFunBase.PositiveIntegers}}, Union{}}, TensorSpace{Tuple{SequenceSpace, SequenceSpace}, DomainSets.VcatDomain{2, Int64, (1, 1), Tuple{ApproxFunBase.PositiveIntegers, ApproxFunBase.PositiveIntegers}}, Union{}}, ApproxFunBase.CachedIterator{Tuple{Int64, Int64}, ApproxFunBase.Tensorizer{Tuple{FillArrays.Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}, FillArrays.Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}}}}, ApproxFunBase.CachedIterator{Tuple{Int64, Int64}, ApproxFunBase.Tensorizer{Tuple{FillArrays.Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}, FillArrays.Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}}}}, Float64}, Tuple{StepRange{Int64, Int64}, StepRange{Int64, Int64}}, Tuple{Int64, Int64}, Tuple{Infinities.InfiniteCardinal{0}, Infinities.InfiniteCardinal{0}}}, ApproxFunBase.SubOperator{Float64, KroneckerOperator{ToeplitzOperator{Float64}, ToeplitzOperator{Float64}, TensorSpace{Tuple{SequenceSpace, SequenceSpace}, DomainSets.VcatDomain{2, Int64, (1, 1), Tuple{ApproxFunBase.PositiveIntegers, ApproxFunBase.PositiveIntegers}}, Union{}}, TensorSpace{Tuple{SequenceSpace, SequenceSpace}, DomainSets.VcatDomain{2, Int64, (1, 1), Tuple{ApproxFunBase.PositiveIntegers, ApproxFunBase.PositiveIntegers}}, Union{}}, ApproxFunBase.CachedIterator{Tuple{Int64, Int64}, ApproxFunBase.Tensorizer{Tuple{FillArrays.Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}, FillArrays.Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}}}}, ApproxFunBase.CachedIterator{Tuple{Int64, Int64}, ApproxFunBase.Tensorizer{Tuple{FillArrays.Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}, FillArrays.Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}}}}, Float64}, Tuple{StepRange{Int64, Int64}, StepRange{Int64, Int64}}, Tuple{Int64, Int64}, Tuple{Int64, Int64}}}
-        @inferred_11011 view(T, 1:1:1, 1:1:1)
+        @inferred TypeExp2 view(T, 1:1:1, 1:1:1)
         TypeExp3 = Union{ApproxFunBase.SubOperator{Float64, KroneckerOperator{ToeplitzOperator{Float64}, ToeplitzOperator{Float64}, TensorSpace{Tuple{SequenceSpace, SequenceSpace}, DomainSets.VcatDomain{2, Int64, (1, 1), Tuple{ApproxFunBase.PositiveIntegers, ApproxFunBase.PositiveIntegers}}, Union{}}, TensorSpace{Tuple{SequenceSpace, SequenceSpace}, DomainSets.VcatDomain{2, Int64, (1, 1), Tuple{ApproxFunBase.PositiveIntegers, ApproxFunBase.PositiveIntegers}}, Union{}}, ApproxFunBase.CachedIterator{Tuple{Int64, Int64}, ApproxFunBase.Tensorizer{Tuple{Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}, Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}}}}, ApproxFunBase.CachedIterator{Tuple{Int64, Int64}, ApproxFunBase.Tensorizer{Tuple{Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}, Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}}}}, Float64}, Tuple{InfiniteArrays.InfUnitRange{Int64}, InfiniteArrays.InfUnitRange{Int64}}, Tuple{Infinities.Infinity, Infinities.Infinity}, Tuple{Infinities.InfiniteCardinal{0}, Infinities.InfiniteCardinal{0}}}, ApproxFunBase.SubOperator{Float64, KroneckerOperator{ToeplitzOperator{Float64}, ToeplitzOperator{Float64}, TensorSpace{Tuple{SequenceSpace, SequenceSpace}, DomainSets.VcatDomain{2, Int64, (1, 1), Tuple{ApproxFunBase.PositiveIntegers, ApproxFunBase.PositiveIntegers}}, Union{}}, TensorSpace{Tuple{SequenceSpace, SequenceSpace}, DomainSets.VcatDomain{2, Int64, (1, 1), Tuple{ApproxFunBase.PositiveIntegers, ApproxFunBase.PositiveIntegers}}, Union{}}, ApproxFunBase.CachedIterator{Tuple{Int64, Int64}, ApproxFunBase.Tensorizer{Tuple{Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}, Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}}}}, ApproxFunBase.CachedIterator{Tuple{Int64, Int64}, ApproxFunBase.Tensorizer{Tuple{Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}, Ones{Int64, 1, Tuple{InfiniteArrays.OneToInf{Int64}}}}}}, Float64}, Tuple{InfiniteArrays.InfUnitRange{Int64}, InfiniteArrays.InfUnitRange{Int64}}, Tuple{Infinities.Infinity, Infinities.Infinity}, Tuple{Int64, Int64}}}
-        @inferred_11011 view(T, 1:∞, 1:∞)
+        @inferred TypeExp3 view(T, 1:∞, 1:∞)
     end
 end
 
@@ -691,7 +682,7 @@ end
         @testset "2D" begin
             ax = Ones{Int}(∞)
             t = ApproxFunBase.Tensorizer((ax,ax))
-            @test (@inferred_11011 length(t)) == length(ax)^2
+            @test (@inferred length(t)) == length(ax)^2
             v = collect(Iterators.take(t, 150))
             @test eltype(v) == eltype(t)
             @testset for (i, vi) in enumerate(v)
@@ -789,18 +780,18 @@ end
 include("show.jl")
 
 @testset "chebyshev_clenshaw" begin
-    @test @inferred_11011(chebyshev_clenshaw(Int[], 1)) == 0
-    @test @inferred_11011(chebyshev_clenshaw(Int[], Dual(0,1))) == Dual(0,0)
-    @test @inferred_11011(chebyshev_clenshaw(Int[], Dual(2,1))) == Dual(0,0)
-    @test @inferred_11011(chebyshev_clenshaw(Float64[], 1)) == 0
-    @test @inferred_11011(chebyshev_clenshaw(Float64[], 1.0)) == 0
-    @test @inferred_11011(chebyshev_clenshaw(Int[1], 1)) == 1
-    @test @inferred_11011(chebyshev_clenshaw([1,2], 1)) == 3
-    @test @inferred_11011(chebyshev_clenshaw([1,2], Dual(0,1))) == Dual(1,2)
-    @test @inferred_11011(chebyshev_clenshaw([1,2], Dual(1,1))) == Dual(3,2)
-    @test @inferred_11011(chebyshev_clenshaw([1,2], Dual(2,1))) == Dual(5,2)
+    @test @inferred(chebyshev_clenshaw(Int[], 1)) == 0
+    @test @inferred(chebyshev_clenshaw(Int[], Dual(0,1))) == Dual(0,0)
+    @test @inferred(chebyshev_clenshaw(Int[], Dual(2,1))) == Dual(0,0)
+    @test @inferred(chebyshev_clenshaw(Float64[], 1)) == 0
+    @test @inferred(chebyshev_clenshaw(Float64[], 1.0)) == 0
+    @test @inferred(chebyshev_clenshaw(Int[1], 1)) == 1
+    @test @inferred(chebyshev_clenshaw([1,2], 1)) == 3
+    @test @inferred(chebyshev_clenshaw([1,2], Dual(0,1))) == Dual(1,2)
+    @test @inferred(chebyshev_clenshaw([1,2], Dual(1,1))) == Dual(3,2)
+    @test @inferred(chebyshev_clenshaw([1,2], Dual(2,1))) == Dual(5,2)
 
-    @test @inferred_11011(chebyshev_clenshaw(BigInt[1], 1)) == 1
+    @test @inferred(chebyshev_clenshaw(BigInt[1], 1)) == 1
 end
 
 @testset "Unimplemented functionality errors" begin
