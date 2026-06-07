@@ -22,7 +22,7 @@ import Statistics: mean
 # compatibility shim to support versions of DomainSets < v0.7.17
 # For DomainSets v0.8 and above, we may switch to using DomainSets.× to construct product domains
 @static if !isdefined(DomainSets, :cartesianproduct)
-    cartesianproduct = ×
+    const cartesianproduct = ×
 end
 
 import DomainSets: Domain, indomain, UnionDomain, ProductDomain, Point, ∂,
