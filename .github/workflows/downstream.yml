@@ -8,11 +8,13 @@ on:
       - 'LICENSE'
       - 'README.md'
       - '.github/workflows/TagBot.yml'
+      - '.github/workflows/downgrade.yml'
   pull_request:
     paths-ignore:
       - 'LICENSE'
       - 'README.md'
       - '.github/workflows/TagBot.yml'
+      - '.github/workflows/downgrade.yml'
 
 concurrency:
   group: build-${{ github.event.pull_request.number || github.ref }}-${{ github.workflow }}
