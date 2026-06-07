@@ -24,6 +24,9 @@ import Statistics: mean
 @static if !isdefined(DomainSets, :cartesianproduct)
     const cartesianproduct = ×
 end
+@static if !isdefined(DomainSets, :isrealdomain)
+    const isrealdomain = isreal
+end
 
 import DomainSets: Domain, indomain, UnionDomain, ProductDomain, Point, ∂,
               SetdiffDomain, Interval, ChebyshevInterval, boundary,
