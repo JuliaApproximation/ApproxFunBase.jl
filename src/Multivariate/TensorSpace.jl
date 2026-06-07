@@ -318,8 +318,8 @@ tensor_eval_type(_,::Type{Vector{Any}}) = Vector{Any}
 
 # Specialize some common cases to avoid mapreduce, which has inference issues
 _typeofproddomain(sp::Tuple{Any}) = typeof(domain(sp[1]))
-_typeofproddomain(sp::Tuple{Any,Any}) = typeof(domain(sp[1]) × domain(sp[2]))
-_typeofproddomain(sp) = typeof(mapreduce(domain,×,sp))
+_typeofproddomain(sp::Tuple{Any,Any}) = typeof(cartesianproduct(domain(sp[1]), domain(sp[2])))
+_typeofproddomain(sp) = typeof(mapreduce(domain, cartesianproduct, sp))
 TensorSpace(sp::Tuple) =
     TensorSpace{typeof(sp), _typeofproddomain(sp),
                 mapreduce(rangetype,tensor_eval_type,sp)}(sp)
@@ -354,7 +354,7 @@ TensorSpace(A::ProductDomain) = TensorSpace(tuple(map(Space,components(A))...))
 ⊗(A::Space,B::TensorSpace) = TensorSpace(A,B.spaces...)
 ⊗(A::Space,B::Space) = TensorSpace(A,B)
 
-domain(f::TensorSpace) = ×(domain.(f.spaces)...)
+domain(f::TensorSpace) = cartesianproduct(domain.(f.spaces)...)
 Space(sp::ProductDomain) = TensorSpace(sp)
 
 setdomain(sp::TensorSpace, d::ProductDomain) = TensorSpace(setdomain.(factors(sp), factors(d)))
@@ -427,7 +427,7 @@ function ProductSpace(spacesx::AbstractVector, spacey)
     Tdx = mapreduce(s->eltype(domain(s)),promote_type,spacesx)
     Tdy = eltype(dy)
     Td = promote_type(Tdx, Tdy)
-    d = convert(Domain{Td}, dx) × convert(Domain{Td}, dy)
+    d = cartesianproduct(convert(Domain{Td}, dx), convert(Domain{Td}, dy))
     ProductSpace{eltype(spacesx),typeof(spacey),typeof(d),Td}(spacesx, spacey, d)
 end
 
