@@ -532,6 +532,31 @@ end
     @testset "Evaluation" begin
         E = Evaluation(PointSpace(1:3), 1)
         @test_throws ArgumentError E[Block(1)]
+
+        @testset "ArraySpace" begin
+            # each component is evaluated independently, so that the range space
+            # is an array of ConstantSpaces of the same shape (#286)
+            @testset for sz in ((2,), (2,2))
+                S = ApproxFunBase.ArraySpace(PointSpace(1:3), sz...)
+                E = Evaluation(S, 1)
+                @test domainspace(E) == S
+                @test rangespace(E) ==
+                    ApproxFunBase.ArraySpace(ConstantSpace(Point(1)), sz...)
+                @test size(rangespace(E)) == sz
+            end
+
+            # a space for which the evaluation may be applied to a Fun
+            H = ApproxFunBase.HeavisideSpace([-1.0, 0.0, 1.0])
+            S = ApproxFunBase.ArraySpace(H, 2)
+            f = Fun(S, Float64[1:4;])
+            E = Evaluation(S, 0.5)
+            @test coefficients(E*f) == f(0.5)
+            @test coefficients(Evaluation(S, -0.5)*f) == f(-0.5)
+
+            # composition with a finite operator
+            A = ApproxFunBase.FiniteOperator([1.0 2.0; 3.0 4.0])
+            @test coefficients((A*E)*f) == [1.0 2.0; 3.0 4.0] * f(0.5)
+        end
     end
 end
 
