@@ -426,7 +426,8 @@ true
 """
 values(f::Fun,dat...) = _values(f.space, f.coefficients, dat...)
 _values(sp, v, dat...) = itransform(sp, v, dat...)
-_values(sp::UnivariateSpace, v::Vector{T}, dat...) where {T<:Number} =
+# the return type may be asserted only for scalar-valued spaces
+_values(sp::Space{<:Domain{<:Number},<:Number}, v::Vector{T}, dat...) where {T<:Number} =
     itransform(sp, v, dat...)::Vector{float(T)}
 
 """
