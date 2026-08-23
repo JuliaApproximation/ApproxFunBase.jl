@@ -64,6 +64,14 @@ Evaluation(S::SumSpace,x,order) =
     EvaluationWrapper(S,x,order,
         InterlaceOperator(RowVector(vnocat(map(s->Evaluation(s,x,order),components(S))...)),SumSpace))
 
+# each component of an ArraySpace is evaluated independently, unlike a SumSpace,
+# where the components are summed
+function Evaluation(S::ArraySpace,x,order)
+    ops = map(s->Evaluation(s,x,order), S)
+    RS = ArraySpace(reshape(map(rangespace, ops), size(S)))
+    EvaluationWrapper(S,x,order, InterlaceOperator(Diagonal(ops), S, RS))
+end
+
 
 ToeplitzOperator(G::Fun{<:MatrixSpace}) = interlace(map(ToeplitzOperator,Array(G)))
 
