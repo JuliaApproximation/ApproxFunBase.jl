@@ -71,7 +71,9 @@ rank(L::LowRankOperator) = length(L.U)
 *(L::LowRankOperator,f::Fun) = sum(map((u,v)->u*(v*f),L.U,L.V))
 
 
-*(A::LowRankOperator,B::LowRankOperator) = LowRankOperator(transpose(A.V*B.transpose(U))*A.U,B.V)
+# (A*B)*f == A*(B*f) == sum(A*B.U[k] * (B.V[k]*f) for k in eachindex(B.U)),
+# as B.V[k]*f is a constant
+*(A::LowRankOperator,B::LowRankOperator) = LowRankOperator(map(u->A*u, B.U), B.V)
 # avoid ambiguity
 for TYP in (:TimesOperator,:PlusOperator,:Conversion,:Operator)
     @eval *(L::LowRankOperator,B::$TYP) = LowRankOperator(L.U,map(v->v*B,L.V))
