@@ -395,5 +395,30 @@ using Test
         A = ApproxFunBase.ArraySpace(empty!([PointSpace(1:3)]))
         @test length(A) == 0
         @test ApproxFunBase.dimension(A) == 0
+
+        @testset "values" begin
+            # the two spaces exercise different paths: an ArraySpace of
+            # HeavisideSpaces lies over a numeric domain and has a trivial
+            # interlacer, so that the component coefficients are views
+            @testset for S in (PointSpace(1:3), ApproxFunBase.HeavisideSpace([-1.0, -0.5, 0.0, 1.0]))
+                @testset for sz in ((2,), (2,2))
+                    A = ApproxFunBase.ArraySpace(S, sz...)
+                    # 3 coefficients per component, so that each component
+                    # may be evaluated on the full grid
+                    n = 3length(A)
+                    f = Fun(A, Float64.(1:n))
+                    v = values(f)
+                    @test all(x -> size(x) == sz, v)
+                    @test v == f.(points(f))
+                    @test !iszero(f)
+                    @test iszero(Fun(A, zeros(n)))
+                end
+            end
+
+            # static array space
+            A = ApproxFunBase.ArraySpace(PointSpace(1:3), Val((2,2)))
+            f = Fun(A, Float64.(1:3length(A)))
+            @test values(f) == f.(points(f))
+        end
     end
 end
