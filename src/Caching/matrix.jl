@@ -6,7 +6,7 @@ CachedOperator(::Type{Matrix},op::Operator;padding::Bool=false) =
 
 function resizedata!(B::CachedOperator{T,Matrix{T}},n::Integer,m::Integer) where T<:Number
     if n > size(B,1) || m > size(B,2)
-        throw(ArgumentError("Cannot resize beyound size of operator"))
+        throw(ArgumentError("Cannot resize beyond size of operator"))
     end
 
     # this does nothing if already in dimensions

@@ -14,7 +14,7 @@ end
 #
 function resizedata!(B::CachedOperator{T,<:BandedBlockBandedMatrix{T}}, ::Colon, col::Integer) where {T<:Number}
     if col > size(B,2)
-        throw(ArgumentError("Cannot resize beyound size of operator"))
+        throw(ArgumentError("Cannot resize beyond size of operator"))
     end
 
     if col > B.datasize[2]
