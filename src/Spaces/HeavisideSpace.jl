@@ -23,6 +23,8 @@ spacescompatible(a::SplineSpace{λ},b::SplineSpace{λ}) where {λ} = domainscomp
 
 
 function evaluate(c::AbstractVector{T}, s::HeavisideSpace{<:Real}, x::Real) where T
+    # the loop below indexes p[k+1] for k up to length(c)
+    @assert length(c) ≤ dimension(s)
     p = domain(s).points
     for k=1:length(c)
         if p[k] ≤ x ≤ p[k+1]
@@ -34,6 +36,8 @@ end
 
 
 function evaluate(c::AbstractVector{T}, s::SplineSpace{1,<:Real}, x::Real) where T
+    # the loop below indexes p[k+1] for k up to length(c)-1
+    @assert length(c) ≤ dimension(s)
     p = domain(s).points
     for k=1:length(c)-1
         if p[k] ≤ x ≤ p[k+1]

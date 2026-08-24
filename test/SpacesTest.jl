@@ -269,6 +269,10 @@ using Test
         h = Fun(space(g), [0.0, 1.0])
         @test h(-0.5) == 0.5
         @test h(0.5) == 0
+
+        # evaluate is not restricted to coefficients that come from a Fun
+        @test_throws AssertionError ApproxFunBase.evaluate(zeros(4), space(g), 0.0)
+        @test_throws AssertionError ApproxFunBase.evaluate(zeros(3), space(f), 0.0)
     end
 
     @testset "DiracDelta integration and differentiation" begin
