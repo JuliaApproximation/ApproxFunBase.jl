@@ -884,6 +884,14 @@ end
         F = ApproxFunBase.FiniteOperator(M)
         @test BandedMatrix(view(F, 1:2, 1:2)) == M[1:2, 1:2]
         @test BandedMatrix(view(F, 2:3, 2:3)) == M[2:3, 2:3]
+
+        # a view that extends beyond the stored matrix falls back to
+        # the generic conversion, and is padded with zeros
+        G = ApproxFunBase.FiniteOperator(M, PointSpace(1:5), PointSpace(1:5))
+        B = BandedMatrix(view(G, 1:4, 1:4))
+        A = zeros(4, 4)
+        A[1:3, 1:3] = Matrix(M)
+        @test Matrix(B) == A
     end
 
     @testset "argument errors" begin
