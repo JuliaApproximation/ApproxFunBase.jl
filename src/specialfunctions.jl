@@ -291,7 +291,8 @@ function airy(k::Number,f::Fun)
     end
 end
 
-besselh(ν,k::Integer,f::Fun) = k == 1 ? hankelh1(ν,f) : k == 2 ? hankelh2(ν,f) : throw(Base.Math.AmosException(1))
+besselh(ν,k::Integer,f::Fun) = k == 1 ? hankelh1(ν,f) : k == 2 ? hankelh2(ν,f) :
+    throw(ArgumentError("k must be 1 or 2, received \$k"))
 
 for jy in (:j, :y)
     bjy = Symbol(:bessel, jy)

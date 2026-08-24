@@ -867,4 +867,28 @@ end
         f = Fun(ApproxFunBase.SequenceSpace(), [3.0, 4.0])
         @test f[CartesianIndex()] == f[1] == 3.0
     end
+
+    @testset "product of LowRankOperators" begin
+        H = ApproxFunBase.HeavisideSpace([-1.0, 0.0, 1.0])
+        A = ApproxFunBase.LowRankOperator(Fun(H, [1.0, 2.0]), Evaluation(H, -0.5))
+        B = ApproxFunBase.LowRankOperator(Fun(H, [3.0, -1.0]), Evaluation(H, 0.5))
+        AB = A*B
+        @test AB isa ApproxFunBase.LowRankOperator
+        @test rank(AB) == rank(B)
+        f = Fun(H, [2.0, 5.0])
+        @test coefficients(AB*f) ≈ coefficients(A*(B*f))
+    end
+
+    @testset "BandedMatrix of a FiniteOperator view" begin
+        M = BandedMatrix(0 => Float64[1, 2, 3], 1 => Float64[4, 5])
+        F = ApproxFunBase.FiniteOperator(M)
+        @test BandedMatrix(view(F, 1:2, 1:2)) == M[1:2, 1:2]
+        @test BandedMatrix(view(F, 2:3, 2:3)) == M[2:3, 2:3]
+    end
+
+    @testset "argument errors" begin
+        @test_throws ArgumentError besselh(0, 3, Fun(1.0))
+        @test_throws ArgumentError LowRankFun((x,y) -> x*y, PointSpace(1:3), PointSpace(1:3),
+                                                method = :neither)
+    end
 end
