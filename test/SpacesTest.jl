@@ -251,6 +251,30 @@ using Test
         @test @inferred(points(a)) == 0.125:0.25:0.875
     end
 
+    @testset "piecewise linear SplineSpace" begin
+        f = Fun(HeavisideSpace([-1.0, 0.0, 1.0]), [1.0, 2.0])
+        g = integrate(f)
+        @test space(g) isa ApproxFunBase.SplineSpace{1}
+        # g is piecewise linear, and interpolates the coefficients at the nodes
+        @test values(g) == coefficients(g)
+        @test g.(points(g)) == values(g)
+        @test g(-0.5) == 0.5
+        @test g(0.5) == 2.0
+        @test g(1.0) == sum(f)
+        # outside the domain
+        @test g(2.0) == 0
+        @test coefficients(differentiate(g)) == coefficients(f)
+
+        # fewer coefficients than the dimension of the space
+        h = Fun(space(g), [0.0, 1.0])
+        @test h(-0.5) == 0.5
+        @test h(0.5) == 0
+
+        # evaluate is not restricted to coefficients that come from a Fun
+        @test_throws AssertionError ApproxFunBase.evaluate(zeros(4), space(g), 0.0)
+        @test_throws AssertionError ApproxFunBase.evaluate(zeros(3), space(f), 0.0)
+    end
+
     @testset "DiracDelta integration and differentiation" begin
         δ = DiracDelta()
         h = integrate(δ)
