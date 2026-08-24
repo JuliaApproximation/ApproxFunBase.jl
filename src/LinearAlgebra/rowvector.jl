@@ -64,7 +64,7 @@ to_vec(x) = x
 # expects to operate within the transposed domain, so to_vec transposes the elements
 @inline map(f, rowvecs::RowVector...) = RowVector(map(f, to_vecs(rowvecs...)...))
 
-# broacast (other combinations default to higher-dimensional array)
+# broadcast (other combinations default to higher-dimensional array)
 @inline broadcast(f, rowvecs::Union{Number,RowVector}...) =
     RowVector(broadcast(f, to_vecs(rowvecs...)...))
 

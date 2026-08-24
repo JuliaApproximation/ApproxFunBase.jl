@@ -70,7 +70,7 @@ rangespace(P::PartialInverseOperator)=domainspace(P.cache)
 domain(P::PartialInverseOperator)=domain(domainspace(P))
 bandwidths(P::PartialInverseOperator) = P.bandwidths
 
-# Compute the value at the (k,j)th index of inv(C), assumming that C is upper triangular
+# Compute the value at the (k,j)th index of inv(C), assuming that C is upper triangular
 function _getindexinv(C, k::Integer, j::Integer, ::Type{UpperTriangular})
     j >= k || return zero(inv(one(eltype(C))))
     j == k && return inv(C[k,k])

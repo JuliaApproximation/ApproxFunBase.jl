@@ -65,7 +65,7 @@ domainscompatible(a,b) = domainscompatible(domain(a),domain(b))
 _isapprox(a, b) = isapprox(a,b)
 function _isapprox(a::Interval, b::Interval)
     # hacky compat for DomainSets v0.6,
-    # where comparing open and closed intevals throws an error
+    # where comparing open and closed intervals throws an error
     # However, we don't need to compare at all if the endpoints differ
     # this introduces a duplicate check, but that's probably ok
     isapprox(leftendpoint(a), leftendpoint(b), atol=100eps(prectype(a))) &&
@@ -90,7 +90,7 @@ function indomain(x,d::SegmentDomain)
     y=tocanonical(d,x)
     ry=real(y)
     iy=imag(y)
-    sc=norm(fromcanonicalD(d,ry<-1 ? -one(ry) : (ry>1 ? one(ry) : ry)))  # scale based on stretch of map on projection to interal
+    sc=norm(fromcanonicalD(d,ry<-1 ? -one(ry) : (ry>1 ? one(ry) : ry)))  # scale based on stretch of map on projection to interval
     dy=fromcanonical(d,y)
     # TODO: use isapprox once keywords are fast
     ((isinf(norm(dy)) && isinf(norm(x))) ||  norm(dy-x) ≤ 1000eps(T)*max(norm(x),1)) &&
@@ -101,7 +101,7 @@ end
 issubcomponent(a::Domain,b::Domain) = a in components(b)
 
 
-##### canoncial
+##### canonical
 """
     tocanonical(d, x)
 
@@ -120,7 +120,7 @@ function tocanonical end
 
 const 𝑪 = tocanonical
 
-## conveninece routines
+## convenience routines
 
 ones(d::Domain) = ones(prectype(d),Space(d))
 zeros(d::Domain) = zeros(prectype(d),Space(d))
@@ -179,7 +179,7 @@ invfromcanonicalD(d::Domain,x...) = 1/fromcanonicalD(d,x...)
 
 
 ## sorting
-# we sort spaces lexigraphically by default
+# we sort spaces lexicographically by default
 
 for OP in (:<,:(<=),:(isless))
     @eval $OP(a::Domain,b::Domain)=$OP(string(a),string(b))

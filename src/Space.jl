@@ -92,7 +92,7 @@ end
 #     S=typeof(sp)
 #     @assert length(fieldnames(S))==1
 #     # the domain is not compatible, but maybe we c
-#     # can drop the space depence.  For example,
+#     # can drop the space dependence.  For example,
 #     # CosSpace{Circle{Float64}} -> CosSpace
 #     eval(Meta.parse(string(S.name.module)*"."*string(S.name)))(d)
 # end
@@ -218,7 +218,7 @@ function conversion_type(a, b)
     if spacescompatible(a,b)
         a
     elseif !domainscompatible(a,b)
-        NoSpace()  # this avoids having to check eachtime
+        NoSpace()  # this avoids having to check each time
     else
         cr=conversion_rule(a,b)
         cr==NoSpace() ? conversion_rule(b,a) : cr
@@ -246,7 +246,7 @@ function maxspace(a::Space, b::Space)
     if spacescompatible(a,b)
         return a
     elseif !domainscompatible(a,b)
-        return NoSpace()  # this avoids having to check eachtime
+        return NoSpace()  # this avoids having to check each time
     end
 
 
@@ -600,7 +600,7 @@ for OP in (:plan_transform,:plan_itransform,:plan_transform!,:plan_itransform!)
 end
 
 ## sorting
-# we sort spaces lexigraphically by default
+# we sort spaces lexicographically by default
 
 for OP in (:<,:(<=),:(isless))
     @eval $OP(a::Space,b::Space)=$OP(string(a),string(b))

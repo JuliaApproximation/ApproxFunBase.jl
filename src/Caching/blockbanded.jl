@@ -18,7 +18,7 @@ end
 # that is, trace an operator down the diagonal.  What blocks correspond to the
 # block diagonal?
 # this is used to determine how many blocks to pad in the QR decomposition, as
-# every lower block gets added to the upper daigonal
+# every lower block gets added to the upper diagonal
 
 diagblockshift(a,b) = error("Developer: Not implemented for blocklengths $a, $b")
 

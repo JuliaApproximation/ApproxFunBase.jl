@@ -28,7 +28,7 @@ function blocklengths(sp::SubSpace{DS,UnitRange{Int}}) where DS
     M = last(sp.indexes)
     B1 = block(sp.space,N)
     B2 = block(sp.space,M)
-    # if the blocks are equal, we have only one bvlock
+    # if the blocks are equal, we have only one block
     B1 == B2 && return [Zeros{Int}(Int(B1)-1); length(sp.indexes)]
 
     [Zeros{Int}(Int(B1)-1);
@@ -126,7 +126,7 @@ end
 # return the space that has banded Conversion to the other
 function conversion_rule(a::SubSpace,b::Space)
     if a.space==b
-        a  # we can write droping coefficients as a banded operator
+        a  # we can write dropping coefficients as a banded operator
     else
         NoSpace()
     end
@@ -142,7 +142,7 @@ end
 # return the space that has banded Conversion to the other
 function union_rule(a::SubSpace,b::Space)
     if a.space==b
-        b  # we can write droping coefficients as a banded operator
+        b  # we can write dropping coefficients as a banded operator
     else
         NoSpace()
     end

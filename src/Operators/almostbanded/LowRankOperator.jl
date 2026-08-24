@@ -72,7 +72,7 @@ rank(L::LowRankOperator) = length(L.U)
 
 
 *(A::LowRankOperator,B::LowRankOperator) = LowRankOperator(transpose(A.V*B.transpose(U))*A.U,B.V)
-# avoid ambiguituy
+# avoid ambiguity
 for TYP in (:TimesOperator,:PlusOperator,:Conversion,:Operator)
     @eval *(L::LowRankOperator,B::$TYP) = LowRankOperator(L.U,map(v->v*B,L.V))
     @eval *(B::$TYP,L::LowRankOperator) = LowRankOperator(map(u->B*u,L.U),L.V)

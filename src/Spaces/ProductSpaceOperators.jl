@@ -286,7 +286,7 @@ end
 choosedomainspace(M::CalculusOperator{UnsetSpace}, sp::SumSpace) =
     mapreduce(s->choosedomainspace(M,s),union,sp.spaces)
 
-## Multiplcation for Array*Vector
+## Multiplication for Array*Vector
 
 function Multiplication(f::Fun{<:MatrixSpace}, sp::VectorSpace)
     @assert size(space(f),2)==length(sp)
@@ -324,7 +324,7 @@ end
 Multiplication(f::Fun, sp::PiecewiseSpace) = MultiplicationWrapper(f, Multiplication(Fun(f,sp),sp))
 
 
-# we override coefficienttimes to split the multiplication down to components as union may combine spaes
+# we override coefficienttimes to split the multiplication down to components as union may combine spaces
 
 coefficienttimes(f::Fun{S1},g::Fun{S2}) where {S1<:SumSpace,S2<:SumSpace} = mapreduce(ff->ff*g,+,components(f))
 coefficienttimes(f::Fun{S1},g::Fun) where {S1<:SumSpace} = mapreduce(ff->ff*g,+,components(f))

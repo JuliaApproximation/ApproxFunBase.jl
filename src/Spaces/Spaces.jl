@@ -192,7 +192,7 @@ function evaluate(f::AbstractVector,S::WeightSpace,x...)
     weight(S,x...).*fv
 end
 
-# recurrence is inhereted
+# recurrence is inherited
 for FUNC in (:recα,:recβ,:recγ)
     @eval $FUNC(T,ws::WeightSpace,k) = $FUNC(T,ws.space,k)
 end

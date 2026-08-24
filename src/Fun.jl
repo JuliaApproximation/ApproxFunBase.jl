@@ -777,7 +777,7 @@ iszero(f::Fun)    = all(iszero, coefficients(f)) || all(iszero, values(f))
 # Deliberately not named isconst or isconstant to avoid conflicts with Base or DomainSets
 isconstantfun(f::Fun) = iszero(f - first(f))
 
-# sum, integrate, and idfferentiate are in CalculusOperator
+# sum, integrate, and differentiate are in CalculusOperator
 
 """
     reverseorientation(f::Fun)
@@ -826,11 +826,11 @@ end
 #   exp.( [x,x]) is equivalent to [exp(x),exp(x)]
 #
 # does not throw the same error. When array values are mixed with arrays, the Array
-# takes presidence:
+# takes precedence:
 #
 #   exp.([x;x] .+ [x,x]) is equivalent to exp.(Array([x;x]) .+ [x,x])
 #
-# This presidence is picked by the `promote_containertype` overrides.
+# This precedence is picked by the `promote_containertype` overrides.
 
 struct FunStyle <: BroadcastStyle end
 

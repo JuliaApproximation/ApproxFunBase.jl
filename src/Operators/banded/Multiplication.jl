@@ -148,7 +148,7 @@ function default_mult_compatible(f::Fun, g::Fun)
         coefficienttimes(g,f)
     end
 end
-# This should be overriden whenever the multiplication space is different
+# This should be overridden whenever the multiplication space is different
 function default_mult(f::Fun,g::Fun)
     # When the spaces differ we promote and multiply
     if domainscompatible(space(f),space(g))

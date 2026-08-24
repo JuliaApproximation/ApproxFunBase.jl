@@ -17,7 +17,7 @@ end
 const VectorSpace{S,DD,RR,A<:AbstractVector{S}} = ArraySpace{S,1,DD,RR,A}
 const MatrixSpace{S,DD,RR,A<:AbstractMatrix{S}} = ArraySpace{S,2,DD,RR,A}
 
-#TODO: Think through domain/domaindominsion
+#TODO: Think through domain/domaindimension
 ArraySpace(sp::AbstractArray{SS,N}) where {D,R,SS<:Space{D,R},N} =
     ArraySpace{SS,N,D,R,typeof(sp)}(sp)
 ArraySpace(sp::AbstractArray{SS,N}, f = first(sp)) where {SS<:Space,N} =
