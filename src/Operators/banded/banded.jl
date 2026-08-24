@@ -3,7 +3,7 @@ include("ConstantOperator.jl")
 include("TridiagonalOperator.jl")
 include("PermutationOperator.jl")
 
-## Operators overrided for spaces
+## Operators overridden for spaces
 
 include("Conversion.jl")
 include("Multiplication.jl")

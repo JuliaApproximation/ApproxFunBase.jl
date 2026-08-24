@@ -831,7 +831,7 @@ const WrapperOperator = Union{SpaceOperator,MultiplicationWrapper,DerivativeWrap
 # The following support converting an Operator to a Matrix or BandedMatrix
 
 ## BLAS and matrix routines
-# We assume that copy may be overriden
+# We assume that copy may be overridden
 
 function axpy!(a, X::Operator, Y::AbstractMatrix)
     Y .+= a .* AbstractMatrix(X)

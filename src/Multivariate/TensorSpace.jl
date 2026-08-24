@@ -15,7 +15,7 @@ factor(d::AbstractProductSpace,k) = factors(d)[k]
 ##### Tensorizer
 # This gives the map from coefficients to the
 # tensor entry of a tensor product of d spaces
-# findfirst is overriden to get efficient inverse
+# findfirst is overridden to get efficient inverse
 # blocklengths is a tuple of block lengths, e.g., Chebyshev()^2
 # would be Tensorizer((Ones{Int}(∞), Ones{Int}(∞)))
 # ConstantSpace() ⊗ Chebyshev()
@@ -43,7 +43,7 @@ Base.IteratorSize(::Type{Tensorizer{T}}) where {T<:Tuple} = _IteratorSize(T)
 Base.keys(a::Tensorizer) = oneto(length(a))
 
 function start(a::TrivialTensorizer{d}) where {d}
-    # ((block_dim_1, block_dim_2,...), (itaration_number, iterator, iterator_state)), (itemssofar, length)
+    # ((block_dim_1, block_dim_2,...), (iteration_number, iterator, iterator_state)), (itemssofar, length)
     block = ntuple(one, d)
     return (block, (0, nothing, nothing)), (0,length(a))
 end
@@ -273,7 +273,7 @@ tensorblocklengths(a,b,c,d...) = tensorblocklengths(tensorblocklengths(a,b),c,d.
     TensorSpace(a::Space,b::Space)
 
 represents a tensor product of two 1D spaces `a` and `b`.
-The coefficients are interlaced in lexigraphical order.
+The coefficients are interlaced in lexicographical order.
 
 For example, consider
 ```julia

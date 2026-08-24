@@ -1,4 +1,4 @@
-## Sequence space defintions
+## Sequence space definitions
 
 # A Fun for SequenceSpace can be an iterator
 iterate(::Fun{SequenceSpace}) = 1
@@ -29,7 +29,7 @@ coefficients(cfs::AbstractVector,::SequenceSpace) = cfs  # all vectors are conve
 
 
 
-## Constant space defintions
+## Constant space definitions
 
 containsconstant(A::Space) = containsconstant(typeof(A))
 containsconstant(@nospecialize(_)) = Val(false)
@@ -266,7 +266,7 @@ promoterangespace(M::ConcreteMultiplication{CS,UnsetSpace},
                              ps::Space) where {CS<:ConstantSpace} =
                         promoterangespace(Multiplication(M.f,space(M.f)),ps)
 
-# Possible hack: we try uing constant space for [1 Operator()] \ z.
+# Possible hack: we try using constant space for [1 Operator()] \ z.
 choosedomainspace(M::ConcreteMultiplication{D,UnsetSpace},sp::UnsetSpace) where {D<:ConstantSpace} = space(M.f)
 choosedomainspace(M::ConcreteMultiplication{D,UnsetSpace},sp::Space) where {D<:ConstantSpace} = space(M.f)
 

@@ -741,7 +741,7 @@ function choosedomainspace(P::PlusOperator, sp::Space)
     ret = UnsetSpace()
     for op in P.ops
         sp2 = choosedomainspace(op, sp)
-        if !isa(sp2, AmbiguousSpace)  # we will ignore this result in hopes another opand
+        if !isa(sp2, AmbiguousSpace)  # we will ignore this result in hopes another operand
             # tells us a good space
             ret = union(ret, sp2)
         end

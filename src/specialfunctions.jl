@@ -152,7 +152,7 @@ function _specialfunctionnormalizationpoint(op,growth,f)
 end
 
 # this is used to find a point in which to impose a boundary
-# condition in calculating secial functions
+# condition in calculating special functions
 function specialfunctionnormalizationpoint(op,growth,f)
     xmin, xmax, opfxmin, opfxmax, opmax = _specialfunctionnormalizationpoint(op,growth,f)
     if abs(opfxmin) == opmax

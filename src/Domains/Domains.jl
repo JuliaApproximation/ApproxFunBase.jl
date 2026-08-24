@@ -36,7 +36,7 @@ end
 
 
 
-# multivariate domainxs
+# multivariate domains
 
 include("multivariate.jl")
 

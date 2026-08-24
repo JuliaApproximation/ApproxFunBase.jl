@@ -91,7 +91,7 @@ function Base.sum(f::Fun{SplineSpace{1,T,R}}) where {T,R}
     ret
 end
 
-#diffentiate HeavisideSpace
+#differentiate HeavisideSpace
 function differentiate(f::Fun{<:HeavisideSpace})
     dp=domain(f).points
     cfs=f.coefficients

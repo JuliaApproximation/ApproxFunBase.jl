@@ -209,7 +209,7 @@ end
 
 ## components
 
-# We use a view when it's avaiable to avoid allocation
+# We use a view when it's available to avoid allocation
 component_coefficients(it::TrivialInterlacer{d},cfs,k) where {d} = (@view cfs[k:d:end])
 
 function component_coefficients(it,cfs,k)

@@ -226,7 +226,7 @@ blockcolstop(S::SubOperator{<:Any,<:Any,Tuple{AbstractRange{Int},AbstractRange{I
 
 israggedbelow(S::SubOperator) = israggedbelow(parent(S))
 
-# since blocks don't change with indexex, neither do blockbandwidths
+# since blocks don't change with indices, neither do blockbandwidths
 blockbandwidths(S::SubOperator{<:Any,<:Any,NTuple{2,AbstractRange{Int}}}) =
     blockbandwidths(parent(S))
 function blockbandwidths(S::SubOperator{<:Any,<:Any,NTuple{2,BlockRange1}})

@@ -534,7 +534,7 @@ Operator(M::AbstractArray{<:Operator}) = InterlaceOperator(M)
 
 
 function interlace_choosedomainspace(ops,sp::UnsetSpace)
-    # this ensures correct dispatch for unino
+    # this ensures correct dispatch for union
     sps = Vector{Space}(
         filter(x->!isambiguous(x),map(choosedomainspace,ops)))
     if isempty(sps)
@@ -546,7 +546,7 @@ end
 
 
 function interlace_choosedomainspace(ops,rs::Space)
-    # this ensures correct dispatch for unino
+    # this ensures correct dispatch for union
     sps = Vector{Space}(
         filter(x->!isambiguous(x),map((op)->choosedomainspace(op,rs),ops)))
     if isempty(sps)
