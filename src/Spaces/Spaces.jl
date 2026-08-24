@@ -98,7 +98,8 @@ end
 # the rangespace is a DirectSumSpace specified by ST of the input rangespaces
 # the default is a  ArraySpace, but support is there for PiecewiseSpace
 # for bcs
-for TYP in (:PiecewiseSpace,:VectorSpace)
+# VectorSpace is a type alias, so the space is constructed through Space(::AbstractArray)
+for (TYP, SPACE) in ((:PiecewiseSpace, :PiecewiseSpace), (:VectorSpace, :Space))
     @eval function LowRankPertOperator(A::AbstractVector{OT},::Type{$TYP}) where OT<:Operator
         A=promotedomainspace(A)
         for k=1:length(A)-1
@@ -107,8 +108,9 @@ for TYP in (:PiecewiseSpace,:VectorSpace)
         @assert isbanded(A[end])
         L=LowRankOperator(A[1:end-1],$TYP)
         # add zero functionals to shift down
-        BB=[fill(ZeroOperator(domainspace(BB),ConstantSpace()),length(A)-1);A[end]]
-        S=InterlaceOperator(BB,domainspace(BB),$TYP(map(rangespace,A)))
+        ds=domainspace(A[end])
+        BB=[fill(ZeroOperator(ds,ConstantSpace()),length(A)-1);A[end]]
+        S=InterlaceOperator(BB,ds,$SPACE(map(rangespace,A)))
         L+S
     end
 end

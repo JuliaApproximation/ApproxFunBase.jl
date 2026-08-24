@@ -412,9 +412,9 @@ end
 
 #For complex bases
 Base.real(f::ProductFun{S,V,SS}) where {S,V,SS<:TensorSpace} =
-    transpose(real(transpose(ProductFun(real(u.coefficients),space(u)))))-transpose(imag(transpose(ProductFun(imag(u.coefficients),space(u)))))
+    transpose(real(transpose(ProductFun(real(f.coefficients),space(f)))))-transpose(imag(transpose(ProductFun(imag(f.coefficients),space(f)))))
 Base.imag(f::ProductFun{S,V,SS}) where {S,V,SS<:TensorSpace} =
-    transpose(real(transpose(ProductFun(imag(u.coefficients),space(u)))))+transpose(imag(transpose(ProductFun(real(u.coefficients),space(u)))))
+    transpose(real(transpose(ProductFun(imag(f.coefficients),space(f)))))+transpose(imag(transpose(ProductFun(real(f.coefficients),space(f)))))
 
 
 

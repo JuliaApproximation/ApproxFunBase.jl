@@ -40,18 +40,6 @@ hasonearg(f) = hasnumargs(f, 1)
 # fast implementation of isapprox with atol a non-keyword argument in most cases
 isapprox_atol(a,b,atol;kwds...) = isapprox(a,b;atol=atol,kwds...)
 isapprox_atol(a::SVector,b::SVector,atol::Real=0;kwds...) = isapprox_atol(collect(a),collect(b),atol;kwds...)
-function isapprox_atol(x::Number, y::Number, atol::Real=0; rtol::Real=Base.rtoldefault(x,y))
-    x == y || (isfinite(x) && isfinite(y) && abs(x-y) <= atol + rtol*max(abs(x), abs(y)))
-end
-function isapprox_atol(x::AbstractArray{T}, y::AbstractArray{S},atol::Real=0; rtol::Real=Base.rtoldefault(T,S), norm::Function=vecnorm) where {T<:Number,S<:Number}
-    d = norm(x - y)
-    if isfinite(d)
-        return d <= atol + rtol*max(norm(x), norm(y))
-    else
-        # Fall back to a component-wise approximate comparison
-        return all(ab -> isapprox(ab[1], ab[2]; rtol=rtol, atol=atol), zip(x, y))
-    end
-end
 
 # The second case handles zero
 isapproxinteger(::Integer) = true

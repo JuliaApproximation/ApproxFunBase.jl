@@ -1,5 +1,5 @@
 Point(::AnyDomain) = Point(NaN)
-Point{T}(x::AnyDomain) where {T} = new(T(NaN))
+Point{T}(::AnyDomain) where {T} = Point{T}(T(NaN))
 
 convert(::Type{Point},::AnyDomain) = Point(NaN)
 convert(::Type{Point{T}},::AnyDomain) where T = Point{T}(NaN)
