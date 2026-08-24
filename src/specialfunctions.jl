@@ -84,7 +84,7 @@ end
 
 
 
-isfinite(f::Fun) = isfinite(maximum(abs,f)) && isfinite(minabs(f))
+isfinite(f::Fun) = isfinite(maximum(abs,f)) && isfinite(minimum(abs,f))
 
 # division by fun
 

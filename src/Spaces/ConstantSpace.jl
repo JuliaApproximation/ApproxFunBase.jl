@@ -6,7 +6,7 @@ iterate(f::Fun{SequenceSpace}, st) = f[st], st+1
 
 getindex(f::Fun{SequenceSpace}, k::Integer) =
     k ≤ ncoefficients(f) ? f.coefficients[k] : zero(cfstype(f))
-getindex(f::Fun{SequenceSpace},K::CartesianIndex{0}) = _first_or_zero(f)
+getindex(f::Fun{SequenceSpace},K::CartesianIndex{0}) = f[1]
 getindex(f::Fun{SequenceSpace},K) = cfstype(f)[f[k] for k in K]
 
 length(f::Fun{SequenceSpace}) = ℵ₀
@@ -78,8 +78,8 @@ spacescompatible(a::ConstantSpace,b::ConstantSpace)=domainscompatible(a,b)
 
 ones(S::ConstantSpace) = Fun(S,fill(1.0,1))
 ones(S::Union{AnyDomain,UnsetSpace}) = ones(ConstantSpace())
-zeros(S::AnyDomain) = zero(ConstantSpace())
-zero(S::UnsetSpace) = zero(ConstantSpace())
+zeros(S::AnyDomain) = zeros(ConstantSpace())
+zero(S::UnsetSpace) = zeros(ConstantSpace())
 _first_or_zero(f::AbstractVector) = get(f, 1, zero(eltype(f)))
 function evaluate(f::AbstractVector, sp::ConstantSpace, x)
     x in domain(sp) || return zero(eltype(f))
@@ -104,9 +104,9 @@ Base.promote_rule(::Type{Fun{CS,V}},::Type{T}) where {CS<:ConstantSpace,T<:Numbe
 
 # we know multiplication by constants preserves types
 Base.promote_op(::typeof(*),::Type{Fun{CS,T,VT}},::Type{F}) where {CS<:ConstantSpace,T,VT,F<:Fun} =
-    promote_op(*,T,F)
+    Base.promote_op(*,T,F)
 Base.promote_op(::typeof(*),::Type{F},::Type{Fun{CS,T,VT}}) where {CS<:ConstantSpace,T,VT,F<:Fun} =
-    promote_op(*,F,T)
+    Base.promote_op(*,F,T)
 
 
 

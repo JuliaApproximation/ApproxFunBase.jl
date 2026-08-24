@@ -825,3 +825,46 @@ end
     @test_throws ErrorException("Override domainspace for $(typeof(X))") domainspace(X)
     @test_throws ErrorException("Override rangespace for $(typeof(X))") rangespace(X)
 end
+
+@testset "previously unreachable methods" begin
+    # these methods referred to names that no longer exist, so that
+    # calling them would throw an UndefVarError or a MethodError
+
+    @testset "isapprox_atol" begin
+        isapprox_atol = ApproxFunBase.isapprox_atol
+        @test isapprox_atol(1.0, 1.0 + 1e-12, 1e-6)
+        @test !isapprox_atol(1.0, 1.1, 1e-6)
+        @test isapprox_atol([1.0, 2.0], [1.0 + 1e-12, 2.0], 1e-6)
+        @test isapprox_atol(ApproxFunBase.SVector(1.0, 2.0), ApproxFunBase.SVector(1.0, 2.0), 1e-6)
+    end
+
+    @testset "lyap" begin
+        # A*X*B' + C*X*D' = E
+        n = 4
+        A, B, C, D = ([k + 2j + (k == j) for k=1:n, j=1:n] .* s for s in (1.0, 0.5, 0.25, 2.0))
+        X = [sin(k*j) for k=1:n, j=1:n]
+        E = A*X*transpose(B) + C*X*transpose(D)
+        Y = ApproxFunBase.lyap(A, B, C, D, E)
+        @test A*Y*transpose(B) + C*Y*transpose(D) ≈ E
+    end
+
+    @testset "diagblockshift" begin
+        diagblockshift = ApproxFunBase.diagblockshift
+        O = Ones{Int}(∞)
+        # the a[1] > b[1] branch with more than one leading block
+        @test diagblockshift(ApproxFunBase.Vcat([3,1,1], O), O) == 0
+        @test diagblockshift(ApproxFunBase.Vcat([3], O), O) == 0
+    end
+
+    @testset "constants" begin
+        @test zeros(ApproxFunBase.AnyDomain()) == Fun(ConstantSpace(), [0.0])
+        @test zero(ApproxFunBase.UnsetSpace()) == Fun(ConstantSpace(), [0.0])
+        # NaN == NaN is false, so compare the coordinates directly
+        @test isnan(Point{Float64}(ApproxFunBase.AnyDomain()).x)
+    end
+
+    @testset "SequenceSpace" begin
+        f = Fun(ApproxFunBase.SequenceSpace(), [3.0, 4.0])
+        @test f[CartesianIndex()] == f[1] == 3.0
+    end
+end

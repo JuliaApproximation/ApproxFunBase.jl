@@ -8,7 +8,6 @@ end
 SubSpace(sp::Space,kr) =
     SubSpace{typeof(sp),typeof(kr),domaintype(sp),rangetype(sp)}(sp,kr)
 
-SubSpace(sp::SubSpace,kr) = SubSpace(sp.space,reindex(sp,sp.indexes,to_indexes(kr))[1])
 
 domain(DS::SubSpace) = domain(DS.space)
 dimension(sp::SubSpace) = length(sp.indexes)

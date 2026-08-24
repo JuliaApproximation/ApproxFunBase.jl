@@ -334,7 +334,7 @@ for TYP in (:RaggedMatrix, :Matrix)
     @eval begin
         function $TYP(V::SubOperator)
             if isinf(size(V,1)) || isinf(size(V,2))
-                error("Cannot convert $V to a $TYP")
+                error("Cannot convert $V to a $($TYP)")
             end
             A = parent(V)
             if isbanded(A)
@@ -346,7 +346,7 @@ for TYP in (:RaggedMatrix, :Matrix)
 
         function $TYP(V::SubOperator{<:Any,<:Any,NTuple{2,UnitRange{Int}}})
             if isinf(size(V,1)) || isinf(size(V,2))
-                error("Cannot convert $V to a $TYP")
+                error("Cannot convert $V to a $($TYP)")
             end
             A = parent(V)
             if isbanded(A)

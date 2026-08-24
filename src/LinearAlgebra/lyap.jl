@@ -72,12 +72,12 @@ end
 
 ##Solves A*X*transpose(B) + C*X*transpose(D) = E
 function lyap(A,B,C,D,E)
-    AC=schurfact(Matrix(A),Matrix(C))
-    BD=schurfact(Matrix(B),Matrix(D))
-    Q1=AC[:left];Q2=BD[:left]
-    Z1=AC[:right];Z2=BD[:right]
+    AC=schur(Matrix(A),Matrix(C))
+    BD=schur(Matrix(B),Matrix(D))
+    Q1=AC.Q;Q2=BD.Q
+    Z1=AC.Z;Z2=BD.Z
 
-    Y=lyapuptriang(AC[:S],BD[:S],AC[:T],BD[:T],Q1'*E*Q2)
+    Y=lyapuptriang(AC.S,BD.S,AC.T,BD.T,Q1'*E*Q2)
     Z1*Y*Z2'
 end
 

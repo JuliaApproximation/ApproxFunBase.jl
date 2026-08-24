@@ -27,7 +27,7 @@ end
 
 LowRankOperator(U::Vector{VFun{S,T}}, V::Vector{<:Operator{T}}) where {S,T} = LowRankOperator{S,T}(U,V)
 function LowRankOperator(U::Vector{VFun{S,T1}}, V::Vector{<:Operator}) where {S,T1}
-    T2 = eltype(eltype(v))
+    T2 = eltype(eltype(V))
     T = promote_type(T1,T2)
     LowRankOperator(strictconvert(Vector{VFun{S,T}},U), map(Operator{T}, V))
 end

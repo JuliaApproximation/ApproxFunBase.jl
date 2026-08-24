@@ -256,7 +256,7 @@ end
 
 Base.transpose(S::SpaceOperator) =
     SpaceOperator(transpose(S.op), transpose(domainspace(S)), transpose(rangespace(S)))
-Base.transpose(S::ConstantTimesOperator) = sp.c*transpose(S.op)
+Base.transpose(S::ConstantTimesOperator) = S.λ*transpose(S.op)
 
 
 
