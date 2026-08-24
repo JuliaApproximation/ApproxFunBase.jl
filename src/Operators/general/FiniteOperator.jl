@@ -55,7 +55,7 @@ function BandedMatrix(S::SubOperator{T,FiniteOperator{AT,T}}) where {AT<:BandedM
     if last(kr) ≤ size(M,1) && last(jr) ≤ size(M,2)
         M[kr,jr]
     else
-        default_copy(S)
+        default_BandedMatrix(S)
     end
 end
 
