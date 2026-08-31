@@ -30,6 +30,8 @@ for TYP in (:DiracSpace,:PointSpace)
         spacescompatible(a::$TYP,b::$TYP) = a.points == b.points
         canonicalspace(a::$TYP) = a
 
+        Base.hash(a::$TYP, h::UInt) = hash(a.points, hash($TYP, h))
+
         union_rule(a::$TYP,b::$TYP) = $TYP(sort(union(a.points,b.points)))
 
         function coefficients(cfs::AbstractVector,fromspace::$TYP,tospace::$TYP)
