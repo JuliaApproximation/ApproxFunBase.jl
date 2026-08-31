@@ -1,5 +1,5 @@
 name = "ApproxFunBase"
-uuid = "fbd15aa5-315a-5a7d-a8a4-24992e37be05"=
+uuid = "fbd15aa5-315a-5a7d-a8a4-24992e37be05"
 version = "0.9.37"
 
 [deps]
