@@ -102,6 +102,16 @@ end
         b1 = ApproxFunBase.BlockInterlacer([Fill(2,2), 1:2])
         b2 = ApproxFunBase.BlockInterlacer((Fill(2,2), 1:2))
         @test collect(b1) == collect(b2)
+
+        # a bare Space is one component, so interlacer must wrap its
+        # blocklengths in a 1-element collection
+        ps = ApproxFunBase.PointSpace(1:3)
+        @test ApproxFunBase.interlacer(ps).blocks == (blocklengths(ps),)
+        cs = ApproxFunBase.ContinuousSpace(ApproxFunBase.PiecewiseSegment([1.0,2.0,3.0]))
+        itc = ApproxFunBase.interlacer(cs)
+        @test itc.blocks == (blocklengths(cs),)
+        @test Base.IteratorSize(itc) == Base.IsInfinite()
+        @test collect(Iterators.take(itc, 4)) == [(1,k) for k in 1:4]
     end
 
     @testset "issue #94" begin
