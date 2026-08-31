@@ -1,5 +1,5 @@
 using ApproxFunBase
-using ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, SVector, checkpoints, AnyDomain
+using ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, SVector, checkpoints, AnyDomain, SumSpace
 using BandedMatrices: rowrange, colrange, BandedMatrix
 using DomainSets: Point
 using LinearAlgebra
@@ -460,5 +460,29 @@ using Test
 
         ps2 = PiecewiseSpace([PointSpace(3:4), PointSpace(1:2)])
         @test ApproxFunBase.canonicalspace(ps2) == ps
+
+        # a Set has no order, so canonicalize before comparing
+        @test ApproxFunBase.canonicalspace(
+            PiecewiseSpace(Set([PointSpace(1:2), PointSpace(3:4)]))) == ps
+    end
+
+    @testset "SumSpace" begin
+        a, b, c = PointSpace(1:2), PointSpace(3:4), PointSpace(5:6)
+        ss = SumSpace(a, b)
+        @test components(ss) == (a, b)
+
+        @test components(SumSpace(ss, c)) == (a, b, c)
+        @test components(SumSpace(c, ss)) == (c, a, b)
+        @test components(SumSpace(ss, SumSpace(c, a))) == (a, b, c, a)
+        @test SumSpace([a, b]) == ss
+
+        @test ApproxFunBase.canonicalspace(SumSpace(b, a)) == ApproxFunBase.canonicalspace(ss)
+
+        # a ConstantSpace{AnyDomain} argument inherits the domain of the other space
+        @test domain(components(SumSpace(ss, ConstantSpace()))[end]) == domain(ss)
+        @test domain(components(SumSpace(a,  ConstantSpace()))[end]) == domain(a)
+        @test domain(components(SumSpace(ConstantSpace(), ss))[1])   == domain(ss)
+        @test domain(components(SumSpace(ConstantSpace(), a))[1])    == domain(a)
+        @test_throws ErrorException SumSpace(ConstantSpace(), ConstantSpace())
     end
 end
