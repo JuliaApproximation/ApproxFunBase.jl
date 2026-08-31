@@ -134,19 +134,72 @@ end
 
 
 evaluate(d::Domain,x) = Evaluation(d,x)
+
+"""
+    ldiffbc(d::Domain, k)
+
+The boundary condition of the `k`-th order derivative on the left endpoint of `d`. See also [`rdiffbc`](@ref), [`ldirichlet`](@ref) and [`lneumann`](@ref).
+"""
 ldiffbc(d,k) = Evaluation(d,leftendpoint,k)
+
+"""
+    rdiffbc(d::Domain, k)
+
+The boundary condition of the `k`-th order derivative on the right endpoint of `d`. See also [`ldiffbc`](@ref), [`rdirichlet`](@ref) and [`rneumann`](@ref).
+"""
 rdiffbc(d,k) = Evaluation(d,rightendpoint,k)
 
+"""
+    ldirichlet(d::Domain) = ldiffbc(d, 0)
+
+The dirichlet boundary condition on the left endpoint of `d`. See also [`rdirichlet`](@ref) and [`ldiffbc`](@ref).
+"""
 ldirichlet(d) = ldiffbc(d,0)
+
+"""
+    rdirichlet(d::Domain) = rdiffbc(d, 0)
+
+The dirichlet boundary condition on the right endpoint of `d`. See also [`ldirichlet`](@ref) and [`rdiffbc`](@ref).
+"""
 rdirichlet(d) = rdiffbc(d,0)
+
+"""
+    lneumann(d::Domain) = ldiffbc(d, 1)
+
+The neumann boundary condition on the left endpoint of `d`. See also [`rneumann`](@ref) and [`ldiffbc`](@ref).  
+"""
 lneumann(d) = ldiffbc(d,1)
+
+"""
+    rneumann(d::Domain) = rdiffbc(d, 1)
+
+The neumann boundary condition on the right endpoint of `d`. See also [`lneumann`](@ref) and [`rdiffbc`](@ref).  
+"""
 rneumann(d) = rdiffbc(d,1)
 
+"""
+    ivp(d::Domain, k) = [ldiffbc(d,i) for i=0:k-1]
+    ivp(d) = ivp(d,2)
 
+The conditions for the `k`-th order initial value problem. See also [`ldiffbc`](@ref), [`bvp`](@ref) and [`periodic`](@ref).
+"""
 ivp(d,k) = [ldiffbc(d,i) for i=0:k-1]
+
+"""
+    bvp(d::Domain, k) = vcat([ldiffbc(d,i) for i=0:div(k,2)-1],
+                        [rdiffbc(d,i) for i=0:div(k,2)-1])
+    bvp(d) = bvp(d,2)
+
+The conditions for the `k`-th order boundary value problem. See also [`ldiffbc`](@ref), [`rdiffbc`](@ref), [`ivp`](@ref) and [`periodic`](@ref).
+"""
 bvp(d,k) = vcat([ldiffbc(d,i) for i=0:div(k,2)-1],
                 [rdiffbc(d,i) for i=0:div(k,2)-1])
 
+"""
+    periodic(d::Domain,k) = [ldiffbc(d,i) - rdiffbc(d,i) for i=0:k]
+
+The conditions for the `k`-th order periodic problem. See also [`ldiffbc`](@ref), [`rdiffbc`](@ref), [`ivp`](@ref) and [`bvp`](@ref)
+"""
 periodic(d,k) = [ldiffbc(d,i) - rdiffbc(d,i) for i=0:k]
 
 # shorthand for second order
@@ -197,7 +250,7 @@ DirichletWrapper(B::Operator,λ=0) = DirichletWrapper{typeof(B),eltype(B)}(B,λ)
 convert(::Type{Operator{T}},B::DirichletWrapper) where {T} =
     DirichletWrapper(Operator{T}(B.op),B.order)::Operator{T}
 
-# Default is to use diffbca
+# Default is to use diffbcs
 default_Dirichlet(sp::Space,λ) =
     DirichletWrapper(InterlaceOperator((ldiffbc(sp,λ), rdiffbc(sp,λ)), false), λ)
 Dirichlet(sp::Space,λ) = default_Dirichlet(sp,λ)

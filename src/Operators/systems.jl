@@ -56,7 +56,7 @@ end
 blockdiag(a::Operator,b::Operator) = blockdiag(Operator{promote_type(eltype(a),eltype(b))}[a],
                                                 Operator{promote_type(eltype(a),eltype(b))}[b])
 
-## broadcase
+## broadcast
 
 broadcast(::typeof(*),A::AbstractArray{N},D::Operator) where {N<:Number} =
     Operator{promote_type(N,eltype(D))}[A[k,j]*D for k=1:size(A,1),j=1:size(A,2)]

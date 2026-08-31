@@ -50,16 +50,20 @@ function getindex(F::FiniteOperator,k::Integer)
 end
 
 function BandedMatrix(S::SubOperator{T,FiniteOperator{AT,T}}) where {AT<:BandedMatrix,T}
-    kr,jr=parentindices(S)
-    if last(kr[1]) ≤ size(S.matrix,1) &&
-        last(jr[2]) ≤ size(S.matrix,2)
-        matrix[kr,jr]
+    kr,jr = parentindices(S)
+    M = parent(S).matrix
+    if last(kr) ≤ size(M,1) && last(jr) ≤ size(M,2)
+        M[kr,jr]
     else
-        default_copy(S)
+        default_BandedMatrix(S)
     end
 end
 
 
 bandwidths(T::FiniteOperator) = bandwidths(T.matrix)
-blockbandwidths(T::FiniteOperator) = block(rangespace(T),size(T.matrix,1)).n[1]-1,block(domainspace(T),size(T.matrix,2)).n[1]-1
+function blockbandwidths(T::FiniteOperator)
+    n1 = Int(block(rangespace(T),size(T.matrix,1)))-1
+    n2 = Int(block(domainspace(T),size(T.matrix,2)))-1
+    return n1, n2
+end
 Base.maximum(K::FiniteOperator) = maximum(K.matrix)

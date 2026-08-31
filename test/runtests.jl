@@ -4,22 +4,21 @@ using Aqua
 using BandedMatrices
 using BlockArrays
 using BlockBandedMatrices
-using DomainSets
+using DomainSets: DomainSets, Point
+using IntervalSets: (..)
 using DualNumbers
 using FillArrays
 using InfiniteArrays
 using Infinities
 using LinearAlgebra
+using LowRankMatrices
 using Random
 using SpecialFunctions
 using StaticArrays
 using Test
 
 @testset "Project quality" begin
-    Aqua.test_all(ApproxFunBase, ambiguities=false, piracy = false,
-        # only test formatting on VERSION >= v1.7
-        # https://github.com/JuliaTesting/Aqua.jl/issues/105#issuecomment-1551405866
-        project_toml_formatting = VERSION >= v"1.9")
+    Aqua.test_all(ApproxFunBase, ambiguities=false, piracies = false)
 end
 
 @testset "Helper" begin
@@ -267,6 +266,11 @@ end
     AInt = convert(AbstractArray{Int}, A)
     @test AInt isa AbstractArray{Int}
     @test AInt == A
+
+    bands, fill = BandedMatrix(0=>Float64[1:4;]), LowRankMatrix(Float64[1:4;], Float64[1:4;])
+    AB = ApproxFunBase.AlmostBandedMatrix(bands, fill)
+    U = UpperTriangular(view(AB, 1:4, 1:4))
+    @test ldiv!(U, Float64[1:4;]) == ldiv!(ones(4), U, Float64[1:4;]) == ldiv!(factorize(Array(U)), Float64[1:4;])
 end
 
 @testset "DiracDelta sampling" begin
@@ -544,6 +548,31 @@ end
     @testset "Evaluation" begin
         E = Evaluation(PointSpace(1:3), 1)
         @test_throws ArgumentError E[Block(1)]
+
+        @testset "ArraySpace" begin
+            # each component is evaluated independently, so that the range space
+            # is an array of ConstantSpaces of the same shape (#286)
+            @testset for sz in ((2,), (2,2))
+                S = ApproxFunBase.ArraySpace(PointSpace(1:3), sz...)
+                E = Evaluation(S, 1)
+                @test domainspace(E) == S
+                @test rangespace(E) ==
+                    ApproxFunBase.ArraySpace(ConstantSpace(Point(1)), sz...)
+                @test size(rangespace(E)) == sz
+            end
+
+            # a space for which the evaluation may be applied to a Fun
+            H = ApproxFunBase.HeavisideSpace([-1.0, 0.0, 1.0])
+            S = ApproxFunBase.ArraySpace(H, 2)
+            f = Fun(S, Float64[1:4;])
+            E = Evaluation(S, 0.5)
+            @test coefficients(E*f) == f(0.5)
+            @test coefficients(Evaluation(S, -0.5)*f) == f(-0.5)
+
+            # composition with a finite operator
+            A = ApproxFunBase.FiniteOperator([1.0 2.0; 3.0 4.0])
+            @test coefficients((A*E)*f) == [1.0 2.0; 3.0 4.0] * f(0.5)
+        end
     end
 end
 
@@ -804,4 +833,86 @@ include("show.jl")
     @test @inferred(chebyshev_clenshaw([1,2], Dual(2,1))) == Dual(5,2)
 
     @test @inferred(chebyshev_clenshaw(BigInt[1], 1)) == 1
+end
+
+@testset "Unimplemented functionality errors" begin
+    struct MyOperator{T} <: ApproxFunBase.Operator{T} end
+    X = MyOperator{Float64}();
+    @test_throws ErrorException("Override domainspace for $(typeof(X))") domainspace(X)
+    @test_throws ErrorException("Override rangespace for $(typeof(X))") rangespace(X)
+end
+
+@testset "previously unreachable methods" begin
+    # these methods referred to names that no longer exist, so that
+    # calling them would throw an UndefVarError or a MethodError
+
+    @testset "isapprox_atol" begin
+        isapprox_atol = ApproxFunBase.isapprox_atol
+        @test isapprox_atol(1.0, 1.0 + 1e-12, 1e-6)
+        @test !isapprox_atol(1.0, 1.1, 1e-6)
+        @test isapprox_atol([1.0, 2.0], [1.0 + 1e-12, 2.0], 1e-6)
+        @test isapprox_atol(ApproxFunBase.SVector(1.0, 2.0), ApproxFunBase.SVector(1.0, 2.0), 1e-6)
+    end
+
+    @testset "lyap" begin
+        # A*X*B' + C*X*D' = E
+        n = 4
+        A, B, C, D = ([k + 2j + (k == j) for k=1:n, j=1:n] .* s for s in (1.0, 0.5, 0.25, 2.0))
+        X = [sin(k*j) for k=1:n, j=1:n]
+        E = A*X*transpose(B) + C*X*transpose(D)
+        Y = ApproxFunBase.lyap(A, B, C, D, E)
+        @test A*Y*transpose(B) + C*Y*transpose(D) ≈ E
+    end
+
+    @testset "diagblockshift" begin
+        diagblockshift = ApproxFunBase.diagblockshift
+        O = Ones{Int}(∞)
+        # the a[1] > b[1] branch with more than one leading block
+        @test diagblockshift(ApproxFunBase.Vcat([3,1,1], O), O) == 0
+        @test diagblockshift(ApproxFunBase.Vcat([3], O), O) == 0
+    end
+
+    @testset "constants" begin
+        @test zeros(ApproxFunBase.AnyDomain()) == Fun(ConstantSpace(), [0.0])
+        @test zero(ApproxFunBase.UnsetSpace()) == Fun(ConstantSpace(), [0.0])
+        # NaN == NaN is false, so compare the coordinates directly
+        @test isnan(Point{Float64}(ApproxFunBase.AnyDomain()).x)
+    end
+
+    @testset "SequenceSpace" begin
+        f = Fun(ApproxFunBase.SequenceSpace(), [3.0, 4.0])
+        @test f[CartesianIndex()] == f[1] == 3.0
+    end
+
+    @testset "product of LowRankOperators" begin
+        H = ApproxFunBase.HeavisideSpace([-1.0, 0.0, 1.0])
+        A = ApproxFunBase.LowRankOperator(Fun(H, [1.0, 2.0]), Evaluation(H, -0.5))
+        B = ApproxFunBase.LowRankOperator(Fun(H, [3.0, -1.0]), Evaluation(H, 0.5))
+        AB = A*B
+        @test AB isa ApproxFunBase.LowRankOperator
+        @test rank(AB) == rank(B)
+        f = Fun(H, [2.0, 5.0])
+        @test coefficients(AB*f) ≈ coefficients(A*(B*f))
+    end
+
+    @testset "BandedMatrix of a FiniteOperator view" begin
+        M = BandedMatrix(0 => Float64[1, 2, 3], 1 => Float64[4, 5])
+        F = ApproxFunBase.FiniteOperator(M)
+        @test BandedMatrix(view(F, 1:2, 1:2)) == M[1:2, 1:2]
+        @test BandedMatrix(view(F, 2:3, 2:3)) == M[2:3, 2:3]
+
+        # a view that extends beyond the stored matrix falls back to
+        # the generic conversion, and is padded with zeros
+        G = ApproxFunBase.FiniteOperator(M, PointSpace(1:5), PointSpace(1:5))
+        B = BandedMatrix(view(G, 1:4, 1:4))
+        A = zeros(4, 4)
+        A[1:3, 1:3] = Matrix(M)
+        @test Matrix(B) == A
+    end
+
+    @testset "argument errors" begin
+        @test_throws ArgumentError besselh(0, 3, Fun(1.0))
+        @test_throws ArgumentError LowRankFun((x,y) -> x*y, PointSpace(1:3), PointSpace(1:3),
+                                                method = :neither)
+    end
 end

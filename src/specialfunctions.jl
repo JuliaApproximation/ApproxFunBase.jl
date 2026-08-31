@@ -84,7 +84,7 @@ end
 
 
 
-isfinite(f::Fun) = isfinite(maximum(abs,f)) && isfinite(minabs(f))
+isfinite(f::Fun) = isfinite(maximum(abs,f)) && isfinite(minimum(abs,f))
 
 # division by fun
 
@@ -152,7 +152,7 @@ function _specialfunctionnormalizationpoint(op,growth,f)
 end
 
 # this is used to find a point in which to impose a boundary
-# condition in calculating secial functions
+# condition in calculating special functions
 function specialfunctionnormalizationpoint(op,growth,f)
     xmin, xmax, opfxmin, opfxmax, opmax = _specialfunctionnormalizationpoint(op,growth,f)
     if abs(opfxmin) == opmax
@@ -291,7 +291,8 @@ function airy(k::Number,f::Fun)
     end
 end
 
-besselh(ν,k::Integer,f::Fun) = k == 1 ? hankelh1(ν,f) : k == 2 ? hankelh2(ν,f) : throw(Base.Math.AmosException(1))
+besselh(ν,k::Integer,f::Fun) = k == 1 ? hankelh1(ν,f) : k == 2 ? hankelh2(ν,f) :
+    throw(ArgumentError("k must be 1 or 2, received \$k"))
 
 for jy in (:j, :y)
     bjy = Symbol(:bessel, jy)

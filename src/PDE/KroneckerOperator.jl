@@ -151,7 +151,7 @@ function subblockbandwidths(K::KroneckerOperator)
         sb = subblock_blockbandwidths(K)
         # divide by the size of each block
         sb_sz = mapreduce(getindex_value,*,dt.blocks)
-        # spread by sub block szie
+        # spread by sub block size
         (sb[1]+1)*sb_sz-1,(sb[2]+1)*sb_sz-1
     end
 end
@@ -182,7 +182,7 @@ domaintensorizer(K::KroneckerOperator) = K.domaintensorizer
 rangetensorizer(K::KroneckerOperator) = K.rangetensorizer
 
 
-# we suport 4-indexing with KroneckerOperator
+# we support 4-indexing with KroneckerOperator
 # If A is K x J and B is N x M, then w
 # index to match KO=reshape(kron(B,A),N,K,M,J)
 # that is
@@ -256,7 +256,7 @@ end
 
 Base.transpose(S::SpaceOperator) =
     SpaceOperator(transpose(S.op), transpose(domainspace(S)), transpose(rangespace(S)))
-Base.transpose(S::ConstantTimesOperator) = sp.c*transpose(S.op)
+Base.transpose(S::ConstantTimesOperator) = S.λ*transpose(S.op)
 
 
 
@@ -388,7 +388,7 @@ convert(::Type{BandedBlockBandedMatrix}, S::SubOperator{T,KroneckerOperator{SS,V
 
 
 ## Conversion
-# TODO: we explicetly state type to avoid type inference bug in 0.4
+# TODO: we explicitly state type to avoid type inference bug in 0.4
 
 ConcreteConversion(a::BivariateSpace,b::BivariateSpace) =
     ConcreteConversion(promote_type(prectype(a),prectype(b)), a,b)

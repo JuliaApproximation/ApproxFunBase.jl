@@ -1,6 +1,7 @@
 export Fun, evaluate, values, points, extrapolate, setdomain
 export coefficients, ncoefficients, coefficient
 export integrate, differentiate, domain, space, linesum, linenorm
+export bilinearform, linebilinearform, innerproduct, lineinnerproduct
 
 include("Domain.jl")
 include("Space.jl")
@@ -107,7 +108,8 @@ julia> coefficients(f, Legendre()) ≈ [0, 0, 1]
 true
 ```
 """
-function coefficients(f::Fun,msp::Space)
+coefficients(f::Fun,msp::Space) = _coefficients(f::Fun,msp::Space)
+function _coefficients(f::Fun,msp::Space)
     #zero can always be converted
     fc = f.coefficients
     if ncoefficients(f) == 0 || (ncoefficients(f) == 1 && fc[1] == 0)
@@ -153,7 +155,7 @@ function coefficient(f::Fun,kr::AbstractRange)
     f.coefficients[first(kr):min(b, end)]
 end
 
-coefficient(f::Fun,K::Block) = coefficient(f,blockrange(space(f),K.n[1]))
+coefficient(f::Fun,K::Block) = coefficient(f,blockrange(space(f),Int(K)))
 coefficient(f::Fun,::Colon) = coefficient(f,1:dimension(space(f)))
 
 # convert to vector while computing coefficients
@@ -424,7 +426,8 @@ true
 """
 values(f::Fun,dat...) = _values(f.space, f.coefficients, dat...)
 _values(sp, v, dat...) = itransform(sp, v, dat...)
-_values(sp::UnivariateSpace, v::Vector{T}, dat...) where {T<:Number} =
+# the return type may be asserted only for scalar-valued spaces
+_values(sp::Space{<:Domain{<:Number},<:Number}, v::Vector{T}, dat...) where {T<:Number} =
     itransform(sp, v, dat...)::Vector{float(T)}
 
 """
@@ -461,7 +464,7 @@ julia> ncoefficients(f)
 """
 ncoefficients(f::Fun)::Int = length(f.coefficients)
 
-blocksize(f::Fun) = (block(space(f),ncoefficients(f)).n[1],)
+blocksize(f::Fun) = (Int(block(space(f),ncoefficients(f))),)
 
 """
     stride(f::Fun)
@@ -594,6 +597,10 @@ end
 
 \(c::Number, f::Fun) = Fun(f.space, c \ f.coefficients)
 
+# eliminate the type-unstable 1/t branch by using an unsigned integer exponent
+isnegative(x) = x < zero(x)
+isnegative(::Unsigned) = false
+
 Base.@constprop :aggressive function intpow(f, k)
     if k == 0
         ones(cfstype(f), space(f))
@@ -607,10 +614,10 @@ Base.@constprop :aggressive function intpow(f, k)
         f * f * f * f
     else
         t = foldl(*, fill(f, abs(k)-1), init=f)
-        if k > 0
-            return t
-        else
+        if isnegative(k)
             return 1/t
+        else
+            return t
         end
     end
 end
@@ -631,8 +638,6 @@ Base.literal_pow(::typeof(^), f::Fun, ::Val{4}) = f * f * f * f
 inv(f::Fun) = 1/f
 
 # Integrals over two Funs, which are fast with the orthogonal weight.
-
-export bilinearform, linebilinearform, innerproduct, lineinnerproduct
 
 # Having fallbacks allow for the fast implementations.
 
@@ -768,11 +773,12 @@ isapprox(g::Number, f::Fun; kw...) = isapprox(g*ones(space(f)), f; kw...)
 isreal(f::Fun{<:RealSpace,<:Real}) = true
 isreal(f::Fun) = false
 
-iszero(f::Fun)    = all(iszero,f.coefficients)
+iszero(f::Fun)    = all(iszero, coefficients(f)) || all(iszero, values(f))
 
+# Deliberately not named isconst or isconstant to avoid conflicts with Base or DomainSets
+isconstantfun(f::Fun) = iszero(f - first(f))
 
-
-# sum, integrate, and idfferentiate are in CalculusOperator
+# sum, integrate, and differentiate are in CalculusOperator
 
 """
     reverseorientation(f::Fun)
@@ -821,11 +827,11 @@ end
 #   exp.( [x,x]) is equivalent to [exp(x),exp(x)]
 #
 # does not throw the same error. When array values are mixed with arrays, the Array
-# takes presidence:
+# takes precedence:
 #
 #   exp.([x;x] .+ [x,x]) is equivalent to exp.(Array([x;x]) .+ [x,x])
 #
-# This presidence is picked by the `promote_containertype` overrides.
+# This precedence is picked by the `promote_containertype` overrides.
 
 struct FunStyle <: BroadcastStyle end
 

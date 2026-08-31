@@ -91,6 +91,7 @@ domainspace(P::AdjointOperator)=rangespace(P.op)
 rangespace(P::AdjointOperator)=domainspace(P.op)
 domain(P::AdjointOperator)=domain(P.op)
 bandwidths(P::AdjointOperator) = reverse(bandwidths(P.op))
+blockbandwidths(P::AdjointOperator) = reverse(blockbandwidths(P.op))
 
 getindex(P::AdjointOperator,k::Integer,j::Integer) = conj(P.op[j,k])
 getindex(P::AdjointOperator,inds...) = adjoint(P.op[reverse(inds)...])

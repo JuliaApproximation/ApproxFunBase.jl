@@ -17,7 +17,7 @@ end
 const VectorSpace{S,DD,RR,A<:AbstractVector{S}} = ArraySpace{S,1,DD,RR,A}
 const MatrixSpace{S,DD,RR,A<:AbstractMatrix{S}} = ArraySpace{S,2,DD,RR,A}
 
-#TODO: Think through domain/domaindominsion
+#TODO: Think through domain/domaindimension
 ArraySpace(sp::AbstractArray{SS,N}) where {D,R,SS<:Space{D,R},N} =
     ArraySpace{SS,N,D,R,typeof(sp)}(sp)
 ArraySpace(sp::AbstractArray{SS,N}, f = first(sp)) where {SS<:Space,N} =
@@ -74,6 +74,11 @@ setdomain(A::ArraySpace,d::Domain) = ArraySpace(map(sp->setdomain(sp,d),A.spaces
 
 #TODO: rework for different spaces
 points(d::ArraySpace,n) = points(d.spaces[1],n)
+# points(::ArraySpace, n) forwards n to a component space, so n must be the number of
+# coefficients per component. The generic points(f::Fun) would pass ncoefficients(f),
+# which counts the interlaced coefficients of all the components together.
+# The count below matches the padding in itransform, so that values(f) == f.(points(f)).
+points(f::Fun{<:ArraySpace}) = points(space(f), maximum(ncoefficients, vec(f), init=0))
 
 
 transform(AS::ArraySpace{SS,1},vals::AbstractVector{Vector{V}}) where {SS,V} =
@@ -98,10 +103,12 @@ transform(AS::VectorSpace{SS},vals::AbstractVector{AV}) where {SS,AV<:AbstractVe
 transform(AS::VectorSpace{SS},vals::AbstractVector{SVector{V,n}}) where {SS,n,V} =
     transform(AS,map(Vector,vals))
 
-function itransform(AS::VectorSpace,cfs::AbstractVector)
+function itransform(AS::ArraySpace,cfs::AbstractVector)
     vf = vec(Fun(AS, cfs))
     n = maximum(ncoefficients, vf)
-    vcat.(values.(pad!.(vf, n))...)
+    vals = vcat.(values.(pad.(vf, n))...)
+    # the values of an array-valued Fun are arrays of the same shape
+    [reshape(v, size(AS)) for v in vals]
 end
 
 

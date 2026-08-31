@@ -1,5 +1,3 @@
-import Base: chop
-
 # BLAS/linear algebra overrides
 
 @inline dot(x...) = LinearAlgebra.dot(x...)
@@ -42,18 +40,6 @@ hasonearg(f) = hasnumargs(f, 1)
 # fast implementation of isapprox with atol a non-keyword argument in most cases
 isapprox_atol(a,b,atol;kwds...) = isapprox(a,b;atol=atol,kwds...)
 isapprox_atol(a::SVector,b::SVector,atol::Real=0;kwds...) = isapprox_atol(collect(a),collect(b),atol;kwds...)
-function isapprox_atol(x::Number, y::Number, atol::Real=0; rtol::Real=Base.rtoldefault(x,y))
-    x == y || (isfinite(x) && isfinite(y) && abs(x-y) <= atol + rtol*max(abs(x), abs(y)))
-end
-function isapprox_atol(x::AbstractArray{T}, y::AbstractArray{S},atol::Real=0; rtol::Real=Base.rtoldefault(T,S), norm::Function=vecnorm) where {T<:Number,S<:Number}
-    d = norm(x - y)
-    if isfinite(d)
-        return d <= atol + rtol*max(norm(x), norm(y))
-    else
-        # Fall back to a component-wise approximate comparison
-        return all(ab -> isapprox(ab[1], ab[2]; rtol=rtol, atol=atol), zip(x, y))
-    end
-end
 
 # The second case handles zero
 isapproxinteger(::Integer) = true
@@ -76,8 +62,6 @@ eps(::T) where T<:Integer = eps(T)
 
 eps(::Type{Complex{T}}) where {T<:Real} = eps(real(T))
 eps(z::Complex{T}) where {T<:Real} = eps(abs(z))
-eps(::Type{Dual{Complex{T}}}) where {T<:Real} = eps(real(T))
-eps(z::Dual{Complex{T}}) where {T<:Real} = eps(abs(z))
 
 
 eps(::Type{Vector{T}}) where {T<:Number} = eps(T)
@@ -388,9 +372,9 @@ function interlace(a::AbstractVector, b::AbstractVector, (ncomponents_a, ncompon
     pad_b = pad(b, ncomponents_b * nblk_b)
 
     blksz_a = Fill(ncomponents_a, nblk_a)
-    aPBlk = PseudoBlockArray(pad_a, blksz_a)
+    aPBlk = BlockedArray(pad_a, blksz_a)
     blksz_b = Fill(ncomponents_b, nblk_b)
-    bPBkl = PseudoBlockArray(pad_b, blksz_b)
+    bPBkl = BlockedArray(pad_b, blksz_b)
 
     nblk_ret = nblk_a + nblk_b
     blksz_ret = zeros(Int, nblk_ret)
@@ -398,7 +382,7 @@ function interlace(a::AbstractVector, b::AbstractVector, (ncomponents_a, ncompon
     blksz_ret[2:2:end] = blksz_b
     nret = sum(blksz_ret)
     ret = initvector(T, nret)
-    retPBlk = PseudoBlockArray(ret, blksz_ret)
+    retPBlk = BlockedArray(ret, blksz_ret)
 
     @views begin
         for (ind, i) in enumerate(1:2:nblk_ret)

@@ -64,6 +64,14 @@ Evaluation(S::SumSpace,x,order) =
     EvaluationWrapper(S,x,order,
         InterlaceOperator(RowVector(vnocat(map(s->Evaluation(s,x,order),components(S))...)),SumSpace))
 
+# each component of an ArraySpace is evaluated independently, unlike a SumSpace,
+# where the components are summed
+function Evaluation(S::ArraySpace,x,order)
+    ops = map(s->Evaluation(s,x,order), S)
+    RS = ArraySpace(reshape(map(rangespace, ops), size(S)))
+    EvaluationWrapper(S,x,order, InterlaceOperator(Diagonal(ops), S, RS))
+end
+
 
 ToeplitzOperator(G::Fun{<:MatrixSpace}) = interlace(map(ToeplitzOperator,Array(G)))
 
@@ -278,7 +286,7 @@ end
 choosedomainspace(M::CalculusOperator{UnsetSpace}, sp::SumSpace) =
     mapreduce(s->choosedomainspace(M,s),union,sp.spaces)
 
-## Multiplcation for Array*Vector
+## Multiplication for Array*Vector
 
 function Multiplication(f::Fun{<:MatrixSpace}, sp::VectorSpace)
     @assert size(space(f),2)==length(sp)
@@ -316,7 +324,7 @@ end
 Multiplication(f::Fun, sp::PiecewiseSpace) = MultiplicationWrapper(f, Multiplication(Fun(f,sp),sp))
 
 
-# we override coefficienttimes to split the multiplication down to components as union may combine spaes
+# we override coefficienttimes to split the multiplication down to components as union may combine spaces
 
 coefficienttimes(f::Fun{S1},g::Fun{S2}) where {S1<:SumSpace,S2<:SumSpace} = mapreduce(ff->ff*g,+,components(f))
 coefficienttimes(f::Fun{S1},g::Fun) where {S1<:SumSpace} = mapreduce(ff->ff*g,+,components(f))

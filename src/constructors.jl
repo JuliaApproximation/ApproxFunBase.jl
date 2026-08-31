@@ -117,11 +117,11 @@ function _default_Fun(f, d::Space)
         cf = default_Fun(f, d, 2^logn, Val(false))
         maxabsc = maximum(abs,cf.coefficients)
         if maxabsc == 0 && maxabsfr == 0
-            return zeros(d)
+            return zeros(T, d)
         end
 
         b = block(d,length(cf.coefficients))
-        bs = blockstart(d,max(b.n[1]-2,1))
+        bs = blockstart(d,max(Int(b)-2,1))
 
         # we allow for transformed coefficients being a different size
         ##TODO: how to do scaling for unnormalized bases like Jacobi?

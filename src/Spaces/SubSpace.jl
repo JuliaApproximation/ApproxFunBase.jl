@@ -8,7 +8,6 @@ end
 SubSpace(sp::Space,kr) =
     SubSpace{typeof(sp),typeof(kr),domaintype(sp),rangetype(sp)}(sp,kr)
 
-SubSpace(sp::SubSpace,kr) = SubSpace(sp.space,reindex(sp,sp.indexes,to_indexes(kr))[1])
 
 domain(DS::SubSpace) = domain(DS.space)
 dimension(sp::SubSpace) = length(sp.indexes)
@@ -28,12 +27,12 @@ function blocklengths(sp::SubSpace{DS,UnitRange{Int}}) where DS
     M = last(sp.indexes)
     B1 = block(sp.space,N)
     B2 = block(sp.space,M)
-    # if the blocks are equal, we have only one bvlock
-    B1 == B2 && return [Zeros{Int}(B1.n[1]-1); length(sp.indexes)]
+    # if the blocks are equal, we have only one block
+    B1 == B2 && return [Zeros{Int}(Int(B1)-1); length(sp.indexes)]
 
-    [Zeros{Int}(B1.n[1]-1);
+    [Zeros{Int}(Int(B1)-1);
          blockstop(sp.space,B1)-N+1;
-         blocklengths(sp.space)[B1.n[1]+1:B2.n[1]-1];
+         blocklengths(sp.space)[Int(B1)+1:Int(B2)-1];
         M-blockstart(sp.space,B2)+1]
 end
 
@@ -41,8 +40,8 @@ function blocklengths(sp::SubSpace{DS,<:AbstractInfUnitRange{Int}}) where DS
     N = first(sp.indexes)
     B1 = block(sp.space,N)
 
-    Vcat([Zeros{Int}(B1.n[1]-1); blockstop(sp.space,B1)-N+1],
-            blocklengths(sp.space)[B1.n[1]+1:∞])
+    Vcat([Zeros{Int}(Int(B1)-1); blockstop(sp.space,B1)-N+1],
+            blocklengths(sp.space)[Int(B1)+1:∞])
 end
 
 blocklengths(sp::SubSpace{DS,Block{1,T}}) where {DS, T} =
@@ -64,8 +63,8 @@ reindex(sp::SubSpace, br::Tuple{AbstractVector{Int}}, ks::Tuple{BlockRange1}) =
 
 
 ## Block
-blocklengths(sp::SubSpace{DS,Block}) where {DS} = [blocklengths(sp.space)[sp.indexes.n[1]]]
-dimension(sp::SubSpace{DS,Block}) where {DS} = blocklengths(sp.space)[sp.indexes.n[1]]
+blocklengths(sp::SubSpace{DS,Block}) where {DS} = [blocklengths(sp.space)[Int(sp.indexes)]]
+dimension(sp::SubSpace{DS,Block}) where {DS} = blocklengths(sp.space)[Int(sp.indexes)]
 
 
 blocklengths(sp::SubSpace{DS,BlockRange1}) where {DS} = blocklengths(sp.space)[Int.(sp.indexes)]
@@ -126,7 +125,7 @@ end
 # return the space that has banded Conversion to the other
 function conversion_rule(a::SubSpace,b::Space)
     if a.space==b
-        a  # we can write droping coefficients as a banded operator
+        a  # we can write dropping coefficients as a banded operator
     else
         NoSpace()
     end
@@ -142,7 +141,7 @@ end
 # return the space that has banded Conversion to the other
 function union_rule(a::SubSpace,b::Space)
     if a.space==b
-        b  # we can write droping coefficients as a banded operator
+        b  # we can write dropping coefficients as a banded operator
     else
         NoSpace()
     end

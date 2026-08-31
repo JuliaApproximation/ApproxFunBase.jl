@@ -1,19 +1,17 @@
-module ApproxFunBaseTest
+module ApproxFunBaseTestExt
 
 using ApproxFunBase
+using Test
 using ApproxFunBase: plan_transform, plan_itransform, israggedbelow, RaggedMatrix, isbandedbelow, isbanded,
     blockstart, blockstop, resizedata!
-using BandedMatrices: BandedMatrices, rowstart, rowstop, colstart, colstop, BandedMatrix, bandwidth
-using BlockArrays: blockrowstop, blockcolstop, Block
-using BlockBandedMatrices: isbandedblockbanded, blockbandwidth, isblockbanded, subblockbandwidth
-using DomainSets: dimension
-using InfiniteArrays
-using LinearAlgebra
-using Test
+using ApproxFunBase.BandedMatrices: BandedMatrices, rowstart, rowstop, colstart, colstop, BandedMatrix, bandwidth
+using ApproxFunBase.BlockArrays: blockrowstop, blockcolstop, Block
+using ApproxFunBase.BlockBandedMatrices: isbandedblockbanded, blockbandwidth, isblockbanded, subblockbandwidth
+using ApproxFunBase.DomainSets: dimension
+using ApproxFunBase.InfiniteArrays
+using ApproxFunBase.LinearAlgebra
 
-# These routines are for the unit tests
-
-export testspace, testfunctional, testraggedbelowoperator, testbandedblockbandedoperator,
+import ApproxFunBase.TestUtils: testspace, testfunctional, testraggedbelowoperator, testbandedblockbandedoperator,
     testbandedoperator, testtransforms, testcalculus, testmultiplication, testinfoperator,
     testblockbandedoperator, testbandedbelowoperator
 
@@ -264,4 +262,5 @@ function testbandedblockbandedoperator(A)
     @test Am isa AbstractMatrix && isbandedblockbanded(Am)
 end
 
-end # module
+
+end

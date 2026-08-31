@@ -104,6 +104,8 @@ function LowRankFun(f::Function, dx::Space, dy::Space;
         else
             F = LowRankFun(copy(G.A), map(b->Fun(b,dy),G.B))
         end
+    else
+        throw(ArgumentError("unsupported method \$method, expected :standard or :Cholesky"))
     end
     retmax ? (F,maxabsf) : F
 end
@@ -145,10 +147,12 @@ function standardLowRankFun(f::Function, dx::Space, dy::Space;
     end
 
     A,B=typeof(a)[],typeof(b)[]
-    if tolerance == :relative
-        tol = 100maxabsf*eps(T)
-    elseif tolerance[1] == :absolute
-        tol = 100*tolerance[2]*eps(T)
+    tol = if tolerance == :relative
+        100maxabsf*eps(T)
+    elseif tolerance isa Tuple && tolerance[1] == :absolute
+        100*tolerance[2]*eps(T)
+    else
+        throw(ArgumentError("unsupported tolerance \$tolerance, expected :relative or (:absolute, tol)"))
     end
     tol10 = tol/10
     Avals,Bvals = zeros(T,gridx),zeros(T,gridy)
@@ -209,10 +213,12 @@ function CholeskyLowRankFun(f::Function,dx::Space;
     end
 
     A,B=typeof(a)[],typeof(a)[]
-    if tolerance == :relative
-        tol = 100maxabsf*eps(T)
-    elseif tolerance[1] == :absolute
-        tol = 100*tolerance[2]*eps(T)
+    tol = if tolerance == :relative
+        100maxabsf*eps(T)
+    elseif tolerance isa Tuple && tolerance[1] == :absolute
+        100*tolerance[2]*eps(T)
+    else
+        throw(ArgumentError("unsupported tolerance \$tolerance, expected :relative or (:absolute, tol)"))
     end
     tol10 = tol/10
     Avals = zeros(T,grid)

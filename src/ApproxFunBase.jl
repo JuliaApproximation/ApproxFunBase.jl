@@ -8,7 +8,6 @@ import Calculus
 import Combinatorics: multiexponents
 using DSP
 using DomainSets
-using DualNumbers
 using FFTW
 using FillArrays
 using InfiniteArrays
@@ -20,11 +19,20 @@ using SpecialFunctions
 using StaticArrays: SVector, @SArray, SArray
 import Statistics: mean
 
+# compatibility shim to support versions of DomainSets < v0.7.17
+# For DomainSets v0.8 and above, we may switch to using DomainSets.× to construct product domains
+@static if !isdefined(DomainSets, :cartesianproduct)
+    const cartesianproduct = ×
+end
+@static if !isdefined(DomainSets, :isrealdomain)
+    const isrealdomain = isreal
+end
+
 import DomainSets: Domain, indomain, UnionDomain, ProductDomain, Point, ∂,
               SetdiffDomain, Interval, ChebyshevInterval, boundary,
               rightendpoint, leftendpoint, dimension, WrappedDomain, VcatDomain,
               component, components, ncomponents, factor, factors, nfactors,
-              canonicaldomain
+              canonicaldomain, domain
 
 using AbstractFFTs: Plan
 
@@ -47,16 +55,22 @@ import Base: values, convert, getindex, setindex!, *, +, -, ==, <, <=, >, |, !,
               asec, cot, acot, sinh, csch, asinh, acsch,
               sech, acosh, asech, tanh, coth, atanh, acoth,
               sinc, cosc, log1p, log, expm1, tan,
-              max, min, cbrt, atan, acos, asin
+              max, min, cbrt, atan, acos, asin, chop,
+              axes, IndexStyle, IndexLinear, typed_hcat, parent,
+              AbstractMatrix, AbstractVector, Number
 
 import Base.Broadcast: BroadcastStyle, Broadcasted, AbstractArrayStyle,
               broadcastable, DefaultArrayStyle, broadcasted
 
-import LinearAlgebra: BlasInt, BlasFloat, norm, ldiv!, mul!, det, cross,
+import LinearAlgebra: BlasFloat, norm, ldiv!, mul!, det, cross,
               qr, qr!, rank, isdiag, istril, istriu, issymmetric,
               Tridiagonal, diagm, diagm_container, factorize,
               nullspace, Hermitian, Symmetric, adjoint, transpose, char_uplo,
-              axpy!, eigvals
+              axpy!, eigvals, LU, checknonsingular, chkstride1
+
+import LinearAlgebra.LAPACK.chklapackerror
+
+import LinearAlgebra.BLAS: @blasfunc, libblas, liblapack, BlasInt
 
 import SparseArrays: blockdiag
 
@@ -80,7 +94,8 @@ import BandedMatrices: bandrange, inbands_setindex!, bandwidth,
               colstart, colstop, colrange, rowstart, rowstop, rowrange,
               bandwidths, _BandedMatrix, BandedMatrix, isbanded
 
-import BlockArrays: blocksize, block, blockaxes, blockindex, blocklengths
+import BlockArrays: blocksize, block, blockaxes, blockindex, blocklengths,
+                    BlockedMatrix
 import BlockBandedMatrices: blockbandwidth, blockbandwidths, blockcolstop,
               blockcolrange, blockcolstart, blockrowstop, blockrowstart,
               subblockbandwidth, subblockbandwidths, _BlockBandedMatrix,
@@ -160,7 +175,6 @@ _vcat_toabsvec(args...) = mapreduce(tuple_to_SVector, vcat, args)
 
 include("LinearAlgebra/LinearAlgebra.jl")
 include("Fun.jl")
-include("onehotvector.jl")
 include("Domains/Domains.jl")
 include("Multivariate/Multivariate.jl")
 include("Operators/Operator.jl")
@@ -171,5 +185,6 @@ include("eigen.jl")
 include("hacks.jl")
 include("specialfunctions.jl")
 include("show.jl")
+include("testutils.jl")
 
 end #module

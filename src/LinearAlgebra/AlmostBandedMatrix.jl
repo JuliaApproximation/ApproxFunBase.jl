@@ -35,7 +35,7 @@ end
 size(A::AlmostBandedMatrix) = size(A.bands)
 
 
-function getindex(B::AlmostBandedMatrix,k::Integer,j::Integer)
+Base.@propagate_inbounds function getindex(B::AlmostBandedMatrix,k::Integer,j::Integer)
     if j > k + bandwidth(B.bands,2)
         B.fill[k,j]
     else
@@ -44,7 +44,7 @@ function getindex(B::AlmostBandedMatrix,k::Integer,j::Integer)
 end
 
 # can only change the bands, not the fill
-function setindex!(B::AlmostBandedMatrix,v,k::Integer,j::Integer)
+Base.@propagate_inbounds function setindex!(B::AlmostBandedMatrix,v,k::Integer,j::Integer)
         B.bands[k,j] = v
 end
 

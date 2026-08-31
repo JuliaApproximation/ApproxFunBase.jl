@@ -18,7 +18,7 @@ end
 # that is, trace an operator down the diagonal.  What blocks correspond to the
 # block diagonal?
 # this is used to determine how many blocks to pad in the QR decomposition, as
-# every lower block gets added to the upper daigonal
+# every lower block gets added to the upper diagonal
 
 diagblockshift(a,b) = error("Developer: Not implemented for blocklengths $a, $b")
 
@@ -44,7 +44,7 @@ function diagblockshift(a::Vcat{Int,1,<:Tuple{V1,<:AbstractFill{Int}}},b::Abstra
     a1, b1 = a[1],b[1]
     a1 == b1 && return diagblockshift(Vcat(a.args[1][2:end],a.args[2]),b)
     a1 >  b1 && length(a.args[1]) == 1 && return 0
-    a1 >  b1 && return max(0,-1+diagblockshift(flatten(([a1-b1;a.args[1][2:end]],a.args[2]),b)))
+    a1 >  b1 && return max(0,-1+diagblockshift(Vcat([a1-b1;a.args[1][2:end]],a.args[2]),b))
     a1 <  b1 && length(a.args[1]) == 1 && return 1
     # a1 <  b1 &&
     return 1+diagblockshift(Vcat(a.args[1][2:end],a.args[2]),Vcat([b1-a1],b))
@@ -88,7 +88,7 @@ end
 #
 function resizedata!(B::CachedOperator{T,BlockBandedMatrix{T}},::Colon,col::Integer) where {T<:Number}
     if col > size(B,2)
-        throw(ArgumentError("Cannot resize beyound size of operator"))
+        throw(ArgumentError("Cannot resize beyond size of operator"))
     end
 
     if col > B.datasize[2]

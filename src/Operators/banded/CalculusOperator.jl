@@ -49,7 +49,7 @@ macro calculus_operator(Op)
             O = $Op(csp,k)
             C = ApproxFunBase.Conversion_maybeconcrete(sp, csp, Val(:forward))
             Top = ApproxFunBase.TimesOperator([O,C])
-            $WrappOp(Top, sp, k, ApproxFunBase.rangespace(O))
+            $WrappOp(Top, k, sp, ApproxFunBase.rangespace(O))
         end
 
         $DefaultOp(d,k) = $Op(ApproxFunBase.Space(d),k)
@@ -163,7 +163,7 @@ function linesum(f::Fun)
     cd=canonicaldomain(f)
     d=domain(f)
 
-    if isreal(d)
+    if isrealdomain(d)
         a,b=leftendpoint(d),rightendpoint(d)
         sign(last(b)-first(a))*sum(f)
     elseif typeof(cd)==typeof(d)  || isperiodic(d)
@@ -370,7 +370,7 @@ Spaces will be inferred when applying or manipulating the operator.
 Integral(k::Int)
 
 """
-    Intergral()
+    Integral()
 
 Return the first integral operator on an unset space.
 Spaces will be inferred when applying or manipulating the operator.

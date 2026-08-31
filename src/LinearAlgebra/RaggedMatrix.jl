@@ -11,7 +11,7 @@ struct RaggedMatrix{T} <: AbstractMatrix{T}
     cols::Vector{Int} # a Vector specifying the first index of each column
     m::Int #Number of rows
     function RaggedMatrix{T}(data::Vector{T}, cols::Vector{Int}, m::Int) where T
-        # make sure the cols are monitonically increasing
+        # make sure the cols are monotonically increasing
         @assert 1==cols[1]
         for j=1:length(cols)-1
             @assert cols[j] ≤ cols[j+1]

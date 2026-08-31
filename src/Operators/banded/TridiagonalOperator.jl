@@ -1,5 +1,5 @@
 ## This makes implementing operators simpler
-# but overrided BandedMatrix directly is likely to be faster
+# but overriding BandedMatrix directly is likely to be faster
 
 
 abstract type TridiagonalOperator{T} <: Operator{T} end

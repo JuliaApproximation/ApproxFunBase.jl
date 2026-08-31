@@ -1,4 +1,4 @@
-## Sequence space defintions
+## Sequence space definitions
 
 # A Fun for SequenceSpace can be an iterator
 iterate(::Fun{SequenceSpace}) = 1
@@ -29,7 +29,7 @@ coefficients(cfs::AbstractVector,::SequenceSpace) = cfs  # all vectors are conve
 
 
 
-## Constant space defintions
+## Constant space definitions
 
 containsconstant(A::Space) = containsconstant(typeof(A))
 containsconstant(@nospecialize(_)) = Val(false)
@@ -78,9 +78,13 @@ spacescompatible(a::ConstantSpace,b::ConstantSpace)=domainscompatible(a,b)
 
 ones(S::ConstantSpace) = Fun(S,fill(1.0,1))
 ones(S::Union{AnyDomain,UnsetSpace}) = ones(ConstantSpace())
-zeros(S::AnyDomain) = zero(ConstantSpace())
-zero(S::UnsetSpace) = zero(ConstantSpace())
-evaluate(f::AbstractVector,::ConstantSpace,x...)=f[1]
+zeros(S::AnyDomain) = zeros(ConstantSpace())
+zero(S::UnsetSpace) = zeros(ConstantSpace())
+_first_or_zero(f::AbstractVector) = get(f, 1, zero(eltype(f)))
+function evaluate(f::AbstractVector, sp::ConstantSpace, x)
+    x in domain(sp) || return zero(eltype(f))
+    _first_or_zero(f)
+end
 evaluate(f::AbstractVector,::ZeroSpace,x...)=zero(eltype(f))
 
 
@@ -89,6 +93,7 @@ convert(::Type{T}, f::Fun{CS}) where {CS<:ConstantSpace,T<:Number} =
 
 Number(f::Fun) = strictconvert(Number, f)
 
+isconstantfun(f::Fun{<:ConstantSpace}) = true
 
 # promoting numbers to Fun
 # override promote_rule if the space type can represent constants
@@ -99,9 +104,9 @@ Base.promote_rule(::Type{Fun{CS,V}},::Type{T}) where {CS<:ConstantSpace,T<:Numbe
 
 # we know multiplication by constants preserves types
 Base.promote_op(::typeof(*),::Type{Fun{CS,T,VT}},::Type{F}) where {CS<:ConstantSpace,T,VT,F<:Fun} =
-    promote_op(*,T,F)
+    Base.promote_op(*,T,F)
 Base.promote_op(::typeof(*),::Type{F},::Type{Fun{CS,T,VT}}) where {CS<:ConstantSpace,T,VT,F<:Fun} =
-    promote_op(*,F,T)
+    Base.promote_op(*,F,T)
 
 
 
@@ -140,6 +145,10 @@ function getindex(C::ConcreteConversion{CS,S,T},k::Integer,j::Integer) where {CS
     k ≤ ncoefficients(on) ? strictconvert(T,on.coefficients[k]) : zero(T)
 end
 
+function coefficients(f::Fun, msp::ConstantSpace)
+    isconstantfun(f) || throw(ArgumentError("cannot convert a non-constant Fun to ConstantSpace"))
+    _coefficients(f, msp)
+end
 
 coefficients(f::AbstractVector,sp::ConstantSpace{Segment{SVector{2,TT}}},
              ts::TensorSpace{SV,DD}) where {TT,SV,DD<:EuclideanDomain{2}} =
@@ -152,6 +161,9 @@ coefficients(f::AbstractVector, sp::ConstantSpace{<:Domain{<:Number}}, ts::Space
 coefficients(f::AbstractVector, sp::ConstantSpace, ts::Space) =
     f[1]*ones(ts).coefficients
 
+# a Fun{<:ConstantSpace} corresponds to a constant value within the domain, irrespective of the domain
+first(f::Fun{<:ConstantSpace}) = convert(Number, f)
+last(f::Fun{<:ConstantSpace}) = convert(Number, f)
 
 ########
 # Evaluation
@@ -173,8 +185,15 @@ defaultMultiplication(f::Fun,b::ConstantSpace) = ConcreteMultiplication(f,b)
 
 bandwidths(D::ConcreteMultiplication{CS1,CS2,T}) where {CS1<:ConstantSpace,CS2<:ConstantSpace,T} =
     0,0
-getindex(D::ConcreteMultiplication{CS1,CS2,T},k::Integer,j::Integer) where {CS1<:ConstantSpace,CS2<:ConstantSpace,T} =
-    k==j==1 ? strictconvert(T,D.f.coefficients[1]) : one(T)
+
+function getindex(D::ConcreteMultiplication{<:ConstantSpace,<:ConstantSpace,T},k::Integer,j::Integer) where {T}
+    if k==j==1
+        c = _first_or_zero(coefficients(D.f))
+        strictconvert(T, c)
+    else
+        one(T)
+    end
+end
 
 rangespace(D::ConcreteMultiplication{CS1,CS2,T}) where {CS1<:ConstantSpace,CS2<:ConstantSpace,T} =
     D.space
@@ -247,14 +266,14 @@ promoterangespace(M::ConcreteMultiplication{CS,UnsetSpace},
                              ps::Space) where {CS<:ConstantSpace} =
                         promoterangespace(Multiplication(M.f,space(M.f)),ps)
 
-# Possible hack: we try uing constant space for [1 Operator()] \ z.
+# Possible hack: we try using constant space for [1 Operator()] \ z.
 choosedomainspace(M::ConcreteMultiplication{D,UnsetSpace},sp::UnsetSpace) where {D<:ConstantSpace} = space(M.f)
 choosedomainspace(M::ConcreteMultiplication{D,UnsetSpace},sp::Space) where {D<:ConstantSpace} = space(M.f)
 
 Base.isfinite(f::Fun{CS}) where {CS<:ConstantSpace} = isfinite(Number(f))
 
 
+## Calculus
 
-
-
-
+integrate(f::Fun{<:ConstantSpace{<:IntervalOrSegment}}) = Number(f) * Fun(domain(f))
+differentiate(f::Fun{<:ConstantSpace{<:IntervalOrSegment}}) = zero(f)

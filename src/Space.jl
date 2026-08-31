@@ -92,7 +92,7 @@ end
 #     S=typeof(sp)
 #     @assert length(fieldnames(S))==1
 #     # the domain is not compatible, but maybe we c
-#     # can drop the space depence.  For example,
+#     # can drop the space dependence.  For example,
 #     # CosSpace{Circle{Float64}} -> CosSpace
 #     eval(Meta.parse(string(S.name.module)*"."*string(S.name)))(d)
 # end
@@ -218,7 +218,7 @@ function conversion_type(a, b)
     if spacescompatible(a,b)
         a
     elseif !domainscompatible(a,b)
-        NoSpace()  # this avoids having to check eachtime
+        NoSpace()  # this avoids having to check each time
     else
         cr=conversion_rule(a,b)
         cr==NoSpace() ? conversion_rule(b,a) : cr
@@ -246,7 +246,7 @@ function maxspace(a::Space, b::Space)
     if spacescompatible(a,b)
         return a
     elseif !domainscompatible(a,b)
-        return NoSpace()  # this avoids having to check eachtime
+        return NoSpace()  # this avoids having to check each time
     end
 
 
@@ -500,6 +500,11 @@ plan_itransform!(sp::Space,v) = ICanonicalTransformPlan(sp, v, Val(true))
 # transform converts from values at points(S,n) to coefficients
 # itransform converts from coefficients to values at points(S,n)
 
+# convert to strided arrays, as currently the inverse performs inplace scaling
+# ideally, this should not be needed if FastTransforms avoids modifying cfs
+_toStridedArray(cfs::StridedArray) = cfs
+_toStridedArray(cfs::AbstractArray) = convert(Array, cfs)
+
 """
     transform(s::Space, vals)
 
@@ -529,7 +534,10 @@ julia> transform(Chebyshev(), v)
  0.0
 ```
 """
-transform(S::Space, vals) = plan_transform(S,vals)*vals
+function transform(S::Space, vals)
+    valsf = convert(AbstractArray{float(eltype(vals))}, vals)
+    plan_transform(S,valsf)*_toStridedArray(valsf)
+end
 
 """
     itransform(s::Space,coefficients::AbstractVector)
@@ -551,7 +559,10 @@ julia> itransform(Chebyshev(), [0.5, 0, 0.5])
  0.75
 ```
 """
-itransform(S::Space, cfs) = plan_itransform(S,cfs)*cfs
+function itransform(S::Space, cfs)
+    cfsf = convert(AbstractArray{float(eltype(cfs))}, cfs)
+    plan_itransform(S,cfsf)*_toStridedArray(cfsf)
+end
 
 itransform!(S::Space,cfs) = plan_itransform!(S,cfs)*cfs
 transform!(S::Space,cfs) = plan_transform!(S,cfs)*cfs
@@ -589,7 +600,7 @@ for OP in (:plan_transform,:plan_itransform,:plan_transform!,:plan_itransform!)
 end
 
 ## sorting
-# we sort spaces lexigraphically by default
+# we sort spaces lexicographically by default
 
 for OP in (:<,:(<=),:(isless))
     @eval $OP(a::Space,b::Space)=$OP(string(a),string(b))
@@ -696,15 +707,15 @@ basis function.
 
 # Examples
 ```jldoctest
-julia> Chebyshev()(2)
-Fun(Chebyshev(), [0.0, 0.0, 1.0])
+julia> Chebyshev()(2) == Fun(Chebyshev(), [0, 0, 1])
+true
 ```
 """
 (s::Space)(n::Integer) = basisfunction(s, n+1)
 """
     (s::Space)(n::Integer, points...)
 
-Evaluate `s(n)(points...)`
+Evaluate `Fun(s, [zeros(n); 1])(points...)` efficiently without allocating the vector of coefficients.
 
 # Examples
 ```jldoctest
@@ -713,3 +724,9 @@ julia> Chebyshev()(1, 0.5)
 ```
 """
 (s::Space)(n::Integer, args...) = s(n)(args...)
+
+# assume that the basis label starts at zero
+function basisfunction(sp, oneindex)
+    oneindex >= 0 || throw(ArgumentError("index to set to one must be non-negative, received $oneindex"))
+    Fun(sp, OneElement{Float64}(oneindex, oneindex))
+end

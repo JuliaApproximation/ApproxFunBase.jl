@@ -306,7 +306,7 @@ function canonicalevaluate(f::ProductFun{S,V,SS,T},x::Number,::Colon) where {S,V
 end
 canonicalevaluate(f::ProductFun,x::Number,y::Number) = canonicalevaluate(f,x,:)(y)
 canonicalevaluate(f::ProductFun{S,V,SS},x::Colon,y::Number) where {S,V,SS<:TensorSpace} =
-    evaluate(transpose(f),y,:)  # doesn't make sense For general product fon without specifying space
+    evaluate(transpose(f),y,:)  # doesn't make sense For general product fun without specifying space
 
 canonicalevaluate(f::ProductFun,xx::AbstractVector,yy::AbstractVector) =
     transpose(hcat([evaluate(f,x,:)(yy) for x in xx]...))
@@ -412,9 +412,9 @@ end
 
 #For complex bases
 Base.real(f::ProductFun{S,V,SS}) where {S,V,SS<:TensorSpace} =
-    transpose(real(transpose(ProductFun(real(u.coefficients),space(u)))))-transpose(imag(transpose(ProductFun(imag(u.coefficients),space(u)))))
+    transpose(real(transpose(ProductFun(real(f.coefficients),space(f)))))-transpose(imag(transpose(ProductFun(imag(f.coefficients),space(f)))))
 Base.imag(f::ProductFun{S,V,SS}) where {S,V,SS<:TensorSpace} =
-    transpose(real(transpose(ProductFun(imag(u.coefficients),space(u)))))+transpose(imag(transpose(ProductFun(real(u.coefficients),space(u)))))
+    transpose(real(transpose(ProductFun(imag(f.coefficients),space(f)))))+transpose(imag(transpose(ProductFun(real(f.coefficients),space(f)))))
 
 
 

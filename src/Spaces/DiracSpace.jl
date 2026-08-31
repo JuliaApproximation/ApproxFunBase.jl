@@ -79,8 +79,11 @@ Fun(::typeof(identity), S::DiracSpace) = Fun(PointSpace(S.points),S.points)
 transform(S::PointSpace,v::AbstractVector,plan...) = v
 values(f::Fun{S}) where S<:PointSpace = coefficient(f,:)
 
-function evaluate(f::AbstractVector,PS::PointSpace,x::Number)
-    p = findfirst(y->isapprox(x,y),PS.points)
+first(f::Fun{<:PointSpace}) = coefficients(f)[1]
+last(f::Fun{<:PointSpace}) = coefficients(f)[end]
+
+function evaluate(f::AbstractVector, PS::PointSpace, x)
+    p = findfirst(≈(convert(Number,x)), PS.points)
     if p === nothing
         zero(eltype(f))
     else
@@ -88,10 +91,8 @@ function evaluate(f::AbstractVector,PS::PointSpace,x::Number)
     end
 end
 
-function evaluate(f::AbstractVector, PS::DiracSpace, x::Number)
-    x ∉ domain(PS) && return zero(eltype(f))
-
-    p = findfirst(y->isapprox(x,y), PS.points)
+function evaluate(f::AbstractVector, PS::DiracSpace, x)
+    p = findfirst(≈(convert(Number,x)), PS.points)
     if p === nothing
         zero(eltype(f))
     else
@@ -100,7 +101,7 @@ function evaluate(f::AbstractVector, PS::DiracSpace, x::Number)
 end
 
 Base.sum(f::Fun{DS}) where DS<:DiracSpace =
-    sum(f.coefficients[1:dimension(space(f))])
+    sum(@view f.coefficients[1:dimension(space(f))])
 
 DiracDelta(x::Number)=Fun(DiracSpace(x),[1.])
 DiracDelta()=DiracDelta(0.)

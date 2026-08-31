@@ -1,10 +1,6 @@
 # This file is based on rowvector.jl in Julia. License is MIT: https://julialang.org/license
 # The motivation for this file is to allow RowVector which doesn't transpose the entries
 
-import Base: convert, similar, length, size, axes, IndexStyle,
-            IndexLinear, @propagate_inbounds, getindex, setindex!,
-            broadcast, hcat, typed_hcat, map, parent
-
 """
     RowVector(vector)
 
@@ -68,7 +64,7 @@ to_vec(x) = x
 # expects to operate within the transposed domain, so to_vec transposes the elements
 @inline map(f, rowvecs::RowVector...) = RowVector(map(f, to_vecs(rowvecs...)...))
 
-# broacast (other combinations default to higher-dimensional array)
+# broadcast (other combinations default to higher-dimensional array)
 @inline broadcast(f, rowvecs::Union{Number,RowVector}...) =
     RowVector(broadcast(f, to_vecs(rowvecs...)...))
 

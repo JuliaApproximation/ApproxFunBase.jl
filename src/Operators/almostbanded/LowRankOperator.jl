@@ -27,7 +27,7 @@ end
 
 LowRankOperator(U::Vector{VFun{S,T}}, V::Vector{<:Operator{T}}) where {S,T} = LowRankOperator{S,T}(U,V)
 function LowRankOperator(U::Vector{VFun{S,T1}}, V::Vector{<:Operator}) where {S,T1}
-    T2 = eltype(eltype(v))
+    T2 = eltype(eltype(V))
     T = promote_type(T1,T2)
     LowRankOperator(strictconvert(Vector{VFun{S,T}},U), map(Operator{T}, V))
 end
@@ -71,8 +71,10 @@ rank(L::LowRankOperator) = length(L.U)
 *(L::LowRankOperator,f::Fun) = sum(map((u,v)->u*(v*f),L.U,L.V))
 
 
-*(A::LowRankOperator,B::LowRankOperator) = LowRankOperator(transpose(A.V*B.transpose(U))*A.U,B.V)
-# avoid ambiguituy
+# (A*B)*f == A*(B*f) == sum(A*B.U[k] * (B.V[k]*f) for k in eachindex(B.U)),
+# as B.V[k]*f is a constant
+*(A::LowRankOperator,B::LowRankOperator) = LowRankOperator(map(u->A*u, B.U), B.V)
+# avoid ambiguity
 for TYP in (:TimesOperator,:PlusOperator,:Conversion,:Operator)
     @eval *(L::LowRankOperator,B::$TYP) = LowRankOperator(L.U,map(v->v*B,L.V))
     @eval *(B::$TYP,L::LowRankOperator) = LowRankOperator(map(u->B*u,L.U),L.V)

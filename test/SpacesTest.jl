@@ -1,9 +1,10 @@
 using ApproxFunBase
-using Test
 using ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, SVector, checkpoints, AnyDomain
-using StaticArrays
 using BandedMatrices: rowrange, colrange, BandedMatrix
+using DomainSets: Point
 using LinearAlgebra
+using StaticArrays
+using Test
 
 @testset "Spaces" begin
     @testset "PointSpace" begin
@@ -11,6 +12,9 @@ using LinearAlgebra
 
         f = @inferred Fun(x->(x-0.1),PointSpace([0,0.1,1]))
         @test roots(f) == [0.1]
+        @test first(f) == -0.1
+        @test last(f) == 0.9
+        @test f(Point(0)) == -0.1
 
         a = @inferred Fun(exp, space(f))
         @test f/a == @inferred Fun(x->(x-0.1)*exp(-x),space(f))
@@ -70,6 +74,7 @@ using LinearAlgebra
                 @test ApproxFunBase.intpow(f, n) == f^n == reduce(*, fill(f, n))
             end
             @test ApproxFunBase.intpow(f,-2) == f^-2 == 1/(f*f)
+            @test f^2 == f^UInt(2)
 
             if VERSION >= v"1.8"
                 @test (@inferred (x -> x^1)(sp)) == sp
@@ -203,6 +208,11 @@ using LinearAlgebra
             F = Fun{typeof(PointSpace(1:3)), Float32}
             @test ApproxFunBase.cfstype(F) == Float32
         end
+
+        @testset "isconstantfun" begin
+            f = Fun(PointSpace(1:4), ones(4))
+            @test ApproxFunBase.isconstantfun(f)
+        end
     end
 
     @testset "DiracSpace" begin
@@ -211,6 +221,8 @@ using LinearAlgebra
         @test f(0.5) == 0
         @test f(5) == 0
         @test isinf(f(0))
+        @test isinf(f(Point(0)))
+        @test sum(f) == 6
     end
 
     @testset "Derivative operator for HeavisideSpace" begin
@@ -237,6 +249,30 @@ using LinearAlgebra
         a = HeavisideSpace(0:0.25:1)
         @test dimension(a) == 4
         @test @inferred(points(a)) == 0.125:0.25:0.875
+    end
+
+    @testset "piecewise linear SplineSpace" begin
+        f = Fun(HeavisideSpace([-1.0, 0.0, 1.0]), [1.0, 2.0])
+        g = integrate(f)
+        @test space(g) isa ApproxFunBase.SplineSpace{1}
+        # g is piecewise linear, and interpolates the coefficients at the nodes
+        @test values(g) == coefficients(g)
+        @test g.(points(g)) == values(g)
+        @test g(-0.5) == 0.5
+        @test g(0.5) == 2.0
+        @test g(1.0) == sum(f)
+        # outside the domain
+        @test g(2.0) == 0
+        @test coefficients(differentiate(g)) == coefficients(f)
+
+        # fewer coefficients than the dimension of the space
+        h = Fun(space(g), [0.0, 1.0])
+        @test h(-0.5) == 0.5
+        @test h(0.5) == 0
+
+        # evaluate is not restricted to coefficients that come from a Fun
+        @test_throws AssertionError ApproxFunBase.evaluate(zeros(4), space(g), 0.0)
+        @test_throws AssertionError ApproxFunBase.evaluate(zeros(3), space(f), 0.0)
     end
 
     @testset "DiracDelta integration and differentiation" begin
@@ -294,6 +330,13 @@ using LinearAlgebra
             @test a == a
             @test a != b
         end
+
+        @testset "points" begin
+            S = PointSpace(1:4) ⊗ PointSpace(1:4)
+            P = points(S, 4, 4)
+            @test P[1] == repeat(1:4, 1, 4)
+            @test P[2] == repeat((1:4)', 4, 1)
+        end
     end
 
     @testset "ConstantSpace" begin
@@ -308,11 +351,27 @@ using LinearAlgebra
         @test g > f
         @test g >= f
         @test 1 < f < 3
+        @test differentiate(f) == Fun(0, ConstantSpace(0..1))
+        @test f(-1) == 0
+        @test first(f) == last(f) == 2
+        @test ApproxFunBase.isconstantfun(f)
+
+        f = Fun(2, ConstantSpace())
+        @test first(f) == last(f) == 2
 
         @test maxspace(ConstantSpace(Point(1)), ConstantSpace(Point(2))) == ConstantSpace(Point(1) ∪ Point(2))
         @test maxspace(ConstantSpace(Point(1)), ConstantSpace(AnyDomain())) == ConstantSpace(Point(1))
         @test maxspace(ConstantSpace(AnyDomain()), ConstantSpace(Point(2))) == ConstantSpace(Point(2))
         @test maxspace(ConstantSpace(AnyDomain()), ConstantSpace(AnyDomain())) == ConstantSpace(AnyDomain())
+
+        f = Fun(ConstantSpace(), Float64[])
+        g = Fun(ConstantSpace(), Float64[0])
+        @test f(0) == g(0) == 0
+
+        C = Multiplication(f, space(f))
+        @test all(iszero, AbstractMatrix(C))
+        C = Multiplication(g, space(g))
+        @test all(iszero, AbstractMatrix(C))
     end
 
     @testset "promotion" begin
@@ -360,6 +419,31 @@ using LinearAlgebra
         A = ApproxFunBase.ArraySpace(empty!([PointSpace(1:3)]))
         @test length(A) == 0
         @test ApproxFunBase.dimension(A) == 0
+
+        @testset "values" begin
+            # the two spaces exercise different paths: an ArraySpace of
+            # HeavisideSpaces lies over a numeric domain and has a trivial
+            # interlacer, so that the component coefficients are views
+            @testset for S in (PointSpace(1:3), ApproxFunBase.HeavisideSpace([-1.0, -0.5, 0.0, 1.0]))
+                @testset for sz in ((2,), (2,2))
+                    A = ApproxFunBase.ArraySpace(S, sz...)
+                    # 3 coefficients per component, so that each component
+                    # may be evaluated on the full grid
+                    n = 3length(A)
+                    f = Fun(A, Float64.(1:n))
+                    v = values(f)
+                    @test all(x -> size(x) == sz, v)
+                    @test v == f.(points(f))
+                    @test !iszero(f)
+                    @test iszero(Fun(A, zeros(n)))
+                end
+            end
+
+            # static array space
+            A = ApproxFunBase.ArraySpace(PointSpace(1:3), Val((2,2)))
+            f = Fun(A, Float64.(1:3length(A)))
+            @test values(f) == f.(points(f))
+        end
     end
 
     @testset "PiecewiseSpace" begin

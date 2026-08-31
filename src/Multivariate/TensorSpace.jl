@@ -15,7 +15,7 @@ factor(d::AbstractProductSpace,k) = factors(d)[k]
 ##### Tensorizer
 # This gives the map from coefficients to the
 # tensor entry of a tensor product of d spaces
-# findfirst is overriden to get efficient inverse
+# findfirst is overridden to get efficient inverse
 # blocklengths is a tuple of block lengths, e.g., Chebyshev()^2
 # would be Tensorizer((Ones{Int}(∞), Ones{Int}(∞)))
 # ConstantSpace() ⊗ Chebyshev()
@@ -43,7 +43,7 @@ Base.IteratorSize(::Type{Tensorizer{T}}) where {T<:Tuple} = _IteratorSize(T)
 Base.keys(a::Tensorizer) = oneto(length(a))
 
 function start(a::TrivialTensorizer{d}) where {d}
-    # ((block_dim_1, block_dim_2,...), (itaration_number, iterator, iterator_state)), (itemssofar, length)
+    # ((block_dim_1, block_dim_2,...), (iteration_number, iterator, iterator_state)), (itemssofar, length)
     block = ntuple(one, d)
     return (block, (0, nothing, nothing)), (0,length(a))
 end
@@ -213,7 +213,7 @@ block(sp::Tensorizer,k::Int) = Block(findfirst(x->x≥k, _cumsum(blocklengths(sp
 block(sp::CachedIterator,k::Int) = block(sp.iterator,k)
 
 blocklength(it,k) = blocklengths(it)[k]
-blocklength(it,k::Block) = blocklength(it,k.n[1])
+blocklength(it,k::Block) = blocklength(it,Int(k))
 blocklength(it,k::BlockRange) = blocklength(it,Int.(k))
 
 blocklengths(::TrivialTensorizer{2}) = 1:∞
@@ -237,8 +237,8 @@ _K_sum(bl::AbstractVector, K) = sum(bl[1:K])
 _K_sum(bl::Integer, K) = bl
 blockstop(it, K)::Int = _K_sum(blocklengths(it), K)
 
-blockstart(it,K::Block) = blockstart(it,K.n[1])
-blockstop(it,K::Block) = blockstop(it,K.n[1])
+blockstart(it,K::Block) = blockstart(it,Int(K))
+blockstop(it,K::Block) = blockstop(it,Int(K))
 
 
 blockrange(it,K) = blockstart(it,K):blockstop(it,K)
@@ -249,10 +249,10 @@ blockrange(it,K::BlockRange) = blockstart(it,first(K)):blockstop(it,last(K))
 
 # convert from block, subblock to tensor
 subblock2tensor(rt::TrivialTensorizer{2},K,k) =
-    (k,K.n[1]-k+1)
+    (k,Int(K)-k+1)
 
 subblock2tensor(rt::CachedIterator{II,TrivialTensorizer{2}},K,k) where {II} =
-    (k,K.n[1]-k+1)
+    (k,Int(K)-k+1)
 
 
 subblock2tensor(rt::CachedIterator,K,k) = rt[blockstart(rt,K)+k-1]
@@ -273,7 +273,7 @@ tensorblocklengths(a,b,c,d...) = tensorblocklengths(tensorblocklengths(a,b),c,d.
     TensorSpace(a::Space,b::Space)
 
 represents a tensor product of two 1D spaces `a` and `b`.
-The coefficients are interlaced in lexigraphical order.
+The coefficients are interlaced in lexicographical order.
 
 For example, consider
 ```julia
@@ -318,8 +318,8 @@ tensor_eval_type(_,::Type{Vector{Any}}) = Vector{Any}
 
 # Specialize some common cases to avoid mapreduce, which has inference issues
 _typeofproddomain(sp::Tuple{Any}) = typeof(domain(sp[1]))
-_typeofproddomain(sp::Tuple{Any,Any}) = typeof(domain(sp[1]) × domain(sp[2]))
-_typeofproddomain(sp) = typeof(mapreduce(domain,×,sp))
+_typeofproddomain(sp::Tuple{Any,Any}) = typeof(cartesianproduct(domain(sp[1]), domain(sp[2])))
+_typeofproddomain(sp) = typeof(mapreduce(domain, cartesianproduct, sp))
 TensorSpace(sp::Tuple) =
     TensorSpace{typeof(sp), _typeofproddomain(sp),
                 mapreduce(rangetype,tensor_eval_type,sp)}(sp)
@@ -354,7 +354,7 @@ TensorSpace(A::ProductDomain) = TensorSpace(tuple(map(Space,components(A))...))
 ⊗(A::Space,B::TensorSpace) = TensorSpace(A,B.spaces...)
 ⊗(A::Space,B::Space) = TensorSpace(A,B)
 
-domain(f::TensorSpace) = ×(domain.(f.spaces)...)
+domain(f::TensorSpace) = cartesianproduct(domain.(f.spaces)...)
 Space(sp::ProductDomain) = TensorSpace(sp)
 
 setdomain(sp::TensorSpace, d::ProductDomain) = TensorSpace(setdomain.(factors(sp), factors(d)))
@@ -427,7 +427,7 @@ function ProductSpace(spacesx::AbstractVector, spacey)
     Tdx = mapreduce(s->eltype(domain(s)),promote_type,spacesx)
     Tdy = eltype(dy)
     Td = promote_type(Tdx, Tdy)
-    d = convert(Domain{Td}, dx) × convert(Domain{Td}, dy)
+    d = cartesianproduct(convert(Domain{Td}, dx), convert(Domain{Td}, dy))
     ProductSpace{eltype(spacesx),typeof(spacey),typeof(d),Td}(spacesx, spacey, d)
 end
 
@@ -565,10 +565,20 @@ end
 points(d::Union{EuclideanDomain{2},BivariateSpace},n,m) = points(d,n,m,1),points(d,n,m,2)
 
 function points(d::BivariateSpace,n,m,k)
-    ptsx=points(columnspace(d,1),n)
-    ptst=points(factor(d,2),m)
+    k ∈ (1,2) || throw(ArgumentError("k must be 1 or 2"))
 
-    promote_type(eltype(ptsx),eltype(ptst))[fromcanonical(d,x,t)[k] for x in ptsx, t in ptst]
+    ptsx = points(columnspace(d,1), n)
+    ptst = points(factor(d,2), m)
+
+    T = promote_eltypeof(ptsx, ptst)
+
+    A = if k == 1
+        repeat(ptsx, 1, m)
+    else # k == 2
+        repeat(reshape(ptst, 1, m), n)
+    end
+
+    convert(AbstractArray{T}, A)
 end
 
 
@@ -602,10 +612,10 @@ function totensor(it::Tensorizer,M::AbstractVector)
     n=length(M)
     B=block(it,n)
 
-    #ret=zeros(eltype(M),[sum(it.blocks[i][1:min(B.n[1],length(it.blocks[i]))]) for i=1:length(it.blocks)]...)
+    #ret=zeros(eltype(M),[sum(it.blocks[i][1:min(Int(B),length(it.blocks[i]))]) for i=1:length(it.blocks)]...)
 
-    ret=zeros(eltype(M),sum(it.blocks[1][1:min(B.n[1],length(it.blocks[1]))]),
-                        sum(it.blocks[2][1:min(B.n[1],length(it.blocks[2]))]))
+    ret=zeros(eltype(M),sum(it.blocks[1][1:min(Int(B),length(it.blocks[1]))]),
+                        sum(it.blocks[2][1:min(Int(B),length(it.blocks[2]))]))
 
     k=1
     for index in it

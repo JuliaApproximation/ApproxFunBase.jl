@@ -109,7 +109,7 @@ inner product given the boundary conditions `B`.
 The optional argument `QuotientSpaceType` specifies the type of space to be used to denote the quotient space in the basis
 recombination process. In most cases, the default choice of `QuotientSpace` is a good one. In specific instances where `B`
 is rank-deficient (e.g. it contains a column of zeros,
-which typically happens if one of the basis elements already satiafies the boundary conditions),
+which typically happens if one of the basis elements already satisfies the boundary conditions),
 one may need to choose this to be a `PathologicalQuotientSpace`.
 
 !!! note
@@ -130,7 +130,7 @@ inner product given the boundary conditions `B`.
 The optional argument `QuotientSpaceType` specifies the type of space to be used to denote the quotient space in the basis
 recombination process. In most cases, the default choice of `QuotientSpace` is a good one. In specific instances where `B`
 is rank-deficient (e.g. it contains a column of zeros,
-which typically happens if one of the basis elements already satiafies the boundary conditions),
+which typically happens if one of the basis elements already satisfies the boundary conditions),
 one may need to choose this to be a `PathologicalQuotientSpace`.
 
 !!! note
