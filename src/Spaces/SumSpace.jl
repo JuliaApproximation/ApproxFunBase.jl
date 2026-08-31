@@ -25,7 +25,7 @@ ncomponents(f::Fun) = ncomponents(space(f))
 
 BlockInterlacer(sp::DirectSumSpace) = BlockInterlacer(map(blocklengths,sp.spaces))
 interlacer(sp::DirectSumSpace) = BlockInterlacer(sp)
-interlacer(sp::Space) = BlockInterlacer(blocklengths(sp))
+interlacer(sp::Space) = BlockInterlacer(tuple(blocklengths(sp)))
 
 function blocklengths(sp::DirectSumSpace)
     bl=map(blocklengths,components(sp))
