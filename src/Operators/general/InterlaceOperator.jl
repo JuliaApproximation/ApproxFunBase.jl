@@ -229,11 +229,21 @@ InterlaceOperator(ops::AbstractArray, ds=NoSpace, rs=ds) =
     InterlaceOperator(Array{Operator{promote_eltypeof(ops)}, ndims(ops)}(ops), ds, rs)
 
 
+# `map` over a `Diagonal` runs the function on the structural zeros as well, which
+# for operator eltypes either errors or silently drops the diagonal structure,
+# depending on how the diagonal is stored. Map over the diagonal itself instead.
+_mapops(f, ops) = map(f, ops)
+_mapops(f, ops::Diagonal) = Diagonal(map(f, parent(ops)))
+
+# a dense array of operators, with the structural zeros of a `Diagonal` filled in
+_denseops(ops) = ops
+_denseops(ops::Diagonal) = [ops[k,j] for k in axes(ops,1), j in axes(ops,2)]
+
 function convert(::Type{Operator{T}},S::InterlaceOperator) where T
     if T == eltype(S)
         S
     else
-        ops = map(x -> convert(Operator{T},x), S.ops)
+        ops = _mapops(x -> convert(Operator{T},x), S.ops)
         InterlaceOperator(ops,domainspace(S),rangespace(S),
                             S.domaininterlacer,S.rangeinterlacer,S.bandwidths,
                             S.blockbandwidths, S.israggedbelow)
@@ -428,7 +438,7 @@ function blockbanded_interlace_convert!(S,ret)
                 KR_size = Block.(Int(first(KR)):min(Int(last(KR)),blocksize(op,1)))
                 JR_size = Block.(Int(first(JR)):min(Int(last(JR)),blocksize(op,2)))
                 BlockBandedMatrix(view(op, KR_size, JR_size))
-            end, parent(S).ops)
+            end, _denseops(parent(S).ops))
 
     for J=blockaxes(ret,2),K=blockcolrange(ret,J)
         Bs=view(ret,K,J)
