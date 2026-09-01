@@ -80,21 +80,37 @@ function _PiecewiseSpace(sp)
     PiecewiseSpace{typeof(sp),typeof(UnionDomain(map(domain,sp))),
                    mapreduce(rangetype,promote_type,sp)}(sp)
 end
+# `union` removes duplicates, but it always returns a `Vector`, which would drop the
+# number of pieces and their individual types from the type of a tuple of spaces.
+# Duplicates are rare here -- `union(::Space, ::Space)` already short-circuits equal
+# spaces before a `PiecewiseSpace` is built -- so keep the tuple when nothing was
+# removed, and only fall back to the vector that `union` returned when it was.
+_uniquespaces(sp::AbstractVector) = union(sp)
+function _uniquespaces(sp::Tuple)
+    u = union(sp)
+    length(u) == length(sp) ? sp : u
+end
+
 function PiecewiseSpace(spacesin::Union{Tuple{Vararg{Space}}, AbstractVector{<:Space}})
-    sp = union(spacesin)  # remove duplicates
-    _PiecewiseSpace(sp)
+    _PiecewiseSpace(_uniquespaces(spacesin))
 end
 
 PiecewiseSpace(spacesin::Set) = PiecewiseSpace(collect(spacesin))
 
 PiecewiseSpace(A::PiecewiseSpace, B::PiecewiseSpace) =
-    PiecewiseSpace(_vcat_toabsvec(A.spaces, B.spaces))
+    PiecewiseSpace(_vcat_preservecontainer(A.spaces, B.spaces))
 
-PiecewiseSpace(A::Space,B::PiecewiseSpace) = PiecewiseSpace(_vcat_toabsvec(A, B.spaces))
-PiecewiseSpace(A::PiecewiseSpace,B::Space) = PiecewiseSpace(_vcat_toabsvec(A.spaces, B))
+PiecewiseSpace(A::Space,B::PiecewiseSpace) = PiecewiseSpace(_vcat_preservecontainer(A, B.spaces))
+PiecewiseSpace(A::PiecewiseSpace,B::Space) = PiecewiseSpace(_vcat_preservecontainer(A.spaces, B))
 PiecewiseSpace(A::Space...) = PiecewiseSpace(A)
 
-canonicalspace(A::PiecewiseSpace) = PiecewiseSpace(sort(convert_vector_or_svector(A.spaces)))
+# `sort` of a tuple is only defined if every piece has the same type, so fall back to
+# permuting by a sorted vector for a mix of spaces. Either way a tuple stays a tuple.
+_sortspaces(sp::AbstractVector) = sort(sp)
+_sortspaces(sp::Tuple{T,Vararg{T}}) where {T} = sort(sp)
+_sortspaces(sp::Tuple) = sp[sortperm(convert_vector(sp))]
+
+canonicalspace(A::PiecewiseSpace) = PiecewiseSpace(_sortspaces(A.spaces))
 
 pieces(sp::PiecewiseSpace) = sp.spaces
 piece(s::Space,k) = pieces(s)[k]
@@ -114,8 +130,16 @@ setdomain(A::PiecewiseSpace,d::UnionDomain) =
 
 
 
-function spacescompatible(A::S,B::S) where S<:DirectSumSpace
-    if ncomponents(A) != ncomponents(B)
+# Two direct sums are compatible if they are the same kind of sum and their pieces
+# match up. The pieces may be stored as a tuple in one and as a vector in the other,
+# so this must not require the two spaces to have the same type.
+_directsumkind(::SumSpace) = SumSpace
+_directsumkind(::PiecewiseSpace) = PiecewiseSpace
+
+function spacescompatible(A::DirectSumSpace,B::DirectSumSpace)
+    if _directsumkind(A) !== _directsumkind(B)
+        false
+    elseif ncomponents(A) != ncomponents(B)
         false
     else
         ret=true
@@ -142,7 +166,18 @@ end
 Base.promote_rule(::Type{Fun{SumSpace{SV,D,R}}},::Type{T}) where {SV,D,R,T<:Number} =
     promote_rule(VFun{SumSpace{SV,D,R},Float64},T)
 
-function Base.promote_rule(::Type{Fun{PiecewiseSpace{SV,D,R},V,VV}},::Type{T}) where {SV,D,R,V,VV,T<:Number}
+# pieces stored in a vector: there is no per-piece type to promote, only the element type
+function Base.promote_rule(::Type{Fun{PiecewiseSpace{SV,D,R},V,VV}},
+        ::Type{T}) where {SV<:AbstractVector,D,R,V,VV,T<:Number}
+    newf = promote_type(VFun{eltype(SV),V},T)
+    if newf == Fun
+        Fun
+    else
+        VFun{PiecewiseSpace{Vector{newf.parameters[1]},D,R},promote_type(V,T)}
+    end
+end
+
+function Base.promote_rule(::Type{Fun{PiecewiseSpace{SV,D,R},V,VV}},::Type{T}) where {SV<:Tuple,D,R,V,VV,T<:Number}
     # if any doesn't support promoting, just leave unpromoted
 
     newfsp=map(s->promote_type(VFun{s,V},T),SV.parameters)

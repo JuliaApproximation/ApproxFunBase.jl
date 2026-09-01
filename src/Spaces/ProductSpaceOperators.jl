@@ -187,6 +187,10 @@ end
 
 
 
+# combine the pieces of two direct sums one by one, keeping tuples as tuples
+_mapspaces(f,S1::Tuple,S2::Tuple) = map(f,S1,S2)
+_mapspaces(f,S1,S2) = [f(S1[k],S2[k]) for k=1:length(S1)]
+
 for (OPrule,OP) in ((:conversion_rule,:conversion_type),(:maxspace_rule,:maxspace),
                         (:union_rule,:union))
     for TYP in (:SumSpace,:PiecewiseSpace)
@@ -202,7 +206,7 @@ for (OPrule,OP) in ((:conversion_rule,:conversion_type),(:maxspace_rule,:maxspac
                 # we can just map down
                 # $TYP(map($OP,S1.spaces,S2.spaces))
                 # this is commented out due to Issue #13261
-                newspaces = [$OP(S1[k],S2[k]) for k=1:length(S1)]
+                newspaces = _mapspaces($OP,S1,S2)
                 if any(b->b==NoSpace(),newspaces)
                     NoSpace()
                 else

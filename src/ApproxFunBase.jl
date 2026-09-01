@@ -173,6 +173,17 @@ tuple_to_SVector(t::Tuple) = SVector(t)
 tuple_to_SVector(x) = x
 _vcat_toabsvec(args...) = mapreduce(tuple_to_SVector, vcat, args)
 
+# Concatenation that preserves how the pieces are stored. Each argument is either a
+# container of spaces or a single space. Tuples stay tuples, so the number of pieces and
+# the type of each one remain in the type; as soon as a runtime-length vector is involved
+# the result is a vector.
+_ascontainer(x::Tuple) = x
+_ascontainer(x::AbstractVector) = x
+_ascontainer(x) = (x,)
+_vcat_containers(a::Tuple, b::Tuple) = (a..., b...)
+_vcat_containers(a, b) = _vcat_toabsvec(a, b)
+_vcat_preservecontainer(a, b) = _vcat_containers(_ascontainer(a), _ascontainer(b))
+
 include("LinearAlgebra/LinearAlgebra.jl")
 include("Fun.jl")
 include("Domains/Domains.jl")
