@@ -191,6 +191,10 @@ end
 _mapspaces(f,S1::Tuple,S2::Tuple) = map(f,S1,S2)
 _mapspaces(f,S1,S2) = [f(S1[k],S2[k]) for k=1:length(S1)]
 
+# The pieces of the two spaces may be stored in different containers, and a tuple never
+# compares equal to a vector however its elements compare, so compare the pieces.
+_samespaces(S1,S2) = length(S1) == length(S2) && all(((a,b),) -> a == b, zip(S1,S2))
+
 for (OPrule,OP) in ((:conversion_rule,:conversion_type),(:maxspace_rule,:maxspace),
                         (:union_rule,:union))
     for TYP in (:SumSpace,:PiecewiseSpace)
@@ -202,7 +206,7 @@ for (OPrule,OP) in ((:conversion_rule,:conversion_type),(:maxspace_rule,:maxspac
                 NoSpace()
             elseif canonicalspace(S1sp) == canonicalspace(S2sp)  # this sorts S1 and S2
                 S1sp ≤ S2sp ? S1sp : S2sp  # choose smallest space by sorting
-            elseif cs1 == cs2
+            elseif _samespaces(cs1,cs2)
                 # we can just map down
                 # $TYP(map($OP,S1.spaces,S2.spaces))
                 # this is commented out due to Issue #13261
@@ -215,7 +219,8 @@ for (OPrule,OP) in ((:conversion_rule,:conversion_type),(:maxspace_rule,:maxspac
             elseif sort(collect(cs1)) == sort(collect(cs2))
                 # sort S1
                 p=perm(cs1,cs2)
-                $OP($TYP(S1[p]),S2sp)
+                # a permutation that reorders nothing would recurse forever
+                p == 1:length(S1) ? NoSpace() : $OP($TYP(S1[p]),S2sp)
             elseif length(S1) == length(S2) == 2  &&
                     $OP(S1[1],S2[1]) != NoSpace() &&
                     $OP(S1[2],S2[2]) != NoSpace()
