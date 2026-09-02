@@ -86,7 +86,7 @@ end
 
 ## Operator Tests
 
-function backend_testfunctional(A)
+Base.@nospecializeinfer function backend_testfunctional(@nospecialize(A))
     @test rowstart(A,1) ≥ 1
     @test colstop(A,1) ≤ 1
     @test bandwidth(A,1) ≤ 0
@@ -127,7 +127,7 @@ function testfunctional(A::Operator{T}) where T<:Complex
     backend_testfunctional(Operator{ComplexF64}(A))
 end
 
-function backend_testinfoperator(A)
+Base.@nospecializeinfer function backend_testinfoperator(@nospecialize(A))
     @test isinf(size(A,1))
     @test isinf(size(A,2))
     B=A[1:5,1:5]
@@ -195,7 +195,7 @@ function testinfoperator(A::Operator{T}) where T<:Complex
     end
 end
 
-function testraggedbelowoperator(A)
+Base.@nospecializeinfer function testraggedbelowoperator(@nospecialize(A))
     @test israggedbelow(A)
     for k=1:20
         @test isfinite(colstop(A,k))
@@ -209,7 +209,7 @@ function testraggedbelowoperator(A)
     testinfoperator(A)
 end
 
-function testbandedbelowoperator(A)
+Base.@nospecializeinfer function testbandedbelowoperator(@nospecialize(A))
     @test isbandedbelow(A)
     @test isfinite(bandwidth(A,1))
     testraggedbelowoperator(A)
@@ -220,11 +220,11 @@ function testbandedbelowoperator(A)
 end
 
 
-function testalmostbandedoperator(A)
+Base.@nospecializeinfer function testalmostbandedoperator(@nospecialize(A))
     testbandedbelowoperator(A)
 end
 
-function testbandedoperator(A)
+Base.@nospecializeinfer function testbandedoperator(@nospecialize(A))
     @test isbanded(A)
     @test isfinite(bandwidth(A,2))
     testalmostbandedoperator(A)
@@ -237,7 +237,7 @@ function testbandedoperator(A)
 end
 
 
-function testblockbandedoperator(A)
+Base.@nospecializeinfer function testblockbandedoperator(@nospecialize(A))
     @test isblockbanded(A)
     testraggedbelowoperator(A)
     @test isfinite(blockbandwidth(A,2))
@@ -252,7 +252,7 @@ function testblockbandedoperator(A)
     end
 end
 
-function testbandedblockbandedoperator(A)
+Base.@nospecializeinfer function testbandedblockbandedoperator(@nospecialize(A))
     @test isbandedblockbanded(A)
     testblockbandedoperator(A)
     @test isfinite(subblockbandwidth(A,1))
