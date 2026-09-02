@@ -104,11 +104,14 @@ PiecewiseSpace(A::Space,B::PiecewiseSpace) = PiecewiseSpace(_vcat_preservecontai
 PiecewiseSpace(A::PiecewiseSpace,B::Space) = PiecewiseSpace(_vcat_preservecontainer(A.spaces, B))
 PiecewiseSpace(A::Space...) = PiecewiseSpace(A)
 
-# `sort` of a tuple is only defined if every piece has the same type, so fall back to
-# permuting by a sorted vector for a mix of spaces. Either way a tuple stays a tuple.
+# `sort` of a tuple needs a newer Julia than this package supports, and even there it is
+# only defined if every piece has the same type. Sort a vector of the pieces and permute
+# the tuple by the result instead, so that a tuple stays a tuple of the same length.
 _sortspaces(sp::AbstractVector) = sort(sp)
-_sortspaces(sp::Tuple{T,Vararg{T}}) where {T} = sort(sp)
-_sortspaces(sp::Tuple) = sp[sortperm(convert_vector(sp))]
+function _sortspaces(sp::Tuple)
+    p = sortperm(convert_vector(sp))
+    ntuple(i -> sp[p[i]], Val(length(sp)))
+end
 
 canonicalspace(A::PiecewiseSpace) = PiecewiseSpace(_sortspaces(A.spaces))
 
