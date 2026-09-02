@@ -20,6 +20,8 @@ domain(QS::QuotientSpace) = domain(QS.space)
 canonicalspace(QS::QuotientSpace) = QS.space
 
 spacescompatible(a::QuotientSpace,b::QuotientSpace) = spacescompatible(a.space,b.space)
+# the boundary conditions are not compared by ==, so they are not hashed either
+Base.hash(a::QuotientSpace, h::UInt) = hash(a.space, hash(QuotientSpace, h))
 hasconversion(a::Space,b::QuotientSpace) = hasconversion(a,b.space)
 hasconversion(a::QuotientSpace,b::Space) = hasconversion(a.space,b)
 hasconversion(a::QuotientSpace,b::QuotientSpace) = hasconversion(a.space,b)

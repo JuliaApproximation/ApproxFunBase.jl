@@ -76,6 +76,8 @@ setdomain(f::Fun{CS},d::Domain) where {CS<:AnyDomain} = Number(f)*ones(d)
 canonicalspace(C::ConstantSpace) = C
 spacescompatible(a::ConstantSpace,b::ConstantSpace)=domainscompatible(a,b)
 
+Base.hash(a::ConstantSpace, h::UInt) = hash(domain(a), hash(ConstantSpace, h))
+
 ones(S::ConstantSpace) = Fun(S,fill(1.0,1))
 ones(S::Union{AnyDomain,UnsetSpace}) = ones(ConstantSpace())
 zeros(S::AnyDomain) = zeros(ConstantSpace())

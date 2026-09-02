@@ -182,6 +182,7 @@ canonicalspace(AS::ArraySpace) = ArraySpace(canonicalspace.(AS.spaces))
 evaluate(f::AbstractVector,S::ArraySpace,x) = map(g->g(x),Fun(S,f))
 
 ==(A::ArraySpace, B::ArraySpace) = size(A) == size(B) && all(((x,y),) -> x==y, zip(A.spaces, B.spaces))
+Base.hash(A::ArraySpace, h::UInt) = hash(A.spaces, hash(ArraySpace, h))
 
 ## choosedomainspace
 

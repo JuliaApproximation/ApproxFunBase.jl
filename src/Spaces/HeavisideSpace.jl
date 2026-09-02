@@ -21,6 +21,8 @@ convert(::Type{HeavisideSpace},d::AbstractVector) =
 
 spacescompatible(a::SplineSpace{λ},b::SplineSpace{λ}) where {λ} = domainscompatible(a,b)
 
+Base.hash(a::SplineSpace{λ}, h::UInt) where {λ} = hash(domain(a), hash(SplineSpace{λ}, h))
+
 
 function evaluate(c::AbstractVector{T}, s::HeavisideSpace{<:Real}, x::Real) where T
     # the loop below indexes p[k+1] for k up to length(c)

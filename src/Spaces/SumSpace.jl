@@ -59,6 +59,8 @@ SumSpace(sp::AbstractArray) = SumSpace(tuple(sp...))
 
 canonicalspace(A::SumSpace) = SumSpace(sort(collect(A.spaces)))
 
+Base.hash(A::SumSpace, h::UInt) = foldr(hash, components(A), init = hash(SumSpace, h))
+
 # TODO: Fix this Hack
 SumSpace(A::ConstantSpace{AnyDomain}, B::ConstantSpace{AnyDomain}) = error("Should not happen")
 SumSpace(A::SumSpace, B::ConstantSpace{AnyDomain}) = SumSpace(A, setdomain(B, domain(A)))
@@ -114,6 +116,10 @@ function _sortspaces(sp::Tuple)
 end
 
 canonicalspace(A::PiecewiseSpace) = PiecewiseSpace(_sortspaces(A.spaces))
+
+# the pieces of two equal spaces may be stored in different containers, so the components
+# are hashed one at a time instead of hashing the container that holds them
+Base.hash(A::PiecewiseSpace, h::UInt) = foldr(hash, components(A), init = hash(PiecewiseSpace, h))
 
 pieces(sp::PiecewiseSpace) = sp.spaces
 piece(s::Space,k) = pieces(s)[k]

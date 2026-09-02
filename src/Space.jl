@@ -624,6 +624,8 @@ dimension(::ZeroSpace) = 0
 
 spacescompatible(::ZeroSpace,::ZeroSpace) = true
 
+Base.hash(a::ZeroSpace, h::UInt) = hash(domain(a), hash(ZeroSpace, h))
+
 pick_maybe_nonambiguous_space(a::UnsetSpace, b::ZeroSpace) = a
 pick_maybe_nonambiguous_space(a::ZeroSpace, b::UnsetSpace) = b
 

@@ -84,6 +84,14 @@ spacescompatible(S1::SubSpace{DS,IT,DD,RR},S2::SubSpace{DS,IT,DD,RR}) where {DS,
 ==(S1::SubSpace{DS,IT,DD,RR},S2::SubSpace{DS,IT,DD,RR}) where {DS,IT,DD,RR} =
     S1.space == S2.space && S1.indexes == S2.indexes
 
+_hashindexes(ind, h::UInt) = hash(ind, h)
+# Base hashes a range through its length, which it can't do if this is infinite,
+# so we hash the first index and the step in this case
+_hashindexes(ind::AbstractRange, h::UInt) =
+    isinf(length(ind)) ? hash(first(ind), hash(step(ind), h)) : hash(ind, h)
+
+Base.hash(S::SubSpace, h::UInt) = _hashindexes(S.indexes, hash(S.space, hash(SubSpace, h)))
+
 canonicalspace(a::SubSpace) = a.space
 
 

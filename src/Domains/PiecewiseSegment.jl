@@ -26,6 +26,7 @@ function PiecewiseSegment(pcsin::AbstractVector{IT}) where IT<:IntervalOrSegment
 end
 
 ==(a::PiecewiseSegment,b::PiecewiseSegment) = a.points==b.points
+Base.hash(a::PiecewiseSegment, h::UInt) = hash(a.points, hash(PiecewiseSegment, h))
 
 indomain(x, d::PiecewiseSegment) = any(Base.Fix1(in, x), components(d))
 
