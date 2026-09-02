@@ -14,6 +14,7 @@ using LinearAlgebra
 using LowRankMatrices
 using Random
 using SpecialFunctions
+using StaticArrays
 using Test
 
 @testset "Project quality" begin
@@ -86,6 +87,31 @@ end
             @test first(C, 10) == C[1:10] == B[1:10] == first(B, 10)
             @test C[2:10][1:2:end] == B[2:10][1:2:end]
         end
+
+        a = [1,2]
+        sa = SVector(1,2)
+        f = Fill(2,∞)
+        @test Base.IteratorSize(ApproxFunBase.BlockInterlacer((f, f))) == Base.IsInfinite()
+        @test Base.IteratorSize(ApproxFunBase.BlockInterlacer([f, f])) == Base.IsInfinite()
+        @test Base.IteratorSize(ApproxFunBase.BlockInterlacer((1:∞, 1:∞))) == Base.IsInfinite()
+        @test Base.IteratorSize(ApproxFunBase.BlockInterlacer([1:∞, 1:∞])) == Base.IsInfinite()
+        @test Base.IteratorSize(ApproxFunBase.BlockInterlacer([sa, sa])) == Base.HasLength()
+        @test Base.IteratorSize(ApproxFunBase.BlockInterlacer([a, a])) == Base.HasLength()
+        @test Base.IteratorSize(ApproxFunBase.BlockInterlacer((a, a))) == Base.HasLength()
+
+        b1 = ApproxFunBase.BlockInterlacer([Fill(2,2), 1:2])
+        b2 = ApproxFunBase.BlockInterlacer((Fill(2,2), 1:2))
+        @test collect(b1) == collect(b2)
+
+        # a bare Space is one component, so interlacer must wrap its
+        # blocklengths in a 1-element collection
+        ps = ApproxFunBase.PointSpace(1:3)
+        @test ApproxFunBase.interlacer(ps).blocks == (blocklengths(ps),)
+        cs = ApproxFunBase.ContinuousSpace(ApproxFunBase.PiecewiseSegment([1.0,2.0,3.0]))
+        itc = ApproxFunBase.interlacer(cs)
+        @test itc.blocks == (blocklengths(cs),)
+        @test Base.IteratorSize(itc) == Base.IsInfinite()
+        @test collect(Iterators.take(itc, 4)) == [(1,k) for k in 1:4]
     end
 
     @testset "issue #94" begin

@@ -35,8 +35,9 @@ end
 
 # the permutation that rearranges a to be b
 multiplyperm(b,a) = Int[a[bk] for bk in b]
-perm(a::Vector,b::Vector) = multiplyperm(invperm(sortperm(b)),sortperm(a))
-perm(a::Tuple,b::Tuple) = perm(collect(a),collect(b))
+# a and b may be stored either as tuples or as vectors, and the two may be mixed
+perm(a::Union{Tuple,AbstractVector}, b::Union{Tuple,AbstractVector}) =
+    multiplyperm(invperm(sortperm(convert_vector(b))), sortperm(convert_vector(a)))
 
 
 struct NegateEven{T,DS,RS} <: Operator{T}

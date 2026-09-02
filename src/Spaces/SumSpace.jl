@@ -50,42 +50,14 @@ end
 SumSpace(sp::Tuple) = SumSpace{typeof(sp),domaintype(first(sp)),
                                 mapreduce(rangetype,promote_type,sp)}(sp)
 
+SumSpace(A::SumSpace,B::SumSpace) = SumSpace(tuple(A.spaces...,B.spaces...))
 
-struct PiecewiseSpace{SV,D<:UnionDomain,R} <: DirectSumSpace{SV,D,R}
-    spaces::SV
-    PiecewiseSpace{SV,D,R}(dom::AnyDomain) where {SV,D,R} =
-        new{SV,D,R}(tuple(map(typ->typ(dom),SV.parameters)...))
-    PiecewiseSpace{SV,D,R}(dom::UnionDomain) where {SV,D,R} =
-        new{SV,D,R}(tuple(map((typ,dom)->typ(dom),SV.parameters,dom.domains)...))
-    PiecewiseSpace{SV,D,R}(sp::Tuple) where {SV,D,R} =
-        new{SV,D,R}(sp)
-end
+SumSpace(A::Space,B::SumSpace) = SumSpace(tuple(A,B.spaces...))
+SumSpace(A::SumSpace,B::Space) = SumSpace(tuple(A.spaces...,B))
+SumSpace(A::Space...) = SumSpace(A)
+SumSpace(sp::AbstractArray) = SumSpace(tuple(sp...))
 
-function _PiecewiseSpace(sp)
-    PiecewiseSpace{typeof(sp),typeof(UnionDomain(map(domain,sp))),
-                   mapreduce(rangetype,promote_type,sp)}(sp)
-end
-function PiecewiseSpace(spin::Tuple)
-    sp=tuple(union(spin)...)  # remove duplicates
-    _PiecewiseSpace(sp)
-end
-
-PiecewiseSpace(spin::Set) = PiecewiseSpace(collect(spin))
-
-
-
-for TYP in (:SumSpace,:PiecewiseSpace)
-    @eval begin
-        $TYP(A::$TYP,B::$TYP) = $TYP(tuple(A.spaces...,B.spaces...))
-
-        $TYP(A::Space,B::$TYP) = $TYP(tuple(A,B.spaces...))
-        $TYP(A::$TYP,B::Space) = $TYP(tuple(A.spaces...,B))
-        $TYP(A::Space...) = $TYP(A)
-        $TYP(sp::AbstractArray) = $TYP(tuple(sp...))
-
-        canonicalspace(A::$TYP) = $TYP(sort(collect(A.spaces)))
-    end
-end
+canonicalspace(A::SumSpace) = SumSpace(sort(collect(A.spaces)))
 
 # TODO: Fix this Hack
 SumSpace(A::ConstantSpace{AnyDomain}, B::ConstantSpace{AnyDomain}) = error("Should not happen")
@@ -93,6 +65,55 @@ SumSpace(A::SumSpace, B::ConstantSpace{AnyDomain}) = SumSpace(A, setdomain(B, do
 SumSpace(B::ConstantSpace{AnyDomain}, A::SumSpace) = SumSpace(setdomain(B, domain(A)), A)
 SumSpace(A::Space, B::ConstantSpace{AnyDomain}) = SumSpace(A, setdomain(B, domain(A)))
 SumSpace(B::ConstantSpace{AnyDomain}, A::Space) = SumSpace(setdomain(B, domain(A)), A)
+
+struct PiecewiseSpace{SV,D<:UnionDomain,R} <: DirectSumSpace{SV,D,R}
+    spaces::SV
+    PiecewiseSpace{SV,D,R}(dom::AnyDomain) where {SV,D,R} =
+        new{SV,D,R}(tuple(map(typ->typ(dom),SV.parameters)...))
+    PiecewiseSpace{SV,D,R}(dom::UnionDomain) where {SV,D,R} =
+        new{SV,D,R}(tuple(map((typ,dom)->typ(dom),SV.parameters,dom.domains)...))
+    PiecewiseSpace{SV,D,R}(sp::SV) where {SV,D,R} =
+        new{SV,D,R}(sp)
+end
+
+function _PiecewiseSpace(sp)
+    PiecewiseSpace{typeof(sp),typeof(UnionDomain(map(domain,sp))),
+                   mapreduce(rangetype,promote_type,sp)}(sp)
+end
+# `union` removes duplicates, but it always returns a `Vector`, which would drop the
+# number of pieces and their individual types from the type of a tuple of spaces.
+# Duplicates are rare here -- `union(::Space, ::Space)` already short-circuits equal
+# spaces before a `PiecewiseSpace` is built -- so keep the tuple when nothing was
+# removed, and only fall back to the vector that `union` returned when it was.
+_uniquespaces(sp::AbstractVector) = union(sp)
+function _uniquespaces(sp::Tuple)
+    u = union(sp)
+    length(u) == length(sp) ? sp : u
+end
+
+function PiecewiseSpace(spacesin::Union{Tuple{Vararg{Space}}, AbstractVector{<:Space}})
+    _PiecewiseSpace(_uniquespaces(spacesin))
+end
+
+PiecewiseSpace(spacesin::Set) = PiecewiseSpace(collect(spacesin))
+
+PiecewiseSpace(A::PiecewiseSpace, B::PiecewiseSpace) =
+    PiecewiseSpace(_vcat_preservecontainer(A.spaces, B.spaces))
+
+PiecewiseSpace(A::Space,B::PiecewiseSpace) = PiecewiseSpace(_vcat_preservecontainer(A, B.spaces))
+PiecewiseSpace(A::PiecewiseSpace,B::Space) = PiecewiseSpace(_vcat_preservecontainer(A.spaces, B))
+PiecewiseSpace(A::Space...) = PiecewiseSpace(A)
+
+# `sort` of a tuple needs a newer Julia than this package supports, and even there it is
+# only defined if every piece has the same type. Sort a vector of the pieces and permute
+# the tuple by the result instead, so that a tuple stays a tuple of the same length.
+_sortspaces(sp::AbstractVector) = sort(sp)
+function _sortspaces(sp::Tuple)
+    p = sortperm(convert_vector(sp))
+    ntuple(i -> sp[p[i]], Val(length(sp)))
+end
+
+canonicalspace(A::PiecewiseSpace) = PiecewiseSpace(_sortspaces(A.spaces))
 
 pieces(sp::PiecewiseSpace) = sp.spaces
 piece(s::Space,k) = pieces(s)[k]
@@ -112,8 +133,16 @@ setdomain(A::PiecewiseSpace,d::UnionDomain) =
 
 
 
-function spacescompatible(A::S,B::S) where S<:DirectSumSpace
-    if ncomponents(A) != ncomponents(B)
+# Two direct sums are compatible if they are the same kind of sum and their pieces
+# match up. The pieces may be stored as a tuple in one and as a vector in the other,
+# so this must not require the two spaces to have the same type.
+_directsumkind(::SumSpace) = SumSpace
+_directsumkind(::PiecewiseSpace) = PiecewiseSpace
+
+function spacescompatible(A::DirectSumSpace,B::DirectSumSpace)
+    if _directsumkind(A) !== _directsumkind(B)
+        false
+    elseif ncomponents(A) != ncomponents(B)
         false
     else
         ret=true
@@ -140,7 +169,18 @@ end
 Base.promote_rule(::Type{Fun{SumSpace{SV,D,R}}},::Type{T}) where {SV,D,R,T<:Number} =
     promote_rule(VFun{SumSpace{SV,D,R},Float64},T)
 
-function Base.promote_rule(::Type{Fun{PiecewiseSpace{SV,D,R},V,VV}},::Type{T}) where {SV,D,R,V,VV,T<:Number}
+# pieces stored in a vector: there is no per-piece type to promote, only the element type
+function Base.promote_rule(::Type{Fun{PiecewiseSpace{SV,D,R},V,VV}},
+        ::Type{T}) where {SV<:AbstractVector,D,R,V,VV,T<:Number}
+    newf = promote_type(VFun{eltype(SV),V},T)
+    if newf == Fun
+        Fun
+    else
+        VFun{PiecewiseSpace{Vector{newf.parameters[1]},D,R},promote_type(V,T)}
+    end
+end
+
+function Base.promote_rule(::Type{Fun{PiecewiseSpace{SV,D,R},V,VV}},::Type{T}) where {SV<:Tuple,D,R,V,VV,T<:Number}
     # if any doesn't support promoting, just leave unpromoted
 
     newfsp=map(s->promote_type(VFun{s,V},T),SV.parameters)

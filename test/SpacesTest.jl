@@ -1,5 +1,5 @@
 using ApproxFunBase
-using ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, SVector, checkpoints, AnyDomain
+using ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, SVector, checkpoints, AnyDomain, SumSpace, SubSpace
 using BandedMatrices: rowrange, colrange, BandedMatrix
 using DomainSets: Point
 using LinearAlgebra
@@ -444,5 +444,114 @@ using Test
             f = Fun(A, Float64.(1:3length(A)))
             @test values(f) == f.(points(f))
         end
+    end
+
+    @testset "PiecewiseSpace" begin
+        ps = PiecewiseSpace([PointSpace(1:2), PointSpace(3:4)])
+        @test PiecewiseSpace(ps, ps) == ps
+        @test ApproxFunBase.canonicalspace(ps) == ps
+        d = domain(ps)
+        @test all(x -> x in d, 1:4)
+        @test all(x -> !(x in d), 5:6)
+        d2 = domain(PiecewiseSpace(ps, PointSpace(5:6)))
+        @test all(x -> x in d2, 5:6)
+        d2 = domain(PiecewiseSpace(PointSpace(5:6), ps))
+        @test all(x -> x in d2, 5:6)
+
+        ps2 = PiecewiseSpace([PointSpace(3:4), PointSpace(1:2)])
+        @test ApproxFunBase.canonicalspace(ps2) == ps
+
+        # a Set has no order, so canonicalize before comparing
+        @test ApproxFunBase.canonicalspace(
+            PiecewiseSpace(Set([PointSpace(1:2), PointSpace(3:4)]))) == ps
+    end
+
+    @testset "PiecewiseSpace pieces container" begin
+        a, b, c, d = PointSpace(1:2), PointSpace(3:4), PointSpace(5:6), PointSpace(7:8)
+
+        # the pieces are kept in the container they were given in, so that a tuple keeps
+        # the number of pieces and the type of each one in the type of the space
+        @test PiecewiseSpace(a, b).spaces isa Tuple
+        @test PiecewiseSpace((a, b)).spaces isa Tuple
+        @test PiecewiseSpace([a, b]).spaces isa Vector
+        @test PiecewiseSpace(Set([a, b])).spaces isa Vector
+
+        # concatenation keeps a tuple only as long as no vector is involved
+        ab, dc = PiecewiseSpace(a, b), PiecewiseSpace(d, c)
+        @test PiecewiseSpace(ab, dc).spaces isa Tuple
+        @test components(PiecewiseSpace(ab, dc)) == (a, b, d, c)
+        @test PiecewiseSpace(c, ab).spaces isa Tuple
+        @test PiecewiseSpace(ab, c).spaces isa Tuple
+        @test PiecewiseSpace(PiecewiseSpace([a, b]), dc).spaces isa Vector
+        @test PiecewiseSpace(ab, PiecewiseSpace([c, d])).spaces isa Vector
+
+        # duplicates are still removed, at the cost of the tuple
+        @test ApproxFunBase.ncomponents(PiecewiseSpace(a, a)) == 1
+
+        # `sort` of a tuple is only defined if every piece has the same type
+        sb = SubSpace(b, 1:1)
+        het = ApproxFunBase._PiecewiseSpace((sb, a))
+        @test ApproxFunBase.canonicalspace(het).spaces isa Tuple
+        @test components(ApproxFunBase.canonicalspace(het)) == (a, sb)
+
+        # pieces held in a vector have no per-piece type to promote
+        @test promote_type(Fun{typeof(PiecewiseSpace([a, b])),Float64,Vector{Float64}}, Int) == Fun
+    end
+
+    @testset "PiecewiseSpace pieces in different containers" begin
+        # A tuple never compares equal to a vector however its elements compare, so the
+        # rules below have to compare the pieces and not the containers holding them.
+        # Comparing the containers made `maxspace` fall through to the branch that sorts
+        # the first space, where the permutation reorders nothing, so the rule called
+        # itself unchanged and recursed until the stack overflowed.
+        a, b, c = PointSpace(1:2), PointSpace(3:4), PointSpace(5:6)
+        # `SubSpace` canonicalises to the space it is taken from, so the two spaces below
+        # differ but their pieces canonicalise to the same thing. Three pieces, because
+        # two are caught by a special case before the offending branch is reached.
+        pt = PiecewiseSpace(SubSpace(a, 1:1), SubSpace(b, 1:1), SubSpace(c, 1:1))
+        pv = PiecewiseSpace([a, b, c])
+        @test pt.spaces isa Tuple
+        @test pv.spaces isa Vector
+        @test ApproxFunBase.canonicalspace(pt) != ApproxFunBase.canonicalspace(pv)
+        @test collect(map(ApproxFunBase.canonicalspace, components(pt))) ==
+                collect(map(ApproxFunBase.canonicalspace, components(pv)))
+
+        @test ApproxFunBase.maxspace(pt, pv) == pv
+        @test union(pt, pv) == pv
+        @test ApproxFunBase.conversion_type(pt, pv) == pt
+
+        # with the pieces in a different order the rule has to permute the first space,
+        # so `perm` is handed a tuple and a vector
+        po = PiecewiseSpace(SubSpace(b, 1:1), SubSpace(a, 1:1), SubSpace(c, 1:1))
+        @test ApproxFunBase.perm(map(ApproxFunBase.canonicalspace, components(po)),
+                                 map(ApproxFunBase.canonicalspace, components(pv))) == [2, 1, 3]
+        @test ApproxFunBase.maxspace(po, pv) == pv
+        @test union(po, pv) == pv
+
+        # the same pieces held in different containers describe the same space
+        tup, vec = PiecewiseSpace(a, b), PiecewiseSpace([a, b])
+        @test ApproxFunBase.spacescompatible(tup, vec)
+        @test tup == vec
+        @test ApproxFunBase.canonicalspace(tup) == ApproxFunBase.canonicalspace(vec)
+    end
+
+    @testset "SumSpace" begin
+        a, b, c = PointSpace(1:2), PointSpace(3:4), PointSpace(5:6)
+        ss = SumSpace(a, b)
+        @test components(ss) == (a, b)
+
+        @test components(SumSpace(ss, c)) == (a, b, c)
+        @test components(SumSpace(c, ss)) == (c, a, b)
+        @test components(SumSpace(ss, SumSpace(c, a))) == (a, b, c, a)
+        @test SumSpace([a, b]) == ss
+
+        @test ApproxFunBase.canonicalspace(SumSpace(b, a)) == ApproxFunBase.canonicalspace(ss)
+
+        # a ConstantSpace{AnyDomain} argument inherits the domain of the other space
+        @test domain(components(SumSpace(ss, ConstantSpace()))[end]) == domain(ss)
+        @test domain(components(SumSpace(a,  ConstantSpace()))[end]) == domain(a)
+        @test domain(components(SumSpace(ConstantSpace(), ss))[1])   == domain(ss)
+        @test domain(components(SumSpace(ConstantSpace(), a))[1])    == domain(a)
+        @test_throws ErrorException SumSpace(ConstantSpace(), ConstantSpace())
     end
 end
