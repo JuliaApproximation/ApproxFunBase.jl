@@ -1,7 +1,10 @@
 using ApproxFunBase
 using ApproxFunBase: PointSpace, HeavisideSpace, PiecewiseSegment, dimension, SVector, checkpoints, AnyDomain, SumSpace, SubSpace
+using ApproxFunBase: ArraySpace, ContinuousSpace, SplineSpace, ZeroSpace
 using BandedMatrices: rowrange, colrange, BandedMatrix
-using DomainSets: Point
+using BlockArrays: Block
+using DomainSets: Point, UnionDomain
+using InfiniteArrays: ∞
 using LinearAlgebra
 using StaticArrays
 using Test
@@ -571,5 +574,101 @@ using Test
         @test domain(components(SumSpace(ConstantSpace(), ss))[1])   == domain(ss)
         @test domain(components(SumSpace(ConstantSpace(), a))[1])    == domain(a)
         @test_throws ErrorException SumSpace(ConstantSpace(), ConstantSpace())
+    end
+
+    @testset "hash" begin
+        @testset "PiecewiseSegment" begin
+            d = PiecewiseSegment([0.0, 1.0, 2.0])
+            # the points may be stored in a vector or in a static vector
+            @test d == PiecewiseSegment(0.0, 1.0, 2.0)
+            @test hash(d) == hash(PiecewiseSegment(0.0, 1.0, 2.0))
+            @test hash(d) == hash(PiecewiseSegment([0, 1, 2]))
+            @test hash(d) != hash(PiecewiseSegment([0.0, 1.0, 3.0]))
+            @test length(Set([d, PiecewiseSegment([0.0, 1.0, 2.0])])) == 1
+        end
+
+        @testset "ConstantSpace and ZeroSpace" begin
+            # equal domains that are not identical objects
+            u1, u2 = UnionDomain([0..1, 2..3]), UnionDomain([2..3, 0..1])
+            @test ConstantSpace(u1) == ConstantSpace(u2)
+            @test hash(ConstantSpace(u1)) == hash(ConstantSpace(u2))
+            @test Dict(ConstantSpace(u1) => 1)[ConstantSpace(u2)] == 1
+            @test hash(ConstantSpace(0..1)) != hash(ConstantSpace(2..3))
+            @test hash(ConstantSpace()) == hash(ConstantSpace())
+            @test ZeroSpace(ConstantSpace(u1)) == ZeroSpace(ConstantSpace(u2))
+            @test hash(ZeroSpace(ConstantSpace(u1))) == hash(ZeroSpace(ConstantSpace(u2)))
+            @test hash(ZeroSpace()) == hash(ZeroSpace())
+            @test hash(ZeroSpace(ConstantSpace(0..1))) != hash(ConstantSpace(0..1))
+        end
+
+        @testset "ContinuousSpace and SplineSpace" begin
+            d, d2 = PiecewiseSegment([0.0, 1.0, 2.0]), PiecewiseSegment(0.0, 1.0, 2.0)
+            for (a, b) in ((ContinuousSpace(d), ContinuousSpace(d2)),
+                            (SplineSpace{1}(d), SplineSpace{1}(d2)),
+                            (HeavisideSpace([0.0, 1.0, 2.0]), HeavisideSpace([0.0, 1.0, 2.0])))
+                @test a == b
+                @test hash(a) == hash(b)
+                @test Dict(a => 1)[b] == 1
+            end
+            @test hash(ContinuousSpace(d)) != hash(SplineSpace{1}(d))
+            @test hash(HeavisideSpace([0.0, 1.0, 2.0])) != hash(SplineSpace{1}(d))
+            @test hash(HeavisideSpace([0.0, 1.0, 2.0])) != hash(HeavisideSpace([0.0, 1.0, 3.0]))
+        end
+
+        @testset "SumSpace and PiecewiseSpace" begin
+            a, b = PointSpace([1.0, 2.0]), PointSpace([3.0, 4.0])
+            @testset for T in (SumSpace, PiecewiseSpace)
+                s1, s2 = T(PointSpace([1.0, 2.0]), PointSpace([3.0, 4.0])), T(a, b)
+                @test s1 == s2
+                @test hash(s1) == hash(s2)
+                @test Dict(s1 => 1)[s2] == 1
+                @test hash(T(a, b)) != hash(T(b, a))
+            end
+            @test SumSpace(a, b) != PiecewiseSpace(a, b)
+            @test hash(SumSpace(a, b)) != hash(PiecewiseSpace(a, b))
+            # the same pieces held in different containers describe the same space
+            @test hash(PiecewiseSpace(a, b)) == hash(PiecewiseSpace([a, b]))
+        end
+
+        @testset "ArraySpace" begin
+            A = ArraySpace([PointSpace([1.0, 2.0]), PointSpace([3.0, 4.0])])
+            B = ArraySpace(SVector(PointSpace([1.0, 2.0]), PointSpace([3.0, 4.0])))
+            @test A == B
+            @test hash(A) == hash(B)
+            @test Dict(A => 1)[B] == 1
+            @test hash(A) != hash(ArraySpace([PointSpace([1.0, 2.0]), PointSpace([3.0, 5.0])]))
+        end
+
+        @testset "TensorSpace" begin
+            a, b = PointSpace([1.0, 2.0]), PointSpace([3.0, 4.0])
+            t1 = TensorSpace(PointSpace([1.0, 2.0]), PointSpace([3.0, 4.0]))
+            t2 = TensorSpace(a, b)
+            @test t1 == t2
+            @test hash(t1) == hash(t2)
+            @test Dict(t1 => 1)[t2] == 1
+            @test hash(t1) != hash(TensorSpace(b, a))
+        end
+
+        @testset "SubSpace" begin
+            s, t = PointSpace([1.0, 2.0, 3.0]), PointSpace([1.0, 2.0, 3.0])
+            @test (s | (1:2)) == (t | (1:2))
+            @test hash(s | (1:2)) == hash(t | (1:2))
+            @test Dict((s | (1:2)) => 1)[t | (1:2)] == 1
+            @test hash(s | (1:2)) != hash(s | (1:3))
+            @test hash(s | (1:2)) != hash(s)
+            # Base hashes a range through its length, which is infinite here
+            @test hash(s | (1:∞)) == hash(t | (1:∞))
+            @test hash(s | (1:∞)) != hash(s | (2:∞))
+            @test hash(s | Block(1)) == hash(t | Block(1))
+        end
+
+        @testset "QuotientSpace" begin
+            Q1 = QuotientSpace(Dirichlet(ConstantSpace(0..1)))
+            Q2 = QuotientSpace(Dirichlet(ConstantSpace(0..1)))
+            @test Q1 == Q2
+            @test hash(Q1) == hash(Q2)
+            @test Dict(Q1 => 1)[Q2] == 1
+            @test hash(Q1) != hash(QuotientSpace(Dirichlet(ConstantSpace(2..3))))
+        end
     end
 end

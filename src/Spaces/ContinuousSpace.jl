@@ -13,6 +13,8 @@ isperiodic(C::ContinuousSpace) = isperiodic(domain(C))
 
 spacescompatible(a::ContinuousSpace, b::ContinuousSpace) = domainscompatible(a,b)
 
+Base.hash(a::ContinuousSpace, h::UInt) = hash(domain(a), hash(ContinuousSpace, h))
+
 plan_transform(sp::ContinuousSpace, vals::AbstractVector) =
     TransformPlan{eltype(vals),typeof(sp),false,Nothing}(sp,nothing)
 
