@@ -213,6 +213,24 @@ using Test
             f = Fun(PointSpace(1:4), ones(4))
             @test ApproxFunBase.isconstantfun(f)
         end
+
+        @testset "hash" begin
+            DS = ApproxFunBase.DiracSpace
+            for T in (PointSpace, DS)
+                a, b = T(1:2), T(1:2)
+                @test a == b
+                @test hash(a) == hash(b)
+                @test isequal(a, b)
+                @test length(Set([a, b])) == 1
+                @test Dict(a => 1)[b] == 1
+                @test Set([T(1:2), T(3:4)]) == Set([T(3:4), T(1:2)])
+                @test hash(T(1:2)) != hash(T(3:4))
+                @test T([1, 2]) == T([1.0, 2.0])
+                @test hash(T([1, 2])) == hash(T([1.0, 2.0]))
+            end
+            @test PointSpace(1:2) != DS(1:2)
+            @test hash(PointSpace(1:2)) != hash(DS(1:2))
+        end
     end
 
     @testset "DiracSpace" begin
