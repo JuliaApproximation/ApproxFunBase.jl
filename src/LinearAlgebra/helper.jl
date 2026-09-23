@@ -548,6 +548,13 @@ getindex(it::UncachedIterator, k) = it.iterator[k]
 Base.show(io::IO, C::UncachedIterator) = print(io, "$UncachedIterator(", C.iterator, ")")
 
 ## Store iterator
+
+# `nothing` marks an iterator that hasn't been started yet. Using a sentinel instead of
+# splatting a 0- or 1-tuple keeps the state type stable across iterations, which matters
+# because `state` below is an untyped field.
+_iterate(itr, ::Nothing) = iterate(itr)
+_iterate(itr, st) = iterate(itr, st)
+
 mutable struct CachedIterator{T,IT} <: AbstractCachedIterator{T,IT}
     iterator::IT
     storage::Vector{T}
@@ -556,7 +563,7 @@ mutable struct CachedIterator{T,IT} <: AbstractCachedIterator{T,IT}
 end
 
 CachedIterator{T,IT}(it::IT, state) where {T,IT} = CachedIterator{T,IT}(it,T[],state,0)
-CachedIterator(it::IT) where IT = CachedIterator{eltype(it),IT}(it, ())
+CachedIterator(it::IT) where IT = CachedIterator{eltype(it),IT}(it, nothing)
 
 function Base.show(io::IO, c::CachedIterator)
     print(io, "Cached ", c.iterator, " with ", c.length, " stored elements, and state = ", c.state)
@@ -568,25 +575,33 @@ function resize!(it::CachedIterator{T},n::Integer) where {T}
         if n > length(it.storage)
             resize!(it.storage,2n)
         end
-
-        @inbounds for k = m+1:n
-            xst = iterate(it.iterator,it.state...)
-            if xst === nothing
-                it.length = k-1
-                return it
-            end
-            v::T, st = xst
-            it.storage[k] = v
-            it.state = (st,)
-        end
-        it.length = n
+        # `state` is an untyped field, so pay for one dynamic dispatch here and let the
+        # loop below infer from the concrete state type
+        _resize!(it, n, m, it.state)
     end
+    it
+end
+
+function _resize!(it::CachedIterator{T}, n, m, state) where {T}
+    @inbounds for k = m+1:n
+        xst = _iterate(it.iterator, state)
+        if xst === nothing
+            it.state = state
+            it.length = k-1
+            return it
+        end
+        v, st = xst
+        it.storage[k] = v::T
+        state = st
+    end
+    it.state = state
+    it.length = n
     it
 end
 
 iterate(it::CachedIterator) = iterate(it,1)
 function iterate(it::CachedIterator,st::Int)
-    if  st > it.length && iterate(it.iterator,it.state...) === nothing
+    if  st > it.length && _iterate(it.iterator, it.state) === nothing
         nothing
     else
         (it[st],st+1)
@@ -707,11 +722,11 @@ function done(it::BlockInterlacer,st)
 end
 
 iterate(it::BlockInterlacer{<:Tuple}) =
-    iterate(it, (1,1,ntuple(_ -> tuple(), length(it.blocks)),
+    iterate(it, (1,1,ntuple(_ -> nothing, length(it.blocks)),
             ntuple(zero,length(it.blocks))))
 
 iterate(it::BlockInterlacer{<:AbstractVector}) =
-    iterate(it, (1,1, [tuple() for _ in 1:length(it.blocks)],
+    iterate(it, (1,1, [nothing for _ in 1:length(it.blocks)],
             [zero(i) for i in 1:length(it.blocks)]))
 
 _setindex(coll, v, ind) = (coll[ind] = v; coll)
@@ -722,13 +737,13 @@ function iterate(it::BlockInterlacer, (N,k,blkst,lngs))
     if N > length(it.blocks)
         # increment to next block
         blkst = map(it.blocks,blkst) do blit,blst
-                xblst = iterate(blit, blst...)
-                xblst === nothing ? blst : (xblst[2],)
+                xblst = _iterate(blit, blst)
+                xblst === nothing ? blst : xblst[2]
             end
         return iterate(it,(1,1,blkst,lngs))
     end
 
-    Bnxtb = iterate(it.blocks[N],blkst[N]...)
+    Bnxtb = _iterate(it.blocks[N], blkst[N])
 
     if Bnxtb === nothing || k > Bnxtb[1]
         # increment to next N

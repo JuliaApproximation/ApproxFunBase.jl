@@ -784,6 +784,19 @@ end
     @test vs == [1:4;]
     @test eltype(vs) == Int
 
+    @testset "resize! past the end of a finite iterator" begin
+        v = ApproxFunBase.CachedIterator(1:4)
+        # asking for more than the iterator holds must stop at the last element
+        ApproxFunBase.resize!(v, 10)
+        @test v.length == 4
+        @test v.storage[1:v.length] == [1:4;]
+        @test collect(v) == [1:4;]
+        # and repeating it must be a no-op rather than corrupting the cached state
+        ApproxFunBase.resize!(v, 10)
+        @test v.length == 4
+        @test collect(v) == [1:4;]
+    end
+
     v = ApproxFunBase.CachedIterator(Iterators.take(1:14, 4))
     @test Base.IteratorSize(v) == Base.HasLength()
     @test length(v) == 4
