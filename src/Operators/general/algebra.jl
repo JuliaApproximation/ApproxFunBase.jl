@@ -73,10 +73,21 @@ end
 function promoteplus(opsin, sz=size(first(opsin)))
     ops = filter(!iszeroop, opsin)
     ET = promote_eltypeof(opsin)
+    O = eltype(convert_vector(_convertops(Operator{ET}, ops)))
     v = promotespaces(ops)
-    PlusOperator{ET}(convert_vector(v), bandwidthsmax(v), sz,
-        bandwidthsmax(v, blockbandwidths), bandwidthsmax(v, subblockbandwidths))
+    w = convert_vector(v)
+    # The types of the promoted operators may depend on the values of the spaces.
+    # We retain the concrete type if the promotion preserves it (e.g. if the spaces agree),
+    # and store the operators as Operator{ET} otherwise. This limits the result to a small Union
+    if w isa Vector{O}
+        _promoteplus(ET, w, v, sz)
+    else
+        _promoteplus(ET, strictconvert(Vector{Operator{ET}}, w), v, sz)
+    end
 end
+# the bandwidths are computed from v, which may be better inferred than ops
+_promoteplus(::Type{ET}, ops, v, sz) where {ET} = PlusOperator{ET}(ops, bandwidthsmax(v), sz,
+    bandwidthsmax(v, blockbandwidths), bandwidthsmax(v, subblockbandwidths))
 
 domain(P::PlusOperator) = commondomain(P.ops)
 
