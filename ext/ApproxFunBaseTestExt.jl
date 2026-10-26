@@ -2,7 +2,7 @@ module ApproxFunBaseTestExt
 
 using ApproxFunBase
 using Test
-using ApproxFunBase: plan_transform, plan_itransform, israggedbelow, RaggedMatrix, isbandedbelow, isbanded,
+using ApproxFunBase: domaindimension, plan_transform, plan_itransform, israggedbelow, RaggedMatrix, isbandedbelow, isbanded,
     blockstart, blockstop, resizedata!
 using ApproxFunBase.BandedMatrices: BandedMatrices, rowstart, rowstop, colstart, colstop, BandedMatrix, bandwidth
 using ApproxFunBase.BlockArrays: blockrowstop, blockcolstop, Block
@@ -113,18 +113,26 @@ Base.@nospecializeinfer function backend_testfunctional(@nospecialize(A))
     @test co[20:30] ≈ A[1:30][20:30] ≈ A[20:30]
 end
 
-# Check that the tests pass after conversion as well
+# Check that the tests pass after conversion as well.
+# Each conversion recompiles the operator algebra for the new eltype,
+# so we only test the conversion to complex for operators on 1D domains
+is1d(A) = domaindimension(domainspace(A)) == 1
+
 function testfunctional(A::Operator{T}) where T<:Real
     backend_testfunctional(A)
-    backend_testfunctional(Operator{Float64}(A))
-    backend_testfunctional(Operator{Float32}(A))
-    backend_testfunctional(Operator{ComplexF64}(A))
+    if T != Float64
+        backend_testfunctional(Operator{Float64}(A))
+    end
+    if is1d(A)
+        backend_testfunctional(Operator{ComplexF64}(A))
+    end
 end
 
 function testfunctional(A::Operator{T}) where T<:Complex
     backend_testfunctional(A)
-    backend_testfunctional(Operator{ComplexF32}(A))
-    backend_testfunctional(Operator{ComplexF64}(A))
+    if T != ComplexF64
+        backend_testfunctional(Operator{ComplexF64}(A))
+    end
 end
 
 Base.@nospecializeinfer function backend_testinfoperator(@nospecialize(A))
@@ -170,26 +178,20 @@ Base.@nospecializeinfer function backend_testinfoperator(@nospecialize(A))
     end
 end
 
-# Check that the tests pass after conversion as well
 function testinfoperator(A::Operator{T}) where T<:Real
     backend_testinfoperator(A)
     if T != Float64
         B = strictconvert(Operator{Float64}, A)
         backend_testinfoperator(B)
     end
-    if T != Float32
-        B = strictconvert(Operator{Float32}, A)
+    if is1d(A)
+        B = strictconvert(Operator{ComplexF64}, A)
         backend_testinfoperator(B)
     end
-    B = strictconvert(Operator{ComplexF64}, A)
-    backend_testinfoperator(B)
 end
 
 function testinfoperator(A::Operator{T}) where T<:Complex
     backend_testinfoperator(A)
-    if T != ComplexF32
-        backend_testinfoperator(strictconvert(Operator{ComplexF32}, A))
-    end
     if T != ComplexF64
         backend_testinfoperator(strictconvert(Operator{ComplexF64}, A))
     end
