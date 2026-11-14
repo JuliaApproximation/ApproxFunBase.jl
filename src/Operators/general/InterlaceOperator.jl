@@ -94,8 +94,10 @@ const MatrixInterlaceOperator = InterlaceOperator{T,2,DS,RS} where {T,DS,RS<:Spa
 __interlace_ops_bandwidths(ops::AbstractMatrix) = bandwidths.(ops)
 __interlace_ops_bandwidths(ops::Diagonal) = bandwidths.(parent(ops))
 function __interlace_bandwidths_square(ops::AbstractMatrix, bw = __interlace_ops_bandwidths(ops))
+    Base.require_one_based_indexing(ops)
     p=size(ops,1)
-    l,u = 0,0
+    opbw = bw[1,1]
+    l,u = p*opbw[1], p*opbw[2]
     for k=axes(ops,1), j=axes(ops,2)
         opbw = bw[k,j]
         l = max(l, p*opbw[1]+k-j)
@@ -105,8 +107,9 @@ function __interlace_bandwidths_square(ops::AbstractMatrix, bw = __interlace_ops
 end
 function __interlace_bandwidths_square(ops::Diagonal, bw = __interlace_ops_bandwidths(ops))
     p=size(ops,1)
-    l,u = 0,0
-    for k=axes(ops,1)
+    opbw = bw[1]
+    l,u = p*opbw[1], p*opbw[2]
+    for k=axes(ops,1)[2:end]
         opbw = bw[k]
         l = max(l, p*opbw[1])
         u = max(u, p*opbw[2])
